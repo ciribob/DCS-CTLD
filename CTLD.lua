@@ -31,7 +31,7 @@ ctld.disableAllSmoke = false -- if true, all smoke is diabled regardless of sett
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
 
-ctld.maxExtractDistance = 50 -- max distance from vehicle to troops to allow a group extraction
+ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a group extraction
 ctld.maximumDistanceLogistic = 200 -- max distance from vehicle to logistics to allow a loading or spawning operation
 ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
 ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop point if no enemy is nearby
