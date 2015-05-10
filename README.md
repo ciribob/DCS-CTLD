@@ -10,7 +10,8 @@ The script supports:
 * Vehicle Loading / Unloading via Radio Menu for C-130 (Other large aircraft can easily be added) (https://www.digitalcombatsimulator.com/en/files/668878/?sphrase_id=1196134)
     * You will need to download the modded version of the C-130 from here (JSGME Ready) that fixes the Radio Menu 
 * Coloured Smoke Marker Drops
-* Extractable Soldier Spawn
+* Extractable Soldier Spawn at a trigger zone
+* Extractable soldier groups added via mission editor
 * Unit construction using crates spawned at a logistics area and dropped via cargo sling
     * HAWK AA System requires 3 separate and correct crates to build
         * HAWK system can also be rearmed after construction by dropping another Hawk Launcher nearby and unpacking
@@ -18,8 +19,11 @@ The script supports:
     * HMMWV MG
     * Mortar
     * MANPAD
+* Pre loading of units into AI vehicles via a DO SCRIPT
 
 A complete test mission is included.
+
+You can also edit the CTLD.lua file to change some configuration options. Make sure you re-add the lua file to the mission after editing by deleting the trigger that loads the file, then readding the trigger and the DO SCRIPT FILE action. 
 
 ##Setup in Mission Editor
 
