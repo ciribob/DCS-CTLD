@@ -26,9 +26,9 @@ A complete test mission is included.
 ###Script Setup
 **This script requires MIST version 3.6 or above: https://github.com/mrSkortch/MissionScriptingTools**
 
-First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a time more of 1. Time More means run this actions after X seconds into the mission.
+First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a "TIME MORE" of 1. "TIME MORE" means run the actions after X seconds into the mission.
 
-Load the CTLD a few seconds after MIST using a second trigger with a time more and a DO SCRIPT of CTLD.lua. 
+Load the CTLD a few seconds after MIST using a second trigger with a "TIME MORE" and a DO SCRIPT of CTLD.lua. 
 An error will be shown if MIST isn't loaded first.
 
 An example is shown below:
@@ -36,14 +36,14 @@ An example is shown below:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-14-00_zpsmoirc3nz.png "Script Setup")
 
 ###Other Script Functions
-You can also preload troops into AI transports once the CTLD script has been loaded instead of having the AI enter a pickup zone using the code below where the parameters are:
+You can also preload troops into AI transports once the CTLD script has been loaded, instead of having the AI enter a pickup zone, using the code below where the parameters are:
 * Pilot name of the unit
 * number of troops / vehicles to load
 * true means load with troops, false means load with vehicles
 
 If you try to load vehicles into anything other than a unit listed in ```ctld.vehicleTransportEnabled```, they won't be able to deploy them.
 ```lua
-function ctld.preLoadTransport("helicargo1", 10,true)
+ctld.preLoadTransport("helicargo1", 10,true)
 ```
 
 You can also make existing mission editor groups extractable by adding their group name to the ```ctld.extractableGroups``` list
@@ -151,7 +151,7 @@ Example for AI APC:
 
 
 ###Logistic Setup
-Logistic crates can also be spawned by Player controlled Transport Helicopters as long as there are near a friendly logistic unit listed in ```ctld.logisticUnits```. The distance that the heli's can spawn crates at can be configured at the top of the script. Any static object can be used as a Logitic Object
+Logistic crates can also be spawned by Player-controlled Transport Helicopters, as long as they are near a friendly logistic unit listed in ```ctld.logisticUnits```. The distance that the heli's can spawn crates at can be configured at the top of the script. Any static object can be used for Logistics.
 
 ```lua
 ctld.logisticUnits = {
@@ -176,15 +176,15 @@ Example:
 #In Game
 ##Troop Loading and Unloading
 
-Troops can be loaded and unloaded using the F10 Menu. Troops can only be loaded in a pickup zone but can be dropped anywhere you like. Troops dropped by transports can also be extracted by any transport unit using the radio menu as long as you are close enough.
+Troops can be loaded and unloaded using the F10 Menu. Troops can only be loaded in a pickup zone but can be dropped anywhere you like. Troops dropped by transports can also be extracted by any transport unit using the radio menu, as long as you are close enough.
 
-AI transports will display a message when they Auto load and deploy troops in the field. AI units won't pickup already deployed troops so as not to intefere with players.
+AI transports will display a message when they Auto load and deploy troops in the field. AI units won't pickup already deployed troops so as not to interfere with players.
 
 The C130 gets an extra radio option for loading and deploying vehicles. By default the C130 can pickup and deploy a  HMMWV TOW and HMMWV MG. This can be changed by editing ```ctld.vehiclesForTransport``` .
 
 ##Cargo Spawning and Sling Loading
 
-Cargo can be spawned by transport helicopters if they are close enough to a friendly logistics unit using the F10 menu. Everything except the HAWK AA Missile system requires only one crate to build. Crates are always spawned off the nose of the unit that requested them. Sling cargo weight differs drastically depending on what you are sling loading. The Huey will need to have 20% fuel and no armamemnts in able to life a HMMWV TOW crate! The Mi-8 has a higher max lifting weight than a Huey.
+Cargo can be spawned by transport helicopters if they are close enough to a friendly logistics unit using the F10 menu. Everything except the HAWK AA Missile system requires only one crate to build. Crates are always spawned off the nose of the unit that requested them. Sling cargo weight differs drastically depending on what you are sling loading. The Huey will need to have 20% fuel and no armaments in able to life a HMMWV TOW crate! The Mi-8 has a higher max lifting weight than a Huey.
 
 Once spawning the crate, to slingload the F6 menu needs to be used to select a cargo of the correct weight. If you've selected the right cargo RED smoke will appear and you can now sling load by hovering over the crate at a height of 15-30 feet or so.
 
@@ -199,12 +199,12 @@ After selecting the right crate:
 
 You can also list nearby crates that have yet to be unpacked using the F10 Crate Commands Menu and also unpack nearby crates using the same menu.
 
-*Crate damage in the script is currently not implemented so as long as the crate isn't destroyed, you should always be able to unpack*
+*Crate damage in the script is currently not implemented so as long as the crate isn't destroyed, you should always be able to unpack.*
 
 ##Crate Unpacking
-Once you have sling loaded and successfully dropped your crate you can land and list nearby crates that have yet to be unpacked using the F10 Crate Commands Menu as well as unpack nearby crates using the same menu. Crates cannot be unpacked near a logistics unit.
+Once you have sling loaded and successfully dropped your crate, you can land and list nearby crates that have yet to be unpacked using the F10 Crate Commands Menu, as well as unpack nearby crates using the same menu. Crates cannot be unpacked near a logistics unit.
 
-To build a HAWK AA system you will need to slingload all 3 parts, Launcher, Track Radar and Search radar and drop the crates within 100m of each other. If you try to build the system without all the parts a message will list which parts are missing.
+To build a HAWK AA system you will need to slingload all 3 parts - Launcher, Track Radar and Search Radar - and drop the crates within 100m of each other. If you try to build the system without all the parts, a message will list which parts are missing.
 
 Parts Missing:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-45-15-05_zpsv856jhw3.png "Hawk Parts missing")
@@ -217,6 +217,6 @@ You can also rearm a fully deployed HAWK system by dropping another Launcher cra
 Rearming:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-46-10-44_zpsqr8oducw.png "Hawk Rearmed")
 
-**Note: Once unpacked a crate will not disappear from the field or the F6 Menu but will disappear from the F10 Nearby Crates list. There is currently no way to remove crates due to a DCS Bug AFAIK. This can make picking the right crate tricky but by using the F10 List crates option, you can keep readjusting you position until you are close to the crate you want and then it's trial an error using the F6 menu  to pick the right crate for sling loading. **
+**Note: Once unpacked a crate will not disappear from the field or the F6 Menu, but will disappear from the F10 Nearby Crates list. There is currently no way to remove crates due to a DCS Bug AFAIK. This can make picking the right crate tricky, but by using the F10 List crates option, you can keep readjusting your position until you are close to the crate that you want and then it's trial and error, using the F6 menu to pick the right crate for sling loading. **
 
 
