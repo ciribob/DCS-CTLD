@@ -1,23 +1,13 @@
 --[[
     Combat Troop and Logistics Drop
 
-    Allows Huey, Mi-8 and C130 to transport troops internally and Helicopters to transport Logistic / Vehicle units to the field via slingloads
-    without requiring external mods via sling loads
+    Allows Huey, Mi-8 and C130 to transport troops internally and Helicopters to transport Logistic / Vehicle units to the field via sling-loads
+    without requiring external mods.
 
-    Once a crate is dropped in the field, it must be unpacked by landing next to it and using the radio menu to start the unpack
+    Supports some of the original CTTS functionality such as AI auto troop load and unload as well as group spawning and preloading of troops into units.
 
-    Some vehicles may require more than one crate in close proximity
+    See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Troop
-
-    Supports usual CTTS functions such as spawn group
-
-    Huey max carry weight = 4000lb / 1814.37 kg
-    Mi-8 Max carry weight = 6614lb / 3000 kg
-    C-130 Max Carry Weight - 26,634 lb
-         - Two HMMWV (ATGM + MG ) and 10 troops
-        - It can actually hold  92 ground troops, 64 fully equipped paratroopers, or 74 litter patients
-            - Source http://fas.org/man/dod-101/sys/ac/c-130.htm
 
  ]]
 
@@ -38,7 +28,7 @@ ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop poi
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
 
-ctld.vehiclesForTransport = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 or hercules
+ctld.vehiclesForTransport = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 
