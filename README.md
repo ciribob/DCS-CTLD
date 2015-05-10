@@ -37,7 +37,7 @@ An error will be shown if MIST isn't loaded first.
 
 An example is shown below:
 
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-14-00_zpsmoirc3nz.png "Script Setup")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-14-00_zpsmoirc3nz.png~original "Script Setup")
 
 ###Other Script Functions
 You can also preload troops into AI transports once the CTLD script has been loaded, instead of having the AI enter a pickup zone, using the code below where the parameters are:
@@ -91,7 +91,7 @@ ctld.pickupZones = {
 AI transport units will automatically load troops and vehicles when entering a pickup zone as long as they stay in the zone for a few seconds. They do not need to stop to load troops but Aircraft will need to be on the ground in order to load troops.
 
 Example:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-22-48-57_zpsc5u7bymy.png "Pickup zone")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-22-48-57_zpsc5u7bymy.png~original "Pickup zone")
 
 Dropoff zones are used by AI units to automatically unload any loaded troops or vehicles. This will occurr as long as the AI unit has some units onboard and stays in the radius of the zone for a few seconds and the zone is named in the ```ctld.dropoffZones``` list. Again units do not need to stop but aircraft need to be on the ground in order to unload the troops.
 
@@ -110,7 +110,7 @@ ctld.dropOffZones = {
 }
 ```
 
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-23-15-72_zpsrmfzbdtr.png "Dropoff Zone")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-23-15-72_zpsrmfzbdtr.png~original "Dropoff Zone")
 
 Smoke can be enabled or disabled individually for pickup or dropoff zones by editing the second column in the list.
 
@@ -145,13 +145,13 @@ ctld.transportPilotNames = {
 ```
 
 Example for C-130:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-26-26-40_zpswy4s4p7p.png "C-130FR")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-26-26-40_zpswy4s4p7p.png~original "C-130FR")
 
 Example for Huey:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-26-30-78_zpsm8bxsofc.png "Huey")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-26-30-78_zpsm8bxsofc.png~original "Huey")
 
 Example for AI APC:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-50-65_zpsdiztodm5.png "AI APC")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-50-65_zpsdiztodm5.png~original "AI APC")
 
 
 ###Logistic Setup
@@ -175,7 +175,7 @@ ctld.logisticUnits = {
 
 Example:
 
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2016-01-53-20_zps1ccbwnop.png "Logistic Unit")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2016-01-53-20_zps1ccbwnop.png~original "Logistic Unit")
 
 #In Game
 ##Troop Loading and Unloading
@@ -195,11 +195,11 @@ Once spawning the crate, to slingload the F6 menu needs to be used to select a c
 * Huey rough max sling weight = 4000 lb / 1814.37 kg
 * Mi-8 rough max sling weight = 6614 lb / 3000 kg
 
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-09-13-61_zpsksnkende.png "Spawned Cargo")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-09-13-61_zpsksnkende.png~original "Spawned Cargo")
 
 After selecting the right crate:
 
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-09-23-08_zpslbed4kpt.png "Spawned Cargo")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-09-23-08_zpslbed4kpt.png~original "Spawned Cargo")
 
 You can also list nearby crates that have yet to be unpacked using the F10 Crate Commands Menu and also unpack nearby crates using the same menu.
 
@@ -211,15 +211,15 @@ Once you have sling loaded and successfully dropped your crate, you can land and
 To build a HAWK AA system you will need to slingload all 3 parts - Launcher, Track Radar and Search Radar - and drop the crates within 100m of each other. If you try to build the system without all the parts, a message will list which parts are missing.
 
 Parts Missing:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-45-15-05_zpsv856jhw3.png "Hawk Parts missing")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-45-15-05_zpsv856jhw3.png~original "Hawk Parts missing")
 
 Example of Deployed HAWK System:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-46-10-44_zpsqr8oducw.png "Hawk Deployed")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-46-10-44_zpsqr8oducw.png~original "Hawk Deployed")
 
 You can also rearm a fully deployed HAWK system by dropping another Launcher crate next to the completed system and unpacking it.
 
 Rearming:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-46-10-44_zpsqr8oducw.png "Hawk Rearmed")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-46-10-44_zpsqr8oducw.png~original "Hawk Rearmed")
 
 **Note: Once unpacked a crate will not disappear from the field or the F6 Menu, but will disappear from the F10 Nearby Crates list. There is currently no way to remove crates due to a DCS Bug AFAIK. This can make picking the right crate tricky, but by using the F10 List crates option, you can keep readjusting your position until you are close to the crate that you want and then it's trial and error, using the F6 menu to pick the right crate for sling loading. **
 
