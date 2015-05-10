@@ -188,7 +188,7 @@ The C130 gets an extra radio option for loading and deploying vehicles. By defau
 
 ##Cargo Spawning and Sling Loading
 
-Cargo can be spawned by transport helicopters if they are close enough to a friendly logistics unit using the F10 menu. Everything except the HAWK AA Missile system requires only one crate to build. Crates are always spawned off the nose of the unit that requested them. Sling cargo weight differs drastically depending on what you are sling loading. The Huey will need to have 20% fuel and no armaments in able to life a HMMWV TOW crate! The Mi-8 has a higher max lifting weight than a Huey.
+Cargo can be spawned by transport helicopters if they are close enough to a friendly logistics unit using the F10 menu. Everything except the HAWK AA Missile system requires only one crate to build. Crates are always spawned off the nose of the unit that requested them. Sling cargo weight differs drastically depending on what you are sling loading. The Huey will need to have 20% fuel and no armaments in order to be able to lift a HMMWV TOW crate! The Mi-8 has a higher max lifting weight than a Huey.
 
 Once spawning the crate, to slingload the F6 menu needs to be used to select a cargo of the correct weight. If you've selected the right cargo RED smoke will appear and you can now sling load by hovering over the crate at a height of 15-30 feet or so.
 
