@@ -214,7 +214,7 @@ Parts Missing:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-45-15-05_zpsv856jhw3.png~original "Hawk Parts missing")
 
 Example of Deployed HAWK System:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-46-10-44_zpsqr8oducw.png~original "Hawk Deployed")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-45-49-86_zpssmg1tvki.png~original "Hawk Deployed")
 
 You can also rearm a fully deployed HAWK system by dropping another Launcher crate next to the completed system and unpacking it.
 
