@@ -1,7 +1,7 @@
 # DCS-CTLD
 Complete Troops and Logistics Deployment for DCS World
 
-This script is a rewrite of some of the functionality of the original Complete Combat Troop Transport Script (CTTS) by Geloxo (http://forums.eagle.ru/showthread.php?t=108523).
+This script is a rewrite of some of the functionality of the original Complete Combat Troop Transport Script (CTTS) by Geloxo (http://forums.eagle.ru/showthread.php?t=108523), as well as adding new features.
 
 The script supports:
 
@@ -21,7 +21,7 @@ The script supports:
 
 A complete test mission is included.
 
-##Setup in Missing Editor
+##Setup in Mission Editor
 
 ###Script Setup
 **This script requires MIST version 3.6 or above: https://github.com/mrSkortch/MissionScriptingTools**
