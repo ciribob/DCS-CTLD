@@ -299,10 +299,13 @@ function ctld.spawnGroupAtTrigger(_groupSide, _number, _triggerName, _searchRadi
         return
     end
 
+    local _country
     if _groupSide == "red" then
         _groupSide = 1
+        _country = 0
     else
         _groupSide = 2
+        _country = 2
     end
 
     if _number < 1 then
@@ -319,7 +322,7 @@ function ctld.spawnGroupAtTrigger(_groupSide, _number, _triggerName, _searchRadi
 
     local _types = ctld.generateTroopTypes(_groupSide,_number)
 
-    local _droppedTroops = ctld.spawnDroppedGroup(_groupSide,_pos3, _types, false,_searchRadius);
+    local _droppedTroops = ctld.spawnDroppedGroup(_country,_groupSide,_pos3, _types, false,_searchRadius);
 
     if _groupSide == 1 then
 
@@ -341,9 +344,9 @@ function ctld.preLoadTransport(_unitName, _number,_troops)
     if _unit ~= nil then
 
         -- will replace any units currently on board
---        if not ctld.troopsOnboard(_unit,_troops)  then
-            ctld.loadTroops(_unit,_troops,_number)
---        end
+        --        if not ctld.troopsOnboard(_unit,_troops)  then
+        ctld.loadTroops(_unit,_troops,_number)
+        --        end
     end
 
 end
@@ -367,7 +370,7 @@ function ctld.eventHandler:onEvent(_event)
         -- env.info("Event unit - Pilot Ejected or Unit Dead")
         ctld.inTransitTroops[_event.initiator:getName()] = nil
 
-       -- env.info(_event.initiator:getName())
+        -- env.info(_event.initiator:getName())
     end
 
 end
@@ -388,7 +391,7 @@ function ctld.getTransportUnit(_unitName)
     return nil
 end
 
-function ctld.spawnCrateStatic(_side,_unitId,_point,_name,_weight)
+function ctld.spawnCrateStatic(_country,_unitId,_point,_name,_weight)
 
     local _crate = {
         ["category"] = "Cargo",
@@ -409,10 +412,10 @@ function ctld.spawnCrateStatic(_side,_unitId,_point,_name,_weight)
 
     local _spawnedCrate
 
-    if _side == 1 then
-        _spawnedCrate = coalition.addStaticObject(_side, _crate)
+    if _country == 1 then
+        _spawnedCrate = coalition.addStaticObject(_country, _crate)
     else
-        _spawnedCrate = coalition.addStaticObject(_side, _crate)
+        _spawnedCrate = coalition.addStaticObject(_country, _crate)
     end
 
     return _spawnedCrate
@@ -454,13 +457,13 @@ function ctld.spawnCrate(_args)
 
         local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-        local _spawnedCrate =  ctld.spawnCrateStatic(_side,_unitId,{x=_point.x+_xOffset,z=_point.z + _yOffset},_name,_crateType.weight)
+        local _spawnedCrate =  ctld.spawnCrateStatic(_heli:getCountry(),_unitId,{x=_point.x+_xOffset,z=_point.z + _yOffset},_name,_crateType.weight)
 
         if _side == 1 then
-         --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
+            --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
             ctld.spawnedCratesRED[_name] = _crateType
         else
-         --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
+            --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
             ctld.spawnedCratesBLUE[_name] = _crateType
         end
 
@@ -520,7 +523,7 @@ function ctld.deployTroops(_heli,_troops)
 
         if _onboard.troops ~= nil and #_onboard.troops > 0 then
 
-            local _droppedTroops = ctld.spawnDroppedGroup(_heli:getCoalition(),_heli:getPoint(), _onboard.troops, false)
+            local _droppedTroops = ctld.spawnDroppedGroup(_heli:getCountry(),_heli:getCoalition(),_heli:getPoint(), _onboard.troops, false)
 
             if _heli:getCoalition() == 1 then
 
@@ -537,7 +540,7 @@ function ctld.deployTroops(_heli,_troops)
     else
         if _onboard.vehicles ~= nil and #_onboard.vehicles > 0 then
 
-            local _droppedVehicles = ctld.spawnDroppedGroup(_heli:getCoalition(),_heli:getPoint(), _onboard.vehicles, true)
+            local _droppedVehicles = ctld.spawnDroppedGroup(_heli:getCountry(),_heli:getCoalition(),_heli:getPoint(), _onboard.vehicles, true)
 
             if _heli:getCoalition() == 1 then
 
@@ -587,7 +590,7 @@ function ctld.generateTroopTypes(_side,_count)
         _troops[_i] = _unitType
     end
 
-   return _troops
+    return _troops
 end
 
 -- load troops onto vehicle
@@ -609,7 +612,7 @@ function ctld.loadTroops(_heli,_troops, _number)
 
     if _troops then
 
-       _onboard.troops = ctld.generateTroopTypes(_heli:getCoalition(),_number)
+        _onboard.troops = ctld.generateTroopTypes(_heli:getCoalition(),_number)
 
         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " loaded ".._number.." troops into " .. _heli:getTypeName(), 10)
 
@@ -658,7 +661,7 @@ function ctld.loadUnloadTroops(_args)
 
     elseif _inZone == true and not ctld.troopsOnboard(_heli,_troops) then
 
-      ctld.loadTroops(_heli,_troops)
+        ctld.loadTroops(_heli,_troops)
 
     else
         -- search for nearest troops to pickup
@@ -930,12 +933,12 @@ function ctld.unpackCrates(_args)
 
         if _crate ~= nil and _crate.dist < 200 then
 
-           if ctld.inLogisticsZone(_heli) == true then
+            if ctld.inLogisticsZone(_heli) == true then
 
-              ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
 
-              return
-          end
+                return
+            end
 
             -- is multi crate?
             if string.match(_crate.details.desc, "HAWK") then
@@ -966,8 +969,8 @@ function ctld.unpackCrates(_args)
 
                             for x = 1, #_units do
                                 if _units[x]:getLife() > 0 then
-                                   table.insert(_types,_units[x]:getTypeName())
-                                   table.insert(_points,_units[x]:getPoint())
+                                    table.insert(_types,_units[x]:getTypeName())
+                                    table.insert(_points,_units[x]:getPoint())
                                 end
                             end
                         end
@@ -1069,12 +1072,12 @@ function ctld.unpackCrates(_args)
                 local _cratePoint = _crate.crateUnit:getPoint()
                 local _crateName = _crate.crateUnit:getName();
 
-             -- ctld.spawnCrateStatic( _heli:getCoalition(),mist.getNextUnitId(),{x=100,z=100},_crateName,100)
+                -- ctld.spawnCrateStatic( _heli:getCoalition(),mist.getNextUnitId(),{x=100,z=100},_crateName,100)
 
                 --remove crate
                 _crate.crateUnit:destroy()
 
-                 ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
+                ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
 
                 if _heli:getCoalition() == 1 then
 
@@ -1126,7 +1129,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
         end
     end
 
-    local _spawnedGroup = coalition.addGroup(_side, Group.Category.GROUND, _group)
+    local _spawnedGroup = coalition.addGroup(_heli:getCountry(), Group.Category.GROUND, _group)
 
     --activate by moving and so we can set ROE and Alarm state
 
@@ -1141,7 +1144,7 @@ end
 
 
 -- spawn normal group
-function ctld.spawnDroppedGroup(_side,_point, _types, _spawnBehind,_maxSearch)
+function ctld.spawnDroppedGroup(_country,_side,_point, _types, _spawnBehind,_maxSearch)
 
     local _id = mist.getNextGroupId()
 
@@ -1189,7 +1192,7 @@ function ctld.spawnDroppedGroup(_side,_point, _types, _spawnBehind,_maxSearch)
         end
     end
 
-    local _spawnedGroup = coalition.addGroup(_side, Group.Category.GROUND, _group)
+    local _spawnedGroup = coalition.addGroup(_country, Group.Category.GROUND, _group)
 
 
     -- find nearest enemy and head there
@@ -1511,12 +1514,12 @@ function ctld.dropSmoke(_args)
 
             _colour = "ORANGE"
         end
-		
-		local _point = _heli:getPoint()
-		
-		local _pos2 = { x = _point.x, y = _point.z }
-		local _alt = land.getHeight(_pos2)
-		local _pos3 = { x = _point.x, y = _alt, z = _point.z }
+
+        local _point = _heli:getPoint()
+
+        local _pos2 = { x = _point.x, y = _point.z }
+        local _alt = land.getHeight(_pos2)
+        local _pos3 = { x = _point.x, y = _alt, z = _point.z }
 
         trigger.action.smoke(_pos3, _args[2])
 
@@ -1632,18 +1635,18 @@ function addTransportMenuItem()
                     if ctld.enableSmokeDrop then
                         missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
                         missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
-                    --    missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
+                        --    missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
                         missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
-		            end
-              else
+                    end
+                else
                     if ctld.enableSmokeDrop then
-                        missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers")                         
+                        missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers")
                         missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
                         missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
                         missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", { "Smoke Markers"}, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
                         missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
                     end
-              end
+                end
 
                 ctld.addedTo[_groupId] = true
             end
