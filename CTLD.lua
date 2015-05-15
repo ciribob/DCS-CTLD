@@ -33,6 +33,30 @@ ctld.vehiclesForTransport = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- veh
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 
 
+-- ***************** JTAC CONFIGURATION *****************
+
+ctld.JTAC_LIMIT_RED = 5 -- max number of JTAC Crates for the RED Side
+
+ctld.JTAC_LIMIT_BLUE = 5 -- max number of JTAC Crates for the BLUE Side
+
+ctld.JTAC_dropEnabled = true -- allow JTAC SPAWN
+
+ctld.JTAC_maxDistance = 2500 -- How far a JTAC can "see" in meters (with Line of Sight)
+
+ctld.JTAC_smokeOn_RED = true -- enables marking of target with smoke
+
+ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke
+
+ctld.JTAC_smokeColour_RED = 1 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+
+ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+
+ctld.JTAC_jtacStatusF10 = true -- enables F10 JTAC Status menu
+
+ctld.JTAC_location = true -- shows location in JTAC message
+
+ctld.JTAC_lock =  "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
+
 -- ***************** Pickup and dropoff zones *****************
 
 -- Available colors (anything else like "none" disables smoke): "green", "red", "white", "orange", "blue", "none",
@@ -212,25 +236,47 @@ ctld.completeHawkSystems = {} -- stores complete spawned groups from multiple cr
 
 -- Weights must be unique as we use the weight to change the cargo to the correct unit
 -- when we unpack
+--
 ctld.spawnableCrates = {
-    ["M1045 HMMWV TOW"] = { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" },
-    ["M1043 HMMWV Armament"] = { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament" },
-    ["2B11 mortar"] = { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
-    ["Stinger manpad"] = { weight = 210, desc = "MANPAD", unit = "Stinger manpad" },
-    ["Hawk ln"] = { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
-    ["Hawk sr"] = { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
-    ["Hawk tr"] = { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
+
+    -- name of the sub menu for spawning crates
+    ["Ground Forces"] = {
+
+        --crates you can spawn
+        -- weight in KG
+        -- Desc is the description on the F10 MENU
+        -- unit is the model name of the unit to spawn
+        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" },
+        { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament" },
+        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer" }, -- used as jtac, not on the crate list if JTAC is disabled
+        { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
+    },
+
+    ["AA Crates"] = {
+
+        { weight = 210, desc = "MANPAD", unit = "Stinger manpad" },
+        { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
+        { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
+        { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
+    },
+
+
 }
 
 
 --used to lookup what the crate will contain
 ctld.crateLookupTable = {}
 
-for _name, _crate in pairs(ctld.spawnableCrates) do
-    -- convert number to string otherwise we'll have a pointless giant
-    -- table. String means 'hashmap' so it will only contain the right number of elements
-    ctld.crateLookupTable[tostring(_crate.weight)] = _name
+for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
+
+    for _, _crate in pairs(_crates) do
+        -- convert number to string otherwise we'll have a pointless giant
+        -- table. String means 'hashmap' so it will only contain the right number of elements
+        ctld.crateLookupTable[tostring(_crate.weight)] = _crate
+    end
 end
+
+
 
 
 --sort out pickup zones
@@ -425,7 +471,7 @@ function ctld.spawnCrate(_args)
 
     -- use the cargo weight to guess the type of unit as no way to add description :(
 
-    local _crateType = ctld.spawnableCrates[_args[2]]
+    local _crateType = ctld.crateLookupTable[tostring(_args[2])]
     local _heli = ctld.getTransportUnit(_args[1])
 
     if _crateType ~= nil and _heli ~= nil and _heli:inAir() == false then
@@ -437,6 +483,31 @@ function ctld.spawnCrate(_args)
             return
         end
 
+        if _crateType.unit == "Hummer" then
+
+            local _limitHit = false
+
+            if _heli:getCoalition() == 1 then
+
+                if ctld.JTAC_LIMIT_RED == 0 then
+                    _limitHit = true
+                else
+                    ctld.JTAC_LIMIT_RED = ctld.JTAC_LIMIT_RED - 1
+                end
+            else
+                if ctld.JTAC_LIMIT_BLUE == 0 then
+                    _limitHit = true
+                else
+                    ctld.JTAC_LIMIT_BLUE = ctld.JTAC_LIMIT_BLUE - 1
+                end
+            end
+
+            if _limitHit then
+                ctld.displayMessageToGroup(_heli, "No more JTAC Crates Left!")
+                return
+            end
+
+        end
 
         local _position = _heli:getPosition()
 
@@ -920,6 +991,7 @@ function ctld.findNearestHawk(_heli)
 end
 
 
+
 function ctld.unpackCrates(_args)
 
     -- trigger.action.outText("Unpack Crates".._args[1],10)
@@ -941,131 +1013,10 @@ function ctld.unpackCrates(_args)
             end
 
             -- is multi crate?
-            if string.match(_crate.details.desc, "HAWK") then
+            if ctld.isMultiCrate(_crate.details) then
                 -- multicrate
 
-                -- are we adding to existing hawk system?
-                if _crate.details.unit == "Hawk ln" then
-
-                    -- find nearest COMPLETE hawk system
-                    local _nearestHawk =  ctld.findNearestHawk(_heli)
-
-                    if _nearestHawk ~=nil and _nearestHawk.dist < 300 then
-
-                        if _heli:getCoalition() == 1 then
-
-                            ctld.spawnedCratesRED[_crate.crateUnit:getName()] = nil
-                        else
-
-                            ctld.spawnedCratesBLUE[_crate.crateUnit:getName()] = nil
-                        end
-
-                        local _types = {}
-                        local _points = {}
-
-                        local _units = _nearestHawk.group:getUnits()
-
-                        if _units ~= nil and #_units > 0 then
-
-                            for x = 1, #_units do
-                                if _units[x]:getLife() > 0 then
-                                    table.insert(_types,_units[x]:getTypeName())
-                                    table.insert(_points,_units[x]:getPoint())
-                                end
-                            end
-                        end
-
-                        if #_types == 3 and #_points == 3 then
-
-                            -- rearm hawk
-                            -- destroy old group
-                            ctld.completeHawkSystems[_nearestHawk.group:getName()] = nil
-
-                            _nearestHawk.group:destroy()
-
-                            local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
-
-                            ctld.completeHawkSystems[_spawnedGroup:getName()] = _spawnedGroup:getName()
-
-                            trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully rearmed a full HAWK AA System in the field", 10)
-
-                            return -- all done so quit
-                        end
-
-
-                    end
-
-                end
-
-
-                -- are there all the pieces close enough together
-                local _hawkParts = { ["Hawk ln"] = false, ["Hawk tr"] = false, ["Hawk sr"] = false }
-
-                for _, _nearbyCrate in pairs(_crates) do
-
-                    if _nearbyCrate.dist < 300 then
-
-                        if _nearbyCrate.details.unit == "Hawk ln" or _nearbyCrate.details.unit == "Hawk sr" or _nearbyCrate.details.unit == "Hawk tr" then
-
-                            _hawkParts[_nearbyCrate.details.unit] = _nearbyCrate
-
-                        else
-                            -- not part of hawk
-                        end
-                    end
-                end
-
-                local _count = 0
-                local _txt = ""
-
-                local _posArray = {}
-                local _typeArray = {}
-                for _name, _hawkPart in pairs(_hawkParts) do
-
-                    if _hawkPart == false then
-
-                        if _name == "Hawk ln" then
-                            _txt = "Missing HAWK Launcher\n"
-                        elseif _name == "Hawk sr" then
-                            _txt = _txt .. "Missing HAWK Search Radar\n"
-                        else
-                            _txt = _txt .. "Missing HAWK Track Radar\n"
-                        end
-                    else
-                        table.insert(_posArray, _hawkPart.crateUnit:getPoint())
-                        table.insert(_typeArray, _name)
-                    end
-                end
-
-                if _txt ~= "" then
-
-                    ctld.displayMessageToGroup(_heli, "Cannot build Hawk\n" .. _txt .. "\n\nOr the crates are not close enough together", 20)
-
-                    return
-                else
-
-                    -- destroy crates
-                    for _name, _hawkPart in pairs(_hawkParts) do
-
-                        if _heli:getCoalition() == 1 then
-
-                            ctld.spawnedCratesRED[_hawkPart.crateUnit:getName()] = nil
-                        else
-
-                            ctld.spawnedCratesBLUE[_hawkPart.crateUnit:getName()] = nil
-                        end
-
-                        --destroy
-                        _hawkPart.crateUnit:destroy()
-                    end
-
-                    -- HAWK READY!
-                    local _spawnedGroup = ctld.spawnCrateGroup(_heli, _posArray, _typeArray)
-
-                    ctld.completeHawkSystems[_spawnedGroup:getName()] = _spawnedGroup:getName()
-
-                    trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full HAWK AA System to the field", 10)
-                end
+               ctld.unpackMultiCrate(_heli,_crate,_crates)
 
             else
                 -- single crate
@@ -1077,17 +1028,24 @@ function ctld.unpackCrates(_args)
                 --remove crate
                 _crate.crateUnit:destroy()
 
-                ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
+               local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
 
                 if _heli:getCoalition() == 1 then
-
                     ctld.spawnedCratesRED[_crateName] = nil
                 else
-
                     ctld.spawnedCratesBLUE[_crateName] = nil
                 end
 
                 trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed " .. _crate.details.desc .. " to the field", 10)
+
+                if _crate.details.unit == "Hummer" and ctld.JTAC_dropEnabled then
+
+                    local _code = table.remove(ctld.jtacGeneratedLaserCodes,1)
+                     --put to the end
+                    table.insert(ctld.jtacGeneratedLaserCodes,_code)
+
+                    ctld.JTACAutoLase(_spawnedGroups:getName(),_code) --(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
+                end
             end
 
         else
@@ -1097,6 +1055,138 @@ function ctld.unpackCrates(_args)
     end
 end
 
+
+function ctld.isMultiCrate(_crateDetails)
+
+    if string.match(_crateDetails.desc, "HAWK") then
+        return true
+    else
+        return false
+    end
+
+end
+
+function ctld.unpackMultiCrate(_heli,_nearestCrate,_nearbyCrates)
+
+    -- are we adding to existing hawk system?
+    if _nearestCrate.details.unit == "Hawk ln" then
+
+        -- find nearest COMPLETE hawk system
+        local _nearestHawk =  ctld.findNearestHawk(_heli)
+
+        if _nearestHawk ~=nil and _nearestHawk.dist < 300 then
+
+            if _heli:getCoalition() == 1 then
+                ctld.spawnedCratesRED[_nearestCrate.crateUnit:getName()] = nil
+            else
+                ctld.spawnedCratesBLUE[_nearestCrate.crateUnit:getName()] = nil
+            end
+
+            local _types = {}
+            local _points = {}
+
+            local _units = _nearestHawk.group:getUnits()
+
+            if _units ~= nil and #_units > 0 then
+
+                for x = 1, #_units do
+                    if _units[x]:getLife() > 0 then
+                        table.insert(_types,_units[x]:getTypeName())
+                        table.insert(_points,_units[x]:getPoint())
+                    end
+                end
+            end
+
+            if #_types == 3 and #_points == 3 then
+
+                -- rearm hawk
+                -- destroy old group
+                ctld.completeHawkSystems[_nearestHawk.group:getName()] = nil
+
+                _nearestHawk.group:destroy()
+
+                local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
+
+                ctld.completeHawkSystems[_spawnedGroup:getName()] = _spawnedGroup:getName()
+
+                trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully rearmed a full HAWK AA System in the field", 10)
+
+                return -- all done so quit
+            end
+
+
+        end
+
+    end
+
+
+    -- are there all the pieces close enough together
+    local _hawkParts = { ["Hawk ln"] = false, ["Hawk tr"] = false, ["Hawk sr"] = false }
+
+    for _, _nearbyCrate in pairs(_nearbyCrates) do
+
+        if _nearbyCrate.dist < 300 then
+
+            if _nearbyCrate.details.unit == "Hawk ln" or _nearbyCrate.details.unit == "Hawk sr" or _nearbyCrate.details.unit == "Hawk tr" then
+
+                _hawkParts[_nearbyCrate.details.unit] = _nearbyCrate
+
+            else
+                -- not part of hawk
+            end
+        end
+    end
+
+    local _count = 0
+    local _txt = ""
+
+    local _posArray = {}
+    local _typeArray = {}
+    for _name, _hawkPart in pairs(_hawkParts) do
+
+        if _hawkPart == false then
+
+            if _name == "Hawk ln" then
+                _txt = "Missing HAWK Launcher\n"
+            elseif _name == "Hawk sr" then
+                _txt = _txt .. "Missing HAWK Search Radar\n"
+            else
+                _txt = _txt .. "Missing HAWK Track Radar\n"
+            end
+        else
+            table.insert(_posArray, _hawkPart.crateUnit:getPoint())
+            table.insert(_typeArray, _name)
+        end
+    end
+
+    if _txt ~= "" then
+
+        ctld.displayMessageToGroup(_heli, "Cannot build Hawk\n" .. _txt .. "\n\nOr the crates are not close enough together", 20)
+
+        return
+    else
+
+        -- destroy crates
+        for _name, _hawkPart in pairs(_hawkParts) do
+
+            if _heli:getCoalition() == 1 then
+                ctld.spawnedCratesRED[_hawkPart.crateUnit:getName()] = nil
+            else
+                ctld.spawnedCratesBLUE[_hawkPart.crateUnit:getName()] = nil
+            end
+
+            --destroy
+            _hawkPart.crateUnit:destroy()
+        end
+
+        -- HAWK READY!
+        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _posArray, _typeArray)
+
+        ctld.completeHawkSystems[_spawnedGroup:getName()] = _spawnedGroup:getName()
+
+        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full HAWK AA System to the field", 10)
+    end
+end
 
 
 function ctld.spawnCrateGroup(_heli, _positions, _types)
@@ -1585,10 +1675,10 @@ end
 
 
 -- Adds menuitem to all heli units that are active
-function addTransportMenuItem()
+function ctld.addF10MenuOptions()
     -- Loop through all Heli units
 
-    timer.scheduleFunction(addTransportMenuItem, nil, timer.getTime() + 5)
+    timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
 
     for _, _unitName in pairs(ctld.transportPilotNames) do
 
@@ -1613,30 +1703,28 @@ function addTransportMenuItem()
 
                     if ctld.unitCanCarryVehicles(_unit) == false then
 
-                        missionCommands.addSubMenuForGroup(_groupId, "Ground Forces")
-                        missionCommands.addCommandForGroup(_groupId, "HMMWV - TOW", { "Ground Forces" }, ctld.spawnCrate, { _unitName, "M1045 HMMWV TOW" })
-                        missionCommands.addCommandForGroup(_groupId, "HMMWV - MG", { "Ground Forces" }, ctld.spawnCrate, { _unitName, "M1043 HMMWV Armament" })
+                        -- add menu for spawning crates
+                        for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
 
-                        missionCommands.addCommandForGroup(_groupId, "2B11 Mortar", { "Ground Forces" }, ctld.spawnCrate, { _unitName, "2B11 mortar" })
+                            missionCommands.addSubMenuForGroup(_groupId, _subMenuName)
+                            for _, _crate in pairs(_crates) do
 
-                        missionCommands.addSubMenuForGroup(_groupId, "AA Crates")
-                        missionCommands.addCommandForGroup(_groupId, "MANPAD", { "AA Crates" }, ctld.spawnCrate, { _unitName, "Stinger manpad" })
-
-                        missionCommands.addCommandForGroup(_groupId, "HAWK Launcher", { "AA Crates" }, ctld.spawnCrate, { _unitName, "Hawk ln" })
-                        missionCommands.addCommandForGroup(_groupId, "HAWK Search Radar", { "AA Crates" }, ctld.spawnCrate, { _unitName, "Hawk sr" })
-                        missionCommands.addCommandForGroup(_groupId, "HAWK Track Radar", { "AA Crates" }, ctld.spawnCrate, { _unitName, "Hawk tr" })
-
+                                if _crate.unit ~= "Hummer" or ( _crate.unit == "Hummer" and ctld.JTAC_dropEnabled ) then
+                                    missionCommands.addCommandForGroup(_groupId, _crate.desc, {_subMenuName }, ctld.spawnCrate, { _unitName,_crate.weight })
+                                end
+                            end
+                        end
                     end
 
-                    missionCommands.addSubMenuForGroup(_groupId, "Crate Commands")
-                    missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", { "Crate Commands" }, ctld.listNearbyCrates, { _unitName })
-                    missionCommands.addCommandForGroup(_groupId, "Unpack Crate", { "Crate Commands" }, ctld.unpackCrates, { _unitName })
+                    missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands")
+                    missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", { "CTLD Commands" }, ctld.listNearbyCrates, { _unitName })
+                    missionCommands.addCommandForGroup(_groupId, "Unpack Crate", { "CTLD Commands" }, ctld.unpackCrates, { _unitName })
 
                     if ctld.enableSmokeDrop then
-                        missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
+                        missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", {  "CTLD Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
+                        missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", {  "CTLD Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
                         --    missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
+                        missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", {  "CTLD Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
                     end
                 else
                     if ctld.enableSmokeDrop then
@@ -1655,7 +1743,39 @@ function addTransportMenuItem()
         end
     end
 
-    return
+    if ctld.JTAC_dropEnabled then
+        -- get all BLUE players
+        ctld.addJTACRadioCommand(coalition.side.BLUE)
+
+        -- get all RED players
+        ctld.addJTACRadioCommand(coalition.side.RED)
+    end
+
+
+end
+
+function ctld.addJTACRadioCommand(_side)
+
+    local _players =  coalition.getPlayers(_side)
+
+    if _players ~= nil then
+
+        for _,_playerUnit in pairs(_players) do
+
+            local _groupId = _playerUnit:getGroup():getID()
+
+            --   env.info("adding command for "..index)
+            if ctld.jtacRadioAdded[_groupId] == nil then
+                -- env.info("about command for "..index)
+                missionCommands.addCommandForGroup(_groupId, "JTAC Status", nil, ctld.getJTACStatus, _playerUnit:getCoalition())
+                ctld.jtacRadioAdded[_groupId] = true
+                -- env.info("Added command for " .. index)
+            end
+
+        end
+
+    end
+
 end
 
 --get distance in meters assuming a Flat world
@@ -1673,18 +1793,608 @@ function ctld.getDistance(_point1, _point2)
 end
 
 
+------------ JTAC -----------
+
+
+ctld.jtacLaserPoints = {}
+ctld.jtacIRPoints = {}
+ctld.jtacSmokeMarks = {}
+ctld.jtacUnits = {} -- list of JTAC units for f10 command
+ctld.jtacCurrentTargets = {}
+ctld.jtacRadioAdded = {} --keeps track of who's had the radio command added
+ctld.jtacGeneratedLaserCodes = {} -- keeps track of generated codes, cycles when they run out
+
+
+function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
+
+
+    if _lock == nil then
+
+        _lock = ctld.JTAC_lock
+    end
+
+
+    ctld.jtacLaserPointCodes[_jtacGroupName] = _laserCode
+
+    local _jtacGroup = ctld.getGroup(_jtacGroupName)
+    local _jtacUnit
+
+    if _jtacGroup == nil or #_jtacGroup == 0 then
+
+        if ctld.jtacUnits[_jtacGroupName] ~= nil then
+            ctld.notifyCoalition("JTAC Group " .. _jtacGroupName .. " KIA!", 10,ctld.jtacUnits[_jtacGroupName].side)
+        end
+
+        --remove from list
+        ctld.jtacUnits[_jtacGroupName] = nil
+
+        ctld.cleanupJTAC(_jtacGroupName)
+
+        return
+    else
+
+        _jtacUnit = _jtacGroup[1]
+        --add to list
+        ctld.jtacUnits[_jtacGroupName] = {name = _jtacUnit:getName(), side = _jtacUnit:getCoalition()}
+
+        -- work out smoke colour
+        if _colour == nil then
+
+           if  _jtacUnit:getCoalition() == 1 then
+               _colour = ctld.JTAC_smokeColour_RED
+           else
+               _colour = ctld.JTAC_smokeColour_BLUE
+           end
+        end
+
+
+        if _smoke == nil then
+
+            if  _jtacUnit:getCoalition() == 1 then
+                _smoke = ctld.JTAC_smokeOn_RED
+            else
+                _smoke = ctld.JTAC_smokeOn_BLUE
+            end
+
+        end
+
+    end
+
+
+    -- search for current unit
+
+    if _jtacUnit:isActive() == false then
+
+        ctld.cleanupJTAC(_jtacGroupName)
+
+        env.info(_jtacGroupName .. ' Not Active - Waiting 30 seconds')
+        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 30)
+
+        return
+    end
+
+    local _enemyUnit = ctld.getCurrentUnit(_jtacUnit, _jtacGroupName)
+
+    if _enemyUnit == nil and ctld.jtacCurrentTargets[_jtacGroupName] ~= nil then
+
+        local _tempUnitInfo = ctld.jtacCurrentTargets[_jtacGroupName]
+
+        --      env.info("TEMP UNIT INFO: " .. tempUnitInfo.name .. " " .. tempUnitInfo.unitType)
+
+        local _tempUnit = Unit.getByName(_tempUnitInfo.name)
+
+        if _tempUnit ~= nil and _tempUnit:getLife() > 0 and _tempUnit:isActive() == true then
+            ctld.notifyCoalition(_jtacGroupName .. " target " .. _tempUnitInfo.unitType .. " lost. Scanning for Targets. ", 10,_jtacUnit:getCoalition())
+        else
+            ctld.notifyCoalition(_jtacGroupName .. " target " .. _tempUnitInfo.unitType .. " KIA. Good Job! Scanning for Targets. ", 10,_jtacUnit:getCoalition())
+        end
+
+        --remove from smoke list
+        ctld.jtacSmokeMarks[_tempUnitInfo.name] = nil
+
+        -- remove from target list
+        ctld.jtacCurrentTargets[_jtacGroupName] = nil
+
+        --stop lasing
+        ctld.cancelLase(_jtacGroupName)
+
+    end
+
+
+    if _enemyUnit == nil then
+        _enemyUnit = ctld.findNearestVisibleEnemy(_jtacUnit, _lock)
+
+        if _enemyUnit ~= nil then
+
+            -- store current target for easy lookup
+            ctld.jtacCurrentTargets[_jtacGroupName] = { name = _enemyUnit:getName(), unitType = _enemyUnit:getTypeName(), unitId = _enemyUnit:getID() }
+
+            ctld.notifyCoalition(_jtacGroupName .. " lasing new target " .. _enemyUnit:getTypeName() .. '. CODE: ' .. _laserCode ..ctld.getPositionString(_enemyUnit) , 10,_jtacUnit:getCoalition())
+
+            -- create smoke
+            if _smoke == true then
+
+                --create first smoke
+                ctld.createSmokeMarker(_enemyUnit, _colour)
+            end
+        end
+    end
+
+    if _enemyUnit ~= nil then
+
+        ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
+
+        --   env.info('Timer timerSparkleLase '..jtacGroupName.." "..laserCode.." "..enemyUnit:getName())
+        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 1)
+
+
+        if _smoke == true then
+            local _nextSmokeTime = ctld.jtacSmokeMarks[_enemyUnit:getName()]
+
+            --recreate smoke marker after 5 mins
+            if _nextSmokeTime ~= nil and _nextSmokeTime < timer.getTime() then
+
+                ctld.createSmokeMarker(_enemyUnit, _colour)
+            end
+        end
+
+    else
+        -- env.info('LASE: No Enemies Nearby')
+
+        -- stop lazing the old spot
+        ctld.cancelLase(_jtacGroupName)
+        --  env.info('Timer Slow timerSparkleLase '..jtacGroupName.." "..laserCode.." "..enemyUnit:getName())
+
+        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 5)
+    end
+end
+
+
+-- used by the timer function
+function ctld.timerJTACAutoLase(_args)
+
+    ctld.JTACAutoLase(_args[1], _args[2], _args[3], _args[4], _args[5])
+end
+
+function ctld.cleanupJTAC(_jtacGroupName)
+    -- clear laser - just in case
+    ctld.cancelLase(_jtacGroupName)
+
+    -- Cleanup
+    ctld.jtacUnits[_jtacGroupName] = nil
+
+    ctld.jtacCurrentTargets[_jtacGroupName] = nil
+end
+
+
+function ctld.notifyCoalition(_message, _displayFor, _side)
+
+
+    trigger.action.outTextForCoalition(_side, _message, _displayFor)
+    trigger.action.outSoundForCoalition(_side, "radiobeep.ogg")
+end
+
+function ctld.createSmokeMarker(_enemyUnit, _colour)
+
+    --recreate in 5 mins
+    ctld.jtacSmokeMarks[_enemyUnit:getName()] = timer.getTime() + 300.0
+
+    -- move smoke 2 meters above target for ease
+    local _enemyPoint = _enemyUnit:getPoint()
+    trigger.action.smoke({ x = _enemyPoint.x, y = _enemyPoint.y + 2.0, z = _enemyPoint.z }, _colour)
+end
+
+function ctld.cancelLase(_jtacGroupName)
+
+    --local index = "JTAC_"..jtacUnit:getID()
+
+    local _tempLase = ctld.jtacLaserPoints[_jtacGroupName]
+
+    if _tempLase ~= nil then
+        Spot.destroy(_tempLase)
+        ctld.jtacLaserPoints[_jtacGroupName] = nil
+
+        --      env.info('Destroy laze  '..index)
+
+        _tempLase = nil
+    end
+
+    local _tempIR = ctld.jtacIRPoints[_jtacGroupName]
+
+    if _tempIR ~= nil then
+        Spot.destroy(_tempIR)
+        ctld.jtacIRPoints[_jtacGroupName] = nil
+
+        --  env.info('Destroy laze  '..index)
+
+        _tempIR = nil
+    end
+end
+
+function ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
+
+    --cancelLase(jtacGroupName)
+
+    local _spots = {}
+
+    local _enemyVector = _enemyUnit:getPoint()
+    local _enemyVectorUpdated = { x = _enemyVector.x, y = _enemyVector.y + 2.0, z = _enemyVector.z }
+
+    local _oldLase = ctld.jtacLaserPoints[_jtacGroupName]
+    local _oldIR = ctld.jtacIRPoints[_jtacGroupName]
+
+    if _oldLase == nil or _oldIR == nil then
+
+        -- create lase
+
+        local _status, _result = pcall(function()
+            _spots['irPoint'] = Spot.createInfraRed(_jtacUnit, { x = 0, y = 2.0, z = 0 }, _enemyVectorUpdated)
+            _spots['laserPoint'] = Spot.createLaser(_jtacUnit, { x = 0, y = 2.0, z = 0 }, _enemyVectorUpdated, _laserCode)
+            return _spots
+        end)
+
+        if not _status then
+            env.error('ERROR: ' .. _result, false)
+        else
+            if _result.irPoint then
+
+                --    env.info(jtacUnit:getName() .. ' placed IR Pointer on '..enemyUnit:getName())
+
+                ctld.jtacIRPoints[_jtacGroupName] = _result.irPoint --store so we can remove after
+
+            end
+            if _result.laserPoint then
+
+                --	env.info(jtacUnit:getName() .. ' is Lasing '..enemyUnit:getName()..'. CODE:'..laserCode)
+
+                ctld.jtacLaserPoints[_jtacGroupName] = _result.laserPoint
+            end
+        end
+
+    else
+
+        -- update lase
+
+        if _oldLase ~=nil then
+            _oldLase:setPoint(_enemyVectorUpdated)
+        end
+
+        if _oldIR ~= nil then
+            _oldIR:setPoint(_enemyVectorUpdated)
+        end
+
+    end
+
+end
+
+-- get currently selected unit and check they're still in range
+function ctld.getCurrentUnit(_jtacUnit, _jtacGroupName)
+
+
+    local _unit = nil
+
+    if ctld.jtacCurrentTargets[_jtacGroupName] ~= nil then
+        _unit = Unit.getByName(ctld.jtacCurrentTargets[_jtacGroupName].name)
+    end
+
+    local _tempPoint = nil
+    local _tempDist = nil
+    local _tempPosition = nil
+
+    local _jtacPosition = _jtacUnit:getPosition()
+    local _jtacPoint = _jtacUnit:getPoint()
+
+    if _unit ~= nil and _unit:getLife() > 0 and _unit:isActive() == true then
+
+        -- calc distance
+        _tempPoint = _unit:getPoint()
+        --   tempPosition = unit:getPosition()
+
+        _tempDist = ctld.getDistance(_unit:getPoint(), _jtacUnit:getPoint() )
+        if _tempDist < ctld.JTAC_maxDistance then
+            -- calc visible
+
+            -- check slightly above the target as rounding errors can cause issues, plus the unit has some height anyways
+            local _offsetEnemyPos = { x = _tempPoint.x, y = _tempPoint.y + 2.0, z = _tempPoint.z }
+            local _offsetJTACPos = { x = _jtacPoint.x, y = _jtacPoint.y + 2.0, z = _jtacPoint.z }
+
+            if land.isVisible(_offsetEnemyPos, _offsetJTACPos) then
+                return _unit
+            end
+        end
+    end
+    return nil
+end
+
+
+-- Find nearest enemy to JTAC that isn't blocked by terrain
+function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType)
+
+    local _x = 1
+    local _i = 1
+
+    local _units = nil
+    local _groupName = nil
+
+    local _nearestUnit = nil
+    local _nearestDistance = ctld.JTAC_maxDistance
+
+    local _enemyGroups
+
+    if _jtacUnit:getCoalition() == 1 then
+        _enemyGroups = coalition.getGroups(2, Group.Category.GROUND)
+    else
+        _enemyGroups = coalition.getGroups(1, Group.Category.GROUND)
+    end
+
+    local _jtacPoint = _jtacUnit:getPoint()
+    local _jtacPosition = _jtacUnit:getPosition()
+
+    local _tempPoint = nil
+    local _tempPosition = nil
+
+    local _tempDist = nil
+
+    -- finish this function
+    for _i = 1, #_enemyGroups do
+        if _enemyGroups[_i] ~= nil then
+            _groupName = _enemyGroups[_i]:getName()
+            _units = ctld.getGroup(_groupName)
+            if #_units > 0 then
+
+                for _x = 1, #_units do
+
+                    --check to see if a JTAC has already targeted this unit
+                    local _targeted = ctld.alreadyTarget(_jtacUnit, _units[_x])
+                    local _allowedTarget = true
+
+                    if _targetType == "vehicle" then
+
+                        _allowedTarget = ctld.isVehicle(_units[_x])
+
+                    elseif _targetType == "troop" then
+
+                        _allowedTarget = ctld.isInfantry(_units[_x])
+
+                    end
+
+                    if _units[_x]:isActive() == true and _targeted == false and _allowedTarget == true then
+
+                        -- calc distance
+                        _tempPoint = _units[_x]:getPoint()
+                        _tempDist = ctld.getDistance(_tempPoint, _jtacPoint)
+
+                        if _tempDist < ctld.JTAC_maxDistance and _tempDist < _nearestDistance then
+
+                            local _offsetEnemyPos = { x = _tempPoint.x, y = _tempPoint.y + 2.0, z = _tempPoint.z }
+                            local _offsetJTACPos = { x = _jtacPoint.x, y = _jtacPoint.y + 2.0, z = _jtacPoint.z }
+
+
+                            -- calc visible
+                            if land.isVisible(_offsetEnemyPos, _offsetJTACPos) then
+
+                                _nearestDistance = _tempDist
+                                _nearestUnit = _units[_x]
+                            end
+
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+
+    if _nearestUnit == nil then
+        return nil
+    end
+
+
+    return _nearestUnit
+end
+-- tests whether the unit is targeted by another JTAC
+function ctld.alreadyTarget(_jtacUnit, _enemyUnit)
+
+    for _ , _jtacTarget in pairs(ctld.jtacCurrentTargets) do
+
+        if _jtacTarget.unitId == _enemyUnit:getID() then
+            -- env.info("ALREADY TARGET")
+            return true
+        end
+
+    end
+
+    return false
+
+end
+
+
+-- Returns only alive units from group but the group / unit may not be active
+
+function ctld.getGroup(groupName)
+
+    local _groupUnits = Group.getByName(groupName)
+
+    local _filteredUnits = {} --contains alive units
+    local _x = 1
+
+    if _groupUnits ~= nil then
+
+        _groupUnits = _groupUnits:getUnits()
+
+        if _groupUnits ~= nil and #_groupUnits > 0 then
+            for _x = 1, #_groupUnits do
+                if _groupUnits[_x]:getLife() > 0 and _groupUnits[_x]:isExist() then
+                    table.insert(_filteredUnits, _groupUnits[_x])
+                end
+            end
+        end
+    end
+
+    return _filteredUnits
+end
+
+
+-- gets the JTAC status and displays to coalition units
+function ctld.getJTACStatus(_side)
+
+    --returns the status of all JTAC units
+
+    local _jtacGroupName = nil
+    local _jtacUnit = nil
+
+    local _message = "JTAC STATUS: \n\n"
+
+    for _jtacGroupName, _jtacDetails in pairs(ctld.jtacUnits) do
+
+        --look up units
+        _jtacUnit = Unit.getByName(_jtacDetails.name)
+
+        if _jtacUnit ~= nil and _jtacUnit:getLife() > 0 and _jtacUnit:isActive() == true and _jtacUnit:getCoalition() == _side  then
+
+            local _enemyUnit = ctld.getCurrentUnit(_jtacUnit, _jtacGroupName)
+
+            local _laserCode =  ctld.jtacLaserPointCodes[_jtacGroupName]
+
+            if _laserCode == nil then
+                _laserCode = "UNKNOWN"
+            end
+
+            if _enemyUnit ~= nil and _enemyUnit:getLife() > 0 and _enemyUnit:isActive() == true then
+                _message = _message .. "" .. _jtacGroupName .. " targeting " .. _enemyUnit:getTypeName().. " CODE: ".. _laserCode .. ctld.getPositionString(_enemyUnit) .. "\n"
+            else
+                _message = _message .. "" .. _jtacGroupName .. " searching for targets" .. ctld.getPositionString(_jtacUnit) .."\n"
+            end
+        end
+    end
+
+    if _message == "JTAC STATUS: \n\n" then
+        _message = "No Active JTACs"
+    end
+
+
+    ctld.notifyCoalition(_message, 10,_side)
+end
+
+
+
+function ctld.isInfantry(_unit)
+
+    local _typeName = _unit:getTypeName()
+
+    --type coerce tostring
+    _typeName = string.lower(_typeName .."")
+
+    local _soldierType = { "infantry","paratrooper","stinger","manpad"}
+
+    for _key, _value in pairs(_soldierType) do
+        if string.match(_typeName, _value) then
+            return true
+        end
+    end
+
+    return false
+
+end
+
+-- assume anything that isnt soldier is vehicle
+function ctld.isVehicle(_unit)
+
+    if ctld.isInfantry(_unit) then
+        return false
+    end
+
+    return true
+
+end
+
+-- The entered value can range from 1111 - 1788,
+-- -- but the first digit of the series must be a 1 or 2
+-- -- and the last three digits must be between 1 and 8.
+--  The range used to be bugged so its not 1 - 8 but 0 - 7.
+-- function below will use the range 1-7 just incase
+function ctld.generateLaserCode()
+
+    ctld.jtacGeneratedLaserCodes = {}
+
+    -- generate list of laser codes
+    local _code = 1111
+
+    local _count = 1
+
+    while _code < 1777 and _count < 30 do
+
+        while true do
+
+            _code = _code+1
+
+            if not ctld.containsDigit(_code,8)
+                    and not ctld.containsDigit(_code,9)
+                    and not ctld.containsDigit(_code,0) then
+
+                table.insert(ctld.jtacGeneratedLaserCodes,_code)
+
+                --env.info(_code.." Code")
+                break
+            end
+        end
+        _count = _count + 1
+    end
+
+end
+
+function ctld.containsDigit(_number,_numberToFind)
+
+    local _thisNumber = _number
+    local _thisDigit = 0
+
+    while _thisNumber ~= 0 do
+
+        _thisDigit = _thisNumber % 10
+        _thisNumber = math.floor(_thisNumber / 10)
+
+        if _thisDigit == _numberToFind then
+            return true
+        end
+    end
+
+    return false
+
+end
+
+
+function ctld.getPositionString(_unit)
+
+    if ctld.JTAC_location == false then
+        return ""
+    end
+
+    local _lat, _lon = coord.LOtoLL(_unit:getPosition().p)
+
+    local _latLngStr = mist.tostringLL(_lat, _lon,3,false)
+
+    local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)),5)
+
+    return " @ " .. _latLngStr .. " - MGRS ".. _mgrsString
+
+end
 
 
 -- Scheduled functions (run cyclically)
 
 timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
-timer.scheduleFunction(addTransportMenuItem, nil, timer.getTime() + 5)
+timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.checkAIStatus,nil,timer.getTime() + 5)
+
 
 --event handler for deaths
 world.addEventHandler(ctld.eventHandler)
 
 env.info("CTLD event handler added")
+
+env.info("Generating Laser Codes")
+ctld.generateLaserCode()
+env.info("Generated Laser Codes")
 
 --DEBUG FUNCTION
 --        for key, value in pairs(getmetatable(_spawnedCrate)) do
