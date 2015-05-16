@@ -6,18 +6,20 @@
 
     Supports some of the original CTTS functionality such as AI auto troop load and unload as well as group spawning and preloading of troops into units.
 
+    Supports deployment of Auto Lasing JTAC to the field
+
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
+    Version: 1.01 - 16/05/2015
 
  ]]
 
-ctld = {}
+ctld = {} -- DONT REMOVE!
 
 -- ************************************************************************
 -- *********************  USER CONFIGURATION ******************************
 -- ************************************************************************
-
-ctld.disableAllSmoke = false -- if true, all smoke is diabled regardless of settings below. Leave false to respect settings below
+ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
 
@@ -28,32 +30,30 @@ ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop poi
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
 
-ctld.vehiclesForTransport = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 
+ctld.vehiclesForTransport = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
+
 
 
 -- ***************** JTAC CONFIGURATION *****************
 
 ctld.JTAC_LIMIT_RED = 5 -- max number of JTAC Crates for the RED Side
-
 ctld.JTAC_LIMIT_BLUE = 5 -- max number of JTAC Crates for the BLUE Side
 
-ctld.JTAC_dropEnabled = true -- allow JTAC SPAWN
+ctld.JTAC_dropEnabled = true -- allow JTAC Crate spawn from F10 menu
 
-ctld.JTAC_maxDistance = 2500 -- How far a JTAC can "see" in meters (with Line of Sight)
+ctld.JTAC_maxDistance = 4000 -- How far a JTAC can "see" in meters (with Line of Sight)
 
-ctld.JTAC_smokeOn_RED = true -- enables marking of target with smoke
+ctld.JTAC_smokeOn_RED = true -- enables marking of target with smoke for RED forces
+ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE forces
 
-ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke
-
-ctld.JTAC_smokeColour_RED = 1 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
-
+ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 
 ctld.JTAC_jtacStatusF10 = true -- enables F10 JTAC Status menu
 
-ctld.JTAC_location = true -- shows location in JTAC message
+ctld.JTAC_location = true -- shows location of target in JTAC message
 
 ctld.JTAC_lock =  "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
 
@@ -193,6 +193,7 @@ ctld.extractableGroups = {
 -- ************** Logistics UNITS FOR CRATE SPAWNING ******************
 
 -- Use any of the predefined names or set your own ones
+-- When a logistic unit is destroyed, you will no longer be able to spawn crates
 
 ctld.logisticUnits = {
     "logistic1",
@@ -208,38 +209,20 @@ ctld.logisticUnits = {
 }
 
 -- ************** UNITS ABLE TO TRANSPORT VEHICLES ******************
-
+-- Add the model name of the unit that you want to be able to transport and deploy vehicles
+-- units db has all the names or you can extract a mission.miz file by making it a zip and looking
+-- in the contained mission file
 ctld.vehicleTransportEnabled = {
     "C-130",
 }
 
-
--- ***************************************************************
--- **************** BE CAREFUL BELOW HERE ************************
--- ***************************************************************
-
-assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
-
-ctld.addedTo = {}
-ctld.spawnedCratesRED = {} -- use to store crates that have been spawned
-ctld.spawnedCratesBLUE = {} -- use to store crates that have been spawned
-
-ctld.droppedTroopsRED = {} -- stores dropped troop groups
-ctld.droppedTroopsBLUE = {} -- stores dropped troop groups
-
-ctld.droppedVehiclesRED = {} -- stores vehicle groups for c-130 / hercules
-ctld.droppedVehiclesBLUE = {} -- stores vehicle groups for c-130 / hercules
-
-ctld.inTransitTroops = {}
-
-ctld.completeHawkSystems = {} -- stores complete spawned groups from multiple crates
-
+-- ************** SPAWNABLE CRATES ******************
 -- Weights must be unique as we use the weight to change the cargo to the correct unit
 -- when we unpack
 --
 ctld.spawnableCrates = {
 
-    -- name of the sub menu for spawning crates
+    -- name of the sub menu on F10 for spawning crates
     ["Ground Forces"] = {
 
         --crates you can spawn
@@ -248,7 +231,7 @@ ctld.spawnableCrates = {
         -- unit is the model name of the unit to spawn
         { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" },
         { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament" },
-        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer" }, -- used as jtac, not on the crate list if JTAC is disabled
+        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer" }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
     },
 
@@ -263,69 +246,13 @@ ctld.spawnableCrates = {
 
 }
 
-
---used to lookup what the crate will contain
-ctld.crateLookupTable = {}
-
-for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
-
-    for _, _crate in pairs(_crates) do
-        -- convert number to string otherwise we'll have a pointless giant
-        -- table. String means 'hashmap' so it will only contain the right number of elements
-        ctld.crateLookupTable[tostring(_crate.weight)] = _crate
-    end
-end
-
-
-
-
---sort out pickup zones
-for _, _zone in pairs(ctld.pickupZones) do
-
-    local _zoneName = _zone[1]
-    local _zoneColor = _zone[2]
-
-    if _zoneColor == "green" then
-        _zone[2] = trigger.smokeColor.Green
-    elseif _zoneColor == "red" then
-        _zone[2] = trigger.smokeColor.Red
-    elseif _zoneColor == "white" then
-        _zone[2] = trigger.smokeColor.White
-    elseif _zoneColor == "orange" then
-        _zone[2] = trigger.smokeColor.Orange
-    elseif _zoneColor == "blue" then
-        _zone[2] = trigger.smokeColor.Blue
-    else
-        _zone[2] = -1 -- no smoke colour
-    end
-end
-
-
---- - Sort out extractable groups
-
-for _, _groupName in pairs(ctld.extractableGroups) do
-
-    local _group = Group.getByName(_groupName)
-
-    if _group ~= nil then
-
-        if _group:getCoalition() == 1 then
-
-            table.insert(ctld.droppedTroopsRED, _group:getName())
-        else
-
-            table.insert(ctld.droppedTroopsBLUE, _group:getName())
-        end
-    end
-end
-
-
------------- EXTERNAL FUNCTIONS FOR MISSION EDITOR -----------
-
+-- ***************************************************************
+-- **************** Mission Editor Functions *********************
+-- ***************************************************************
 
 
 -----------------------------------------------------------------
--- Spawn group at a trigger and sets them as extractable. Usage:
+-- Spawn group at a trigger and set them as extractable. Usage:
 -- 			ctld.spawnGroupAtTrigger("groupside", number, "triggerName", radius)
 -- Variables:
 -- "groupSide" = "red" for Russia "blue" for USA
@@ -399,27 +326,11 @@ end
 
 
 
+-- ***************************************************************
+-- **************** BE CAREFUL BELOW HERE ************************
+-- ***************************************************************
 
 ---------------- INTERNAL FUNCTIONS ----------------
-
--- Remove intransit troops when heli / cargo plane dies
-ctld.eventHandler = {}
-function ctld.eventHandler:onEvent(_event)
-
-    if _event == nil or _event.initiator == nil then
-        env.info("CTLD null event")
-    elseif _event.id == 9 then
-        -- Pilot dead
-        ctld.inTransitTroops[_event.initiator:getName()] = nil
-
-    elseif world.event.S_EVENT_EJECTION == _event.id or _event.id == 8 then
-        -- env.info("Event unit - Pilot Ejected or Unit Dead")
-        ctld.inTransitTroops[_event.initiator:getName()] = nil
-
-        -- env.info(_event.initiator:getName())
-    end
-
-end
 
 function ctld.getTransportUnit(_unitName)
 
@@ -503,7 +414,7 @@ function ctld.spawnCrate(_args)
             end
 
             if _limitHit then
-                ctld.displayMessageToGroup(_heli, "No more JTAC Crates Left!")
+                ctld.displayMessageToGroup(_heli, "No more JTAC Crates Left!",10)
                 return
             end
 
@@ -901,6 +812,7 @@ end
 function ctld.displayMessageToGroup(_unit, _text, _time)
 
     trigger.action.outTextForGroup(_unit:getGroup():getID(), _text, _time)
+
 end
 
 function ctld.getCratesAndDistance(_heli)
@@ -1688,7 +1600,7 @@ function ctld.addF10MenuOptions()
 
             local _groupId = _unit:getGroup():getID()
 
-            if ctld.addedTo[_groupId] == nil and _unit:getPlayerName() ~= nil then
+            if ctld.addedTo[tostring(_groupId)] == nil and _unit:getPlayerName() ~= nil then
 
                 missionCommands.addSubMenuForGroup(_groupId, "Troop Transport")
                 missionCommands.addCommandForGroup(_groupId, "Load / Unload Troops", { "Troop Transport" }, ctld.loadUnloadTroops, { _unitName,true })
@@ -1736,14 +1648,14 @@ function ctld.addF10MenuOptions()
                     end
                 end
 
-                ctld.addedTo[_groupId] = true
+                ctld.addedTo[tostring(_groupId)] = true
             end
         else
             -- env.info(string.format("unit nil %s",_unitName))
         end
     end
 
-    if ctld.JTAC_dropEnabled then
+    if ctld.JTAC_jtacStatusF10 then
         -- get all BLUE players
         ctld.addJTACRadioCommand(coalition.side.BLUE)
 
@@ -1765,10 +1677,10 @@ function ctld.addJTACRadioCommand(_side)
             local _groupId = _playerUnit:getGroup():getID()
 
             --   env.info("adding command for "..index)
-            if ctld.jtacRadioAdded[_groupId] == nil then
+            if ctld.jtacRadioAdded[tostring(_groupId)] == nil then
                 -- env.info("about command for "..index)
                 missionCommands.addCommandForGroup(_groupId, "JTAC Status", nil, ctld.getJTACStatus, _playerUnit:getCoalition())
-                ctld.jtacRadioAdded[_groupId] = true
+                ctld.jtacRadioAdded[tostring(_groupId)] = true
                 -- env.info("Added command for " .. index)
             end
 
@@ -1803,6 +1715,7 @@ ctld.jtacUnits = {} -- list of JTAC units for f10 command
 ctld.jtacCurrentTargets = {}
 ctld.jtacRadioAdded = {} --keeps track of who's had the radio command added
 ctld.jtacGeneratedLaserCodes = {} -- keeps track of generated codes, cycles when they run out
+ctld.jtacLaserPointCodes = {}
 
 
 function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
@@ -2285,7 +2198,7 @@ function ctld.isInfantry(_unit)
     --type coerce tostring
     _typeName = string.lower(_typeName .."")
 
-    local _soldierType = { "infantry","paratrooper","stinger","manpad"}
+    local _soldierType = { "infantry","paratrooper","stinger","manpad","mortar"}
 
     for _key, _value in pairs(_soldierType) do
         if string.match(_typeName, _value) then
@@ -2380,6 +2293,96 @@ function ctld.getPositionString(_unit)
 end
 
 
+-- ***************** SETUP SCRIPT ****************
+
+assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
+
+ctld.addedTo = {}
+ctld.spawnedCratesRED = {} -- use to store crates that have been spawned
+ctld.spawnedCratesBLUE = {} -- use to store crates that have been spawned
+
+ctld.droppedTroopsRED = {} -- stores dropped troop groups
+ctld.droppedTroopsBLUE = {} -- stores dropped troop groups
+
+ctld.droppedVehiclesRED = {} -- stores vehicle groups for c-130 / hercules
+ctld.droppedVehiclesBLUE = {} -- stores vehicle groups for c-130 / hercules
+
+ctld.inTransitTroops = {}
+
+ctld.completeHawkSystems = {} -- stores complete spawned groups from multiple crates
+
+
+--used to lookup what the crate will contain
+ctld.crateLookupTable = {}
+
+-- Remove intransit troops when heli / cargo plane dies
+ctld.eventHandler = {}
+function ctld.eventHandler:onEvent(_event)
+
+    if _event == nil or _event.initiator == nil then
+        env.info("CTLD null event")
+    elseif _event.id == 9 then
+        -- Pilot dead
+        ctld.inTransitTroops[_event.initiator:getName()] = nil
+
+    elseif world.event.S_EVENT_EJECTION == _event.id or _event.id == 8 then
+        -- env.info("Event unit - Pilot Ejected or Unit Dead")
+        ctld.inTransitTroops[_event.initiator:getName()] = nil
+
+        -- env.info(_event.initiator:getName())
+    end
+
+end
+
+-- create crate lookup table
+for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
+
+    for _, _crate in pairs(_crates) do
+        -- convert number to string otherwise we'll have a pointless giant
+        -- table. String means 'hashmap' so it will only contain the right number of elements
+        ctld.crateLookupTable[tostring(_crate.weight)] = _crate
+    end
+end
+
+
+--sort out pickup zones
+for _, _zone in pairs(ctld.pickupZones) do
+
+    local _zoneName = _zone[1]
+    local _zoneColor = _zone[2]
+
+    if _zoneColor == "green" then
+        _zone[2] = trigger.smokeColor.Green
+    elseif _zoneColor == "red" then
+        _zone[2] = trigger.smokeColor.Red
+    elseif _zoneColor == "white" then
+        _zone[2] = trigger.smokeColor.White
+    elseif _zoneColor == "orange" then
+        _zone[2] = trigger.smokeColor.Orange
+    elseif _zoneColor == "blue" then
+        _zone[2] = trigger.smokeColor.Blue
+    else
+        _zone[2] = -1 -- no smoke colour
+    end
+end
+
+
+-- Sort out extractable groups
+for _, _groupName in pairs(ctld.extractableGroups) do
+
+    local _group = Group.getByName(_groupName)
+
+    if _group ~= nil then
+
+        if _group:getCoalition() == 1 then
+            table.insert(ctld.droppedTroopsRED, _group:getName())
+        else
+            table.insert(ctld.droppedTroopsBLUE, _group:getName())
+        end
+    end
+end
+
+
 -- Scheduled functions (run cyclically)
 
 timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
@@ -2396,6 +2399,7 @@ env.info("Generating Laser Codes")
 ctld.generateLaserCode()
 env.info("Generated Laser Codes")
 
+env.info("CTLD READY")
 --DEBUG FUNCTION
 --        for key, value in pairs(getmetatable(_spawnedCrate)) do
 --            env.info(tostring(key))
