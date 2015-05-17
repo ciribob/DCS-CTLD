@@ -17,6 +17,7 @@ The script supports:
         * HAWK system can also be rearmed after construction by dropping another Hawk Launcher nearby and unpacking
     * HMMWV TOW
     * HMMWV MG
+    * HMMWV JTAC - Will Auto Lase and mark targets with smoke if enabled
     * Mortar
     * MANPAD
 * Pre loading of units into AI vehicles via a DO SCRIPT
@@ -38,6 +39,65 @@ An error will be shown if MIST isn't loaded first.
 An example is shown below:
 
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-14-00_zpsmoirc3nz.png~original "Script Setup")
+
+###Script Configuration
+The script has lots of configuration options that can be used to futher customise the behaviour.
+```lua
+-- ************************************************************************
+-- *********************  USER CONFIGURATION ******************************
+-- ************************************************************************
+ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
+ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
+ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
+
+ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a group extraction
+ctld.maximumDistanceLogistic = 200 -- max distance from vehicle to logistics to allow a loading or spawning operation
+ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
+ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop point if no enemy is nearby
+
+ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
+
+ctld.vehiclesForTransport = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130
+
+ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
+```
+
+To change what units can be dropped from crates modify the spawnable crates section
+
+```lua
+
+-- ************** SPAWNABLE CRATES ******************
+-- Weights must be unique as we use the weight to change the cargo to the correct unit
+-- when we unpack
+--
+ctld.spawnableCrates = {
+
+    -- name of the sub menu on F10 for spawning crates
+    ["Ground Forces"] = {
+
+        --crates you can spawn
+        -- weight in KG
+        -- Desc is the description on the F10 MENU
+        -- unit is the model name of the unit to spawn
+        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" },
+        { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament" },
+        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer" }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
+    },
+
+    ["AA Crates"] = {
+
+        { weight = 210, desc = "MANPAD", unit = "Stinger manpad" },
+        { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
+        { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
+        { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
+    },
+
+
+}
+```
+
+**Make sure that after making any changes to the script you remove and re-add the script to the mission. **
 
 ###Other Script Functions
 You can also preload troops into AI transports once the CTLD script has been loaded, instead of having the AI enter a pickup zone, using the code below where the parameters are:
@@ -68,6 +128,94 @@ or
 ctld.spawnGroupAtTrigger("blue", 5, "spawnTrigger2", 2000)
 ```
 
+####JTAC Automatic Targeting and Laser
+This script has been merged with https://github.com/ciribob/DCS-JTACAutoLaze . JTACs can either be deployed by Helicopters and configured with the options in the script or pre added to the mission. By default each side can drop 5 JTACs.
+
+The JTAC Script configuration is shown below and can easily be disabled using the ```ctld.JTAC_dropEnabled``` option.
+
+```lua
+-- ***************** JTAC CONFIGURATION *****************
+ctld.JTAC_LIMIT_RED = 5 -- max number of JTAC Crates for the RED Side
+ctld.JTAC_LIMIT_BLUE = 5 -- max number of JTAC Crates for the BLUE Side
+
+ctld.JTAC_dropEnabled = true -- allow JTAC Crate spawn from F10 menu
+
+ctld.JTAC_maxDistance = 4000 -- How far a JTAC can "see" in meters (with Line of Sight)
+
+ctld.JTAC_smokeOn_RED = true -- enables marking of target with smoke for RED forces
+ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE forces
+
+ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+
+ctld.JTAC_jtacStatusF10 = false -- enables F10 JTAC Status menu
+
+ctld.JTAC_location = false -- shows location of target in JTAC message
+
+ctld.JTAC_lock =  "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
+
+```
+
+The script allows a JTAC to mark and hold an IR and Laser point on a target allowing TGP's to lock onto the lase and ease of target location using NV Goggles.
+
+The JTAC will automatically switch targets when a target is destroyed or goes out of Line of Sight.
+
+The JTACs can be configured globally to target only vehicles or troops or all ground targets.
+
+***NOTE: LOS doesn't include buildings or tree's... Sorry! ***
+
+The script can also be useful in daylight by enabling the JTAC to mark enemy positions with Smoke. The JTAC will only move the smoke to the target every 5 minutes (to stop a huge trail of smoke markers) unless the target is destroyed, in which case the new target will be marked straight away with smoke. There is also an F10 menu option for units allowing the JTAC(s) to report their current status but if a JTAC is down it won't report in.
+
+To add JTACS to the mission using the editor place a JTAC unit on the map putting each JTAC in it's own group containing only itself and no
+other units. Name the group something easy to remember e.g. JTAC1 and make sure the JTAC units have a unique name which must
+not be the same as the group name. The editor should do this for you but be careful if you copy and paste.
+
+Run the code below as a DO SCRIPT at the start of the mission, or after a delay if you prefer to activate a mission JTAC. 
+
+**JTAC HMMWV units deployed by unpacking a crate will automatically activate and begin searching for targets immediately.**
+
+```lua
+ctld.JTACAutoLase('JTAC1', 1688)
+```
+
+Where JTAC1 is the Group name of the JTAC Group with one and only one JTAC unit and the 1688 is the Laser code.
+
+You can also override global settings set in the script like so:
+
+```lua
+ctld.JTACAutoLase('JTAC1', 1688, false,"all") 
+```
+This means no smoke marks for this JTAC and it will target all ground troops
+
+```lua
+ctld.JTACAutoLase('JTAC1', 1688, true,"vehicle")
+```
+This smoke marks for this JTAC and it will target ONLY ground vehicles
+
+```lua
+ctld.JTACAutoLase('JTAC1', 1688, true,"troop")
+```
+This means smoke marks are enabled for this JTAC and it will target ONLY ground troops
+
+```lua
+ctld.JTACAutoLase('JTAC1', 1688, true,"troop",1)
+```
+This means smoke marks are enabled for this JTAC and it will target ONLY ground troops AND smoke colour will be Red
+
+```lua
+ctld.JTACAutoLase('JTAC1', 1688, true,"troop",0)
+```
+This means smoke marks are enabled for this JTAC and it will target ONLY ground troops AND smoke colour will be Green
+
+```lua
+ctld.JTACAutoLase('JTAC1', 1688, true,"all", 4) 
+```
+This means no smoke marks for this JTAC and it will target all ground troops AND mark with Blue smoke
+
+Smoke colours are: Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+
+The script doesn't care if the unit isn't activated when run, as it'll automatically activate when the JTAC is activated in
+the mission but there can be a delay of up to 30 seconds after activation for the JTAC to start searching for targets.
 
 ###Pickup and Dropoff Zones Setup
 Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger in order to load troops and vehicles.
