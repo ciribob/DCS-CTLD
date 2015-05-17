@@ -293,9 +293,9 @@ function ctld.spawnGroupAtTrigger(_groupSide, _number, _triggerName, _searchRadi
     local _alt = land.getHeight(_pos2)
     local _pos3 = { x = _pos2.x, y = _alt, z = _pos2.y }
 
-    local _types = ctld.generateTroopTypes(_groupSide,_number)
+    local _groupDetails = ctld.generateTroopTypes(_groupSide,_number,_country)
 
-    local _droppedTroops = ctld.spawnDroppedGroup(_country,_groupSide,_pos3, _types, false,_searchRadius);
+    local _droppedTroops = ctld.spawnDroppedGroup(_pos3, _groupDetails, false,_searchRadius);
 
     if _groupSide == 1 then
 
@@ -464,14 +464,14 @@ function ctld.troopsOnboard(_heli,_troops)
 
         if _troops then
 
-            if _onboard.troops ~= nil and #_onboard.troops > 0 then
+            if _onboard.troops ~= nil and _onboard.troops.units ~= nil and #_onboard.troops.units > 0 then
                 return true
             else
                 return false
             end
         else
 
-            if _onboard.vehicles ~= nil and #_onboard.vehicles > 0 then
+            if _onboard.vehicles ~= nil and _onboard.vehicles.units ~= nil and #_onboard.vehicles.units > 0 then
                 return true
             else
                 return false
@@ -503,9 +503,9 @@ function ctld.deployTroops(_heli,_troops)
     -- deloy troops
     if _troops then
 
-        if _onboard.troops ~= nil and #_onboard.troops > 0 then
+        if _onboard.troops ~= nil and #_onboard.troops.units > 0 then
 
-            local _droppedTroops = ctld.spawnDroppedGroup(_heli:getCountry(),_heli:getCoalition(),_heli:getPoint(), _onboard.troops, false)
+            local _droppedTroops = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.troops, false)
 
             if _heli:getCoalition() == 1 then
 
@@ -515,14 +515,14 @@ function ctld.deployTroops(_heli,_troops)
                 table.insert(ctld.droppedTroopsBLUE, _droppedTroops:getName())
             end
 
-            ctld.inTransitTroops[_heli:getName()].troops = {}
+            ctld.inTransitTroops[_heli:getName()].troops = nil
             trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped troops from " .. _heli:getTypeName() .. " into combat", 10)
 
         end
     else
-        if _onboard.vehicles ~= nil and #_onboard.vehicles > 0 then
+        if _onboard.vehicles ~= nil and #_onboard.vehicles.units > 0 then
 
-            local _droppedVehicles = ctld.spawnDroppedGroup(_heli:getCountry(),_heli:getCoalition(),_heli:getPoint(), _onboard.vehicles, true)
+            local _droppedVehicles = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.vehicles, true)
 
             if _heli:getCoalition() == 1 then
 
@@ -532,7 +532,7 @@ function ctld.deployTroops(_heli,_troops)
                 table.insert(ctld.droppedVehiclesBLUE, _droppedVehicles:getName())
             end
 
-            ctld.inTransitTroops[_heli:getName()].vehicles = {}
+            ctld.inTransitTroops[_heli:getName()].vehicles = nil
 
             trigger.action.outTextForCoalition(_heli:getCoalition(),ctld.getPlayerNameOrType(_heli) .. " dropped vehicles from " .. _heli:getTypeName() .. " into combat", 10)
 
@@ -543,7 +543,7 @@ end
 
 
 
-function ctld.generateTroopTypes(_side,_count)
+function ctld.generateTroopTypes(_side,_count, _country)
 
     local _troops = {}
 
@@ -569,10 +569,16 @@ function ctld.generateTroopTypes(_side,_count)
             end
         end
 
-        _troops[_i] = _unitType
+        local _unitId = mist.getNextUnitId()
+
+        _troops[_i] =  {type = _unitType, unitId = _unitId, name = string.format("Dropped %s #%i",_unitType,_unitId)}
+
     end
 
-    return _troops
+    local _groupId = mist.getNextGroupId()
+    local _details = {units = _troops, groupId = _groupId, groupName = string.format("Dropped Group %i",_groupId), side=_side, country=_country}
+
+    return _details
 end
 
 -- load troops onto vehicle
@@ -594,15 +600,13 @@ function ctld.loadTroops(_heli,_troops, _number)
 
     if _troops then
 
-        _onboard.troops = ctld.generateTroopTypes(_heli:getCoalition(),_number)
+        _onboard.troops = ctld.generateTroopTypes(_heli:getCoalition(),_number,_heli:getCountry())
 
         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " loaded ".._number.." troops into " .. _heli:getTypeName(), 10)
 
     else
 
-        for _i, _type in ipairs(ctld.vehiclesForTransport) do
-            _onboard.vehicles[_i] = _type
-        end
+        _onboard.vehicles = ctld.generateVehiclesForTransport(_heli:getCoalition(), _heli:getCountry())
 
         local _count = #ctld.vehiclesForTransport
 
@@ -611,6 +615,26 @@ function ctld.loadTroops(_heli,_troops, _number)
     end
 
     ctld.inTransitTroops[_heli:getName()] = _onboard
+
+end
+
+function ctld.generateVehiclesForTransport(_side,_country)
+
+    local _vehicles = {}
+
+    for _i, _type in ipairs(ctld.vehiclesForTransport) do
+
+        local _unitId= mist.getNextUnitId()
+
+        _vehicles[_i] =  {type = _type, unitId = _unitId, name = string.format("Dropped %s #%i",_type,_unitId)}
+
+    end
+
+
+    local _groupId = mist.getNextGroupId()
+    local _details = {units = _vehicles, groupId = _groupId, groupName = string.format("Dropped Group %i",_groupId), side=_side, country=_country }
+
+    return _details
 
 end
 
@@ -625,15 +649,49 @@ function ctld.loadUnloadTroops(_args)
 
     local _inZone = ctld.inPickupZone(_heli)
 
+    -- first check for extractable troops regardless of if we're in a zone or not
+
+--    if  not ctld.troopsOnboard(_heli,_troops) then
+--
+--        local _extract
+--
+--        if _troops then
+--            if _heli:getCoalition() == 1 then
+--
+--                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsRED)
+--            else
+--
+--                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsBLUE)
+--            end
+--        else
+--
+--            if _heli:getCoalition() == 1 then
+--
+--                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesRED)
+--            else
+--
+--                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesBLUE)
+--            end
+--
+--        end
+--
+--        if _extract ~= nil then
+--            -- search for nearest troops to pickup
+--            ctld.extractTroops(_heli,_troops)
+--
+--            return -- stop
+--        end
+--    end
+
     if _inZone == true and ctld.troopsOnboard(_heli,_troops) then
 
         if _troops then
             ctld.displayMessageToGroup(_heli, "Dropped troops back to base", 20)
-            ctld.inTransitTroops[_heli:getName()].troops = {}
+            ctld.inTransitTroops[_heli:getName()].troops = nil
 
         else
             ctld.displayMessageToGroup(_heli, "Dropped vehicles back to base", 20)
-            ctld.inTransitTroops[_heli:getName()].vehicles = {}
+            ctld.inTransitTroops[_heli:getName()].vehicles = nil
 
         end
 
@@ -644,12 +702,11 @@ function ctld.loadUnloadTroops(_args)
     elseif _inZone == true and not ctld.troopsOnboard(_heli,_troops) then
 
         ctld.loadTroops(_heli,_troops)
-
     else
         -- search for nearest troops to pickup
         ctld.extractTroops(_heli,_troops)
-
     end
+
 end
 
 function ctld.extractTroops(_heli,_troops)
@@ -658,7 +715,7 @@ function ctld.extractTroops(_heli,_troops)
     local _onboard = ctld.inTransitTroops[_heli:getName()]
 
     if _onboard == nil then
-        _onboard =  { troops = {}, vehicles = {} }
+        _onboard =  { troops = nil, vehicles = nil }
     end
 
     if _troops then
@@ -673,7 +730,7 @@ function ctld.extractTroops(_heli,_troops)
 
         if _extractTroops ~= nil then
 
-            _onboard.troops = _extractTroops.types
+            _onboard.troops = _extractTroops.details
 
             trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " extracted troops in " .. _heli:getTypeName() .. " from combat", 10)
 
@@ -687,7 +744,7 @@ function ctld.extractTroops(_heli,_troops)
             _extractTroops.group:destroy()
 
         else
-            _onboard.troops = {}
+            _onboard.troops = nil
             ctld.displayMessageToGroup(_heli, "No extractable troops nearby and not in a pickup zone", 20)
         end
 
@@ -707,7 +764,7 @@ function ctld.extractTroops(_heli,_troops)
         end
 
         if _extractVehicles ~= nil then
-            _onboard.vehicles = _extractVehicles.types
+            _onboard.vehicles = _extractVehicles.details
 
             if _heli:getCoalition() == 1 then
 
@@ -724,7 +781,7 @@ function ctld.extractTroops(_heli,_troops)
 
 
         else
-            _onboard.vehicles = {}
+            _onboard.vehicles = nil
             ctld.displayMessageToGroup(_heli, "No extractable vehicles nearby and not in a pickup zone", 20)
         end
 
@@ -738,10 +795,6 @@ end
 function ctld.checkTroopStatus(_args)
 
     --list onboard troops, if c130
-
-    -- trigger.action.outText("Troop Status".._args[1],10)
-
-
     local _heli = ctld.getTransportUnit(_args[1])
 
     if _heli == nil then
@@ -753,17 +806,17 @@ function ctld.checkTroopStatus(_args)
     if _onboard == nil then
         ctld.displayMessageToGroup(_heli, "No troops onboard", 10)
     else
-        local _troops = #_onboard.troops
-        local _vehicles = #_onboard.vehicles
+        local _troops = _onboard.troops
+        local _vehicles = _onboard.vehicles
 
         local _txt = ""
 
-        if _troops > 0 then
-            _txt = _txt .. " " .. _troops .. " troops onboard\n"
+        if _troops ~= nil and _troops.units ~= nil and #_troops.units > 0 then
+            _txt = _txt .. " " .. #_troops.units .. " troops onboard\n"
         end
 
-        if _vehicles > 0 then
-            _txt = _txt .. " " .. _vehicles .. " vehicles onboard\n"
+        if _vehicles ~= nil and  _vehicles.units ~= nil and #_vehicles.units > 0 then
+            _txt = _txt .. " " .. #_vehicles.units .. " vehicles onboard\n"
         end
 
         if _txt ~= "" then
@@ -1122,12 +1175,19 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
 
     if #_positions == 1 then
 
-        _group.units[1] = ctld.createUnit(_positions[1].x + 5, _positions[1].z + 5, 120, _types[1])
+        local _unitId = mist.getNextUnitId()
+        local _details = {type= _types[1], unitId = _unitId, name = string.format("Unpacked %s #%i",_types[1],_unitId)}
+
+        _group.units[1] = ctld.createUnit(_positions[1].x + 5, _positions[1].z + 5, 120, _details)
 
     else
 
         for _i, _pos in ipairs(_positions) do
-            _group.units[_i] = ctld.createUnit(_pos.x + 5, _pos.z + 5, 120, _types[_i])
+
+            local _unitId = mist.getNextUnitId()
+            local _details = {type= _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i",_types[_i],_unitId)}
+
+            _group.units[_i] = ctld.createUnit(_pos.x + 5, _pos.z + 5, 120, _details)
         end
     end
 
@@ -1146,15 +1206,13 @@ end
 
 
 -- spawn normal group
-function ctld.spawnDroppedGroup(_country,_side,_point, _types, _spawnBehind,_maxSearch)
+function ctld.spawnDroppedGroup(_point, _details, _spawnBehind,_maxSearch)
 
-    local _id = mist.getNextGroupId()
-
-    local _groupName = "Dropped Group  #" .. _id
+    local _groupName = _details.groupName
 
     local _group = {
         ["visible"] = false,
-        ["groupId"] = _id,
+        ["groupId"] = _details.groupId,
         ["hidden"] = false,
         ["units"] = {},
         --        ["y"] = _positions[1].z,
@@ -1170,13 +1228,13 @@ function ctld.spawnDroppedGroup(_country,_side,_point, _types, _spawnBehind,_max
 
         local _pos = _point
 
-        for _i, _type in ipairs(_types) do
+        for _i, _detail in ipairs(_details.units) do
 
-            local _angle = math.pi * 2 * (_i - 1) / #_types
+            local _angle = math.pi * 2 * (_i - 1) / #_details.units
             local _xOffset = math.cos(_angle) * 30
             local _yOffset = math.sin(_angle) * 30
 
-            _group.units[_i] = ctld.createUnit(_pos.x + _xOffset, _pos.z + _yOffset, _angle, _type)
+            _group.units[_i] = ctld.createUnit(_pos.x + _xOffset, _pos.z + _yOffset, _angle, _detail)
         end
 
     else
@@ -1189,12 +1247,12 @@ function ctld.spawnDroppedGroup(_country,_side,_point, _types, _spawnBehind,_max
         local _yOffset = math.sin(_angle) * 30
 
 
-        for _i, _type in ipairs(_types) do
-            _group.units[_i] = ctld.createUnit(_pos.x - (_xOffset + 10 * _i), _pos.z - (_yOffset + 10 * _i), _angle, _type)
+        for _i, _detail in ipairs(_details.units) do
+            _group.units[_i] = ctld.createUnit(_pos.x - (_xOffset + 10 * _i), _pos.z - (_yOffset + 10 * _i), _angle,_detail)
         end
     end
 
-    local _spawnedGroup = coalition.addGroup(_country, Group.Category.GROUND, _group)
+    local _spawnedGroup = coalition.addGroup(_details.country, Group.Category.GROUND, _group)
 
 
     -- find nearest enemy and head there
@@ -1202,7 +1260,7 @@ function ctld.spawnDroppedGroup(_country,_side,_point, _types, _spawnBehind,_max
         _maxSearch = ctld.maximumSearchDistance
     end
 
-    local _enemyPos = ctld.findNearestEnemy(_side,_point,_maxSearch)
+    local _enemyPos = ctld.findNearestEnemy(_details.side,_point,_maxSearch)
 
     ctld.orderGroupToMoveToPoint(_spawnedGroup:getUnit(1), _enemyPos)
 
@@ -1270,7 +1328,7 @@ end
 
 function ctld.findNearestGroup(_heli, _groups)
 
-    local _closestGroupTypes = {}
+    local _closestGroupDetails = {}
     local _closestGroup = nil
 
     local _closestGroupDist = ctld.maxExtractDistance
@@ -1288,7 +1346,7 @@ function ctld.findNearestGroup(_heli, _groups)
 
                 local _leader = nil
 
-                local _unitTypes = {}
+                local _groupDetails = { groupId = _group:getID(), groupName = _group:getName(),  side = _group:getCoalition(), units = {} }
 
                 -- find alive leader
                 for x = 1, #_units do
@@ -1296,9 +1354,13 @@ function ctld.findNearestGroup(_heli, _groups)
 
                         if _leader == nil then
                             _leader = _units[x]
+                            -- set country based on leader
+                            _groupDetails.country  = _leader:getCountry()
                         end
 
-                        table.insert(_unitTypes, _units[x]:getTypeName())
+                        local _unitDetails = {type = _units[x]:getTypeName(), unitId = _units[x]:getID(), name = _units[x]:getName() }
+
+                        table.insert(_groupDetails.units, _unitDetails)
                     end
                 end
 
@@ -1307,7 +1369,7 @@ function ctld.findNearestGroup(_heli, _groups)
                     local _dist = ctld.getDistance(_heliPoint, _leaderPos)
                     if _dist < _closestGroupDist then
                         _closestGroupDist = _dist
-                        _closestGroupTypes = _unitTypes
+                        _closestGroupDetails = _groupDetails
                         _closestGroup = _group
                     end
                 end
@@ -1318,7 +1380,7 @@ function ctld.findNearestGroup(_heli, _groups)
 
     if _closestGroup ~= nil then
 
-        return { group = _closestGroup, types = _closestGroupTypes }
+        return { group = _closestGroup, details = _closestGroupDetails }
     else
 
         return nil
@@ -1326,17 +1388,13 @@ function ctld.findNearestGroup(_heli, _groups)
 end
 
 
-function ctld.createUnit(_x, _y, _angle, _type)
-
-    local _id = mist.getNextUnitId();
-
-    local _name = string.format("%s #%s", _type, _id)
+function ctld.createUnit(_x, _y, _angle, _details)
 
     local _newUnit = {
         ["y"] = _y,
-        ["type"] = _type,
-        ["name"] = _name,
-        ["unitId"] = _id,
+        ["type"] = _details.type,
+        ["name"] = _details.name,
+        ["unitId"] = _details.unitId,
         ["heading"] = _angle,
         ["playerCanDrive"] = true,
         ["skill"] = "Excellent",
