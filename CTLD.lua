@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.01 - 16/05/2015
+    Version: 1.02 - 17/05/2015
 
  ]]
 
