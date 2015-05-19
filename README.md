@@ -62,7 +62,9 @@ ctld.vehiclesForTransport = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- veh
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 ```
 
-To change what units can be dropped from crates modify the spawnable crates section
+To change what units can be dropped from crates modify the spawnable crates section. An extra parameter, ```cratesRequired = NUMBER``` can be added so you need more than one crate to build a unit. This parameter cannot be used for the HAWK system as that is already broken into 3 crates. 
+
+```--``` in lua means ignore this line :)
 
 ```lua
 
@@ -79,10 +81,13 @@ ctld.spawnableCrates = {
         -- weight in KG
         -- Desc is the description on the F10 MENU
         -- unit is the model name of the unit to spawn
+        -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
+        -- dont use that option with the HAWK Crates
         { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" },
         { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament" },
         { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer" }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
+      -- { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 3 },
     },
 
     ["AA Crates"] = {
@@ -91,11 +96,17 @@ ctld.spawnableCrates = {
         { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
         { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
         { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
+     --   { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 3 },
+
     },
 
 
 }
 ```
+
+Example showing what happens if you dont have enough crates:
+
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-19%2019-39-33-98_zps0hynlgc0.png~original "Not enough crates!")
 
 **Make sure that after making any changes to the script you remove and re-add the script to the mission. **
 

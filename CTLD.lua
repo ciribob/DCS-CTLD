@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.02 - 17/05/2015
+    Version: 1.03 - 19/05/2015
 
  ]]
 
@@ -229,10 +229,13 @@ ctld.spawnableCrates = {
         -- weight in KG
         -- Desc is the description on the F10 MENU
         -- unit is the model name of the unit to spawn
+        -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
+        -- dont use that option with the HAWK Crates
         { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" },
         { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament" },
         { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer" }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
+      -- { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 3 },
     },
 
     ["AA Crates"] = {
@@ -241,6 +244,8 @@ ctld.spawnableCrates = {
         { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
         { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
         { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
+     --   { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 3 },
+
     },
 
 
@@ -651,37 +656,37 @@ function ctld.loadUnloadTroops(_args)
 
     -- first check for extractable troops regardless of if we're in a zone or not
 
---    if  not ctld.troopsOnboard(_heli,_troops) then
---
---        local _extract
---
---        if _troops then
---            if _heli:getCoalition() == 1 then
---
---                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsRED)
---            else
---
---                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsBLUE)
---            end
---        else
---
---            if _heli:getCoalition() == 1 then
---
---                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesRED)
---            else
---
---                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesBLUE)
---            end
---
---        end
---
---        if _extract ~= nil then
---            -- search for nearest troops to pickup
---            ctld.extractTroops(_heli,_troops)
---
---            return -- stop
---        end
---    end
+    --    if  not ctld.troopsOnboard(_heli,_troops) then
+    --
+    --        local _extract
+    --
+    --        if _troops then
+    --            if _heli:getCoalition() == 1 then
+    --
+    --                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsRED)
+    --            else
+    --
+    --                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsBLUE)
+    --            end
+    --        else
+    --
+    --            if _heli:getCoalition() == 1 then
+    --
+    --                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesRED)
+    --            else
+    --
+    --                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesBLUE)
+    --            end
+    --
+    --        end
+    --
+    --        if _extract ~= nil then
+    --            -- search for nearest troops to pickup
+    --            ctld.extractTroops(_heli,_troops)
+    --
+    --            return -- stop
+    --        end
+    --    end
 
     if _inZone == true and ctld.troopsOnboard(_heli,_troops) then
 
@@ -981,19 +986,19 @@ function ctld.unpackCrates(_args)
             if ctld.isMultiCrate(_crate.details) then
                 -- multicrate
 
-               ctld.unpackMultiCrate(_heli,_crate,_crates)
+                ctld.unpackMultiCrate(_heli,_crate,_crates)
 
             else
                 -- single crate
                 local _cratePoint = _crate.crateUnit:getPoint()
-                local _crateName = _crate.crateUnit:getName();
+                local _crateName = _crate.crateUnit:getName()
 
                 -- ctld.spawnCrateStatic( _heli:getCoalition(),mist.getNextUnitId(),{x=100,z=100},_crateName,100)
 
                 --remove crate
                 _crate.crateUnit:destroy()
 
-               local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
+                local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
 
                 if _heli:getCoalition() == 1 then
                     ctld.spawnedCratesRED[_crateName] = nil
@@ -1006,7 +1011,7 @@ function ctld.unpackCrates(_args)
                 if _crate.details.unit == "Hummer" and ctld.JTAC_dropEnabled then
 
                     local _code = table.remove(ctld.jtacGeneratedLaserCodes,1)
-                     --put to the end
+                    --put to the end
                     table.insert(ctld.jtacGeneratedLaserCodes,_code)
 
                     ctld.JTACAutoLase(_spawnedGroups:getName(),_code) --(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
@@ -1023,7 +1028,8 @@ end
 
 function ctld.isMultiCrate(_crateDetails)
 
-    if string.match(_crateDetails.desc, "HAWK") then
+    if string.match(_crateDetails.desc, "HAWK")
+            or (_crateDetails.cratesRequired ~= nil and _crateDetails.cratesRequired > 1) then
         return true
     else
         return false
@@ -1031,7 +1037,7 @@ function ctld.isMultiCrate(_crateDetails)
 
 end
 
-function ctld.unpackMultiCrate(_heli,_nearestCrate,_nearbyCrates)
+function ctld.rearmHawk(_heli,_nearestCrate,_nearbyCrates)
 
     -- are we adding to existing hawk system?
     if _nearestCrate.details.unit == "Hawk ln" then
@@ -1076,12 +1082,19 @@ function ctld.unpackMultiCrate(_heli,_nearestCrate,_nearbyCrates)
 
                 trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully rearmed a full HAWK AA System in the field", 10)
 
-                return -- all done so quit
+                return true -- all done so quit
             end
-
-
         end
+    end
 
+    return false
+end
+
+function ctld.unpackHawk(_heli,_nearestCrate,_nearbyCrates)
+
+    if ctld.rearmHawk(_heli,_nearestCrate,_nearbyCrates) then
+        -- rearmed hawk
+        return
     end
 
 
@@ -1151,6 +1164,71 @@ function ctld.unpackMultiCrate(_heli,_nearestCrate,_nearbyCrates)
 
         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full HAWK AA System to the field", 10)
     end
+end
+
+function ctld.unpackMultiCrate(_heli,_nearestCrate,_nearbyCrates)
+
+    if string.match(_nearestCrate.details.desc, "HAWK") then
+        ctld.unpackHawk(_heli,_nearestCrate,_nearbyCrates)
+
+        return -- stop processing
+    end
+
+    -- unpack multi crate
+    local _nearbyMultiCrates = {}
+
+    for _, _nearbyCrate in pairs(_nearbyCrates) do
+
+        if _nearbyCrate.dist < 300 then
+
+            if _nearbyCrate.details.unit == _nearestCrate.details.unit then
+
+                table.insert(_nearbyMultiCrates, _nearbyCrate)
+
+                if #_nearbyMultiCrates == _nearestCrate.details.cratesRequired then
+                    break
+                end
+            end
+        end
+    end
+
+    --- check crate count
+    if #_nearbyMultiCrates == _nearestCrate.details.cratesRequired then
+
+        local _point = _nearestCrate.crateUnit:getPoint()
+
+        -- destroy crates
+        for _, _crate in pairs(_nearbyMultiCrates) do
+
+            if _point == nil then
+                _point = _crate.crateUnit:getPoint()
+            end
+
+            if _heli:getCoalition() == 1 then
+                ctld.spawnedCratesRED[_crate.crateUnit:getName()] = nil
+            else
+                ctld.spawnedCratesBLUE[_crate.crateUnit:getName()] = nil
+            end
+
+            --destroy
+            _crate.crateUnit:destroy()
+        end
+
+
+        local _spawnedGroup = ctld.spawnCrateGroup(_heli,{_point} ,{_nearestCrate.details.unit})
+
+        local _txt = string.format("%s successfully deployed %s to the field using %d crates",ctld.getPlayerNameOrType(_heli),_nearestCrate.details.desc,#_nearbyMultiCrates)
+
+        trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
+
+    else
+
+        local _txt = string.format("Cannot build %s!\n\nIt requires %d crates and there are %d \n\nOr the crates are not within 300m of each other",_nearestCrate.details.desc,_nearestCrate.details.cratesRequired,#_nearbyMultiCrates)
+
+        ctld.displayMessageToGroup(_heli, _txt, 20)
+    end
+
+
 end
 
 
@@ -1811,11 +1889,11 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
         -- work out smoke colour
         if _colour == nil then
 
-           if  _jtacUnit:getCoalition() == 1 then
-               _colour = ctld.JTAC_smokeColour_RED
-           else
-               _colour = ctld.JTAC_smokeColour_BLUE
-           end
+            if  _jtacUnit:getCoalition() == 1 then
+                _colour = ctld.JTAC_smokeColour_RED
+            else
+                _colour = ctld.JTAC_smokeColour_BLUE
+            end
         end
 
 
