@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.03 - 19/05/2015
+    Version: 1.04 - 23/05/2015 - Event Bug Fix from Latest DCS Patch
 
  ]]
 
@@ -830,6 +830,24 @@ function ctld.checkTroopStatus(_args)
             ctld.displayMessageToGroup(_heli, "No troops onboard", 10)
         end
     end
+end
+
+-- Removes troops from transport when it dies
+function ctld.checkTransportStatus()
+
+    timer.scheduleFunction(ctld.checkTransportStatus,nil,timer.getTime()+3)
+
+    for _,_name in ipairs(ctld.transportPilotNames) do
+
+        local _transUnit = ctld.getTransportUnit(_name)
+
+        if _transUnit == nil then
+            --env.info("CTLD Transport Unit Dead event")
+            ctld.inTransitTroops[_name] = nil
+        end
+
+    end
+
 end
 
 function ctld.listNearbyCrates(_args)
@@ -2452,23 +2470,23 @@ ctld.completeHawkSystems = {} -- stores complete spawned groups from multiple cr
 ctld.crateLookupTable = {}
 
 -- Remove intransit troops when heli / cargo plane dies
-ctld.eventHandler = {}
-function ctld.eventHandler:onEvent(_event)
-
-    if _event == nil or _event.initiator == nil then
-        env.info("CTLD null event")
-    elseif _event.id == 9 then
-        -- Pilot dead
-        ctld.inTransitTroops[_event.initiator:getName()] = nil
-
-    elseif world.event.S_EVENT_EJECTION == _event.id or _event.id == 8 then
-        -- env.info("Event unit - Pilot Ejected or Unit Dead")
-        ctld.inTransitTroops[_event.initiator:getName()] = nil
-
-        -- env.info(_event.initiator:getName())
-    end
-
-end
+--ctld.eventHandler = {}
+--function ctld.eventHandler:onEvent(_event)
+--
+--    if _event == nil or _event.initiator == nil then
+--        env.info("CTLD null event")
+--    elseif _event.id == 9 then
+--        -- Pilot dead
+--        ctld.inTransitTroops[_event.initiator:getName()] = nil
+--
+--    elseif world.event.S_EVENT_EJECTION == _event.id or _event.id == 8 then
+--        -- env.info("Event unit - Pilot Ejected or Unit Dead")
+--        ctld.inTransitTroops[_event.initiator:getName()] = nil
+--
+--        -- env.info(_event.initiator:getName())
+--    end
+--
+--end
 
 -- create crate lookup table
 for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
@@ -2524,12 +2542,13 @@ end
 timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.checkAIStatus,nil,timer.getTime() + 5)
+timer.scheduleFunction(ctld.checkTransportStatus,nil,timer.getTime()+5)
 
 
 --event handler for deaths
-world.addEventHandler(ctld.eventHandler)
+--world.addEventHandler(ctld.eventHandler)
 
-env.info("CTLD event handler added")
+--env.info("CTLD event handler added")
 
 env.info("Generating Laser Codes")
 ctld.generateLaserCode()
