@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.04 - 23/05/2015 - Event Bug Fix from Latest DCS Patch
+    Version: 1.05 - 24/05/2015 - Event Bug Fix from Latest DCS Patch
 
  ]]
 
@@ -20,7 +20,9 @@ ctld = {} -- DONT REMOVE!
 -- *********************  USER CONFIGURATION ******************************
 -- ************************************************************************
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
+
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
+
 ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
 
 ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a group extraction
@@ -30,10 +32,21 @@ ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop poi
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
 
-ctld.vehiclesForTransport = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130
+ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76
+ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 
+ctld.enabledFOBBuilding = true -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
+                            -- In future i'd like it to be a FARP but so far that seems impossible...
+                            -- You can also enable troop Pickup at FOBS
+
+ctld.cratesRequiredForFOB = 3 -- The amount of crates required to build a FOB. Once built, helis can spawn crates at this outpost to be carried and deployed in another area.
+                                -- The crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
+
+ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a created FOB
+
+ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 
 
 -- ***************** JTAC CONFIGURATION *****************
@@ -43,7 +56,7 @@ ctld.JTAC_LIMIT_BLUE = 5 -- max number of JTAC Crates for the BLUE Side
 
 ctld.JTAC_dropEnabled = true -- allow JTAC Crate spawn from F10 menu
 
-ctld.JTAC_maxDistance = 4000 -- How far a JTAC can "see" in meters (with Line of Sight)
+ctld.JTAC_maxDistance = 5000 -- How far a JTAC can "see" in meters (with Line of Sight)
 
 ctld.JTAC_smokeOn_RED = true -- enables marking of target with smoke for RED forces
 ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE forces
@@ -213,8 +226,10 @@ ctld.logisticUnits = {
 -- units db has all the names or you can extract a mission.miz file by making it a zip and looking
 -- in the contained mission file
 ctld.vehicleTransportEnabled = {
+    "76MD", -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
     "C-130",
 }
+
 
 -- ************** SPAWNABLE CRATES ******************
 -- Weights must be unique as we use the weight to change the cargo to the correct unit
@@ -230,10 +245,17 @@ ctld.spawnableCrates = {
         -- Desc is the description on the F10 MENU
         -- unit is the model name of the unit to spawn
         -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
+        -- side is optional but 2 is BLUE and 1 is RED
         -- dont use that option with the HAWK Crates
-        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" },
-        { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament" },
-        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer" }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" , side = 2 },
+        { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
+
+        { weight = 1600, desc = "BTR-D", unit =  "BTR_D", side = 1 },
+        { weight = 1800, desc = "BRDM-2", unit =  "BRDM-2", side = 1 },
+
+        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer", side = 2,  }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 1500, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1,  }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
       -- { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 3 },
     },
@@ -249,6 +271,11 @@ ctld.spawnableCrates = {
     },
 
 
+}
+
+-- if the unit is on this list, it will be made into a JTAC
+ctld.jtacUnitTypes = {
+    "SKP","Hummer"
 }
 
 -- ***************************************************************
@@ -372,16 +399,162 @@ function ctld.spawnCrateStatic(_country,_unitId,_point,_name,_weight)
         --            ["CargoDisplayName"] = "cargo123",
     }
 
-    local _spawnedCrate
-
-    if _country == 1 then
-        _spawnedCrate = coalition.addStaticObject(_country, _crate)
-    else
-        _spawnedCrate = coalition.addStaticObject(_country, _crate)
-    end
+    local _spawnedCrate = coalition.addStaticObject(_country, _crate)
 
     return _spawnedCrate
 end
+
+function ctld.spawnFOBCrateStatic(_country,_unitId,_point,_name)
+
+    local _crate = {
+        ["category"] = "Fortifications",
+        ["shape_name"] = "konteiner_red1",
+        ["type"] = "Container red 1",
+        ["unitId"] = _unitId,
+        ["y"] = _point.z ,
+        ["x"] = _point.x ,
+        ["name"] = _name,
+        ["canCargo"] = false,
+        ["heading"] = 0,
+    }
+
+    local  _spawnedCrate = coalition.addStaticObject(_country, _crate)
+
+    return _spawnedCrate
+end
+
+
+function ctld.spawnFOB(_country,_unitId,_point,_name)
+
+    local _crate = {
+        ["category"] = "Fortifications",
+        ["type"] = "outpost",
+        ["unitId"] = _unitId,
+        ["y"] = _point.z ,
+        ["x"] = _point.x ,
+        ["name"] = _name,
+        ["canCargo"] = false,
+        ["heading"] = 0,
+    }
+
+    local _spawnedCrate = coalition.addStaticObject(_country, _crate)
+
+	local _id = mist.getNextUnitId()
+  	local _tower = {
+	    ["type"] = "house2arm",
+	    ["unitId"] = _id,
+	    ["rate"] = 100,
+	    ["y"] = _point.z + -36.57142857,
+	    ["x"] = _point.x + 14.85714286,
+	    ["name"] = "FOB Watchtower #".._id,
+	    ["category"] = "Fortifications",
+	    ["canCargo"] = false,
+	    ["heading"] = 0,
+	}
+	coalition.addStaticObject(_country, _tower)
+
+    return _spawnedCrate
+end
+
+--function ctld.spawnFARP(_country,_point)
+--
+--    local _crate = {
+--        ["type"] = "FARP",
+--        ["unitId"] = _unitId,
+--        ["heliport_modulation"] = 0,
+--        ["y"] = _point.z+1,
+--        ["x"] = _point.x+1,
+--        ["name"] = _name,
+--        ["category"] = "Heliports",
+--        ["canCargo"] = false,
+--        ["heliport_frequency"] = 127.5,
+--        ["heliport_callsign_id"] = 1,
+--        ["heading"] = 3.1415926535898,
+--
+--    }
+--
+--
+--    local _farpPiece =   {
+--        ["shape_name"] = "PalatkaB",
+--        ["type"] = "FARP Tent",
+--
+--        ["y"] = _point.z+1.5,
+--        ["x"] = _point.x+1.5,
+--        ["name"] = "Unit #"..mist.getNextUnitId(),
+--        ["unitId"] = mist.getNextUnitId(),
+--        ["category"] = "Fortifications",
+--        ["heading"] = 3.1415926535898,
+--    }
+--
+--    coalition.addStaticObject(_country, _farpPiece)
+--    local _farpPiece =      {
+--        ["shape_name"] = "SetkaKP",
+--        ["type"] = "FARP Ammo Dump Coating",
+--
+--        ["y"] = _point.z+2,
+--        ["x"] = _point.x+2,
+--        ["name"] = "Unit #"..mist.getNextUnitId(),
+--        ["unitId"] = mist.getNextUnitId(),
+--        ["category"] = "Fortifications",
+--        ["heading"] = 3.1415926535898,
+--    }
+--    coalition.addStaticObject(_country, _farpPiece)
+--    local _farpPiece =     {
+--        ["shape_name"] = "GSM Rus",
+--        ["type"] = "FARP Fuel Depot",
+--
+--        ["y"] = _point.z+2.5,
+--        ["x"] = _point.x+2.5,
+--        ["name"] = "Unit #"..mist.getNextUnitId(),
+--        ["unitId"] = mist.getNextUnitId(),
+--        ["category"] = "Fortifications",
+--        ["heading"] = 3.1415926535898,
+--    }
+--    coalition.addStaticObject(_country, _farpPiece)
+--
+--
+--
+--    local _farpUnits = {
+--        {
+--
+--            ["type"] = "M978 HEMTT Tanker",
+--            ["name"] = "Unit #"..mist.getNextUnitId(),
+--            ["unitId"] = mist.getNextUnitId(),
+--            ["heading"] = 4.7822021504645,
+--            ["playerCanDrive"] = true,
+--            ["skill"] = "Average",
+--            ["x"] = _point.x,
+--            ["y"] = _point.z,
+--        },
+--        {
+--
+--            ["type"] = "M 818",
+--            ["name"] = "Unit #"..mist.getNextUnitId(),
+--            ["unitId"] = mist.getNextUnitId(),
+--            ["heading"] = 4.7822021504645,
+--            ["playerCanDrive"] = true,
+--            ["skill"] = "Average",
+--            ["x"] = _point.x,
+--            ["y"] = _point.z,
+--
+--        },
+--        {
+--
+--            ["type"] = "M-113",
+--            ["name"] = "Unit #"..mist.getNextUnitId(),
+--            ["unitId"] = mist.getNextUnitId(),
+--            ["heading"] = 4.7822021504645,
+--            ["playerCanDrive"] = true,
+--            ["skill"] = "Average",
+--            ["x"] = _point.x,
+--            ["y"] = _point.z,
+--
+--        },
+--    }
+--
+--    mist.dynAdd({units = _farpUnits,country=_country,category=Group.Category.GROUND})
+--
+--end
 
 function ctld.spawnCrate(_args)
 
@@ -399,7 +572,7 @@ function ctld.spawnCrate(_args)
             return
         end
 
-        if _crateType.unit == "Hummer" then
+        if ctld.isJTACUnitType(_crateType.unit)  then
 
             local _limitHit = false
 
@@ -603,6 +776,13 @@ function ctld.loadTroops(_heli,_troops, _number)
         _onboard =  { troops = {}, vehicles = {} }
     end
 
+    local _list
+    if _heli:getCoalition() == 1 then
+        _list = ctld.vehiclesForTransportRED
+    else
+        _list = ctld.vehiclesForTransportBLUE
+    end
+
     if _troops then
 
         _onboard.troops = ctld.generateTroopTypes(_heli:getCoalition(),_number,_heli:getCountry())
@@ -613,7 +793,7 @@ function ctld.loadTroops(_heli,_troops, _number)
 
         _onboard.vehicles = ctld.generateVehiclesForTransport(_heli:getCoalition(), _heli:getCountry())
 
-        local _count = #ctld.vehiclesForTransport
+        local _count = #_list
 
         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " loaded ".._count.." vehicles into " .. _heli:getTypeName(), 10)
 
@@ -626,8 +806,15 @@ end
 function ctld.generateVehiclesForTransport(_side,_country)
 
     local _vehicles = {}
+    local _list
+    if _side == 1 then
+        _list = ctld.vehiclesForTransportRED
+    else
+        _list = ctld.vehiclesForTransportBLUE
+    end
 
-    for _i, _type in ipairs(ctld.vehiclesForTransport) do
+
+    for _i, _type in ipairs(_list) do
 
         local _unitId= mist.getNextUnitId()
 
@@ -640,6 +827,99 @@ function ctld.generateVehiclesForTransport(_side,_country)
     local _details = {units = _vehicles, groupId = _groupId, groupName = string.format("Dropped Group %i",_groupId), side=_side, country=_country }
 
     return _details
+
+end
+
+function ctld.loadUnloadFOBCrate(_args)
+
+    local _heli = ctld.getTransportUnit(_args[1])
+    local _troops = _args[2]
+
+    if _heli == nil then
+        return
+    end
+
+    if _heli:inAir() == true then
+        return
+    end
+
+
+    local _side = _heli:getCoalition()
+
+    local _inZone = ctld.inLogisticsZone(_heli)
+    local _crateOnboard =  ctld.inTransitFOBCrates[_heli:getName()] ~= nil
+
+    if _inZone == false and _crateOnboard == true then
+
+        ctld.inTransitFOBCrates[_heli:getName()] = nil
+
+        local _position = _heli:getPosition()
+
+        --try to spawn at 6 oclock to us
+        local _angle = math.atan2(_position.x.z, _position.x.x)
+        local _xOffset = math.cos(_angle) * -60
+        local _yOffset = math.sin(_angle) * -60
+
+        local _point = _heli:getPoint()
+
+        local _side = _heli:getCoalition()
+
+        local _unitId = mist.getNextUnitId()
+
+        local _name = string.format("FOB Crate #%i", _unitId)
+
+        local _spawnedCrate =  ctld.spawnFOBCrateStatic(_heli:getCountry(),mist.getNextUnitId(),{x=_point.x+_xOffset,z=_point.z + _yOffset},_name)
+
+        if _side == 1 then
+            ctld.droppedFOBCratesRED[_name] = _name
+        else
+            ctld.droppedFOBCratesBLUE[_name] = _name
+        end
+
+        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " delivered a FOB Crate", 10)
+
+        ctld.displayMessageToGroup(_heli, "Delivered FOB Crate 60m at 6'oclock to you", 10)
+
+    elseif _inZone == true and _crateOnboard == true then
+
+        ctld.displayMessageToGroup(_heli, "FOB Crate dropped back to base", 10)
+
+        ctld.inTransitFOBCrates[_heli:getName()] = nil
+
+    elseif _inZone == true and _crateOnboard == false then
+        ctld.displayMessageToGroup(_heli, "FOB Crate Loaded", 10)
+
+        ctld.inTransitFOBCrates[_heli:getName()] = true
+
+        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " loaded a FOB Crate ready for delivery!", 10)
+
+    else
+
+        -- nearest Crate
+        local _crates = ctld.getFOBCratesAndDistance(_heli)
+        local _nearestCrate = ctld.getClosestCrate(_heli, _crates)
+
+        if _nearestCrate ~= nil and _nearestCrate.dist < 100 then
+
+            ctld.displayMessageToGroup(_heli, "FOB Crate Loaded", 10)
+            ctld.inTransitFOBCrates[_heli:getName()] = true
+
+            trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " loaded a FOB Crate ready for delivery!", 10)
+
+            if _side == 1 then
+                ctld.droppedFOBCratesRED[_nearestCrate.crateUnit:getName()] = nil
+            else
+                ctld.droppedFOBCratesBLUE[_nearestCrate.crateUnit:getName()] = nil
+            end
+
+            --remove
+            _nearestCrate.crateUnit:destroy()
+
+        else
+            ctld.displayMessageToGroup(_heli, "There are no friendly logistic units nearby to load a FOB crate from!", 10)
+        end
+
+    end
 
 end
 
@@ -753,8 +1033,6 @@ function ctld.extractTroops(_heli,_troops)
             ctld.displayMessageToGroup(_heli, "No extractable troops nearby and not in a pickup zone", 20)
         end
 
-
-
     else
 
         local _extractVehicles
@@ -809,7 +1087,14 @@ function ctld.checkTroopStatus(_args)
     local _onboard = ctld.inTransitTroops[_heli:getName()]
 
     if _onboard == nil then
-        ctld.displayMessageToGroup(_heli, "No troops onboard", 10)
+
+        if ctld.inTransitFOBCrates[_heli:getName()] == true then
+            ctld.displayMessageToGroup(_heli, "1 FOB Crate Onboard", 10)
+        else
+            ctld.displayMessageToGroup(_heli, "No troops onboard", 10)
+        end
+
+
     else
         local _troops = _onboard.troops
         local _vehicles = _onboard.vehicles
@@ -824,10 +1109,18 @@ function ctld.checkTroopStatus(_args)
             _txt = _txt .. " " .. #_vehicles.units .. " vehicles onboard\n"
         end
 
+        if ctld.inTransitFOBCrates[_heli:getName()] == true then
+            _txt = _txt .. " 1 FOB Crate oboard\n"
+        end
+
         if _txt ~= "" then
             ctld.displayMessageToGroup(_heli, _txt, 10)
         else
-            ctld.displayMessageToGroup(_heli, "No troops onboard", 10)
+            if ctld.inTransitFOBCrates[_heli:getName()] == true then
+                ctld.displayMessageToGroup(_heli, "1 FOB Crate Onboard", 10)
+            else
+                ctld.displayMessageToGroup(_heli, "No troops onboard", 10)
+            end
         end
     end
 end
@@ -852,27 +1145,51 @@ end
 
 function ctld.listNearbyCrates(_args)
 
-    --trigger.action.outText("Nearby Crates" .. _args[1], 10)
-
     local _message = ""
 
     local _heli = ctld.getTransportUnit(_args[1])
 
-    if _heli ~= nil then
+    if _heli == nil then
 
-        local _crates = ctld.getCratesAndDistance(_heli)
+        return -- no heli!
+    end
 
-        for _, _crate in pairs(_crates) do
+    local _crates = ctld.getCratesAndDistance(_heli)
 
-            if _crate.dist < 1000 then
-                _message = string.format("%s\n%s crate - kg %i - %i m", _message, _crate.details.desc, _crate.details.weight, _crate.dist)
-            end
+    for _, _crate in pairs(_crates) do
+
+        if _crate.dist < 1000 then
+            _message = string.format("%s\n%s crate - kg %i - %i m", _message, _crate.details.desc, _crate.details.weight, _crate.dist)
         end
     end
 
-    if _message ~= "" then
+    local _fobCrates = ctld.getFOBCratesAndDistance(_heli)
 
-        local _txt = "Nearby Crates:\n" .. _message
+    local _fobMsg = ""
+    for _, _fobCrate in pairs(_fobCrates) do
+
+        if _fobCrate.dist < 1000 then
+            _fobMsg = _fobMsg..string.format("FOB Crate - %d m\n",  _fobCrate.dist)
+        end
+    end
+
+    if _message ~= "" or _fobMsg ~= "" then
+
+        local _txt= ""
+
+        if _message ~= "" then
+            _txt = "Nearby Crates:\n" .. _message
+        end
+
+        if _fobMsg ~= "" then
+
+            if _message ~= "" then
+                _txt = _txt.."\n\n"
+            end
+
+            _txt = _txt.."Nearby FOB Crates (Not Slingloadable):\n" .. _fobMsg
+
+        end
 
         ctld.displayMessageToGroup(_heli, _txt, 20)
 
@@ -916,6 +1233,37 @@ function ctld.getCratesAndDistance(_heli)
             local _dist = ctld.getDistance(_crate:getPoint(), _heli:getPoint())
 
             local _crateDetails = { crateUnit = _crate, dist = _dist, details = _details }
+
+            table.insert(_crates, _crateDetails)
+        end
+    end
+
+    return _crates
+end
+
+function ctld.getFOBCratesAndDistance(_heli)
+
+    local _crates = {}
+
+    local _allCrates
+    if _heli:getCoalition() == 1 then
+
+        _allCrates = ctld.droppedFOBCratesRED
+    else
+
+        _allCrates = ctld.droppedFOBCratesBLUE
+    end
+
+    for _crateName, _details in pairs(_allCrates) do
+
+        --get crate
+        local _crate = StaticObject.getByName(_crateName)
+
+        if _crate ~= nil and _crate:getLife() > 0 then
+
+            local _dist = ctld.getDistance(_crate:getPoint(), _heli:getPoint())
+
+            local _crateDetails = { crateUnit = _crate, dist = _dist, details = {} }
 
             table.insert(_crates, _crateDetails)
         end
@@ -993,12 +1341,12 @@ function ctld.unpackCrates(_args)
 
         if _crate ~= nil and _crate.dist < 200 then
 
-            if ctld.inLogisticsZone(_heli) == true then
-
-                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
-
-                return
-            end
+--            if ctld.inLogisticsZone(_heli) == true then
+--
+--                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+--
+--                return
+--            end
 
             -- is multi crate?
             if ctld.isMultiCrate(_crate.details) then
@@ -1026,7 +1374,7 @@ function ctld.unpackCrates(_args)
 
                 trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed " .. _crate.details.desc .. " to the field", 10)
 
-                if _crate.details.unit == "Hummer" and ctld.JTAC_dropEnabled then
+                if ctld.isJTACUnitType(_crate.details.unit) and ctld.JTAC_dropEnabled then
 
                     local _code = table.remove(ctld.jtacGeneratedLaserCodes,1)
                     --put to the end
@@ -1041,6 +1389,129 @@ function ctld.unpackCrates(_args)
             ctld.displayMessageToGroup(_heli, "No friendly crates close enough to unpack", 20)
         end
     end
+end
+
+
+-- builds a fob!
+function ctld.unpackFOBCrates(_args)
+
+    local _heli = ctld.getTransportUnit(_args[1])
+
+    if _heli ~= nil and _heli:inAir() == false then
+
+        local _crates = ctld.getFOBCratesAndDistance(_heli)
+        local _nearestCrate = ctld.getClosestCrate(_heli, _crates)
+
+        if _nearestCrate ~= nil and _nearestCrate.dist < 750 then
+
+            if ctld.inLogisticsZone(_heli) == true then
+
+                ctld.displayMessageToGroup(_heli, "You can't unpack the FOB here! Take it to where it's needed!", 20)
+
+                return
+            end
+
+            -- unpack multi crate
+            local _nearbyMultiCrates = {}
+
+            for _, _nearbyCrate in pairs(_crates) do
+
+                if _nearbyCrate.dist < 750 then
+
+                    table.insert(_nearbyMultiCrates, _nearbyCrate)
+
+                    if #_nearbyMultiCrates == ctld.cratesRequiredForFOB then
+                        break
+                    end
+
+                end
+            end
+
+            --- check crate count
+            if #_nearbyMultiCrates == ctld.cratesRequiredForFOB then
+
+                -- destroy crates
+
+                local _points = {}
+
+                for _, _crate in pairs(_nearbyMultiCrates) do
+
+                    if _heli:getCoalition() == 1 then
+                        ctld.droppedFOBCratesRED[_crate.crateUnit:getName()] = nil
+                    else
+                        ctld.droppedFOBCratesRED[_crate.crateUnit:getName()] = nil
+                    end
+
+                    table.insert(_points, _crate.crateUnit:getPoint())
+
+                    --destroy
+                    _crate.crateUnit:destroy()
+                end
+
+                local _centroid = ctld.getCentroid(_points)
+
+                timer.scheduleFunction(
+                    function(_args)
+
+                        local _unitId = mist.getNextUnitId()
+                        local _name = "Deployed FOB #".._unitId
+
+                        local _fob = ctld.spawnFOB(_args[2],_unitId,_args[1],_name)
+
+                        --make it able to deploy crates
+                        table.insert(ctld.logisticUnits, _fob:getName())
+
+                        if ctld.troopPickupAtFOB == true then
+
+                            table.insert(ctld.builtFOBS, _fob:getName())
+
+                            trigger.action.outTextForCoalition(_args[3],"Finished building FOB! Crates and Troops can now be picked up.", 10)
+                        else
+                            trigger.action.outTextForCoalition(_args[3],"Finished building FOB! Crates can now be picked up.", 10)
+                        end
+
+                        -- spawn smoke
+                        trigger.action.smoke(_args[1],trigger.smokeColor.Green)
+
+                     end, {_centroid, _heli:getCountry(),_heli:getCoalition()}, timer.getTime() + ctld.buildTimeFOB)
+
+
+                local _txt = string.format("%s started building FOB using %d FOB crates, it will be finished in %d seconds",ctld.getPlayerNameOrType(_heli),#_nearbyMultiCrates,ctld.buildTimeFOB)
+
+                trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
+
+            else
+
+                local _txt = string.format("Cannot build FOB!\n\nIt requires %d FOB crates and there are %d \n\nOr the crates are not within 750m of each other",ctld.cratesRequiredForFOB,#_nearbyMultiCrates)
+
+                ctld.displayMessageToGroup(_heli, _txt, 20)
+            end
+
+
+        else
+
+            ctld.displayMessageToGroup(_heli, "No friendly FOB crates close enough to unpack", 20)
+        end
+    end
+end
+
+
+-- gets the center of a bunch of points!
+-- return proper DCS point with height
+function ctld.getCentroid(_points)
+    local _tx, _ty = 0, 0
+    for _index, _point in ipairs(_points) do
+        _tx = _tx + _point.x
+        _ty = _ty + _point.z
+    end
+
+    local _npoints = #_points
+
+    local _point=  {x = _tx / _npoints, z = _ty / _npoints }
+
+    _point.y = land.getHeight({_point.x, _point.z})
+
+    return _point
 end
 
 
@@ -1339,12 +1810,12 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind,_maxSearch)
 
         --try to spawn at 6 oclock to us
         local _angle = math.atan2(_pos.z, _pos.x)
-        local _xOffset = math.cos(_angle) * 30
-        local _yOffset = math.sin(_angle) * 30
+        local _xOffset = math.cos(_angle) * -30
+        local _yOffset = math.sin(_angle) * -30
 
 
         for _i, _detail in ipairs(_details.units) do
-            _group.units[_i] = ctld.createUnit(_pos.x - (_xOffset + 10 * _i), _pos.z - (_yOffset + 10 * _i), _angle,_detail)
+            _group.units[_i] = ctld.createUnit(_pos.x + (_xOffset + 10 * _i), _pos.z + (_yOffset + 10 * _i), _angle,_detail)
         end
     end
 
@@ -1564,6 +2035,25 @@ function ctld.inPickupZone(_heli)
         end
     end
 
+    -- now check spawned fobs
+    for _, _fobName in ipairs(ctld.builtFOBS) do
+
+        local _fob = StaticObject.getByName(_fobName)
+
+        if _fob ~= nil and _fob:isExist() and _fob:getCoalition() == _heli:getCoalition() and _fob:getLife() > 0 then
+
+            --get distance to center
+
+            local _dist = ctld.getDistance(_heliPoint,_fob:getPoint())
+
+            if _dist <= 150 then
+                return true
+            end
+        end
+    end
+
+
+
     return false
 end
 
@@ -1685,18 +2175,46 @@ end
 
 function ctld.unitCanCarryVehicles(_unit)
 
-    local _type = _unit:getTypeName()
+    local _type = string.lower(_unit:getTypeName())
 
-    for _,_name in pairs(ctld.vehicleTransportEnabled) do
+    local _found = false
+    for _,_name in ipairs(ctld.vehicleTransportEnabled) do
 
-        if string.match(_type, _name) then
-            return true
+       -- env.info("TYPE: ".._type)
+
+        local _nameLower = string.lower(_name)
+       -- env.info("NAME: ".._nameLower)
+
+        if string.match(_type, _nameLower) ~= nil then
+          --  env.info("MATCH")
+           _found = true
+            break
         end
+
     end
 
-    return false
+    return _found
 
 end
+
+function ctld.isJTACUnitType(_type)
+
+     _type = string.lower(_type)
+
+    local _found = false
+    for _,_name in ipairs(ctld.jtacUnitTypes) do
+        local _nameLower = string.lower(_name)
+        if string.match(_type, _nameLower) ~= nil then
+            _found = true
+            break
+        end
+
+    end
+
+    return _found
+
+end
+
 
 
 -- checks the status of all AI troop carriers and auto loads and unloads troops
@@ -1760,7 +2278,14 @@ function ctld.addF10MenuOptions()
                 missionCommands.addCommandForGroup(_groupId, "Load / Unload Troops", { "Troop Transport" }, ctld.loadUnloadTroops, { _unitName,true })
 
                 if ctld.unitCanCarryVehicles(_unit) then
+
                     missionCommands.addCommandForGroup(_groupId, "Load / Unload Vehicles", { "Troop Transport" }, ctld.loadUnloadTroops, { _unitName,false })
+
+                    if ctld.enabledFOBBuilding then
+
+                        missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", { "Troop Transport" }, ctld.loadUnloadFOBCrate, { _unitName,false })
+                    end
+
                 end
 
                 missionCommands.addCommandForGroup(_groupId, "Check Status", { "Troop Transport" }, ctld.checkTroopStatus, { _unitName })
@@ -1775,8 +2300,10 @@ function ctld.addF10MenuOptions()
                             missionCommands.addSubMenuForGroup(_groupId, _subMenuName)
                             for _, _crate in pairs(_crates) do
 
-                                if _crate.unit ~= "Hummer" or ( _crate.unit == "Hummer" and ctld.JTAC_dropEnabled ) then
-                                    missionCommands.addCommandForGroup(_groupId, _crate.desc, {_subMenuName }, ctld.spawnCrate, { _unitName,_crate.weight })
+                                if ctld.isJTACUnitType(_crate.unit) == false or ( ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled ) then
+                                    if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
+                                        missionCommands.addCommandForGroup(_groupId, _crate.desc, {_subMenuName }, ctld.spawnCrate, { _unitName,_crate.weight })
+                                    end
                                 end
                             end
                         end
@@ -1784,7 +2311,11 @@ function ctld.addF10MenuOptions()
 
                     missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands")
                     missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", { "CTLD Commands" }, ctld.listNearbyCrates, { _unitName })
-                    missionCommands.addCommandForGroup(_groupId, "Unpack Crate", { "CTLD Commands" }, ctld.unpackCrates, { _unitName })
+                    missionCommands.addCommandForGroup(_groupId, "Unpack Sling Crates", { "CTLD Commands" }, ctld.unpackCrates, { _unitName })
+
+                    if ctld.enabledFOBBuilding then
+                        missionCommands.addCommandForGroup(_groupId, "Unpack FOB Crates", { "CTLD Commands" }, ctld.unpackFOBCrates, { _unitName })
+                    end
 
                     if ctld.enableSmokeDrop then
                         missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", {  "CTLD Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
@@ -2462,6 +2993,13 @@ ctld.droppedVehiclesRED = {} -- stores vehicle groups for c-130 / hercules
 ctld.droppedVehiclesBLUE = {} -- stores vehicle groups for c-130 / hercules
 
 ctld.inTransitTroops = {}
+
+ctld.inTransitFOBCrates = {}
+
+ctld.droppedFOBCratesRED = {}
+ctld.droppedFOBCratesBLUE = {}
+
+ctld.builtFOBS = {} -- stores fully built fobs
 
 ctld.completeHawkSystems = {} -- stores complete spawned groups from multiple crates
 
