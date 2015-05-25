@@ -368,11 +368,13 @@ Example:
 #In Game
 ##Troop Loading and Unloading
 
-Troops can be loaded and unloaded using the F10 Menu. Troops can only be loaded in a pickup zone but can be dropped anywhere you like. Troops dropped by transports can also be extracted by any transport unit using the radio menu, as long as you are close enough.
+Troops can be loaded and unloaded using the F10 Menu. Troops can only be loaded in a pickup zone or from a FOB (if enabled) but can be dropped anywhere you like. Troops dropped by transports can also be extracted by any transport unit using the radio menu, as long as you are close enough.
 
 AI transports will display a message when they Auto load and deploy troops in the field. AI units won't pickup already deployed troops so as not to interfere with players.
 
-The C130 gets an extra radio option for loading and deploying vehicles. By default the C130 can pickup and deploy a  HMMWV TOW and HMMWV MG. This can be changed by editing ```ctld.vehiclesForTransport``` .
+The C130 / IL-76 gets an extra radio option for loading and deploying vehicles. By default the C-130 can pickup and deploy a  HMMWV TOW and HMMWV MG. This can be changed by editing ```ctld.vehiclesForTransportBLUE``` for BLUE coalition forces or ```ctld.vehiclesForTransportRED``` for RED coalition forces.
+
+The C-130 / IL-76 can also load and unload FOB crates from a Logistics area, see FOB Construction for more details.
 
 ##Cargo Spawning and Sling Loading
 
