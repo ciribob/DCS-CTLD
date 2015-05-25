@@ -418,7 +418,7 @@ The amount of FOB crates required and the time to build can be configured at the
 
 FOB crates cannot be moved by sling-load but can be built using the F10 - CTLD Commands menu by ether aircraft or helicopters. They can be repeatedly dropped and picked up by transport aircraft if they need to be moved. The FOB will build between all the dropped crates.
 
-Once built, units can load troops and spawn crates from the FOB. Troop loading from the FOB can be configured at the top fo the script.
+Once built, units can load troops and spawn crates from the FOB. Troop loading from the FOB can be configured at the top fo the script. AI units can also auto load troops from the FOB.
 
 Crate Dropped:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150524_204030_zpsy33kfzcz.png~original "Crate Dropped")
