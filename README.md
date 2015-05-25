@@ -7,7 +7,7 @@ The script supports:
 
 * Troop Loading / Unloading via Radio Menu
     * AI Units can also load and unload troops automatically
-* Vehicle Loading / Unloading via Radio Menu for C-130 (Other large aircraft can easily be added) (https://www.digitalcombatsimulator.com/en/files/668878/?sphrase_id=1196134)
+* Vehicle Loading / Unloading via Radio Menu for C-130 / IL-76 (Other large aircraft can easily be added) (https://www.digitalcombatsimulator.com/en/files/668878/?sphrase_id=1196134)
     * You will need to download the modded version of the C-130 from here (JSGME Ready) that fixes the Radio Menu 
 * Coloured Smoke Marker Drops
 * Extractable Soldier Spawn at a trigger zone
@@ -18,8 +18,13 @@ The script supports:
     * HMMWV TOW
     * HMMWV MG
     * HMMWV JTAC - Will Auto Lase and mark targets with smoke if enabled
+    * SKP-11 JTAC - Will Auto Lase and mark targets with smoke if enabled
     * Mortar
-    * MANPAD
+    * Stinger MANPAD
+    * Igla MANPAD
+    * BTR-D
+    * BRMD-2
+* FOB Building
 * Pre loading of units into AI vehicles via a DO SCRIPT
 
 A complete test mission is included.
@@ -41,13 +46,16 @@ An example is shown below:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-14-00_zpsmoirc3nz.png~original "Script Setup")
 
 ###Script Configuration
-The script has lots of configuration options that can be used to futher customise the behaviour.
+The script has lots of configuration options that can be used to further customise the behaviour.
 ```lua
+
 -- ************************************************************************
 -- *********************  USER CONFIGURATION ******************************
 -- ************************************************************************
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
+
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
+
 ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
 
 ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a group extraction
@@ -57,17 +65,29 @@ ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop poi
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
 
-ctld.vehiclesForTransport = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130
+ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76
+ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
+
+ctld.enabledFOBBuilding = true -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
+-- In future i'd like it to be a FARP but so far that seems impossible...
+-- You can also enable troop Pickup at FOBS
+
+ctld.cratesRequiredForFOB = 3 -- The amount of crates required to build a FOB. Once built, helis can spawn crates at this outpost to be carried and deployed in another area.
+-- The crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
+
+ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a created FOB
+
+ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
+
 ```
 
-To change what units can be dropped from crates modify the spawnable crates section. An extra parameter, ```cratesRequired = NUMBER``` can be added so you need more than one crate to build a unit. This parameter cannot be used for the HAWK system as that is already broken into 3 crates. 
+To change what units can be dropped from crates modify the spawnable crates section. An extra parameter, ```cratesRequired = NUMBER``` can be added so you need more than one crate to build a unit. This parameter cannot be used for the HAWK system as that is already broken into 3 crates. You can also specify the coalition side so RED and BLUE have different crates to drop. If the parameter is missing the crate will appear for both sides.
 
 ```--``` in lua means ignore this line :)
 
 ```lua
-
 -- ************** SPAWNABLE CRATES ******************
 -- Weights must be unique as we use the weight to change the cargo to the correct unit
 -- when we unpack
@@ -82,24 +102,31 @@ ctld.spawnableCrates = {
         -- Desc is the description on the F10 MENU
         -- unit is the model name of the unit to spawn
         -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
+        -- side is optional but 2 is BLUE and 1 is RED
         -- dont use that option with the HAWK Crates
-        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" },
-        { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament" },
-        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer" }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" , side = 2 },
+        { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
+
+        { weight = 1700, desc = "BTR-D", unit =  "BTR_D", side = 1 },
+        { weight = 1900, desc = "BRDM-2", unit =  "BRDM-2", side = 1 },
+
+        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer", side = 2,  }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 1500, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1,  }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
-      -- { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 3 },
+        -- { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 3 },
     },
 
     ["AA Crates"] = {
 
-        { weight = 210, desc = "MANPAD", unit = "Stinger manpad" },
+        { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
+        { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
+
         { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
         { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
         { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
-     --   { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 3 },
-
+        --   { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 3 },
     },
-
 
 }
 ```
@@ -167,6 +194,8 @@ ctld.JTAC_lock =  "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only loc
 
 ```
 
+To make a unit deployed from a crate into a JTAC unit, add the type to the ```ctld.jtacUnitTypes``` list.
+
 The script allows a JTAC to mark and hold an IR and Laser point on a target allowing TGP's to lock onto the lase and ease of target location using NV Goggles.
 
 The JTAC will automatically switch targets when a target is destroyed or goes out of Line of Sight.
@@ -183,7 +212,7 @@ not be the same as the group name. The editor should do this for you but be care
 
 Run the code below as a DO SCRIPT at the start of the mission, or after a delay if you prefer to activate a mission JTAC. 
 
-**JTAC HMMWV units deployed by unpacking a crate will automatically activate and begin searching for targets immediately.**
+**JTAC units deployed by unpacking a crate will automatically activate and begin searching for targets immediately.**
 
 ```lua
 ctld.JTACAutoLase('JTAC1', 1688)
@@ -381,5 +410,24 @@ Rearming:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-46-10-44_zpsqr8oducw.png~original "Hawk Rearmed")
 
 **Note: Once unpacked a crate will not disappear from the field or the F6 Menu, but will disappear from the F10 Nearby Crates list. There is currently no way to remove crates due to a DCS Bug AFAIK. This can make picking the right crate tricky, but by using the F10 List crates option, you can keep readjusting your position until you are close to the crate that you want and then it's trial and error, using the F6 menu to pick the right crate for sling loading. **
+
+##Forward Operating Base (FOB) Construction
+FOBs can be built by loading special FOB crates from a **Logistics** unit into a C-130 or other large aircraft configured in the script. To load the crate use the F10 - Troop Commands Menu. The idea behind FOBs is to make player vs player missions even more dynamic as these can be deployed in most locations. Once destroyed the FOB can no longer be used.
+
+The amount of FOB crates required and the time to build can be configured at the top of the CTLD script. By default the FOB required 3 crates to build.
+
+FOB crates cannot be moved by sling-load but can be built using the F10 - CTLD Commands menu by ether aircraft or helicopters. They can be repeatedly dropped and picked up by transport aircraft if they need to be moved. The FOB will build between all the dropped crates.
+
+Once built, units can load troops and spawn crates from the FOB. Troop loading from the FOB can be configured at the top fo the script.
+
+Crate Dropped:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150524_204030_zpsy33kfzcz.png~original "Crate Dropped")
+
+Building:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150524_204047_zpsp8dj0wgs.png~original "Loading")
+
+Built:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150524_204056_zpsbodlkdgt.png~original "Loading")
+
 
 

@@ -38,11 +38,11 @@ ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } --
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 
 ctld.enabledFOBBuilding = true -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
-                            -- In future i'd like it to be a FARP but so far that seems impossible...
-                            -- You can also enable troop Pickup at FOBS
+-- In future i'd like it to be a FARP but so far that seems impossible...
+-- You can also enable troop Pickup at FOBS
 
 ctld.cratesRequiredForFOB = 3 -- The amount of crates required to build a FOB. Once built, helis can spawn crates at this outpost to be carried and deployed in another area.
-                                -- The crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
+-- The crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
 
 ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a created FOB
 
@@ -250,32 +250,32 @@ ctld.spawnableCrates = {
         { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" , side = 2 },
         { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
 
-        { weight = 1600, desc = "BTR-D", unit =  "BTR_D", side = 1 },
-        { weight = 1800, desc = "BRDM-2", unit =  "BRDM-2", side = 1 },
+        { weight = 1700, desc = "BTR-D", unit =  "BTR_D", side = 1 },
+        { weight = 1900, desc = "BRDM-2", unit =  "BRDM-2", side = 1 },
 
         { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer", side = 2,  }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
         { weight = 1500, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1,  }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
 
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
-      -- { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 3 },
+        -- { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 3 },
     },
 
     ["AA Crates"] = {
 
-        { weight = 210, desc = "MANPAD", unit = "Stinger manpad" },
+        { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
+        { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
+
         { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
         { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
         { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
-     --   { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 3 },
-
+        --   { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 3 },
     },
-
 
 }
 
 -- if the unit is on this list, it will be made into a JTAC
 ctld.jtacUnitTypes = {
-    "SKP","Hummer"
+    "SKP","Hummer" -- there are some wierd encoding issues so if you write SKP-11 it wont match as the - sign is encoded differently...
 }
 
 -- ***************************************************************
@@ -439,19 +439,19 @@ function ctld.spawnFOB(_country,_unitId,_point,_name)
 
     local _spawnedCrate = coalition.addStaticObject(_country, _crate)
 
-	local _id = mist.getNextUnitId()
-  	local _tower = {
-	    ["type"] = "house2arm",
-	    ["unitId"] = _id,
-	    ["rate"] = 100,
-	    ["y"] = _point.z + -36.57142857,
-	    ["x"] = _point.x + 14.85714286,
-	    ["name"] = "FOB Watchtower #".._id,
-	    ["category"] = "Fortifications",
-	    ["canCargo"] = false,
-	    ["heading"] = 0,
-	}
-	coalition.addStaticObject(_country, _tower)
+    local _id = mist.getNextUnitId()
+    local _tower = {
+        ["type"] = "house2arm",
+        ["unitId"] = _id,
+        ["rate"] = 100,
+        ["y"] = _point.z + -36.57142857,
+        ["x"] = _point.x + 14.85714286,
+        ["name"] = "FOB Watchtower #".._id,
+        ["category"] = "Fortifications",
+        ["canCargo"] = false,
+        ["heading"] = 0,
+    }
+    coalition.addStaticObject(_country, _tower)
 
     return _spawnedCrate
 end
@@ -1341,12 +1341,12 @@ function ctld.unpackCrates(_args)
 
         if _crate ~= nil and _crate.dist < 200 then
 
---            if ctld.inLogisticsZone(_heli) == true then
---
---                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
---
---                return
---            end
+            if ctld.inLogisticsZone(_heli) == true then
+
+                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+
+                return
+            end
 
             -- is multi crate?
             if ctld.isMultiCrate(_crate.details) then
@@ -1462,34 +1462,23 @@ function ctld.unpackFOBCrates(_args)
                         table.insert(ctld.logisticUnits, _fob:getName())
 
                         if ctld.troopPickupAtFOB == true then
-
                             table.insert(ctld.builtFOBS, _fob:getName())
-
                             trigger.action.outTextForCoalition(_args[3],"Finished building FOB! Crates and Troops can now be picked up.", 10)
                         else
                             trigger.action.outTextForCoalition(_args[3],"Finished building FOB! Crates can now be picked up.", 10)
                         end
+                    end, {_centroid, _heli:getCountry(),_heli:getCoalition()}, timer.getTime() + ctld.buildTimeFOB)
 
-                        -- spawn smoke
-                        trigger.action.smoke(_args[1],trigger.smokeColor.Green)
+                local _txt = string.format("%s started building FOB using %d FOB crates, it will be finished in %d seconds.\nPosition marked with smoke.",ctld.getPlayerNameOrType(_heli),#_nearbyMultiCrates,ctld.buildTimeFOB)
 
-                     end, {_centroid, _heli:getCountry(),_heli:getCoalition()}, timer.getTime() + ctld.buildTimeFOB)
-
-
-                local _txt = string.format("%s started building FOB using %d FOB crates, it will be finished in %d seconds",ctld.getPlayerNameOrType(_heli),#_nearbyMultiCrates,ctld.buildTimeFOB)
+                trigger.action.smoke(_centroid,trigger.smokeColor.Green)
 
                 trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
-
             else
-
                 local _txt = string.format("Cannot build FOB!\n\nIt requires %d FOB crates and there are %d \n\nOr the crates are not within 750m of each other",ctld.cratesRequiredForFOB,#_nearbyMultiCrates)
-
                 ctld.displayMessageToGroup(_heli, _txt, 20)
             end
-
-
         else
-
             ctld.displayMessageToGroup(_heli, "No friendly FOB crates close enough to unpack", 20)
         end
     end
@@ -2177,41 +2166,29 @@ function ctld.unitCanCarryVehicles(_unit)
 
     local _type = string.lower(_unit:getTypeName())
 
-    local _found = false
     for _,_name in ipairs(ctld.vehicleTransportEnabled) do
-
-       -- env.info("TYPE: ".._type)
-
         local _nameLower = string.lower(_name)
-       -- env.info("NAME: ".._nameLower)
-
-        if string.match(_type, _nameLower) ~= nil then
-          --  env.info("MATCH")
-           _found = true
-            break
+        if string.match(_type, _nameLower) then
+           return true
         end
-
     end
 
-    return _found
-
+    return false
 end
 
 function ctld.isJTACUnitType(_type)
 
-     _type = string.lower(_type)
+    _type = string.lower(_type)
 
-    local _found = false
     for _,_name in ipairs(ctld.jtacUnitTypes) do
         local _nameLower = string.lower(_name)
-        if string.match(_type, _nameLower) ~= nil then
-            _found = true
-            break
+        if string.match(_type, _nameLower) then
+           return true
         end
 
     end
 
-    return _found
+    return false
 
 end
 
