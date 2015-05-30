@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.05 - 24/05/2015 - Event Bug Fix from Latest DCS Patch
+    Version: 1.06 - 29/05/2015 - Event Bug Fix from Latest DCS Patch
 
  ]]
 
@@ -48,6 +48,7 @@ ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a creat
 
 ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 
+ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons
 
 -- ***************** JTAC CONFIGURATION *****************
 
@@ -896,10 +897,10 @@ function ctld.loadUnloadFOBCrate(_args)
     else
 
         -- nearest Crate
-        local _crates = ctld.getFOBCratesAndDistance(_heli)
-        local _nearestCrate = ctld.getClosestCrate(_heli, _crates)
+        local _crates = ctld.getCratesAndDistance(_heli)
+        local _nearestCrate = ctld.getClosestCrate(_heli, _crates, "FOB")
 
-        if _nearestCrate ~= nil and _nearestCrate.dist < 100 then
+        if _nearestCrate ~= nil and _nearestCrate.dist < 150 then
 
             ctld.displayMessageToGroup(_heli, "FOB Crate Loaded", 10)
             ctld.inTransitFOBCrates[_heli:getName()] = true
@@ -1143,6 +1144,68 @@ function ctld.checkTransportStatus()
 
 end
 
+--recreates beacons to make sure they work!
+function ctld.refreshRadioBeacons()
+
+    timer.scheduleFunction(ctld.refreshRadioBeacons,nil,timer.getTime()+60)
+
+    for _fobName,_beaconDetails in ipairs(ctld.fobBeacons) do
+        local _fob = StaticObject.getByName(_fobName)
+
+        if _fob ~= nil and _fob:isExist()  and _fob:getLife() > 0 then
+            ctld.createRadioBeacon(_beaconDetails.frequency,_fob:getPoint())
+        end
+    end
+
+end
+
+function ctld.getClockDirection(_heli,_crate)
+
+    -- Source: Helicopter Script - Thanks!
+
+    local _position = _crate:getPosition().p -- get position of crate
+    local _playerPosition = _heli:getPosition().p -- get position of helicopter
+    local _relativePosition = mist.vec.sub(_position,_playerPosition)
+
+    local _playerHeading = mist.getHeading(_heli) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
+
+    local _headingVector = {x = math.cos(_playerHeading),y=0,z=math.sin(_playerHeading)}
+
+    local _headingVectorPerpendicular = {x = math.cos(_playerHeading+math.pi/2),y=0,z=math.sin(_playerHeading+math.pi/2)}
+
+    local _forwardDistance = mist.vec.dp(_relativePosition,_headingVector)
+
+    local _rightDistance = mist.vec.dp(_relativePosition,_headingVectorPerpendicular)
+
+    local _angle = math.atan2(_rightDistance,_forwardDistance)*180/math.pi
+
+    if _angle < 0 then
+        _angle = 360+_angle
+    end
+    _angle = math.floor(_angle*12/360+0.5)
+    if _angle == 0 then
+        _angle = 12
+    end
+
+    return _angle
+end
+
+
+function ctld.getCompassBearing(_ref,_unitPos)
+
+    _ref = mist.utils.makeVec3(_ref, 0)  -- turn it into Vec3 if it is not already.
+    _unitPos = mist.utils.makeVec3(_unitPos,0) -- turn it into Vec3 if it is not already.
+
+    local _vec = {x = _unitPos.x - _ref.x, y = _unitPos.y - _ref.y, z = _unitPos.z - _ref.z}
+
+    local _dir = mist.utils.getDir(_vec, _ref)
+
+    local _bearing = mist.utils.round(mist.utils.toDegree(_dir), 0)
+
+    return _bearing
+
+end
+
 function ctld.listNearbyCrates(_args)
 
     local _message = ""
@@ -1158,18 +1221,17 @@ function ctld.listNearbyCrates(_args)
 
     for _, _crate in pairs(_crates) do
 
-        if _crate.dist < 1000 then
-            _message = string.format("%s\n%s crate - kg %i - %i m", _message, _crate.details.desc, _crate.details.weight, _crate.dist)
+        if _crate.dist < 1000 and _crate.details.unit ~= "FOB" then
+            _message = string.format("%s\n%s crate - kg %i - %i m - %d o'clock", _message, _crate.details.desc, _crate.details.weight, _crate.dist,ctld.getClockDirection(_heli,_crate.crateUnit))
         end
     end
 
-    local _fobCrates = ctld.getFOBCratesAndDistance(_heli)
 
     local _fobMsg = ""
-    for _, _fobCrate in pairs(_fobCrates) do
+    for _, _fobCrate in pairs(_crates) do
 
-        if _fobCrate.dist < 1000 then
-            _fobMsg = _fobMsg..string.format("FOB Crate - %d m\n",  _fobCrate.dist)
+        if _fobCrate.dist < 1000 and _fobCrate.details.unit == "FOB" then
+            _fobMsg = _fobMsg..string.format("FOB Crate - %d m - %d o'clock\n",  _fobCrate.dist, ctld.getClockDirection(_heli,_fobCrate.crateUnit))
         end
     end
 
@@ -1202,22 +1264,72 @@ function ctld.listNearbyCrates(_args)
     end
 end
 
+
+function ctld.listFOBS(_args)
+
+    local _msg = "FOB Positions:"
+
+    local _heli = ctld.getTransportUnit(_args[1])
+
+    if _heli == nil then
+
+        return -- no heli!
+    end
+
+    -- get fob positions
+
+    local _fobs = ctld.getSpawnedFobs(_heli)
+
+    -- now check spawned fobs
+    for _, _fob in ipairs(_fobs) do
+        _msg = string.format("%s\nFOB @ %s", _msg, ctld.getFOBPositionString(_fob))
+    end
+
+    if _msg == "FOB Positions:" then
+        ctld.displayMessageToGroup(_heli, "Sorry, there are no active FOBs!", 20)
+    else
+        ctld.displayMessageToGroup(_heli, _msg, 20)
+    end
+
+end
+
+function ctld.getFOBPositionString(_fob)
+
+    local _lat, _lon = coord.LOtoLL(_fob:getPosition().p)
+
+    local _latLngStr = mist.tostringLL(_lat, _lon,3,false)
+
+    local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)),5)
+
+    local _message = _latLngStr .. " - MGRS ".._mgrsString
+
+    local _beaconInfo = ctld.fobBeacons[_fob:getName()]
+
+    if _beaconInfo ~=nil then
+        _message= string.format("%s - %.2f FM", _message,_beaconInfo.frequency / 1000000)
+    end
+
+    return _message
+end
+
+
+
+
 function ctld.displayMessageToGroup(_unit, _text, _time)
 
     trigger.action.outTextForGroup(_unit:getGroup():getID(), _text, _time)
 
 end
 
+--includes fob crates!
 function ctld.getCratesAndDistance(_heli)
 
     local _crates = {}
 
     local _allCrates
     if _heli:getCoalition() == 1 then
-
         _allCrates = ctld.spawnedCratesRED
     else
-
         _allCrates = ctld.spawnedCratesBLUE
     end
 
@@ -1238,23 +1350,14 @@ function ctld.getCratesAndDistance(_heli)
         end
     end
 
-    return _crates
-end
-
-function ctld.getFOBCratesAndDistance(_heli)
-
-    local _crates = {}
-
-    local _allCrates
+    local _fobCrates
     if _heli:getCoalition() == 1 then
-
-        _allCrates = ctld.droppedFOBCratesRED
+        _fobCrates = ctld.droppedFOBCratesRED
     else
-
-        _allCrates = ctld.droppedFOBCratesBLUE
+        _fobCrates = ctld.droppedFOBCratesBLUE
     end
 
-    for _crateName, _details in pairs(_allCrates) do
+    for _crateName, _details in pairs(_fobCrates) do
 
         --get crate
         local _crate = StaticObject.getByName(_crateName)
@@ -1263,7 +1366,7 @@ function ctld.getFOBCratesAndDistance(_heli)
 
             local _dist = ctld.getDistance(_crate:getPoint(), _heli:getPoint())
 
-            local _crateDetails = { crateUnit = _crate, dist = _dist, details = {} }
+            local _crateDetails = { crateUnit = _crate, dist = _dist, details = {unit="FOB"},  }
 
             table.insert(_crates, _crateDetails)
         end
@@ -1272,7 +1375,8 @@ function ctld.getFOBCratesAndDistance(_heli)
     return _crates
 end
 
-function ctld.getClosestCrate(_heli, _crates)
+
+function ctld.getClosestCrate(_heli, _crates,_type)
 
     local _closetCrate = nil
     local _shortestDistance = -1
@@ -1280,11 +1384,13 @@ function ctld.getClosestCrate(_heli, _crates)
 
     for _, _crate in pairs(_crates) do
 
-        _distance = _crate.dist
+        if(_crate.details.unit == _type or _type == nil) then
+            _distance = _crate.dist
 
-        if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
-            _shortestDistance = _distance
-            _closetCrate = _crate
+            if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
+                _shortestDistance = _distance
+                _closetCrate = _crate
+            end
         end
     end
 
@@ -1339,14 +1445,20 @@ function ctld.unpackCrates(_args)
         local _crates = ctld.getCratesAndDistance(_heli)
         local _crate = ctld.getClosestCrate(_heli, _crates)
 
-        if _crate ~= nil and _crate.dist < 200 then
+        if _crate ~= nil and _crate.dist < 750 and _crate.details.unit == "FOB" then
 
-            if ctld.inLogisticsZone(_heli) == true then
+            ctld.unpackFOBCrates(_crates,_heli)
 
-                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+            return
 
-                return
-            end
+        elseif _crate ~= nil and _crate.dist < 200 then
+
+--            if ctld.inLogisticsZone(_heli) == true then
+--
+--                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+--
+--                return
+--            end
 
             -- is multi crate?
             if ctld.isMultiCrate(_crate.details) then
@@ -1393,95 +1505,132 @@ end
 
 
 -- builds a fob!
-function ctld.unpackFOBCrates(_args)
+function ctld.unpackFOBCrates(_crates,_heli)
 
-    local _heli = ctld.getTransportUnit(_args[1])
+--    if ctld.inLogisticsZone(_heli) == true then
+--
+--        ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+--
+--        return
+--    end
 
-    if _heli ~= nil and _heli:inAir() == false then
+    -- unpack multi crate
+    local _nearbyMultiCrates = {}
 
-        local _crates = ctld.getFOBCratesAndDistance(_heli)
-        local _nearestCrate = ctld.getClosestCrate(_heli, _crates)
+    for _, _nearbyCrate in pairs(_crates) do
 
-        if _nearestCrate ~= nil and _nearestCrate.dist < 750 then
+        if _nearbyCrate.dist < 750 and _nearbyCrate.details.unit == "FOB" then
 
-            if ctld.inLogisticsZone(_heli) == true then
+            table.insert(_nearbyMultiCrates, _nearbyCrate)
 
-                ctld.displayMessageToGroup(_heli, "You can't unpack the FOB here! Take it to where it's needed!", 20)
-
-                return
-            end
-
-            -- unpack multi crate
-            local _nearbyMultiCrates = {}
-
-            for _, _nearbyCrate in pairs(_crates) do
-
-                if _nearbyCrate.dist < 750 then
-
-                    table.insert(_nearbyMultiCrates, _nearbyCrate)
-
-                    if #_nearbyMultiCrates == ctld.cratesRequiredForFOB then
-                        break
-                    end
-
-                end
-            end
-
-            --- check crate count
             if #_nearbyMultiCrates == ctld.cratesRequiredForFOB then
-
-                -- destroy crates
-
-                local _points = {}
-
-                for _, _crate in pairs(_nearbyMultiCrates) do
-
-                    if _heli:getCoalition() == 1 then
-                        ctld.droppedFOBCratesRED[_crate.crateUnit:getName()] = nil
-                    else
-                        ctld.droppedFOBCratesRED[_crate.crateUnit:getName()] = nil
-                    end
-
-                    table.insert(_points, _crate.crateUnit:getPoint())
-
-                    --destroy
-                    _crate.crateUnit:destroy()
-                end
-
-                local _centroid = ctld.getCentroid(_points)
-
-                timer.scheduleFunction(
-                    function(_args)
-
-                        local _unitId = mist.getNextUnitId()
-                        local _name = "Deployed FOB #".._unitId
-
-                        local _fob = ctld.spawnFOB(_args[2],_unitId,_args[1],_name)
-
-                        --make it able to deploy crates
-                        table.insert(ctld.logisticUnits, _fob:getName())
-
-                        if ctld.troopPickupAtFOB == true then
-                            table.insert(ctld.builtFOBS, _fob:getName())
-                            trigger.action.outTextForCoalition(_args[3],"Finished building FOB! Crates and Troops can now be picked up.", 10)
-                        else
-                            trigger.action.outTextForCoalition(_args[3],"Finished building FOB! Crates can now be picked up.", 10)
-                        end
-                    end, {_centroid, _heli:getCountry(),_heli:getCoalition()}, timer.getTime() + ctld.buildTimeFOB)
-
-                local _txt = string.format("%s started building FOB using %d FOB crates, it will be finished in %d seconds.\nPosition marked with smoke.",ctld.getPlayerNameOrType(_heli),#_nearbyMultiCrates,ctld.buildTimeFOB)
-
-                trigger.action.smoke(_centroid,trigger.smokeColor.Green)
-
-                trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
-            else
-                local _txt = string.format("Cannot build FOB!\n\nIt requires %d FOB crates and there are %d \n\nOr the crates are not within 750m of each other",ctld.cratesRequiredForFOB,#_nearbyMultiCrates)
-                ctld.displayMessageToGroup(_heli, _txt, 20)
+                break
             end
-        else
-            ctld.displayMessageToGroup(_heli, "No friendly FOB crates close enough to unpack", 20)
+
         end
     end
+
+    --- check crate count
+    if #_nearbyMultiCrates == ctld.cratesRequiredForFOB then
+
+        -- destroy crates
+
+        local _points = {}
+
+        for _, _crate in pairs(_nearbyMultiCrates) do
+
+            if _heli:getCoalition() == 1 then
+                ctld.droppedFOBCratesRED[_crate.crateUnit:getName()] = nil
+            else
+                ctld.droppedFOBCratesRED[_crate.crateUnit:getName()] = nil
+            end
+
+            table.insert(_points, _crate.crateUnit:getPoint())
+
+            --destroy
+            _crate.crateUnit:destroy()
+        end
+
+        local _centroid = ctld.getCentroid(_points)
+
+        timer.scheduleFunction(
+            function(_args)
+
+                local _unitId = mist.getNextUnitId()
+                local _name = "Deployed FOB #".._unitId
+
+                local _fob = ctld.spawnFOB(_args[2],_unitId,_args[1],_name)
+
+                --make it able to deploy crates
+                table.insert(ctld.logisticUnits, _fob:getName())
+
+                local _frequency = ctld.generateRadioFMRadioFrequency()
+
+                ctld.fobBeacons[_name] = {frequency=_frequency, point=_fob:getPoint() }
+
+                --started radio beacon
+                ctld.createRadioBeacon(_frequency,_fob:getPoint())
+
+                if ctld.troopPickupAtFOB == true then
+                    table.insert(ctld.builtFOBS, _fob:getName())
+
+                    trigger.action.outTextForCoalition(_args[3],"Finished building FOB! Crates and Troops can now be picked up.", 10)
+                else
+                    trigger.action.outTextForCoalition(_args[3],"Finished building FOB! Crates can now be picked up.", 10)
+                end
+
+            end, {_centroid, _heli:getCountry(),_heli:getCoalition()}, timer.getTime() + ctld.buildTimeFOB)
+
+        local _txt = string.format("%s started building FOB using %d FOB crates, it will be finished in %d seconds.\nPosition marked with smoke.",ctld.getPlayerNameOrType(_heli),#_nearbyMultiCrates,ctld.buildTimeFOB)
+
+        trigger.action.smoke(_centroid,trigger.smokeColor.Green)
+
+        trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
+    else
+        local _txt = string.format("Cannot build FOB!\n\nIt requires %d FOB crates and there are %d \n\nOr the crates are not within 750m of each other",ctld.cratesRequiredForFOB,#_nearbyMultiCrates)
+        ctld.displayMessageToGroup(_heli, _txt, 20)
+    end
+
+end
+
+function ctld.createRadioBeacon(_frequency, _point)
+
+    trigger.action.radioTransmission(ctld.radioSound, _point, 1, true, _frequency, 1000)
+end
+
+function ctld.generateRadioFMRadioFrequency()
+
+    --pick random frequency!
+    -- first digit 3-7
+    -- second digit 0-5
+    -- third digit 0-9
+    -- fourth digit 0 or 5
+    -- times by 10000
+
+
+    local _first = math.random(3,7)
+    local _second = math.random(0,5)
+    local _third = math.random(0,9)
+
+    local _frequency =( (100*_first)+(10*_second)+_third) * 100000 --extra 0 because we didnt bother with 4th digit
+
+    local _found = false
+    for _, _beacon in ipairs(ctld.fobBeacons) do
+
+        if _beacon.frequency == _frequency then
+            _found = true
+            break
+        end
+
+    end
+
+    if _found then
+    --try again!
+        return ctld.generateRadioFMFrequency()
+    else
+        return _frequency
+    end
+
 end
 
 
@@ -2024,26 +2173,41 @@ function ctld.inPickupZone(_heli)
         end
     end
 
+    local _fobs = ctld.getSpawnedFobs(_heli)
+
     -- now check spawned fobs
-    for _, _fobName in ipairs(ctld.builtFOBS) do
+    for _, _fob in ipairs(_fobs) do
 
-        local _fob = StaticObject.getByName(_fobName)
+        --get distance to center
 
-        if _fob ~= nil and _fob:isExist() and _fob:getCoalition() == _heli:getCoalition() and _fob:getLife() > 0 then
+        local _dist = ctld.getDistance(_heliPoint,_fob:getPoint())
 
-            --get distance to center
-
-            local _dist = ctld.getDistance(_heliPoint,_fob:getPoint())
-
-            if _dist <= 150 then
-                return true
-            end
+        if _dist <= 150 then
+            return true
         end
     end
 
 
 
     return false
+end
+
+function ctld.getSpawnedFobs(_heli)
+
+    local _fobs = {}
+
+    for _, _fobName in ipairs(ctld.builtFOBS) do
+
+        local _fob = StaticObject.getByName(_fobName)
+
+        if _fob ~= nil and _fob:isExist() and _fob:getCoalition() == _heli:getCoalition() and _fob:getLife() > 0 then
+
+           table.insert(_fobs,_fob)
+        end
+    end
+
+    return _fobs
+
 end
 
 -- are we in a dropoff zone
@@ -2169,7 +2333,7 @@ function ctld.unitCanCarryVehicles(_unit)
     for _,_name in ipairs(ctld.vehicleTransportEnabled) do
         local _nameLower = string.lower(_name)
         if string.match(_type, _nameLower) then
-           return true
+            return true
         end
     end
 
@@ -2183,7 +2347,7 @@ function ctld.isJTACUnitType(_type)
     for _,_name in ipairs(ctld.jtacUnitTypes) do
         local _nameLower = string.lower(_name)
         if string.match(_type, _nameLower) then
-           return true
+            return true
         end
 
     end
@@ -2265,7 +2429,7 @@ function ctld.addF10MenuOptions()
 
                 end
 
-                missionCommands.addCommandForGroup(_groupId, "Check Status", { "Troop Transport" }, ctld.checkTroopStatus, { _unitName })
+                missionCommands.addCommandForGroup(_groupId, "Check Cargo", { "Troop Transport" }, ctld.checkTroopStatus, { _unitName })
 
                 if ctld.enableCrates then
 
@@ -2288,10 +2452,10 @@ function ctld.addF10MenuOptions()
 
                     missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands")
                     missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", { "CTLD Commands" }, ctld.listNearbyCrates, { _unitName })
-                    missionCommands.addCommandForGroup(_groupId, "Unpack Sling Crates", { "CTLD Commands" }, ctld.unpackCrates, { _unitName })
+                    missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", { "CTLD Commands" }, ctld.unpackCrates, { _unitName })
 
                     if ctld.enabledFOBBuilding then
-                        missionCommands.addCommandForGroup(_groupId, "Unpack FOB Crates", { "CTLD Commands" }, ctld.unpackFOBCrates, { _unitName })
+                        missionCommands.addCommandForGroup(_groupId, "List FOBs", { "CTLD Commands" }, ctld.listFOBS, { _unitName })
                     end
 
                     if ctld.enableSmokeDrop then
@@ -2980,6 +3144,11 @@ ctld.builtFOBS = {} -- stores fully built fobs
 
 ctld.completeHawkSystems = {} -- stores complete spawned groups from multiple crates
 
+ctld.fobBeacons = {} -- stores radio beacons, refreshed every 60 seconds
+
+--ctld.radioFrequencyRED = 46000000
+
+
 
 --used to lookup what the crate will contain
 ctld.crateLookupTable = {}
@@ -3058,6 +3227,7 @@ timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.checkAIStatus,nil,timer.getTime() + 5)
 timer.scheduleFunction(ctld.checkTransportStatus,nil,timer.getTime()+5)
+timer.scheduleFunction(ctld.refreshRadioBeacons,nil,timer.getTime()+5)
 
 
 --event handler for deaths
