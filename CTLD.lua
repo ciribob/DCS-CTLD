@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.06 - 29/05/2015 - Event Bug Fix from Latest DCS Patch
+    Version: 1.07 - 30/05/2015 - Radio Beacons
 
  ]]
 
@@ -32,8 +32,8 @@ ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop poi
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
 
-ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76
-ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130
+ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
+ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 
@@ -286,7 +286,7 @@ ctld.jtacUnitTypes = {
 
 -----------------------------------------------------------------
 -- Spawn group at a trigger and set them as extractable. Usage:
--- 			ctld.spawnGroupAtTrigger("groupside", number, "triggerName", radius)
+--          ctld.spawnGroupAtTrigger("groupside", number, "triggerName", radius)
 -- Variables:
 -- "groupSide" = "red" for Russia "blue" for USA
 -- _number = number of groups to spawn
@@ -1453,12 +1453,12 @@ function ctld.unpackCrates(_args)
 
         elseif _crate ~= nil and _crate.dist < 200 then
 
---            if ctld.inLogisticsZone(_heli) == true then
---
---                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
---
---                return
---            end
+            if ctld.inLogisticsZone(_heli) == true then
+
+                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+
+                return
+            end
 
             -- is multi crate?
             if ctld.isMultiCrate(_crate.details) then
@@ -1507,12 +1507,12 @@ end
 -- builds a fob!
 function ctld.unpackFOBCrates(_crates,_heli)
 
---    if ctld.inLogisticsZone(_heli) == true then
---
---        ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
---
---        return
---    end
+    if ctld.inLogisticsZone(_heli) == true then
+
+        ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+
+        return
+    end
 
     -- unpack multi crate
     local _nearbyMultiCrates = {}
@@ -1625,7 +1625,7 @@ function ctld.generateRadioFMRadioFrequency()
     end
 
     if _found then
-    --try again!
+        --try again!
         return ctld.generateRadioFMFrequency()
     else
         return _frequency
@@ -2202,7 +2202,7 @@ function ctld.getSpawnedFobs(_heli)
 
         if _fob ~= nil and _fob:isExist() and _fob:getCoalition() == _heli:getCoalition() and _fob:getLife() > 0 then
 
-           table.insert(_fobs,_fob)
+            table.insert(_fobs,_fob)
         end
     end
 
@@ -2784,7 +2784,7 @@ function ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
             end
             if _result.laserPoint then
 
-                --	env.info(jtacUnit:getName() .. ' is Lasing '..enemyUnit:getName()..'. CODE:'..laserCode)
+                --  env.info(jtacUnit:getName() .. ' is Lasing '..enemyUnit:getName()..'. CODE:'..laserCode)
 
                 ctld.jtacLaserPoints[_jtacGroupName] = _result.laserPoint
             end
