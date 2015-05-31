@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.07 - 30/05/2015 - Radio Beacons
+    Version: 1.08 - 31/05/2015 - Radio Beacons - Menu Restructure
 
  ]]
 
@@ -2415,21 +2415,23 @@ function ctld.addF10MenuOptions()
 
             if ctld.addedTo[tostring(_groupId)] == nil and _unit:getPlayerName() ~= nil then
 
-                missionCommands.addSubMenuForGroup(_groupId, "Troop Transport")
-                missionCommands.addCommandForGroup(_groupId, "Load / Unload Troops", { "Troop Transport" }, ctld.loadUnloadTroops, { _unitName,true })
+                local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
+
+                local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport",_rootPath)
+                missionCommands.addCommandForGroup(_groupId, "Load / Unload Troops", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName,true })
 
                 if ctld.unitCanCarryVehicles(_unit) then
 
-                    missionCommands.addCommandForGroup(_groupId, "Load / Unload Vehicles", { "Troop Transport" }, ctld.loadUnloadTroops, { _unitName,false })
+                    missionCommands.addCommandForGroup(_groupId, "Load / Unload Vehicles", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName,false })
 
                     if ctld.enabledFOBBuilding then
 
-                        missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", { "Troop Transport" }, ctld.loadUnloadFOBCrate, { _unitName,false })
+                        missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _troopCommandsPath, ctld.loadUnloadFOBCrate, { _unitName,false })
                     end
 
                 end
 
-                missionCommands.addCommandForGroup(_groupId, "Check Cargo", { "Troop Transport" }, ctld.checkTroopStatus, { _unitName })
+                missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
 
                 if ctld.enableCrates then
 
@@ -2438,31 +2440,32 @@ function ctld.addF10MenuOptions()
                         -- add menu for spawning crates
                         for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
 
-                            missionCommands.addSubMenuForGroup(_groupId, _subMenuName)
+                           local _cratePath =  missionCommands.addSubMenuForGroup(_groupId, _subMenuName,_rootPath)
                             for _, _crate in pairs(_crates) do
 
                                 if ctld.isJTACUnitType(_crate.unit) == false or ( ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled ) then
                                     if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
-                                        missionCommands.addCommandForGroup(_groupId, _crate.desc, {_subMenuName }, ctld.spawnCrate, { _unitName,_crate.weight })
+                                        missionCommands.addCommandForGroup(_groupId, _crate.desc, _cratePath, ctld.spawnCrate, { _unitName,_crate.weight })
                                     end
                                 end
                             end
                         end
                     end
 
-                    missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands")
-                    missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", { "CTLD Commands" }, ctld.listNearbyCrates, { _unitName })
-                    missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", { "CTLD Commands" }, ctld.unpackCrates, { _unitName })
+                    local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands",_rootPath)
+                    missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", _crateCommands, ctld.listNearbyCrates, { _unitName })
+                    missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
 
                     if ctld.enabledFOBBuilding then
-                        missionCommands.addCommandForGroup(_groupId, "List FOBs", { "CTLD Commands" }, ctld.listFOBS, { _unitName })
+                        missionCommands.addCommandForGroup(_groupId, "List FOBs", _crateCommands, ctld.listFOBS, { _unitName })
                     end
 
                     if ctld.enableSmokeDrop then
-                        missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", {  "CTLD Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", {  "CTLD Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
-                        --    missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", { "Crate Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", {  "CTLD Commands" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
+                       local _smokeCommands =  missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers",_rootPath)
+                        missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke",_smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
+                        missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
+                        missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
+                        missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke",_smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
                     end
                 else
                     if ctld.enableSmokeDrop then

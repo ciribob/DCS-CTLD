@@ -25,6 +25,7 @@ The script supports:
     * BTR-D
     * BRMD-2
 * FOB Building
+    * Homing using FM Radio Beacon 
 * Pre loading of units into AI vehicles via a DO SCRIPT
 
 A complete test mission is included.
@@ -39,11 +40,14 @@ You can also edit the CTLD.lua file to change some configuration options. Make s
 First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a "TIME MORE" of 1. "TIME MORE" means run the actions after X seconds into the mission.
 
 Load the CTLD a few seconds after MIST using a second trigger with a "TIME MORE" and a DO SCRIPT of CTLD.lua. 
+
+You will also need to load in the beacon.ogg sound file for Radio beacon homing. This can be done by adding a second action of Sound To Country. Pick an unused country, like Australia so no one actually hears the audio when joining at the start of the mission. If you don't add the Audio file, radio beacons will not work. Make sure not to rename the file as well.
+
 An error will be shown if MIST isn't loaded first.
 
 An example is shown below:
 
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-14-00_zpsmoirc3nz.png~original "Script Setup")
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-31%2016-19-38-18_zpsmd8k6sqh.png~original "Script Setup")
 
 ###Script Configuration
 The script has lots of configuration options that can be used to further customise the behaviour.
@@ -65,8 +69,8 @@ ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop poi
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
 
-ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76
-ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130
+ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
+ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 
@@ -80,6 +84,8 @@ ctld.cratesRequiredForFOB = 3 -- The amount of crates required to build a FOB. O
 ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a created FOB
 
 ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
+
+ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons
 
 ```
 
@@ -391,7 +397,7 @@ After selecting the right crate:
 
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-09-23-08_zpslbed4kpt.png~original "Spawned Cargo")
 
-You can also list nearby crates that have yet to be unpacked using the F10 Crate Commands Menu and also unpack nearby crates using the same menu.
+You can also list nearby crates that have yet to be unpacked using the F10 CTLD Commands Menu and also unpack nearby crates using the same menu.
 
 *Crate damage in the script is currently not implemented so as long as the crate isn't destroyed, you should always be able to unpack.*
 
@@ -431,5 +437,18 @@ Building:
 Built:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150524_204056_zpsbodlkdgt.png~original "Loading")
 
+Once built, FOBs can be located using the F10 CTLD Commands menu -> List FOBS.
 
+You will get a position as well as an FM frequency that the Huey can use to find the FOB.
 
+How to use the FM Homing:
+1. List FOB Locations and note down frequency
+2. Set your FM Radio to Home (Far right setting)
+3. Program in the FM Frequency
+4. Use the instrument highlighted to turn towards the beacon. The vertical needle will swing left and right and so can be used to get a bearing on the FOB
+
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150531_153159_zps6vjljjh8.png~original "Setup Homing")
+
+FOB in sight with the instrument showing we're heading the right direction:
+
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150531_153231_zpssruevv95.png "Setup Homing")
