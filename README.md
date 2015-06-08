@@ -26,6 +26,8 @@ The script supports:
     * BRMD-2
 * FOB Building
     * Homing using FM Radio Beacon 
+* Radio Beacon Deployment
+    * Ability to deploy a homing beacon that the A10C, Ka-50, Mi-8 and Huey can home on
 * Pre loading of units into AI vehicles via a DO SCRIPT
 
 A complete test mission is included.
@@ -41,7 +43,7 @@ First make sure MIST is loaded, either as an Initialization Script  for the miss
 
 Load the CTLD a few seconds after MIST using a second trigger with a "TIME MORE" and a DO SCRIPT of CTLD.lua. 
 
-You will also need to load in the beacon.ogg sound file for Radio beacon homing. This can be done by adding a second action of Sound To Country. Pick an unused country, like Australia so no one actually hears the audio when joining at the start of the mission. If you don't add the Audio file, radio beacons will not work. Make sure not to rename the file as well.
+You will also need to load in **both** the **beacon.ogg** sound file and the **beaconsilent.ogg** for Radio beacon homing. This can be done by adding a two Sound To Country actions. Pick an unused country, like Australia so no one actually hears the audio when joining at the start of the mission. If you don't add the **two** Audio files, radio beacons will not work. Make sure not to rename the file as well.
 
 An error will be shown if MIST isn't loaded first.
 
@@ -85,8 +87,12 @@ ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a creat
 
 ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 
-ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons
+ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
+ctld.radioSoundFC3 = "beaconsilent.ogg" -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
 
+ctld.deployedBeaconBattery = 15 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
+
+ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
 ```
 
 To change what units can be dropped from crates modify the spawnable crates section. An extra parameter, ```cratesRequired = NUMBER``` can be added so you need more than one crate to build a unit. This parameter cannot be used for the HAWK system as that is already broken into 3 crates. You can also specify the coalition side so RED and BLUE have different crates to drop. If the parameter is missing the crate will appear for both sides.
@@ -439,16 +445,80 @@ Built:
 
 Once built, FOBs can be located using the F10 CTLD Commands menu -> List FOBS.
 
-You will get a position as well as an FM frequency that the Huey can use to find the FOB.
+You will get a position as well as a UHF / VHF frequency that the Huey / Mi-8 (VHF) and Ka-50 / A10-C (UHF) can use to find the FOB. How to configure the radios is shown in the section below
 
-How to use the FM Homing:
-1. List FOB Locations and note down frequency
-2. Set your FM Radio to Home (Far right setting)
-3. Program in the FM Frequency
-4. Use the instrument highlighted to turn towards the beacon. The vertical needle will swing left and right and so can be used to get a bearing on the FOB
+##Radio Beacon Deployment
+Radio beacons can be dropped by any transport unit and there is no enforced limit on the number of beacons that can be dropped. There is however a finite limit of available frequencies so don't drop too many or you won't be able to distinguise the beacons from one another. 
 
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150531_153159_zps6vjljjh8.png~original "Setup Homing")
+By default a beacon will disappear after 15 minutes, when it's battery runs out. FOB beacons will never run out power. You can give the beacon more time by editing the ```ctld.deployedBeaconBattery``` setting.
 
-FOB in sight with the instrument showing we're heading the right direction:
+To deploy a beacon you must be on the ground and then use the F10 radio menu. The beacons are under the Radio Beacons section in CTLD. Once a beacon has been dropped, the frequencies can also be listed using the CTLD - > Radio Beacons -> List Radio Beacons command.
 
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150531_153231_zpssruevv95.png "Setup Homing")
+The guides below are not necessarily the best or only way to set up the ADF in each aircraft but it works :)
+
+
+###A10-C UHF ADF Radio Setup
+To configure ADF on the UHF Radio you must 
+* Put the UHF Radio in ADF Mode using the mode select knob (rightmost setting)
+* Enter the **MHz** frequency using the clickable knobs below the digital display
+* That's it!
+
+Once you've got the right frequency, you should see an arrow on the compass pointing in the right direction as well as the UHF light lit up under the Homing section below the compass but it may take up to a minute to pick up the signal not work while on the ground. You will not hear any sound.
+
+Make sure the right knob is set to MNL or your frequency setting will be ignored.
+
+UHF Radio Configured: - Bottom left of Picture:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075329_zps4v5ubtcy.png~original "UHF RADIO")
+
+Pointer towards Radio Signal at 9 o'clock:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075457_zpscoezd0fg.png~original "Radio Pointer")
+
+###KA-50 UHF ADF Radio Setup
+To configure ADF on the UHF Radio you must 
+* Put the UHF Radio in ADF Mode using the single ADF switch on the second row of switches on the Radio
+* Enter the **MHz** frequency using the clickable orange wheels below the  display
+* That's it!
+
+Once you've got the right frequency, you should see a gold arrow on the compass pointing in the right direction. It may take up to a minute to pick up the signal and not work while on the ground. You will not hear any sound!
+
+Radio configured to the correct frequency for a beacon:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075837_zpscgqe8syn.png~original "UHF Radio")
+
+Gold pointer pointing to beacon on the compass:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075852_zpstypoehpu.png~original "UHF Radio")
+
+###Mi-8 ARC-9 VHF Radio Setup
+To configure ADF on the VHF Radio you must 
+* Switch to the engineer or co-pilot seat
+* Put the VHF Radio in ADF Mode using the switch at the top of the radio to the COMP setting by clicking once.
+* Enter the **KHz** frequency using the clickable switch and wheel on the left Reserve B radio
+* Tune +/- 5 KHz using the bottom left tune knob on the ARC-9
+* Switch to the pilot seat
+
+Once you've got the right frequency, you should see a white arrow on the compass pointing in the right direction. It may take up to a minute to pick up the signal and not work while on the ground. You may hear morse code when on the right frequency and occasionally receive text the radio which will be displayed at the top of the screen. You can also use the power meter on the radio to work out if you're on the right frequency.
+
+Radio configured to the correct frequency for a beacon:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_080120_zps7vpmu3jc.png~original "ARC-9 Radio")
+
+White pointer pointing to beacon on the compass:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_080142_zpsfsuucw84.png~original "Radio Compass")
+
+###UH-1 ADF VHF Radio Setup
+To configure the VHF ADF:
+* Switch to the engineer or co-pilot seat
+* Put the VHF Radio in ADF Mode using the switch at the top of the radio to the COMP setting by clicking once.
+* Enter the **KHz** frequency using the clickable switch and wheel on the left Reserve B radio
+* Tune +/- 5 KHz using the bottom left tune knob on the ARC-9
+* Switch to the pilot seat
+
+Once you've got the right frequency, you should see a white arrow on the compass pointing in the right direction. It may take up to a minute to pick up the signal and not work while on the ground. You may hear morse code when on the right frequency and occasionally receive text the radio which will be displayed at the top of the screen. You can also use the power meter on the radio to work out if you're on the right frequency.
+
+The Huey ADF can be a dodgy and occasionaly points the wrong direction but it should eventually settle on the correct direction.
+
+Radio configured to the correct frequency for a beacon:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075150_zps0uqgw4zt.png~original "ARC-9 Radio")
+
+White pointer pointing to beacon on the compass:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075211_zpsdaus4wxt.png~original "Radio Compass")
+
+
