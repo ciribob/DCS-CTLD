@@ -1761,64 +1761,72 @@ function ctld.updateRadioBeacon(_vhfFrequency, _vhfGroupName, _uhfFrequency,_uhf
 
     for _,_radio in pairs(_radioLoop) do
 
-        local _setFrequency = {
-            ["enabled"] = true,
-            ["auto"] = false,
-            ["id"] = "WrappedAction",
-            ["number"] = 1, -- first task
-            ["params"] = {
-                ["action"] = {
-                    ["id"] = "SetFrequency",
-                    ["params"] = {
-                        ["modulation"] = _radio.mode, -- 0 is AM 1 is FM --if FM you cant read the message... might be the only fix to stop FC3 aircraft hearing it... :(
-                        ["frequency"] = _radio.freq,
-                    },
-                },
-            },
-        }
-
-
-        local _radioText = _text
-        local _sound = ctld.radioSound
-        --dont show radio text on UHF as that should hide it from FC3 aircraft
         if _radio.silent then
-            _radioText = ""
-            _sound = ctld.radioSoundFC3
-        end
-
-
-        local _setupDetails = {
-            ["enabled"] = true,
-            ["auto"] = false,
-            ["id"] = "WrappedAction",
-            ["number"] = 2, -- second task
-            ["params"] = {
-                ["action"] = {
-                    ["id"] = "TransmitMessage",
-                    ["params"] = {
-                        ["loop"] = true, --false works too
-                        ["subtitle"] = _radioText, --_text
-                        ["duration"] =  60, -- reset every 60 seconds --used to have timer.getTime() +60
-                        ["file"] = _sound,
+            local _setFrequency = {
+                ["enabled"] = true,
+                ["auto"] = false,
+                ["id"] = "WrappedAction",
+                ["number"] = 1, -- first task
+                ["params"] = {
+                    ["action"] = {
+                        ["id"] = "SetFrequency",
+                        ["params"] = {
+                            ["modulation"] = _radio.mode, -- 0 is AM 1 is FM --if FM you cant read the message... might be the only fix to stop FC3 aircraft hearing it... :(
+                            ["frequency"] = _radio.freq,
+                        },
                     },
                 },
             }
-        }
 
-        local _groupController = _radio.group:getController()
 
-        --reset!
-        _groupController:resetTask()
+            local _radioText = _text
+            local _sound = ctld.radioSound
+            --dont show radio text on UHF as that should hide it from FC3 aircraft
+            if _radio.silent then
+                _radioText = ""
+                _sound = ctld.radioSoundFC3
+            end
 
-       _groupController:setTask(_setFrequency)
-       _groupController:setTask(_setupDetails)
 
-        --Make the unit NOT engage as its simulating a radio...!
-        _groupController:setOption(AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.WEAPON_HOLD)
+            local _setupDetails = {
+                ["enabled"] = true,
+                ["auto"] = false,
+                ["id"] = "WrappedAction",
+                ["number"] = 2, -- second task
+                ["params"] = {
+                    ["action"] = {
+                        ["id"] = "TransmitMessage",
+                        ["params"] = {
+                            ["loop"] = true, --false works too
+                            ["subtitle"] = "", --_text
+                            ["duration"] =  60, -- reset every 60 seconds --used to have timer.getTime() +60
+                            ["file"] = _sound,
+                        },
+                    },
+                }
+            }
 
-        --env.info("Radio Beacon: ".. _text)
+            local _groupController = _radio.group:getController()
 
-       -- trigger.action.radioTransmission(ctld.radioSoundShort, _vhfGroup:getUnit(1):getPoint(), _radio.mode, false, _radio.freq, 1000)
+            --reset!
+            _groupController:resetTask()
+
+           _groupController:setTask(_setFrequency)
+           _groupController:setTask(_setupDetails)
+
+            --Make the unit NOT engage as its simulating a radio...!
+            _groupController:setOption(AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.WEAPON_HOLD)
+
+            --env.info("Radio Beacon: ".. _text)
+        else
+            -- Above function doesnt work for simulating VHF in multiplayer but DOES in single player.... WHY DCS WHY!?!?!
+
+            trigger.action.radioTransmission(ctld.radioSound, _vhfGroup:getUnit(1):getPoint(), _radio.mode, false, _radio.freq, 1000)
+            --This function doesnt actually stop transmitting when then sound is false. My hope is it will stop if a new beacon is created on the same
+            -- frequency... OR they fix the bug where it wont stop.
+        end
+
+       --
     end
 
     return true
