@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.10 - 07/06/2015 - Deployable Radio Beacons... ish
+    Version: 1.11 - 11/06/2015 - Deployable Radio Beacons... ish
 
  ]]
 
