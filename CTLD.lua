@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.11 - 11/06/2015 - Deployable Radio Beacons... ish
+    Version: 1.12 - 14/06/2015 - Deployable Radio Beacons with FM radio
 
  ]]
 
@@ -51,7 +51,7 @@ ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
 ctld.radioSoundFC3 = "beaconsilent.ogg" -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
 
-ctld.deployedBeaconBattery = 15 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
+ctld.deployedBeaconBattery = 20 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
 
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
 
@@ -1133,7 +1133,7 @@ function ctld.refreshRadioBeacons()
     for _index, _beaconDetails in ipairs(ctld.deployedRadioBeacons) do
 
         --trigger.action.outTextForCoalition(_beaconDetails.coalition,_beaconDetails.text,10)
-        if ctld.updateRadioBeacon(_beaconDetails.vhf,_beaconDetails.vhfGroup, _beaconDetails.uhf,_beaconDetails.uhfGroup, _beaconDetails.text, _beaconDetails.battery) == false then
+        if ctld.updateRadioBeacon(_beaconDetails) == false then
 
             --search used frequencies + remove, add back to unused
 
@@ -1155,14 +1155,14 @@ function ctld.refreshRadioBeacons()
 
             end
 
---            for _i, _freq in ipairs(ctld.usedFMFrequencies) do
---                if _freq == _beaconDetails.fm then
---
---                    table.insert(ctld.freeFMFrequencies,_freq)
---                    table.remove(ctld.usedFMFrequencies,_i)
---                end
---
---            end
+            for _i, _freq in ipairs(ctld.usedFMFrequencies) do
+                if _freq == _beaconDetails.fm then
+
+                    table.insert(ctld.freeFMFrequencies,_freq)
+                    table.remove(ctld.usedFMFrequencies,_i)
+                end
+
+            end
 
             --clean up beacon table
             table.remove(ctld.deployedRadioBeacons,_index)
@@ -1317,7 +1317,7 @@ function ctld.getFOBPositionString(_fob)
     if _beaconInfo ~= nil then
         _message = string.format("%s - %.2f KHz ", _message, _beaconInfo.vhf / 1000)
         _message = string.format("%s - %.2f MHz ", _message, _beaconInfo.uhf / 1000000)
-       -- _message = string.format("%s - %.4f MHz ", _message, _beaconInfo.fm / 1000000)
+        _message = string.format("%s - %.2f MHz ", _message, _beaconInfo.fm / 1000000)
     end
 
     return _message
@@ -1569,7 +1569,7 @@ function ctld.unpackFOBCrates(_crates, _heli)
 
             local _radioBeaconDetails = ctld.createRadioBeacon(_args[1], _args[3], _args[2],true)
 
-            ctld.fobBeacons[_name] = { vhf = _radioBeaconDetails.vhf, uhf = _radioBeaconDetails.uhf }
+            ctld.fobBeacons[_name] = { vhf = _radioBeaconDetails.vhf, uhf = _radioBeaconDetails.uhf, fm = _radioBeaconDetails.fm }
 
             if ctld.troopPickupAtFOB == true then
                 table.insert(ctld.builtFOBS, _fob:getName())
@@ -1598,7 +1598,7 @@ function ctld.createRadioBeacon(_point, _coalition, _country,_isFOB)
 
     local _uhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "UHF")
     local _vhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "VHF")
-  --  local _fmGroup = ctld.spawnRadioBeaconUnit(_point, _country, "FM")
+    local _fmGroup = ctld.spawnRadioBeaconUnit(_point, _country, "FM")
 
     local _freq = ctld.generateADFFrequencies()
 
@@ -1627,21 +1627,22 @@ function ctld.createRadioBeacon(_point, _coalition, _country,_isFOB)
 
     _message = string.format("%s - %.2f MHz", _message, _freq.uhf / 1000000)
 
-  --  _message = string.format("%s - %.4f MHz ", _message, _freq.fm / 1000000)
+    _message = string.format("%s - %.3f MHz ", _message, _freq.fm / 1000000)
 
-    ctld.updateRadioBeacon(_freq.vhf, _vhfGroup:getName(), _freq.uhf,_uhfGroup:getName(), _message, _battery)
+
 
     local _beaconDetails = {
         vhf=_freq.vhf,
         vhfGroup=_vhfGroup:getName(),
         uhf=_freq.uhf,
         uhfGroup=_uhfGroup:getName(),
-    --    fm = _freq.fm,
-     --   fmGroup = _fmGroup:getName(),
+        fm = _freq.fm,
+        fmGroup = _fmGroup:getName(),
         text=_message,
         battery=_battery,
         coalition=_coalition,
     }
+    ctld.updateRadioBeacon(_beaconDetails)
 
     table.insert(ctld.deployedRadioBeacons,_beaconDetails)
 
@@ -1668,17 +1669,17 @@ function ctld.generateADFFrequencies()
 
     local _vhf = table.remove(ctld.freeVHFFrequencies,math.random(#ctld.freeVHFFrequencies))
     table.insert(ctld.usedVHFFrequencies,_vhf)
---
---    if #ctld.freeFMFrequencies <= 3 then
---        ctld.freeFMFrequencies = ctld.usedFMFrequencies
---        ctld.usedFMFrequencies = {}
---    end
---
---    local _fm = table.remove(ctld.freeFMFrequencies,math.random(#ctld.freeFMFrequencies))
---    table.insert(ctld.usedFMFrequencies,_fm)
 
-   -- return {uhf=_uhf,vhf=_vhf,fm=_fm}
-    return {uhf=_uhf,vhf=_vhf}
+    if #ctld.freeFMFrequencies <= 3 then
+        ctld.freeFMFrequencies = ctld.usedFMFrequencies
+        ctld.usedFMFrequencies = {}
+    end
+
+    local _fm = table.remove(ctld.freeFMFrequencies,math.random(#ctld.freeFMFrequencies))
+    table.insert(ctld.usedFMFrequencies,_fm)
+
+   return {uhf=_uhf,vhf=_vhf,fm=_fm}
+    ---return {uhf=_uhf,vhf=_vhf}
 end
 
 
@@ -1714,31 +1715,31 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _type)
     return coalition.addGroup(_country, Group.Category.GROUND, _radioGroup)
 end
 
-function ctld.updateRadioBeacon(_vhfFrequency, _vhfGroupName, _uhfFrequency,_uhfGroupName, _text, _battery)
+function ctld.updateRadioBeacon(_beaconDetails)
 
-    local _vhfGroup = Group.getByName(_vhfGroupName)
+    local _vhfGroup = Group.getByName(_beaconDetails.vhfGroup)
 
-    local _uhfGroup = Group.getByName(_uhfGroupName)
+    local _uhfGroup = Group.getByName(_beaconDetails.uhfGroup)
 
-  --  local _fmGroup = Group.getByName(_fmGroupName)
+    local _fmGroup = Group.getByName(_beaconDetails.fmGroup)
 
     local _radioLoop = {}
 
     if _vhfGroup ~= nil and _vhfGroup:getUnits() ~= nil and #_vhfGroup:getUnits() == 1 then
-        table.insert(_radioLoop,{group=_vhfGroup,freq=_vhfFrequency, silent=false, mode = 0})
+        table.insert(_radioLoop,{group=_vhfGroup,freq=_beaconDetails.vhf, silent=false, mode = 0})
     end
 
     if _uhfGroup ~= nil and _uhfGroup:getUnits() ~= nil and #_uhfGroup:getUnits() == 1 then
-        table.insert(_radioLoop,{group=_uhfGroup,freq=_uhfFrequency, silent=true,mode = 0})
+        table.insert(_radioLoop,{group=_uhfGroup,freq=_beaconDetails.uhf, silent=true,mode = 0})
     end
 
---    if _fmGroup ~= nil and _fmGroup:getUnits() ~= nil and #_fmGroup:getUnits() == 1 then
---        table.insert(_radioLoop,{group=_fmGroup,freq=_fmFrequency,silent=false, mode = 1})
---    end
+    if _fmGroup ~= nil and _fmGroup:getUnits() ~= nil and #_fmGroup:getUnits() == 1 then
+        table.insert(_radioLoop,{group=_fmGroup,freq=_beaconDetails.fm,silent=false, mode = 1})
+    end
 
-    local _batLife = _battery - timer.getTime()
+    local _batLife = _beaconDetails.battery - timer.getTime()
 
-    if (_batLife <= 0 and _battery ~= -1) or #_radioLoop ~= 2 then
+    if (_batLife <= 0 and _beaconDetails.battery ~= -1) or #_radioLoop ~= 3 then
         -- ran out of batteries
 
         if _vhfGroup ~= nil then
@@ -1747,84 +1748,92 @@ function ctld.updateRadioBeacon(_vhfFrequency, _vhfGroupName, _uhfFrequency,_uhf
         if _uhfGroup ~= nil then
             _uhfGroup:destroy()
         end
---        if _fmGroup ~= nil then
---            _fmGroup:destroy()
---        end
+        if _fmGroup ~= nil then
+            _fmGroup:destroy()
+        end
 
         return false
     end
 
     --fobs have unlimited battery life
-    if _battery ~= -1 then
-        _text = _text.." "..mist.utils.round(_batLife).." seconds of battery"
-    end
+--    if _battery ~= -1 then
+--        _text = _text.." "..mist.utils.round(_batLife).." seconds of battery"
+--    end
 
     for _,_radio in pairs(_radioLoop) do
 
-        if _radio.silent then
-            local _setFrequency = {
-                ["enabled"] = true,
-                ["auto"] = false,
-                ["id"] = "WrappedAction",
-                ["number"] = 1, -- first task
-                ["params"] = {
-                    ["action"] = {
-                        ["id"] = "SetFrequency",
-                        ["params"] = {
-                            ["modulation"] = _radio.mode, -- 0 is AM 1 is FM --if FM you cant read the message... might be the only fix to stop FC3 aircraft hearing it... :(
-                            ["frequency"] = _radio.freq,
-                        },
-                    },
-                },
-            }
-
-
-            local _radioText = _text
-            local _sound = ctld.radioSound
-            --dont show radio text on UHF as that should hide it from FC3 aircraft
-            if _radio.silent then
-                _radioText = ""
-                _sound = ctld.radioSoundFC3
-            end
-
-
-            local _setupDetails = {
-                ["enabled"] = true,
-                ["auto"] = false,
-                ["id"] = "WrappedAction",
-                ["number"] = 2, -- second task
-                ["params"] = {
-                    ["action"] = {
-                        ["id"] = "TransmitMessage",
-                        ["params"] = {
-                            ["loop"] = true, --false works too
-                            ["subtitle"] = "", --_text
-                            ["duration"] =  60, -- reset every 60 seconds --used to have timer.getTime() +60
-                            ["file"] = _sound,
-                        },
-                    },
-                }
-            }
+--        if _radio.silent then
+--            local _setFrequency = {
+--                ["enabled"] = true,
+--                ["auto"] = false,
+--                ["id"] = "WrappedAction",
+--                ["number"] = 1, -- first task
+--                ["params"] = {
+--                    ["action"] = {
+--                        ["id"] = "SetFrequency",
+--                        ["params"] = {
+--                            ["modulation"] = _radio.mode, -- 0 is AM 1 is FM --if FM you cant read the message... might be the only fix to stop FC3 aircraft hearing it... :(
+--                            ["frequency"] = _radio.freq,
+--                        },
+--                    },
+--                },
+--            }
+--
+--
+--            local _radioText = _text
+--            local _sound = ctld.radioSound
+--            --dont show radio text on UHF as that should hide it from FC3 aircraft
+--            if _radio.silent then
+--                _radioText = ""
+--                _sound = ctld.radioSoundFC3
+--            end
+--
+--
+--            local _setupDetails = {
+--                ["enabled"] = true,
+--                ["auto"] = false,
+--                ["id"] = "WrappedAction",
+--                ["number"] = 2, -- second task
+--                ["params"] = {
+--                    ["action"] = {
+--                        ["id"] = "TransmitMessage",
+--                        ["params"] = {
+--                            ["loop"] = true, --false works too
+--                            ["subtitle"] = "", --_text
+--                            ["duration"] =  60, -- reset every 60 seconds --used to have timer.getTime() +60
+--                            ["file"] = _sound,
+--                        },
+--                    },
+--                }
+--            }
+--
+--            local _groupController = _radio.group:getController()
+--
+--            --reset!
+--            _groupController:resetTask()
+--
+--           _groupController:setTask(_setFrequency)
+--           _groupController:setTask(_setupDetails)
+--
+--            --Make the unit NOT engage as its simulating a radio...!
+--
+--
+--            --env.info("Radio Beacon: ".. _text)
+--        else
+            -- Above function doesnt work for simulating VHF in multiplayer but DOES in single player.... WHY DCS WHY!?!?!
 
             local _groupController = _radio.group:getController()
 
-            --reset!
-            _groupController:resetTask()
-
-           _groupController:setTask(_setFrequency)
-           _groupController:setTask(_setupDetails)
-
-            --Make the unit NOT engage as its simulating a radio...!
+            local _sound = ctld.radioSound
+            if _radio.silent then
+                _sound = ctld.radioSoundFC3
+            end
             _groupController:setOption(AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.WEAPON_HOLD)
 
-            --env.info("Radio Beacon: ".. _text)
-        else
-            -- Above function doesnt work for simulating VHF in multiplayer but DOES in single player.... WHY DCS WHY!?!?!
-
-            trigger.action.radioTransmission(ctld.radioSound, _vhfGroup:getUnit(1):getPoint(), _radio.mode, false, _radio.freq, 1000)
+            trigger.action.radioTransmission(_sound, _radio.group:getUnit(1):getPoint(), _radio.mode, false, _radio.freq, 1000)
             --This function doesnt actually stop transmitting when then sound is false. My hope is it will stop if a new beacon is created on the same
             -- frequency... OR they fix the bug where it wont stop.
-        end
+--        end
 
        --
     end
@@ -1926,7 +1935,7 @@ function ctld.removeRadioBeacon(_args)
 
             local _uhfGroup = Group.getByName(_closetBeacon.uhfGroup)
 
-           -- local _fmGroup = Group.getByName(_closetBeacon.fmGroup)
+            local _fmGroup = Group.getByName(_closetBeacon.fmGroup)
 
             if _vhfGroup ~= nil then
                 _vhfGroup:destroy()
@@ -1934,9 +1943,9 @@ function ctld.removeRadioBeacon(_args)
             if _uhfGroup ~= nil then
                 _uhfGroup:destroy()
             end
---            if _fmGroup ~= nil then
---                _fmGroup:destroy()
---            end
+            if _fmGroup ~= nil then
+                _fmGroup:destroy()
+            end
 
             trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " removed a Radio Beacon.\n\n".._closetBeacon.text, 20)
         else
@@ -2743,119 +2752,122 @@ end
 function ctld.addF10MenuOptions()
     -- Loop through all Heli units
 
-    timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
+    pcall(
+        function()
+            for _, _unitName in pairs(ctld.transportPilotNames) do
 
-    for _, _unitName in pairs(ctld.transportPilotNames) do
+                local _unit = ctld.getTransportUnit(_unitName)
 
-        local _unit = ctld.getTransportUnit(_unitName)
+                if _unit ~= nil then
 
-        if _unit ~= nil then
+                    local _groupId = _unit:getGroup():getID()
 
-            local _groupId = _unit:getGroup():getID()
+                    if ctld.addedTo[tostring(_groupId)] == nil then
 
-            if ctld.addedTo[tostring(_groupId)] == nil then
+                        local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
 
-                local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
+                        local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport", _rootPath)
+                        missionCommands.addCommandForGroup(_groupId, "Load / Unload Troops", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, true })
 
-                local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport", _rootPath)
-                missionCommands.addCommandForGroup(_groupId, "Load / Unload Troops", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, true })
+                        if ctld.unitCanCarryVehicles(_unit) then
 
-                if ctld.unitCanCarryVehicles(_unit) then
+                            missionCommands.addCommandForGroup(_groupId, "Load / Unload Vehicles", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, false })
 
-                    missionCommands.addCommandForGroup(_groupId, "Load / Unload Vehicles", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, false })
+                            if ctld.enabledFOBBuilding then
 
-                    if ctld.enabledFOBBuilding then
+                                missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _troopCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
+                            end
+                        end
 
-                        missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _troopCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
-                    end
-                end
+                        missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
 
-                missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
+                        if ctld.enableCrates then
 
-                if ctld.enableCrates then
+                            if ctld.unitCanCarryVehicles(_unit) == false then
 
-                    if ctld.unitCanCarryVehicles(_unit) == false then
+                                -- add menu for spawning crates
+                                for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
 
-                        -- add menu for spawning crates
-                        for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
+                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _rootPath)
+                                    for _, _crate in pairs(_crates) do
 
-                            local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _rootPath)
-                            for _, _crate in pairs(_crates) do
-
-                                if ctld.isJTACUnitType(_crate.unit) == false or (ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled) then
-                                    if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
-                                        missionCommands.addCommandForGroup(_groupId, _crate.desc, _cratePath, ctld.spawnCrate, { _unitName, _crate.weight })
+                                        if ctld.isJTACUnitType(_crate.unit) == false or (ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled) then
+                                            if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
+                                                missionCommands.addCommandForGroup(_groupId, _crate.desc, _cratePath, ctld.spawnCrate, { _unitName, _crate.weight })
+                                            end
+                                        end
                                     end
                                 end
                             end
+
+                            local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
+                            missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", _crateCommands, ctld.listNearbyCrates, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
+
+                            if ctld.enabledFOBBuilding then
+                                missionCommands.addCommandForGroup(_groupId, "List FOBs", _crateCommands, ctld.listFOBS, { _unitName })
+                            end
+
+                            if ctld.enableSmokeDrop then
+                                local _smokeCommands = missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers", _rootPath)
+                                missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
+                            end
+
+                            if ctld.enabledRadioBeaconDrop then
+                                local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, "Radio Beacons", _rootPath)
+                                missionCommands.addCommandForGroup(_groupId, "List Beacons", _radioCommands, ctld.listRadioBeacons, { _unitName })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Beacon", _radioCommands, ctld.dropRadioBeacon, { _unitName })
+                                missionCommands.addCommandForGroup(_groupId, "Remove Closet Beacon", _radioCommands, ctld.removeRadioBeacon, { _unitName })
+
+                            end
+                        else
+                            if ctld.enableSmokeDrop then
+                                missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers")
+                                missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
+                            end
+
+                            if ctld.enabledRadioBeaconDrop then
+                                local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, "Radio Beacons", _rootPath)
+                                missionCommands.addCommandForGroup(_groupId, "List Beacons", _radioCommands, ctld.listRadioBeacons, { _unitName })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Beacon", _radioCommands, ctld.dropRadioBeacon, { _unitName })
+                                missionCommands.addCommandForGroup(_groupId, "Remove Closet Beacon", _radioCommands, ctld.removeRadioBeacon, { _unitName })
+
+                            end
                         end
-                    end
 
-                    local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
-                    missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", _crateCommands, ctld.listNearbyCrates, { _unitName })
-                    missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
-
-                    if ctld.enabledFOBBuilding then
-                        missionCommands.addCommandForGroup(_groupId, "List FOBs", _crateCommands, ctld.listFOBS, { _unitName })
-                    end
-
-                    if ctld.enableSmokeDrop then
-                        local _smokeCommands = missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers", _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
-                    end
-
-                    if ctld.enabledRadioBeaconDrop then
-                        local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, "Radio Beacons", _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, "List Beacons", _radioCommands, ctld.listRadioBeacons, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Beacon", _radioCommands, ctld.dropRadioBeacon, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, "Remove Closet Beacon", _radioCommands, ctld.removeRadioBeacon, { _unitName })
-
+                        ctld.addedTo[tostring(_groupId)] = true
                     end
                 else
-                    if ctld.enableSmokeDrop then
-                        missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers")
-                        missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
-                    end
-
-                    if ctld.enabledRadioBeaconDrop then
-                        local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, "Radio Beacons", _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, "List Beacons", _radioCommands, ctld.listRadioBeacons, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Beacon", _radioCommands, ctld.dropRadioBeacon, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, "Remove Closet Beacon", _radioCommands, ctld.removeRadioBeacon, { _unitName })
-
-                    end
+                    -- env.info(string.format("unit nil %s",_unitName))
                 end
-
-                ctld.addedTo[tostring(_groupId)] = true
             end
-        else
-            -- env.info(string.format("unit nil %s",_unitName))
+
+            -- now do any player controlled aircraft that ARENT transport units
+            if ctld.enabledRadioBeaconDrop then
+                -- get all BLUE players
+                ctld.addRadioListCommand(2)
+
+                -- get all RED players
+                ctld.addRadioListCommand(1)
+            end
+
+
+            if ctld.JTAC_jtacStatusF10 then
+                -- get all BLUE players
+                ctld.addJTACRadioCommand(2)
+
+                -- get all RED players
+                ctld.addJTACRadioCommand(1)
+            end
         end
-    end
-
-    -- now do any player controlled aircraft that ARENT transport units
-    if ctld.enabledRadioBeaconDrop then
-        -- get all BLUE players
-        ctld.addRadioListCommand(coalition.side.BLUE)
-
-        -- get all RED players
-        ctld.addRadioListCommand(coalition.side.RED)
-    end
-
-
-    if ctld.JTAC_jtacStatusF10 then
-        -- get all BLUE players
-        ctld.addJTACRadioCommand(coalition.side.BLUE)
-
-        -- get all RED players
-        ctld.addJTACRadioCommand(coalition.side.RED)
-    end
+        )
+    timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
 end
 
 --add to all players that arent transport
@@ -2891,7 +2903,7 @@ function ctld.addJTACRadioCommand(_side)
             --   env.info("adding command for "..index)
             if ctld.jtacRadioAdded[tostring(_groupId)] == nil then
                 -- env.info("about command for "..index)
-                missionCommands.addCommandForGroup(_groupId, "JTAC Status", nil, ctld.getJTACStatus, _playerUnit:getCoalition())
+                missionCommands.addCommandForGroup(_groupId, "JTAC Status", nil, ctld.getJTACStatus, { _playerUnit:getName() })
                 ctld.jtacRadioAdded[tostring(_groupId)] = true
                 -- env.info("Added command for " .. index)
             end
@@ -3349,9 +3361,17 @@ end
 
 
 -- gets the JTAC status and displays to coalition units
-function ctld.getJTACStatus(_side)
+function ctld.getJTACStatus(_args)
 
     --returns the status of all JTAC units
+
+    local _playerUnit = ctld.getTransportUnit(_args[1])
+
+    if _playerUnit == nil then
+        return
+    end
+
+    local _side = _playerUnit:getCoalition()
 
     local _jtacGroupName = nil
     local _jtacUnit = nil
@@ -3608,25 +3628,25 @@ end
 --    -- fourth digit 0 or 5
 --    -- times by 10000
 --
---function ctld.generateFMFrequencies()
---
---    ctld.freeFMFrequencies = {}
---    local _start = 220000000
---
---    while _start < 399000000 do
---
---        _start = _start + 500000
---    end
---
---    for _first = 3,7 do
---        for _second = 0,5 do
---            for _third = 0,9 do
---                local _frequency = ((100 * _first) + (10 * _second) + _third) * 100000 --extra 0 because we didnt bother with 4th digit
---                table.insert(ctld.freeFMFrequencies, _frequency)
---            end
---        end
---    end
---end
+function ctld.generateFMFrequencies()
+
+    ctld.freeFMFrequencies = {}
+    local _start = 220000000
+
+    while _start < 399000000 do
+
+        _start = _start + 500000
+    end
+
+    for _first = 3,7 do
+        for _second = 0,5 do
+            for _third = 0,9 do
+                local _frequency = ((100 * _first) + (10 * _second) + _third) * 100000 --extra 0 because we didnt bother with 4th digit
+                table.insert(ctld.freeFMFrequencies, _frequency)
+            end
+        end
+    end
+end
 
 function ctld.getPositionString(_unit)
 
@@ -3675,11 +3695,11 @@ ctld.deployedRadioBeacons = {} -- stores details of deployed radio beacons
 
 ctld.usedUHFFrequencies = {}
 ctld.usedVHFFrequencies = {}
---ctld.usedFMFrequencies = {}
+ctld.usedFMFrequencies = {}
 
 ctld.freeUHFFrequencies = {}
 ctld.freeVHFFrequencies = {}
---ctld.freeFMFrequencies = {}
+ctld.freeFMFrequencies = {}
 
 --used to lookup what the crate will contain
 ctld.crateLookupTable = {}
@@ -3781,9 +3801,9 @@ ctld.generateVHFrequencies()
 env.info("Generated VHF Frequencies")
 
 
---env.info("Generating FM Frequencies")
---ctld.generateFMFrequencies()
---env.info("Generated FM Frequencies")
+env.info("Generating FM Frequencies")
+ctld.generateFMFrequencies()
+env.info("Generated FM Frequencies")
 
 env.info("CTLD READY")
 --DEBUG FUNCTION
