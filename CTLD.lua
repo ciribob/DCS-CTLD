@@ -10,7 +10,16 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.12 - 14/06/2015 - Deployable Radio Beacons with FM radio
+    Version: 1.13 - 16/06/2015 - Added CountInZone for Cargo
+                               - Added Extract Zone with Flag trigger
+
+
+    TODO Support for Spotter Groups
+        - Spotter group will deploy smoke at their position with Radio Beacon
+        - Wont engage unless fired upon
+        - Report status via F10 Radio
+        - Report status every 5 minutes or when targets first appear
+        - Report vague status like 5 armoured vehicles, soldiers and support trucks ??
 
  ]]
 
@@ -108,6 +117,7 @@ ctld.dropOffZones = {
     { "dropzone9", "none" },
     { "dropzone10", "none" },
 }
+
 
 -- ******************** Transports names **********************
 
@@ -356,6 +366,135 @@ function ctld.preLoadTransport(_unitName, _number, _troops)
 end
 
 
+-- Continuously counts the number of crates in a zone and sets the value of the passed in flag
+-- to the count amount
+-- This means you can trigger actions based on the count and also trigger messages before the count is reached
+-- Just pass in the zone name and flag number like so as a single (NOT Continuous) Trigger
+-- e.g. ctld.cratesInZone("DropZone1", 5)
+function ctld.cratesInZone(_zone, _flagNumber)
+    local _triggerZone = trigger.misc.getZone(_zone) -- trigger to use as reference position
+
+    if _triggerZone == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zone, 10)
+        return
+    end
+
+    local _zonePos = mist.utils.zoneToVec3(_zone)
+
+    --ignore side, if crate has been used its discounted from the count
+    local _crateTables = {ctld.spawnedCratesRED,ctld.spawnedCratesBLUE }
+
+    local _crateCount = 0
+
+    for _,_crates in pairs(_crateTables) do
+
+        for _crateName, _details in pairs(_crates) do
+
+            --get crate
+            local _crate = StaticObject.getByName(_crateName)
+
+            --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
+            if _crate ~= nil and _crate:getLife() > 0
+                    and (_crate:inAir() == false or (land.getHeight(_crate:getPoint()) < 200 and mist.vec.mag(_crate:getVelocity()) < 1.0)) then
+
+                local _dist = ctld.getDistance(_crate:getPoint(),_zonePos)
+
+                if _dist <= _triggerZone.radius then
+                    _crateCount = _crateCount + 1
+                end
+            end
+        end
+    end
+
+    --set flag stuff
+    trigger.action.setUserFlag(_flagNumber, _crateCount)
+
+   -- env.info("FLAG ".._flagNumber.." crates ".._crateCount)
+
+    --retrigger in 5 seconds
+    timer.scheduleFunction(function(_args)
+
+        ctld.cratesInZone(_args[1], _args[2])
+
+    end, {_zone,_flagNumber}, timer.getTime() + 5)
+
+end
+
+-- Creates an extraction zone
+-- any Soldiers (not vehicles) dropped at this zone by a helicopter will disappear
+-- and be added to a running total of soldiers for a set flag number
+-- The idea is you can then drop say 20 troops in a zone and trigger an action using the mission editor triggers
+-- and the flag value
+--
+-- The ctld.createExtractZone function needs to be called once in a trigger action do script.
+-- if you dont want smoke, pass -1 to the function.
+--Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4, NO SMOKE = -1
+--
+-- e.g. ctld.createExtractZone("extractzone1", 2, -1) will create an extraction zone at trigger zone "extractzone1", store the number of troops dropped at
+-- the zone in flag 2 and not have smoke
+--
+--
+--
+function ctld.createExtractZone(_zone, _flagNumber, _smoke)
+    local _triggerZone = trigger.misc.getZone(_zone) -- trigger to use as reference position
+
+    if _triggerZone == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zone, 10)
+        return
+    end
+
+    local _zonePos = mist.utils.zoneToVec3(_zone)
+
+    trigger.action.setUserFlag(_flagNumber, 0) --start at 0
+
+    local _details = {point = _zonePos,name=_zone,smoke=_smoke,flag=_flagNumber, radius=_triggerZone.radius}
+    table.insert(ctld.extractZones, _details)
+
+    if _smoke ~=nil or _smoke > -1 then
+
+       local _smokeFunction
+
+       _smokeFunction = function (_args)
+
+           trigger.action.smoke(_args.point, _args.smoke)
+
+           timer.scheduleFunction(_smokeFunction, _args, timer.getTime() + 300)
+        end
+
+        --run local function
+       _smokeFunction(_details)
+
+    end
+
+
+    --refresh in 5 minutes
+
+end
+
+-- Creates a radio beacon on a random UHF - VHF and HF/FM frequency for homing
+-- This WILL NOT WORK if you dont add beacon.ogg and beaconsilent.ogg to the mission!!!
+-- e.g. ctld.createRadioBeaconAtZone("beaconZone","red", 1440) will create a beacon at trigger zone "beaconZone" for the Red side
+-- that will last 1440 minutes (24 hours )
+--
+-- e.g. ctld.createRadioBeaconAtZone("beaconZoneBlue","blue", 20) will create a beacon at trigger zone "beaconZoneBlue" for the Blue side
+-- that will last 20 minutes
+function ctld.createRadioBeaconAtZone(_zone, _coalition,_batteryLife)
+    local _triggerZone = trigger.misc.getZone(_zone) -- trigger to use as reference position
+
+    if _triggerZone == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zone, 10)
+        return
+    end
+
+    local _zonePos = mist.utils.zoneToVec3(_zone)
+
+    if _coalition == "red" then
+        ctld.createRadioBeacon(_zonePos,1, 0,false,_batteryLife) --1440
+    else
+        ctld.createRadioBeacon(_zonePos,2, 2,false,_batteryLife) --1440
+    end
+
+end
 
 -- ***************************************************************
 -- **************** BE CAREFUL BELOW HERE ************************
@@ -669,6 +808,23 @@ function ctld.getPlayerNameOrType(_heli)
     end
 end
 
+function ctld.inExtractZone(_heli)
+
+    local _heliPoint = _heli:getPoint()
+
+    for _, _zoneDetails in pairs(ctld.extractZones) do
+
+          --get distance to center
+        local _dist = ctld.getDistance(_heliPoint, _zoneDetails.point)
+
+        if _dist <= _zoneDetails.radius then
+            return _zoneDetails
+        end
+
+    end
+
+    return false
+end
 
 function ctld.deployTroops(_heli, _troops)
 
@@ -679,19 +835,39 @@ function ctld.deployTroops(_heli, _troops)
 
         if _onboard.troops ~= nil and #_onboard.troops.units > 0 then
 
-            local _droppedTroops = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.troops, false)
+            -- check we're not in extract zone
+            local _extractZone = ctld.inExtractZone(_heli)
 
-            if _heli:getCoalition() == 1 then
+            if _extractZone == false then
 
-                table.insert(ctld.droppedTroopsRED, _droppedTroops:getName())
+                local _droppedTroops = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.troops, false)
+
+                if _heli:getCoalition() == 1 then
+
+                    table.insert(ctld.droppedTroopsRED, _droppedTroops:getName())
+                else
+
+                    table.insert(ctld.droppedTroopsBLUE, _droppedTroops:getName())
+                end
+
+                ctld.inTransitTroops[_heli:getName()].troops = nil
+                trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped troops from " .. _heli:getTypeName() .. " into combat", 10)
+
             else
+                --extract zone!
+                local _droppedCount = trigger.misc.getUserFlag(_extractZone.flag)
 
-                table.insert(ctld.droppedTroopsBLUE, _droppedTroops:getName())
+                _droppedCount = (#_onboard.troops.units) +_droppedCount
+
+                trigger.action.setUserFlag(_extractZone.flag,_droppedCount)
+
+                ctld.inTransitTroops[_heli:getName()].troops = nil
+                trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped troops from " .. _heli:getTypeName() .. " into ".._extractZone.name, 10)
+
             end
 
-            ctld.inTransitTroops[_heli:getName()].troops = nil
-            trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped troops from " .. _heli:getTypeName() .. " into combat", 10)
         end
+
     else
         if _onboard.vehicles ~= nil and #_onboard.vehicles.units > 0 then
 
@@ -1308,7 +1484,7 @@ function ctld.getFOBPositionString(_fob)
 
     local _latLngStr = mist.tostringLL(_lat, _lon, 3, false)
 
- --   local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
+    --   local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
 
     local _message = _latLngStr
 
@@ -1594,7 +1770,7 @@ end
 --spawns a radio beacon made up of two units,
 -- one for VHF and one for UHF
 -- The units are set to to NOT engage
-function ctld.createRadioBeacon(_point, _coalition, _country,_isFOB)
+function ctld.createRadioBeacon(_point, _coalition, _country,_isFOB,_batteryTime)
 
     local _uhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "UHF")
     local _vhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "VHF")
@@ -1603,7 +1779,13 @@ function ctld.createRadioBeacon(_point, _coalition, _country,_isFOB)
     local _freq = ctld.generateADFFrequencies()
 
     --create timeout
-    local _battery = timer.getTime()+ (ctld.deployedBeaconBattery *60)
+    local _battery
+
+    if _batteryTime == nil then
+        _battery = timer.getTime()+ (ctld.deployedBeaconBattery *60)
+    else
+        _battery = timer.getTime()+ (_batteryTime *60)
+    end
 
     local _lat, _lon = coord.LOtoLL(_point)
 
@@ -1678,7 +1860,7 @@ function ctld.generateADFFrequencies()
     local _fm = table.remove(ctld.freeFMFrequencies,math.random(#ctld.freeFMFrequencies))
     table.insert(ctld.usedFMFrequencies,_fm)
 
-   return {uhf=_uhf,vhf=_vhf,fm=_fm}
+    return {uhf=_uhf,vhf=_vhf,fm=_fm}
     ---return {uhf=_uhf,vhf=_vhf}
 end
 
@@ -1756,86 +1938,86 @@ function ctld.updateRadioBeacon(_beaconDetails)
     end
 
     --fobs have unlimited battery life
---    if _battery ~= -1 then
---        _text = _text.." "..mist.utils.round(_batLife).." seconds of battery"
---    end
+    --    if _battery ~= -1 then
+    --        _text = _text.." "..mist.utils.round(_batLife).." seconds of battery"
+    --    end
 
     for _,_radio in pairs(_radioLoop) do
 
---        if _radio.silent then
---            local _setFrequency = {
---                ["enabled"] = true,
---                ["auto"] = false,
---                ["id"] = "WrappedAction",
---                ["number"] = 1, -- first task
---                ["params"] = {
---                    ["action"] = {
---                        ["id"] = "SetFrequency",
---                        ["params"] = {
---                            ["modulation"] = _radio.mode, -- 0 is AM 1 is FM --if FM you cant read the message... might be the only fix to stop FC3 aircraft hearing it... :(
---                            ["frequency"] = _radio.freq,
---                        },
---                    },
---                },
---            }
---
---
---            local _radioText = _text
---            local _sound = ctld.radioSound
---            --dont show radio text on UHF as that should hide it from FC3 aircraft
---            if _radio.silent then
---                _radioText = ""
---                _sound = ctld.radioSoundFC3
---            end
---
---
---            local _setupDetails = {
---                ["enabled"] = true,
---                ["auto"] = false,
---                ["id"] = "WrappedAction",
---                ["number"] = 2, -- second task
---                ["params"] = {
---                    ["action"] = {
---                        ["id"] = "TransmitMessage",
---                        ["params"] = {
---                            ["loop"] = true, --false works too
---                            ["subtitle"] = "", --_text
---                            ["duration"] =  60, -- reset every 60 seconds --used to have timer.getTime() +60
---                            ["file"] = _sound,
---                        },
---                    },
---                }
---            }
---
---            local _groupController = _radio.group:getController()
---
---            --reset!
---            _groupController:resetTask()
---
---           _groupController:setTask(_setFrequency)
---           _groupController:setTask(_setupDetails)
---
---            --Make the unit NOT engage as its simulating a radio...!
---
---
---            --env.info("Radio Beacon: ".. _text)
---        else
-            -- Above function doesnt work for simulating VHF in multiplayer but DOES in single player.... WHY DCS WHY!?!?!
+        --        if _radio.silent then
+        --            local _setFrequency = {
+        --                ["enabled"] = true,
+        --                ["auto"] = false,
+        --                ["id"] = "WrappedAction",
+        --                ["number"] = 1, -- first task
+        --                ["params"] = {
+        --                    ["action"] = {
+        --                        ["id"] = "SetFrequency",
+        --                        ["params"] = {
+        --                            ["modulation"] = _radio.mode, -- 0 is AM 1 is FM --if FM you cant read the message... might be the only fix to stop FC3 aircraft hearing it... :(
+        --                            ["frequency"] = _radio.freq,
+        --                        },
+        --                    },
+        --                },
+        --            }
+        --
+        --
+        --            local _radioText = _text
+        --            local _sound = ctld.radioSound
+        --            --dont show radio text on UHF as that should hide it from FC3 aircraft
+        --            if _radio.silent then
+        --                _radioText = ""
+        --                _sound = ctld.radioSoundFC3
+        --            end
+        --
+        --
+        --            local _setupDetails = {
+        --                ["enabled"] = true,
+        --                ["auto"] = false,
+        --                ["id"] = "WrappedAction",
+        --                ["number"] = 2, -- second task
+        --                ["params"] = {
+        --                    ["action"] = {
+        --                        ["id"] = "TransmitMessage",
+        --                        ["params"] = {
+        --                            ["loop"] = true, --false works too
+        --                            ["subtitle"] = "", --_text
+        --                            ["duration"] =  60, -- reset every 60 seconds --used to have timer.getTime() +60
+        --                            ["file"] = _sound,
+        --                        },
+        --                    },
+        --                }
+        --            }
+        --
+        --            local _groupController = _radio.group:getController()
+        --
+        --            --reset!
+        --            _groupController:resetTask()
+        --
+        --           _groupController:setTask(_setFrequency)
+        --           _groupController:setTask(_setupDetails)
+        --
+        --            --Make the unit NOT engage as its simulating a radio...!
+        --
+        --
+        --            --env.info("Radio Beacon: ".. _text)
+        --        else
+        -- Above function doesnt work for simulating VHF in multiplayer but DOES in single player.... WHY DCS WHY!?!?!
 
-            local _groupController = _radio.group:getController()
+        local _groupController = _radio.group:getController()
 
-            local _sound = ctld.radioSound
-            if _radio.silent then
-                _sound = ctld.radioSoundFC3
-            end
-            _groupController:setOption(AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.WEAPON_HOLD)
+        local _sound = ctld.radioSound
+        if _radio.silent then
+            _sound = ctld.radioSoundFC3
+        end
+        _groupController:setOption(AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.WEAPON_HOLD)
 
-            trigger.action.radioTransmission(_sound, _radio.group:getUnit(1):getPoint(), _radio.mode, false, _radio.freq, 1000)
-            --This function doesnt actually stop transmitting when then sound is false. My hope is it will stop if a new beacon is created on the same
-            -- frequency... OR they fix the bug where it wont stop.
---        end
+        trigger.action.radioTransmission(_sound, _radio.group:getUnit(1):getPoint(), _radio.mode, false, _radio.freq, 1000)
+        --This function doesnt actually stop transmitting when then sound is false. My hope is it will stop if a new beacon is created on the same
+        -- frequency... OR they fix the bug where it wont stop.
+        --        end
 
-       --
+        --
     end
 
     return true
@@ -2866,7 +3048,7 @@ function ctld.addF10MenuOptions()
                 ctld.addJTACRadioCommand(1)
             end
         end
-        )
+    )
     timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
 end
 
@@ -3703,6 +3885,8 @@ ctld.freeFMFrequencies = {}
 
 --used to lookup what the crate will contain
 ctld.crateLookupTable = {}
+
+ctld.extractZones = {} -- stored extract zones
 
 -- Remove intransit troops when heli / cargo plane dies
 --ctld.eventHandler = {}

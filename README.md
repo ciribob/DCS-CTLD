@@ -26,9 +26,13 @@ The script supports:
     * BRMD-2
 * FOB Building
     * Homing using FM Radio Beacon 
+    * Easy Beacon Creation using Mission Editor
 * Radio Beacon Deployment
     * Ability to deploy a homing beacon that the A10C, Ka-50, Mi-8 and Huey can home on
 * Pre loading of units into AI vehicles via a DO SCRIPT
+* Mission Editor Trigger functions - They store the numbers in flags for use by triggers
+	* Count Crates in Zone
+	* Count soldiers extracted to a zone (the soldiers disappear)
 
 A complete test mission is included.
 
@@ -149,7 +153,8 @@ Example showing what happens if you dont have enough crates:
 
 **Make sure that after making any changes to the script you remove and re-add the script to the mission. **
 
-###Other Script Functions
+###Mission Editor Script Functions
+####Preload Troops into Transport
 You can also preload troops into AI transports once the CTLD script has been loaded, instead of having the AI enter a pickup zone, using the code below where the parameters are:
 * Pilot name of the unit
 * number of troops / vehicles to load
@@ -159,9 +164,10 @@ If you try to load vehicles into anything other than a unit listed in ```ctld.ve
 ```lua
 ctld.preLoadTransport("helicargo1", 10,true)
 ```
-
+####Create Extractable Groups without Pickup Zone
 You can also make existing mission editor groups extractable by adding their group name to the ```ctld.extractableGroups``` list
 
+####Spawn Extractable Groups without Pickup Zone
 You can also spawn extractable infantry groups at a specified trigger zone using the code below.
 
 The parameters are:
@@ -177,6 +183,39 @@ or
 ```lua
 ctld.spawnGroupAtTrigger("blue", 5, "spawnTrigger2", 2000)
 ```
+
+####Create Radio Beacon at Zone
+A radio beacon can be spawned at any zone by adding a Trigger Once with a Time More set to any time after the CTLD script has been loaded and a DO SCRIPT action of ```ctld.createRadioBeaconAtZone("beaconZone","red", 1440)```
+
+Where ```"beaconZone"``` is the name of a Trigger Zone added using the mission editor, ```"red"``` is the side to add the beacon for and ```1440``` the time in minutes for the beacon to broadcast for.
+
+```ctld.createRadioBeaconAtZone("beaconZoneBlue","blue", 20)``` will create a beacon at trigger zone named ```"beaconZoneBlue"``` for the Blue coalition that will last 20 minutes.
+
+Spawned beacons will broadcast on HF/FM, UHF and VHF until their battery runs out and can be used by most aircraft for ADF. The frequencies used on each frequency will be random.
+
+**Again, beacons will not work if beacon.ogg and beaconsilent.ogg are not in the mission!**
+
+####Create Extract Zone
+An extact zone is a zone where troops (not vehicles) can be dropped by transports and used to trigger another action based on the number of troops dropped. The radius of the zone sets how big the extract zone will be.
+
+When troops are dropped, the troops disappear and the number of troops dropped added to the flag number configured by the function. This means you can make a trigger such that 10 troops have to be rescued and dropped at the extract zone, and when this happens you can trigger another action.
+
+An Extraction zone can be created by adding a Trigger Once with a Time More set to any time after the CTLD script has been loaded and a DO SCRIPT action of ```ctld.createExtractZone("extractzone1", 2, -1)```
+Where ```"extractzone1"``` is the name of a Trigger Zone added using the mission editor, ```2``` is the flag where we want the total number of troops dropped in a zone added and ```-1``` the smoke colour.
+
+The settings for smoke are: Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4, NO SMOKE = -1
+
+####Create Crate Drop Zone
+A crate drop zone is a zone where the number of crates in a zone in counted every 5 seconds and the current amount stored in a flag specified by the script.
+
+The flag number can be used to trigger other actions added using the mission editor, i.e only activate vehicles once a certain number of crates have been dropped in a zone.  The radius of the zone in the mission editor sets how big the crate drop zone will be.
+
+**The script doesnt differentiate between crates, any crate spawned by the CTLD script can be dropped there and it will count as 1 but if a crate is unpacked in a zone it will no longer count!**
+
+A crate drop zone can be added to any zone by adding a Trigger Once with a Time More set to any time after the CTLD script has been loaded and a DO SCRIPT action of ```ctld.cratesInZone("crateZone",1)```
+
+Where ```"crateZone"``` is the name of a Trigger Zone added using the mission editor, and ```1``` is the number of the flag where the current number of crates in the zone will be stored.
+
 
 ####JTAC Automatic Targeting and Laser
 This script has been merged with https://github.com/ciribob/DCS-JTACAutoLaze . JTACs can either be deployed by Helicopters and configured with the options in the script or pre added to the mission. By default each side can drop 5 JTACs.
