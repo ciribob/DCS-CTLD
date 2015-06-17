@@ -10,8 +10,9 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.13 - 16/06/2015 - Added CountInZone for Cargo
-                               - Added Extract Zone with Flag trigger
+    Version: 1.14 - 17/06/2015 - Added CountInZone for Cargo with Flag
+                               - Added Extract Zone with Flag 
+                               - Added Create Beacon using Mission Edtor
 
 
     TODO Support for Spotter Groups
