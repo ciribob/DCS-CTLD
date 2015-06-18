@@ -10,7 +10,8 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.14 - 17/06/2015 - Added CountInZone for Cargo with Flag
+    Version: 1.15 - 18/06/2015 - Bug fix for Rearming hawk
+                               - Added CountInZone for Cargo with Flag
                                - Added Extract Zone with Flag 
                                - Added Create Beacon using Mission Edtor
 
@@ -410,7 +411,7 @@ function ctld.cratesInZone(_zone, _flagNumber)
     --set flag stuff
     trigger.action.setUserFlag(_flagNumber, _crateCount)
 
-   -- env.info("FLAG ".._flagNumber.." crates ".._crateCount)
+    -- env.info("FLAG ".._flagNumber.." crates ".._crateCount)
 
     --retrigger in 5 seconds
     timer.scheduleFunction(function(_args)
@@ -453,17 +454,17 @@ function ctld.createExtractZone(_zone, _flagNumber, _smoke)
 
     if _smoke ~=nil or _smoke > -1 then
 
-       local _smokeFunction
+        local _smokeFunction
 
-       _smokeFunction = function (_args)
+        _smokeFunction = function (_args)
 
-           trigger.action.smoke(_args.point, _args.smoke)
+            trigger.action.smoke(_args.point, _args.smoke)
 
-           timer.scheduleFunction(_smokeFunction, _args, timer.getTime() + 300)
+            timer.scheduleFunction(_smokeFunction, _args, timer.getTime() + 300)
         end
 
         --run local function
-       _smokeFunction(_details)
+        _smokeFunction(_details)
 
     end
 
@@ -815,7 +816,7 @@ function ctld.inExtractZone(_heli)
 
     for _, _zoneDetails in pairs(ctld.extractZones) do
 
-          --get distance to center
+        --get distance to center
         local _dist = ctld.getDistance(_heliPoint, _zoneDetails.point)
 
         if _dist <= _zoneDetails.radius then
@@ -1609,7 +1610,7 @@ function ctld.findNearestHawk(_heli)
     end
 
     if _closestHawkGroup ~= nil then
-        return { group = _closestHawkGroup, dist = _distance }
+        return { group = _closestHawkGroup, dist = _shortestDistance }
     end
     return nil
 end
