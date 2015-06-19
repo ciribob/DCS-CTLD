@@ -10,7 +10,8 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.15 - 18/06/2015 - Bug fix for Rearming hawk
+    Version: 1.16 - 19/06/2015 - Bug fix for Rearming hawk
+                               - Bug fix for smoke spawning IN the ground?!
                                - Added CountInZone for Cargo with Flag
                                - Added Extract Zone with Flag 
                                - Added Create Beacon using Mission Edtor
@@ -47,6 +48,7 @@ ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il
 ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
+ctld.spawnStinger = false -- spawns a stinger / igla soldier with every group of 5 or more men.
 
 ctld.enabledFOBBuilding = true -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
 -- In future i'd like it to be a FARP but so far that seems impossible...
@@ -445,11 +447,13 @@ function ctld.createExtractZone(_zone, _flagNumber, _smoke)
         return
     end
 
-    local _zonePos = mist.utils.zoneToVec3(_zone)
+    local _pos2 = { x = _triggerZone.point.x, y = _triggerZone.point.z }
+    local _alt = land.getHeight(_pos2)
+    local _pos3 = { x = _pos2.x, y = _alt, z = _pos2.y }
 
     trigger.action.setUserFlag(_flagNumber, 0) --start at 0
 
-    local _details = {point = _zonePos,name=_zone,smoke=_smoke,flag=_flagNumber, radius=_triggerZone.radius}
+    local _details = {point = _pos3,name=_zone,smoke=_smoke,flag=_flagNumber, radius=_triggerZone.radius}
     table.insert(ctld.extractZones, _details)
 
     if _smoke ~=nil or _smoke > -1 then
@@ -902,6 +906,10 @@ function ctld.generateTroopTypes(_side, _count, _country)
 
         if _side == 2 then
             _unitType = "Soldier M4"
+
+            if _i <= 5 and ctld.spawnStinger then
+                _unitType = "Stinger manpad"
+            end
             if _i <= 4 and ctld.spawnRPGWithCoalition then
                 _unitType = "Paratrooper RPG-16"
             end
@@ -910,6 +918,9 @@ function ctld.generateTroopTypes(_side, _count, _country)
             end
         else
             _unitType = "Infantry AK"
+            if _i <= 5 and ctld.spawnStinger then
+                _unitType = "SA-18 Igla manpad"
+            end
             if _i <= 4 then
                 _unitType = "Paratrooper RPG-16"
             end
