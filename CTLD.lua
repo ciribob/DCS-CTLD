@@ -10,8 +10,10 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.16 - 19/06/2015 - Bug fix for Rearming hawk
+    Version: 1.17 - 20/06/2015 - Bug fix for Rearming hawk
                                - Bug fix for smoke spawning IN the ground?!
+                               - Bug fix for smoke disable for extractZones
+                               - Enabled multi crate units
                                - Added CountInZone for Cargo with Flag
                                - Added Extract Zone with Flag 
                                - Added Create Beacon using Mission Edtor
@@ -23,6 +25,9 @@
         - Report status via F10 Radio
         - Report status every 5 minutes or when targets first appear
         - Report vague status like 5 armoured vehicles, soldiers and support trucks ??
+
+    TODO Make HAWK have three launchers, it fires all 3 off most times
+    TODO Make hawk only engage closer targets
 
  ]]
 
@@ -46,6 +51,8 @@ ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli
 
 ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
 ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
+
+ctld.hawkLaunchers = 3 -- controls how many launchers to add to the hawk when its spawned.
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 ctld.spawnStinger = false -- spawns a stinger / igla soldier with every group of 5 or more men.
@@ -275,7 +282,7 @@ ctld.spawnableCrates = {
         { weight = 1500, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
 
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
-        -- { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 3 },
+        { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 5 },
     },
     ["AA Crates"] = {
         { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
@@ -284,7 +291,7 @@ ctld.spawnableCrates = {
         { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
         { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
         { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
-        --   { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 3 },
+        { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 5 },
     },
 }
 
@@ -456,14 +463,14 @@ function ctld.createExtractZone(_zone, _flagNumber, _smoke)
     local _details = {point = _pos3,name=_zone,smoke=_smoke,flag=_flagNumber, radius=_triggerZone.radius}
     table.insert(ctld.extractZones, _details)
 
-    if _smoke ~=nil or _smoke > -1 then
+    if _smoke ~=nil and _smoke > -1 then
 
         local _smokeFunction
 
         _smokeFunction = function (_args)
 
             trigger.action.smoke(_args.point, _args.smoke)
-
+            --refresh in 5 minutes
             timer.scheduleFunction(_smokeFunction, _args, timer.getTime() + 300)
         end
 
@@ -471,9 +478,6 @@ function ctld.createExtractZone(_zone, _flagNumber, _smoke)
         _smokeFunction(_details)
 
     end
-
-
-    --refresh in 5 minutes
 
 end
 
@@ -2282,7 +2286,7 @@ function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
 
     for _, _nearbyCrate in pairs(_nearbyCrates) do
 
-        if _nearbyCrate.dist < 300 then
+        if _nearbyCrate.dist < 500 then
 
             if _nearbyCrate.details.unit == "Hawk ln" or _nearbyCrate.details.unit == "Hawk sr" or _nearbyCrate.details.unit == "Hawk tr" then
 
