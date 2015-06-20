@@ -7,6 +7,7 @@ The script supports:
 
 * Troop Loading / Unloading via Radio Menu
     * AI Units can also load and unload troops automatically
+    * Troops can spawn with RPGs and Stingers / Iglas if enabled.
 * Vehicle Loading / Unloading via Radio Menu for C-130 / IL-76 (Other large aircraft can easily be added) (https://www.digitalcombatsimulator.com/en/files/668878/?sphrase_id=1196134)
     * You will need to download the modded version of the C-130 from here (JSGME Ready) that fixes the Radio Menu 
 * Coloured Smoke Marker Drops
@@ -78,7 +79,10 @@ ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli
 ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
 ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
 
+ctld.hawkLaunchers = 3 -- controls how many launchers to add to the hawk when its spawned.
+
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
+ctld.spawnStinger = false -- spawns a stinger / igla soldier with every group of 5 or more men.
 
 ctld.enabledFOBBuilding = true -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
 -- In future i'd like it to be a FARP but so far that seems impossible...
@@ -94,7 +98,7 @@ ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
 ctld.radioSoundFC3 = "beaconsilent.ogg" -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
 
-ctld.deployedBeaconBattery = 15 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
+ctld.deployedBeaconBattery = 20 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
 
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
 ```
@@ -109,10 +113,8 @@ To change what units can be dropped from crates modify the spawnable crates sect
 -- when we unpack
 --
 ctld.spawnableCrates = {
-
     -- name of the sub menu on F10 for spawning crates
     ["Ground Forces"] = {
-
         --crates you can spawn
         -- weight in KG
         -- Desc is the description on the F10 MENU
@@ -120,31 +122,34 @@ ctld.spawnableCrates = {
         -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
         -- side is optional but 2 is BLUE and 1 is RED
         -- dont use that option with the HAWK Crates
-        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW" , side = 2 },
+        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW", side = 2 },
         { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
 
-        { weight = 1700, desc = "BTR-D", unit =  "BTR_D", side = 1 },
-        { weight = 1900, desc = "BRDM-2", unit =  "BRDM-2", side = 1 },
+        { weight = 1700, desc = "BTR-D", unit = "BTR_D", side = 1 },
+        { weight = 1900, desc = "BRDM-2", unit = "BRDM-2", side = 1 },
 
-        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer", side = 2,  }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
-        { weight = 1500, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1,  }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer", side = 2, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 1500, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
 
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
-        -- { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 3 },
+
+        { weight = 500, desc = "SPH 2S19 Msta", unit = "SAU Msta", side=1, cratesRequired = 3 },
+        { weight = 501, desc = "M-109", unit = "M-109", side=2, cratesRequired = 3 },
     },
-
     ["AA Crates"] = {
-
         { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
         { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
         { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
         { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
         { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
-        --   { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 3 },
-    },
+        --
 
+        { weight = 505, desc =  "Strela-1 9P31", unit = "Strela-1 9P31", side =1, cratesRequired = 4 },
+        { weight = 506, desc =  "M1097 Avenger", unit = "M1097 Avenger", side =2, cratesRequired = 4 },
+    },
 }
+
 ```
 
 Example showing what happens if you dont have enough crates:
@@ -210,7 +215,9 @@ A crate drop zone is a zone where the number of crates in a zone in counted ever
 
 The flag number can be used to trigger other actions added using the mission editor, i.e only activate vehicles once a certain number of crates have been dropped in a zone.  The radius of the zone in the mission editor sets how big the crate drop zone will be.
 
-**The script doesnt differentiate between crates, any crate spawned by the CTLD script can be dropped there and it will count as 1 but if a crate is unpacked in a zone it will no longer count!**
+**The script doesnt differentiate between crates, any crate spawned by the CTLD script can be dropped there and it will count as 1 but if a crate is unpacked in a zone it will no longer count! **
+
+**Crates added by the Mission Editor cannot be used, only crates spawned by the Script will work!**
 
 A crate drop zone can be added to any zone by adding a Trigger Once with a Time More set to any time after the CTLD script has been loaded and a DO SCRIPT action of ```ctld.cratesInZone("crateZone",1)```
 
@@ -224,8 +231,8 @@ The JTAC Script configuration is shown below and can easily be disabled using th
 
 ```lua
 -- ***************** JTAC CONFIGURATION *****************
-ctld.JTAC_LIMIT_RED = 5 -- max number of JTAC Crates for the RED Side
-ctld.JTAC_LIMIT_BLUE = 5 -- max number of JTAC Crates for the BLUE Side
+ctld.JTAC_LIMIT_RED = 10 -- max number of JTAC Crates for the RED Side
+ctld.JTAC_LIMIT_BLUE = 10 -- max number of JTAC Crates for the BLUE Side
 
 ctld.JTAC_dropEnabled = true -- allow JTAC Crate spawn from F10 menu
 
@@ -328,6 +335,15 @@ ctld.pickupZones = {
 ```
 
 AI transport units will automatically load troops and vehicles when entering a pickup zone as long as they stay in the zone for a few seconds. They do not need to stop to load troops but Aircraft will need to be on the ground in order to load troops.
+
+The number of troops that can be loaded from a pickup zone can be configured by changing ```ctld.numberOfTroops``` which by default is 10. You can also enable troop groups to have RPGs and Stingers / Iglas by  ```ctld.spawnRPGWithCoalition``` and ```ctld.spawnStinger```. 
+
+If ```ctld.numberOfTroops``` is 6 or more than the soldier group will consist of:
+
+ - 2 MG Soldiers with M249s or Paratroopers with AKS-74
+ - 2 RPG Soldiers (only on the RED side if ```ctld.spawnRPGWithCoalition``` is ```false```
+ - 1 Igla / Stinger
+ - The rest will be standard soldiers
 
 Example:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-22-48-57_zpsc5u7bymy.png~original "Pickup zone")
@@ -449,7 +465,7 @@ You can also list nearby crates that have yet to be unpacked using the F10 CTLD 
 ##Crate Unpacking
 Once you have sling loaded and successfully dropped your crate, you can land and list nearby crates that have yet to be unpacked using the F10 Crate Commands Menu, as well as unpack nearby crates using the same menu. Crates cannot be unpacked near a logistics unit.
 
-To build a HAWK AA system you will need to slingload all 3 parts - Launcher, Track Radar and Search Radar - and drop the crates within 100m of each other. If you try to build the system without all the parts, a message will list which parts are missing.
+To build a HAWK AA system you will need to slingload all 3 parts - Launcher, Track Radar and Search Radar - and drop the crates within 100m of each other. If you try to build the system without all the parts, a message will list which parts are missing. The HAWK system by default will spawn with 3 launchers as it usually fires off 3 missiles at one target at a time. If you want to change the amount of launchers it has, edit the ```ctld.hawkLaunchers``` option in the user configuration at the top of the CTLD.lua file.
 
 Parts Missing:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-45-15-05_zpsv856jhw3.png~original "Hawk Parts missing")

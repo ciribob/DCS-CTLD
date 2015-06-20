@@ -10,13 +10,9 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.17 - 20/06/2015 - Bug fix for Rearming hawk
-                               - Bug fix for smoke spawning IN the ground?!
-                               - Bug fix for smoke disable for extractZones
-                               - Enabled multi crate units
-                               - Added CountInZone for Cargo with Flag
-                               - Added Extract Zone with Flag 
-                               - Added Create Beacon using Mission Edtor
+    Version: 1.18 - 20/06/2015
+                                - Enabled multi crate units
+                                - Added new parameter for the number of launchers to spawn a HAWK with
 
 
     TODO Support for Spotter Groups
@@ -26,8 +22,7 @@
         - Report status every 5 minutes or when targets first appear
         - Report vague status like 5 armoured vehicles, soldiers and support trucks ??
 
-    TODO Make HAWK have three launchers, it fires all 3 off most times
-    TODO Make hawk only engage closer targets
+    TODO Make hawk only engage closer targets?
 
  ]]
 
@@ -77,8 +72,8 @@ ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be
 
 -- ***************** JTAC CONFIGURATION *****************
 
-ctld.JTAC_LIMIT_RED = 5 -- max number of JTAC Crates for the RED Side
-ctld.JTAC_LIMIT_BLUE = 5 -- max number of JTAC Crates for the BLUE Side
+ctld.JTAC_LIMIT_RED = 10 -- max number of JTAC Crates for the RED Side
+ctld.JTAC_LIMIT_BLUE = 10 -- max number of JTAC Crates for the BLUE Side
 
 ctld.JTAC_dropEnabled = true -- allow JTAC Crate spawn from F10 menu
 
@@ -282,7 +277,9 @@ ctld.spawnableCrates = {
         { weight = 1500, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
 
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
-        { weight = 500, desc = "M-109", unit = "M-109", cratesRequired = 5 },
+
+        { weight = 500, desc = "SPH 2S19 Msta", unit = "SAU Msta", side=1, cratesRequired = 3 },
+        { weight = 501, desc = "M-109", unit = "M-109", side=2, cratesRequired = 3 },
     },
     ["AA Crates"] = {
         { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
@@ -291,11 +288,14 @@ ctld.spawnableCrates = {
         { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
         { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
         { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
-        { weight = 505, desc =  "M6 Linebacker", unit = "M6 Linebacker", cratesRequired = 5 },
+        --
+
+        { weight = 505, desc =  "Strela-1 9P31", unit = "Strela-1 9P31", side =1, cratesRequired = 4 },
+        { weight = 506, desc =  "M1097 Avenger", unit = "M1097 Avenger", side =2, cratesRequired = 4 },
     },
 }
 
--- if the unit is on this list, it will be made into a JTAC
+-- if the unit is on this list, it will be made into a JTAC when deployed
 ctld.jtacUnitTypes = {
     "SKP", "Hummer" -- there are some wierd encoding issues so if you write SKP-11 it wont match as the - sign is encoded differently...
 }
@@ -393,13 +393,13 @@ function ctld.cratesInZone(_zone, _flagNumber)
     local _zonePos = mist.utils.zoneToVec3(_zone)
 
     --ignore side, if crate has been used its discounted from the count
-    local _crateTables = {ctld.spawnedCratesRED,ctld.spawnedCratesBLUE }
+    local _crateTables = {ctld.spawnedCratesRED,ctld.spawnedCratesBLUE,ctld.missionEditorCargoCrates }
 
     local _crateCount = 0
 
     for _,_crates in pairs(_crateTables) do
 
-        for _crateName, _details in pairs(_crates) do
+        for _crateName, _dontUse in pairs(_crates) do
 
             --get crate
             local _crate = StaticObject.getByName(_crateName)
@@ -2231,12 +2231,7 @@ function ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates)
 
         if _nearestHawk ~= nil and _nearestHawk.dist < 300 then
 
-            if _heli:getCoalition() == 1 then
-                ctld.spawnedCratesRED[_nearestCrate.crateUnit:getName()] = nil
-            else
-                ctld.spawnedCratesBLUE[_nearestCrate.crateUnit:getName()] = nil
-            end
-
+            local _uniqueTypes = {} -- stores each unique part of hawk, should always be 3
             local _types = {}
             local _points = {}
 
@@ -2246,13 +2241,17 @@ function ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates)
 
                 for x = 1, #_units do
                     if _units[x]:getLife() > 0 then
-                        table.insert(_types, _units[x]:getTypeName())
+
+                        --this allows us to count each type once
+                        _uniqueTypes[_units[x]:getTypeName()]=_units[x]:getTypeName()
+
                         table.insert(_points, _units[x]:getPoint())
+                        table.insert(_types, _units[x]:getTypeName())
                     end
                 end
             end
 
-            if #_types == 3 and #_points == 3 then
+            if ctld.countTableEntries(_uniqueTypes) == 3 and #_points >= 3 then
 
                 -- rearm hawk
                 -- destroy old group
@@ -2266,12 +2265,36 @@ function ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates)
 
                 trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully rearmed a full HAWK AA System in the field", 10)
 
+                -- remove crate
+                if _heli:getCoalition() == 1 then
+                    ctld.spawnedCratesRED[_nearestCrate.crateUnit:getName()] = nil
+                else
+                    ctld.spawnedCratesBLUE[_nearestCrate.crateUnit:getName()] = nil
+                end
+
                 return true -- all done so quit
             end
         end
     end
 
     return false
+end
+
+function ctld.countTableEntries(_table)
+
+    if _table == nil then
+        return 0
+    end
+
+
+    local _count = 0
+
+    for _key,_value in pairs(_table) do
+
+        _count = _count +1
+    end
+
+    return _count
 end
 
 function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
@@ -2315,8 +2338,30 @@ function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
                 _txt = _txt .. "Missing HAWK Track Radar\n"
             end
         else
-            table.insert(_posArray, _hawkPart.crateUnit:getPoint())
-            table.insert(_typeArray, _name)
+
+            --handle multiple launchers from one crate
+            if _name == "Hawk ln" and ctld.hawkLaunchers > 1 then
+
+                --add multiple launchers
+                for _i=1,ctld.hawkLaunchers do
+
+                    -- spawn in a circle around the crate
+                    local _angle = math.pi * 2 * (_i - 1) / ctld.hawkLaunchers
+                    local _xOffset = math.cos(_angle) * 10
+                    local _yOffset = math.sin(_angle) * 10
+
+                    local _point =  _hawkPart.crateUnit:getPoint()
+
+                    _point = {x = _point.x + _xOffset, y=_point.y, z= _point.z + _yOffset}
+
+                    table.insert(_posArray, _point)
+                    table.insert(_typeArray, "Hawk ln")
+                end
+            else
+                table.insert(_posArray, _hawkPart.crateUnit:getPoint())
+                table.insert(_typeArray, _name)
+            end
+
         end
     end
 
@@ -3905,6 +3950,8 @@ ctld.crateLookupTable = {}
 
 ctld.extractZones = {} -- stored extract zones
 
+ctld.missionEditorCargoCrates = {} --crates added by mission editor for triggering cratesinzone
+
 -- Remove intransit troops when heli / cargo plane dies
 --ctld.eventHandler = {}
 --function ctld.eventHandler:onEvent(_event)
@@ -3971,6 +4018,33 @@ for _, _groupName in pairs(ctld.extractableGroups) do
         end
     end
 end
+
+-- Add Mission editor added crates
+-- Crates are NOT returned by coalition.getStaticObjects()
+--local _objects = coalition.getStaticObjects(1)
+--if _objects ~= nil then
+--    for _, _static in pairs(_objects) do
+--
+--        env.info("RED:".._static:getTypeName())
+--        if _static:getTypeName() == "Cargo1" then
+--
+--            ctld.missionEditorCargoCrates[ _static:getName()] =  _static:getName();
+--        end
+--    end
+--end
+--
+--local _objects = coalition.getStaticObjects(2)
+--
+--if _objects ~= nil then
+--    for _, _static in pairs(_objects) do
+--
+--        env.info("BLUE:".._static:getTypeName())
+--        if _static:getTypeName() == "Cargo1" then
+--
+--            ctld.missionEditorCargoCrates[ _static:getName()] =  _static:getName();
+--        end
+--    end
+--end
 
 
 -- Scheduled functions (run cyclically)
