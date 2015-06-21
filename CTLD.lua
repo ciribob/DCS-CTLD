@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.20 - 21/06/2015  - Crates in Zone now works for Spawned crates and Ones added by the mission editor
+    Version: 1.21 - 21/06/2015  - Crates in Zone now works for Spawned crates and Ones added by the mission editor
                                 - Enabled multi crate units
                                 - Added new parameter for the number of launchers to spawn a HAWK with
 
@@ -704,80 +704,90 @@ end
 --
 --end
 
-function ctld.spawnCrate(_args)
+function ctld.spawnCrate(_arguments)
 
-    -- use the cargo weight to guess the type of unit as no way to add description :(
+    local _status,_err =  pcall(
+        function(_args)
 
-    local _crateType = ctld.crateLookupTable[tostring(_args[2])]
-    local _heli = ctld.getTransportUnit(_args[1])
+            -- use the cargo weight to guess the type of unit as no way to add description :(
 
-    if _crateType ~= nil and _heli ~= nil and _heli:inAir() == false then
+            local _crateType = ctld.crateLookupTable[tostring(_args[2])]
+            local _heli = ctld.getTransportUnit(_args[1])
 
-        if ctld.inLogisticsZone(_heli) == false then
+            if _crateType ~= nil and _heli ~= nil and _heli:inAir() == false then
 
-            ctld.displayMessageToGroup(_heli, "You are not close enough to friendly logistics to get a crate!", 10)
+                if ctld.inLogisticsZone(_heli) == false then
 
-            return
-        end
+                    ctld.displayMessageToGroup(_heli, "You are not close enough to friendly logistics to get a crate!", 10)
 
-        if ctld.isJTACUnitType(_crateType.unit) then
-
-            local _limitHit = false
-
-            if _heli:getCoalition() == 1 then
-
-                if ctld.JTAC_LIMIT_RED == 0 then
-                    _limitHit = true
-                else
-                    ctld.JTAC_LIMIT_RED = ctld.JTAC_LIMIT_RED - 1
+                    return
                 end
+
+                if ctld.isJTACUnitType(_crateType.unit) then
+
+                    local _limitHit = false
+
+                    if _heli:getCoalition() == 1 then
+
+                        if ctld.JTAC_LIMIT_RED == 0 then
+                            _limitHit = true
+                        else
+                            ctld.JTAC_LIMIT_RED = ctld.JTAC_LIMIT_RED - 1
+                        end
+                    else
+                        if ctld.JTAC_LIMIT_BLUE == 0 then
+                            _limitHit = true
+                        else
+                            ctld.JTAC_LIMIT_BLUE = ctld.JTAC_LIMIT_BLUE - 1
+                        end
+                    end
+
+                    if _limitHit then
+                        ctld.displayMessageToGroup(_heli, "No more JTAC Crates Left!", 10)
+                        return
+                    end
+                end
+
+                local _position = _heli:getPosition()
+
+                --try to spawn at 12 oclock to us
+                local _angle = math.atan2(_position.x.z, _position.x.x)
+                local _xOffset = math.cos(_angle) * 30
+                local _yOffset = math.sin(_angle) * 30
+
+                --   trigger.action.outText("Spawn Crate".._args[1].." ".._args[2],10)
+
+                local _heli = ctld.getTransportUnit(_args[1])
+
+                local _point = _heli:getPoint()
+
+                local _unitId = mist.getNextUnitId()
+
+                local _side = _heli:getCoalition()
+
+                local _name = string.format("%s #%i", _crateType.desc, _unitId)
+
+                local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, { x = _point.x + _xOffset, z = _point.z + _yOffset }, _name, _crateType.weight)
+
+                if _side == 1 then
+                    --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
+                    ctld.spawnedCratesRED[_name] = _crateType
+                else
+                    --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
+                    ctld.spawnedCratesBLUE[_name] = _crateType
+                end
+
+                ctld.displayMessageToGroup(_heli, string.format("A %s crate weighing %s kg has been brought out and is at your 12 o'clock ", _crateType.desc, _crateType.weight), 20)
+
             else
-                if ctld.JTAC_LIMIT_BLUE == 0 then
-                    _limitHit = true
-                else
-                    ctld.JTAC_LIMIT_BLUE = ctld.JTAC_LIMIT_BLUE - 1
-                end
+                env.info("Couldn't find crate item to spawn")
             end
 
-            if _limitHit then
-                ctld.displayMessageToGroup(_heli, "No more JTAC Crates Left!", 10)
-                return
-            end
-        end
+    end
+    , _arguments)
 
-        local _position = _heli:getPosition()
-
-        --try to spawn at 12 oclock to us
-        local _angle = math.atan2(_position.x.z, _position.x.x)
-        local _xOffset = math.cos(_angle) * 30
-        local _yOffset = math.sin(_angle) * 30
-
-        --   trigger.action.outText("Spawn Crate".._args[1].." ".._args[2],10)
-
-        local _heli = ctld.getTransportUnit(_args[1])
-
-        local _point = _heli:getPoint()
-
-        local _unitId = mist.getNextUnitId()
-
-        local _side = _heli:getCoalition()
-
-        local _name = string.format("%s #%i", _crateType.desc, _unitId)
-
-        local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, { x = _point.x + _xOffset, z = _point.z + _yOffset }, _name, _crateType.weight)
-
-        if _side == 1 then
-            --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
-            ctld.spawnedCratesRED[_name] = _crateType
-        else
-            --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
-            ctld.spawnedCratesBLUE[_name] = _crateType
-        end
-
-        ctld.displayMessageToGroup(_heli, string.format("A %s crate weighing %s kg has been brought out and is at your 12 o'clock ", _crateType.desc, _crateType.weight), 20)
-
-    else
-        env.info("Couldn't find crate item to spawn")
+    if (not _status) then
+        env.error(string.format("CTLD ERROR: %s", _err))
     end
 end
 
@@ -1633,72 +1643,80 @@ end
 
 
 
-function ctld.unpackCrates(_args)
+function ctld.unpackCrates(_arguments)
+
+   local _status,_err =  pcall(
+       function(_args)
 
     -- trigger.action.outText("Unpack Crates".._args[1],10)
 
-    local _heli = ctld.getTransportUnit(_args[1])
+        local _heli = ctld.getTransportUnit(_args[1])
 
-    if _heli ~= nil and _heli:inAir() == false then
+        if _heli ~= nil and _heli:inAir() == false then
 
-        local _crates = ctld.getCratesAndDistance(_heli)
-        local _crate = ctld.getClosestCrate(_heli, _crates)
+            local _crates = ctld.getCratesAndDistance(_heli)
+            local _crate = ctld.getClosestCrate(_heli, _crates)
 
-        if _crate ~= nil and _crate.dist < 750 and _crate.details.unit == "FOB" then
+            if _crate ~= nil and _crate.dist < 750 and _crate.details.unit == "FOB" then
 
-            ctld.unpackFOBCrates(_crates, _heli)
-
-            return
-
-        elseif _crate ~= nil and _crate.dist < 200 then
-
-            if ctld.inLogisticsZone(_heli) == true then
-
-                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+                ctld.unpackFOBCrates(_crates, _heli)
 
                 return
-            end
 
-            -- is multi crate?
-            if ctld.isMultiCrate(_crate.details) then
-                -- multicrate
+            elseif _crate ~= nil and _crate.dist < 200 then
 
-                ctld.unpackMultiCrate(_heli, _crate, _crates)
+                if ctld.inLogisticsZone(_heli) == true then
+
+                    ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+
+                    return
+                end
+
+                -- is multi crate?
+                if ctld.isMultiCrate(_crate.details) then
+                    -- multicrate
+
+                    ctld.unpackMultiCrate(_heli, _crate, _crates)
+
+                else
+                    -- single crate
+                    local _cratePoint = _crate.crateUnit:getPoint()
+                    local _crateName = _crate.crateUnit:getName()
+
+                    -- ctld.spawnCrateStatic( _heli:getCoalition(),mist.getNextUnitId(),{x=100,z=100},_crateName,100)
+
+                    --remove crate
+                   -- _crate.crateUnit:destroy()
+
+                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
+
+                    if _heli:getCoalition() == 1 then
+                        ctld.spawnedCratesRED[_crateName] = nil
+                    else
+                        ctld.spawnedCratesBLUE[_crateName] = nil
+                    end
+
+                    trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed " .. _crate.details.desc .. " to the field", 10)
+
+                    if ctld.isJTACUnitType(_crate.details.unit) and ctld.JTAC_dropEnabled then
+
+                        local _code = table.remove(ctld.jtacGeneratedLaserCodes, 1)
+                        --put to the end
+                        table.insert(ctld.jtacGeneratedLaserCodes, _code)
+
+                        ctld.JTACAutoLase(_spawnedGroups:getName(), _code) --(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
+                    end
+                end
 
             else
-                -- single crate
-                local _cratePoint = _crate.crateUnit:getPoint()
-                local _crateName = _crate.crateUnit:getName()
 
-                -- ctld.spawnCrateStatic( _heli:getCoalition(),mist.getNextUnitId(),{x=100,z=100},_crateName,100)
-
-                --remove crate
-                _crate.crateUnit:destroy()
-
-                local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
-
-                if _heli:getCoalition() == 1 then
-                    ctld.spawnedCratesRED[_crateName] = nil
-                else
-                    ctld.spawnedCratesBLUE[_crateName] = nil
-                end
-
-                trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed " .. _crate.details.desc .. " to the field", 10)
-
-                if ctld.isJTACUnitType(_crate.details.unit) and ctld.JTAC_dropEnabled then
-
-                    local _code = table.remove(ctld.jtacGeneratedLaserCodes, 1)
-                    --put to the end
-                    table.insert(ctld.jtacGeneratedLaserCodes, _code)
-
-                    ctld.JTACAutoLase(_spawnedGroups:getName(), _code) --(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
-                end
+                ctld.displayMessageToGroup(_heli, "No friendly crates close enough to unpack", 20)
             end
-
-        else
-
-            ctld.displayMessageToGroup(_heli, "No friendly crates close enough to unpack", 20)
         end
+    end, _arguments)
+
+    if (not _status) then
+        env.error(string.format("CTLD ERROR: %s", _err))
     end
 end
 
@@ -2383,7 +2401,7 @@ function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
             end
 
             --destroy
-            _hawkPart.crateUnit:destroy()
+           -- _hawkPart.crateUnit:destroy()
         end
 
         -- HAWK READY!
@@ -2440,7 +2458,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
             end
 
             --destroy
-            _crate.crateUnit:destroy()
+           -- _crate.crateUnit:destroy()
         end
 
 
