@@ -10,7 +10,8 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.21 - 21/06/2015  - Crates in Zone now works for Spawned crates and Ones added by the mission editor
+    Version: 1.22 - 22/06/2015  - Made FOB crates work if sling load crates are disabled
+    							- Crates in Zone now works for Spawned crates and Ones added by the mission editor
                                 - Enabled multi crate units
                                 - Added new parameter for the number of launchers to spawn a HAWK with
 
@@ -3087,12 +3088,12 @@ function ctld.addF10MenuOptions()
 
                             end
                         else
-                            if ctld.enableSmokeDrop then
-                                missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers")
-                                missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
-                                missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
-                                missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
-                                missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
+                             if ctld.enableSmokeDrop then
+                                local _smokeCommands = missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers", _rootPath)
+                                missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
+                                missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", _smokeCommands, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
                             end
 
                             if ctld.enabledRadioBeaconDrop then
@@ -3101,6 +3102,15 @@ function ctld.addF10MenuOptions()
                                 missionCommands.addCommandForGroup(_groupId, "Drop Beacon", _radioCommands, ctld.dropRadioBeacon, { _unitName })
                                 missionCommands.addCommandForGroup(_groupId, "Remove Closet Beacon", _radioCommands, ctld.removeRadioBeacon, { _unitName })
 
+                            end
+
+
+                            if ctld.enabledFOBBuilding then
+                         
+	                            local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
+	                            missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", _crateCommands, ctld.listNearbyCrates, { _unitName })
+	                            missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
+	                            missionCommands.addCommandForGroup(_groupId, "List FOBs", _crateCommands, ctld.listFOBS, { _unitName })
                             end
                         end
 
