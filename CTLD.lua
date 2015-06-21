@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.18 - 20/06/2015
+    Version: 1.20 - 21/06/2015  - Crates in Zone now works for Spawned crates and Ones added by the mission editor
                                 - Enabled multi crate units
                                 - Added new parameter for the number of launchers to spawn a HAWK with
 
@@ -50,7 +50,7 @@ ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } --
 ctld.hawkLaunchers = 3 -- controls how many launchers to add to the hawk when its spawned.
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
-ctld.spawnStinger = false -- spawns a stinger / igla soldier with every group of 5 or more men.
+ctld.spawnStinger = false -- spawns a stinger / igla soldier with a group of 6 or more soldiers
 
 ctld.enabledFOBBuilding = true -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
 -- In future i'd like it to be a FARP but so far that seems impossible...
@@ -381,6 +381,7 @@ end
 -- to the count amount
 -- This means you can trigger actions based on the count and also trigger messages before the count is reached
 -- Just pass in the zone name and flag number like so as a single (NOT Continuous) Trigger
+-- This will now work for Mission Editor and Spawned Crates
 -- e.g. ctld.cratesInZone("DropZone1", 5)
 function ctld.cratesInZone(_zone, _flagNumber)
     local _triggerZone = trigger.misc.getZone(_zone) -- trigger to use as reference position
@@ -4019,33 +4020,6 @@ for _, _groupName in pairs(ctld.extractableGroups) do
     end
 end
 
--- Add Mission editor added crates
--- Crates are NOT returned by coalition.getStaticObjects()
---local _objects = coalition.getStaticObjects(1)
---if _objects ~= nil then
---    for _, _static in pairs(_objects) do
---
---        env.info("RED:".._static:getTypeName())
---        if _static:getTypeName() == "Cargo1" then
---
---            ctld.missionEditorCargoCrates[ _static:getName()] =  _static:getName();
---        end
---    end
---end
---
---local _objects = coalition.getStaticObjects(2)
---
---if _objects ~= nil then
---    for _, _static in pairs(_objects) do
---
---        env.info("BLUE:".._static:getTypeName())
---        if _static:getTypeName() == "Cargo1" then
---
---            ctld.missionEditorCargoCrates[ _static:getName()] =  _static:getName();
---        end
---    end
---end
-
 
 -- Scheduled functions (run cyclically)
 
@@ -4080,7 +4054,48 @@ env.info("Generating FM Frequencies")
 ctld.generateFMFrequencies()
 env.info("Generated FM Frequencies")
 
+-- Search for crates
+-- Crates are NOT returned by coalition.getStaticObjects() for some reason
+-- Search for crates in the mission editor instead
+env.info("Searching for Crates")
+for _coalitionName, _coalitionData in pairs(env.mission.coalition) do
+
+    if (_coalitionName == 'red' or _coalitionName == 'blue')
+            and type(_coalitionData) == 'table' then
+        if _coalitionData.country then --there is a country table
+        for _, _countryData in pairs(_coalitionData.country) do
+
+            if type(_countryData) == 'table' then
+                for _objectTypeName, _objectTypeData in pairs(_countryData) do
+                    if _objectTypeName == "static" then
+
+                        if ((type(_objectTypeData) == 'table')
+                                and _objectTypeData.group
+                                and (type(_objectTypeData.group) == 'table')
+                                and (#_objectTypeData.group > 0)) then
+
+                            for _groupId, _group in pairs(_objectTypeData.group) do
+                                if _group and _group.units and type(_group.units) == 'table' then
+                                    for _unitNum, _unit in pairs(_group.units) do
+                                        if _unit.type == "Cargo1" and _unit.canCargo == true then
+                                            ctld.missionEditorCargoCrates[_unit.name] = _unit.name
+                                            env.info("Crate Found: ".._unit.name)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        end
+    end
+end
+env.info("END search for crates")
+
 env.info("CTLD READY")
+
 --DEBUG FUNCTION
 --        for key, value in pairs(getmetatable(_spawnedCrate)) do
 --            env.info(tostring(key))

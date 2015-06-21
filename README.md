@@ -33,6 +33,7 @@ The script supports:
 * Pre loading of units into AI vehicles via a DO SCRIPT
 * Mission Editor Trigger functions - They store the numbers in flags for use by triggers
 	* Count Crates in Zone
+	    * Works for both crates added by the Mission Editor and Crates spawned by Transports
 	* Count soldiers extracted to a zone (the soldiers disappear)
 
 A complete test mission is included.
@@ -217,7 +218,7 @@ The flag number can be used to trigger other actions added using the mission edi
 
 **The script doesnt differentiate between crates, any crate spawned by the CTLD script can be dropped there and it will count as 1 but if a crate is unpacked in a zone it will no longer count! **
 
-**Crates added by the Mission Editor cannot be used, only crates spawned by the Script will work!**
+**Crates added by the Mission Editor can now be used as well!**
 
 A crate drop zone can be added to any zone by adding a Trigger Once with a Time More set to any time after the CTLD script has been loaded and a DO SCRIPT action of ```ctld.cratesInZone("crateZone",1)```
 
