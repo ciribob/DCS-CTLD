@@ -1380,7 +1380,7 @@ function ctld.checkHoverStatus()
 
                         --check height!
                         local _height = _transUnit:getPoint().y - _crate.crateUnit:getPoint().y
-                        env.info("HEIGHT " .. _name .. " " .. _height .. " " .. _transUnit:getPoint().y .. " " .. _crate.crateUnit:getPoint().y)
+                        --env.info("HEIGHT " .. _name .. " " .. _height .. " " .. _transUnit:getPoint().y .. " " .. _crate.crateUnit:getPoint().y)
                         --  ctld.heightDiff(_transUnit)
                         --env.info("HEIGHT ABOVE GROUD ".._name.." ".._height.." ".._transUnit:getPoint().y.." ".._crate.crateUnit:getPoint().y)
 
@@ -1643,8 +1643,8 @@ function ctld.heightDiff(_unit)
 
     local _point = _unit:getPoint()
 
-    env.info("heightunit " .. _point.y)
-    env.info("heightland " .. land.getHeight({ x = _point.x, y = _point.z }))
+   -- env.info("heightunit " .. _point.y)
+    --env.info("heightland " .. land.getHeight({ x = _point.x, y = _point.z }))
 
     return _point.y - land.getHeight({ x = _point.x, y = _point.z })
 end
