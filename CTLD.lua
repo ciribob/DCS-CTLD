@@ -47,6 +47,8 @@ ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
 ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop point if no enemy is nearby
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
+ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
+ctld.fastRopeMaximumHeight = 18.28 -- in meters which is 60 ft max fast rope (not rappell) safe height
 
 ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
 ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
@@ -878,62 +880,100 @@ function ctld.inExtractZone(_heli)
     return false
 end
 
+-- safe to fast rope if speed is less than 0.5 Meters per second
+function ctld.safeToFastRope(_heli)
+
+    if ctld.enableFastRopeInsertion == false then
+        return false
+    end
+
+    --landed or speed is less than 8 km/h and height is less than fast rope height
+    if (_heli:inAir() == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and mist.vec.mag(_heli:getVelocity()) < 2.2)) then
+        return true
+    end
+
+end
+
+function ctld.metersToFeet(_meters)
+
+    local _feet = _meters *3.2808399
+
+    return mist.utils.round(_feet)
+
+end
+
 function ctld.deployTroops(_heli, _troops)
 
     local _onboard = ctld.inTransitTroops[_heli:getName()]
 
     -- deloy troops
     if _troops then
-
         if _onboard.troops ~= nil and #_onboard.troops.units > 0 then
+            if _heli:inAir() == false or ctld.safeToFastRope(_heli) then
 
-            -- check we're not in extract zone
-            local _extractZone = ctld.inExtractZone(_heli)
+                -- check we're not in extract zone
+                local _extractZone = ctld.inExtractZone(_heli)
 
-            if _extractZone == false then
+                if _extractZone == false then
 
-                local _droppedTroops = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.troops, false)
+                    local _droppedTroops = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.troops, false)
 
-                if _heli:getCoalition() == 1 then
+                    if _heli:getCoalition() == 1 then
 
-                    table.insert(ctld.droppedTroopsRED, _droppedTroops:getName())
+                        table.insert(ctld.droppedTroopsRED, _droppedTroops:getName())
+                    else
+
+                        table.insert(ctld.droppedTroopsBLUE, _droppedTroops:getName())
+                    end
+
+                    ctld.inTransitTroops[_heli:getName()].troops = nil
+
+                    if _heli:inAir() then
+                        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops fast-ropped from " .. _heli:getTypeName() .. " into combat", 10)
+                    else
+                        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops dropped from " .. _heli:getTypeName() .. " into combat", 10)
+                    end
+
                 else
+                    --extract zone!
+                    local _droppedCount = trigger.misc.getUserFlag(_extractZone.flag)
 
-                    table.insert(ctld.droppedTroopsBLUE, _droppedTroops:getName())
+                    _droppedCount = (#_onboard.troops.units) + _droppedCount
+
+                    trigger.action.setUserFlag(_extractZone.flag, _droppedCount)
+
+                    ctld.inTransitTroops[_heli:getName()].troops = nil
+
+                    if _heli:inAir() then
+                        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops fast-ropped from " .. _heli:getTypeName() .. " into " .. _extractZone.name, 10)
+                    else
+                        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops dropped from " .. _heli:getTypeName() .. " into " .. _extractZone.name, 10)
+                    end
+
                 end
-
-                ctld.inTransitTroops[_heli:getName()].troops = nil
-                trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped troops from " .. _heli:getTypeName() .. " into combat", 10)
-
             else
-                --extract zone!
-                local _droppedCount = trigger.misc.getUserFlag(_extractZone.flag)
-
-                _droppedCount = (#_onboard.troops.units) + _droppedCount
-
-                trigger.action.setUserFlag(_extractZone.flag, _droppedCount)
-
-                ctld.inTransitTroops[_heli:getName()].troops = nil
-                trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped troops from " .. _heli:getTypeName() .. " into " .. _extractZone.name, 10)
+                ctld.displayMessageToGroup(_heli, "Too high or too fast to drop troops into combat! Hover below "..ctld.metersToFeet(ctld.fastRopeMaximumHeight).." feet or land.",10)
             end
         end
 
     else
-        if _onboard.vehicles ~= nil and #_onboard.vehicles.units > 0 then
+        if _heli:inAir() == false then
+            if _onboard.vehicles ~= nil and #_onboard.vehicles.units > 0 then
 
-            local _droppedVehicles = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.vehicles, true)
+                local _droppedVehicles = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.vehicles, true)
 
-            if _heli:getCoalition() == 1 then
+                if _heli:getCoalition() == 1 then
 
-                table.insert(ctld.droppedVehiclesRED, _droppedVehicles:getName())
-            else
+                    table.insert(ctld.droppedVehiclesRED, _droppedVehicles:getName())
+                else
 
-                table.insert(ctld.droppedVehiclesBLUE, _droppedVehicles:getName())
+                    table.insert(ctld.droppedVehiclesBLUE, _droppedVehicles:getName())
+                end
+
+                ctld.inTransitTroops[_heli:getName()].vehicles = nil
+
+                trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped vehicles from " .. _heli:getTypeName() .. " into combat", 10)
             end
-
-            ctld.inTransitTroops[_heli:getName()].vehicles = nil
-
-            trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped vehicles from " .. _heli:getTypeName() .. " into combat", 10)
         end
     end
 end
@@ -1155,37 +1195,37 @@ function ctld.loadUnloadTroops(_args)
 
     -- first check for extractable troops regardless of if we're in a zone or not
 
-    --    if  not ctld.troopsOnboard(_heli,_troops) then
-    --
-    --        local _extract
-    --
-    --        if _troops then
-    --            if _heli:getCoalition() == 1 then
-    --
-    --                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsRED)
-    --            else
-    --
-    --                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsBLUE)
-    --            end
-    --        else
-    --
-    --            if _heli:getCoalition() == 1 then
-    --
-    --                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesRED)
-    --            else
-    --
-    --                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesBLUE)
-    --            end
-    --
-    --        end
-    --
-    --        if _extract ~= nil then
-    --            -- search for nearest troops to pickup
-    --            ctld.extractTroops(_heli,_troops)
-    --
-    --            return -- stop
-    --        end
-    --    end
+    if  not ctld.troopsOnboard(_heli,_troops) then
+
+        local _extract
+
+        if _troops then
+            if _heli:getCoalition() == 1 then
+
+                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsRED)
+            else
+
+                _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsBLUE)
+            end
+        else
+
+            if _heli:getCoalition() == 1 then
+
+                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesRED)
+            else
+
+                _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesBLUE)
+            end
+
+        end
+
+        if _extract ~= nil then
+            -- search for nearest troops to pickup
+            ctld.extractTroops(_heli,_troops)
+
+            return -- stop
+        end
+    end
 
     if _inZone == true and ctld.troopsOnboard(_heli, _troops) then
 
@@ -1213,12 +1253,17 @@ end
 
 function ctld.extractTroops(_heli, _troops)
 
+    if _heli:inAir() then
+        return
+    end
 
     local _onboard = ctld.inTransitTroops[_heli:getName()]
 
     if _onboard == nil then
         _onboard = { troops = nil, vehicles = nil }
     end
+
+    local _extracted = false
 
     if _troops then
 
@@ -1245,6 +1290,7 @@ function ctld.extractTroops(_heli, _troops)
             --remove
             _extractTroops.group:destroy()
 
+            _extracted = true
         else
             _onboard.troops = nil
             ctld.displayMessageToGroup(_heli, "No extractable troops nearby and not in a pickup zone", 20)
@@ -1278,7 +1324,7 @@ function ctld.extractTroops(_heli, _troops)
 
             --remove
             _extractVehicles.group:destroy()
-
+            _extracted = true
 
         else
             _onboard.vehicles = nil
@@ -1287,6 +1333,8 @@ function ctld.extractTroops(_heli, _troops)
     end
 
     ctld.inTransitTroops[_heli:getName()] = _onboard
+
+    return _extracted
 end
 
 
@@ -1643,7 +1691,7 @@ function ctld.heightDiff(_unit)
 
     local _point = _unit:getPoint()
 
-   -- env.info("heightunit " .. _point.y)
+    -- env.info("heightunit " .. _point.y)
     --env.info("heightland " .. land.getHeight({ x = _point.x, y = _point.z }))
 
     return _point.y - land.getHeight({ x = _point.x, y = _point.z })
