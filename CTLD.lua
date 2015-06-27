@@ -10,10 +10,9 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.22 - 26/06/2015  - New alternative to real sling loading with simulated sling loading. If you have issues with sling loads crashing the server use this
-                                - Crates in Zone now works for Spawned crates and Ones added by the mission editor
-                                - Enabled multi crate units
-                                - Added new parameter for the number of launchers to spawn a HAWK with
+    Version: 1.23 - 27/06/2015  - Fast Rope for troops
+                                - You can now pickup troops that are on a pickup zone instead of loading troops, once they're gone you can load as normal
+                                
 
 
     TODO Support for Spotter Groups
