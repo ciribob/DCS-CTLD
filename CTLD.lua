@@ -10,8 +10,12 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.23 - 27/06/2015  - Fast Rope for troops
+    Version: 1.25 - 28/06/2015  - Sling Load is now DISABLED by default
+                                - Fast Rope for troops
+                                - Able to Drop Crate and troops while on a building
                                 - You can now pickup troops that are on a pickup zone instead of loading troops, once they're gone you can load as normal
+                                - Bug fix for hawk rearm crate not disappearing
+                                - Bug fix for smoke not being under the CTLD menu when slingload is disabled
                                 
 
 
@@ -21,8 +25,6 @@
         - Report status via F10 Radio
         - Report status every 5 minutes or when targets first appear
         - Report vague status like 5 armoured vehicles, soldiers and support trucks ??
-
-    TODO Make hawk only engage closer targets?
 
  ]]
 
@@ -34,7 +36,7 @@ ctld = {} -- DONT REMOVE!
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
-ctld.slingLoad = true -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
+ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
 -- There are some bug with Sling-loading that can cause crashes, if these occur set slingLoad to false
 -- to use the other method.
 
@@ -412,7 +414,7 @@ function ctld.cratesInZone(_zone, _flagNumber)
 
             --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
             if _crate ~= nil and _crate:getLife() > 0
-                    and (_crate:inAir() == false or (ctld.heightDiff(_crate) < 10.0 and mist.vec.mag(_crate:getVelocity()) < 1.0)) then
+                    and (ctld.inAir(_crate) == false) then
 
                 local _dist = ctld.getDistance(_crate:getPoint(), _zonePos)
 
@@ -742,7 +744,7 @@ function ctld.spawnCrate(_arguments)
         local _crateType = ctld.crateLookupTable[tostring(_args[2])]
         local _heli = ctld.getTransportUnit(_args[1])
 
-        if _crateType ~= nil and _heli ~= nil and _heli:inAir() == false then
+        if _crateType ~= nil and _heli ~= nil and ctld.inAir(_heli) == false then
 
             if ctld.inLogisticsZone(_heli) == false then
 
@@ -887,7 +889,7 @@ function ctld.safeToFastRope(_heli)
     end
 
     --landed or speed is less than 8 km/h and height is less than fast rope height
-    if (_heli:inAir() == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and mist.vec.mag(_heli:getVelocity()) < 2.2)) then
+    if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and mist.vec.mag(_heli:getVelocity()) < 2.2)) then
         return true
     end
 
@@ -901,6 +903,19 @@ function ctld.metersToFeet(_meters)
 
 end
 
+function ctld.inAir(_heli)
+
+    if _heli:inAir() == false then
+        return false
+    end
+
+    -- less than 5 cm/s a second so landed
+    if mist.vec.mag(_heli:getVelocity()) < 0.05 then
+        return false
+    end
+    return true
+end
+
 function ctld.deployTroops(_heli, _troops)
 
     local _onboard = ctld.inTransitTroops[_heli:getName()]
@@ -908,7 +923,7 @@ function ctld.deployTroops(_heli, _troops)
     -- deloy troops
     if _troops then
         if _onboard.troops ~= nil and #_onboard.troops.units > 0 then
-            if _heli:inAir() == false or ctld.safeToFastRope(_heli) then
+            if ctld.inAir(_heli) == false or ctld.safeToFastRope(_heli) then
 
                 -- check we're not in extract zone
                 local _extractZone = ctld.inExtractZone(_heli)
@@ -927,7 +942,7 @@ function ctld.deployTroops(_heli, _troops)
 
                     ctld.inTransitTroops[_heli:getName()].troops = nil
 
-                    if _heli:inAir() then
+                    if ctld.inAir(_heli) then
                         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops fast-ropped from " .. _heli:getTypeName() .. " into combat", 10)
                     else
                         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops dropped from " .. _heli:getTypeName() .. " into combat", 10)
@@ -943,7 +958,7 @@ function ctld.deployTroops(_heli, _troops)
 
                     ctld.inTransitTroops[_heli:getName()].troops = nil
 
-                    if _heli:inAir() then
+                    if ctld.inAir(_heli) then
                         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops fast-ropped from " .. _heli:getTypeName() .. " into " .. _extractZone.name, 10)
                     else
                         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops dropped from " .. _heli:getTypeName() .. " into " .. _extractZone.name, 10)
@@ -956,7 +971,7 @@ function ctld.deployTroops(_heli, _troops)
         end
 
     else
-        if _heli:inAir() == false then
+        if ctld.inAir(_heli) == false then
             if _onboard.vehicles ~= nil and #_onboard.vehicles.units > 0 then
 
                 local _droppedVehicles = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.vehicles, true)
@@ -1099,7 +1114,7 @@ function ctld.loadUnloadFOBCrate(_args)
         return
     end
 
-    if _heli:inAir() == true then
+    if ctld.inAir(_heli) == true then
         return
     end
 
@@ -1252,7 +1267,7 @@ end
 
 function ctld.extractTroops(_heli, _troops)
 
-    if _heli:inAir() then
+    if ctld.inAir(_heli) then
         return
     end
 
@@ -1417,13 +1432,13 @@ function ctld.checkHoverStatus()
             local _transUnit = ctld.getTransportUnit(_name)
 
             --only check transports that are hovering and not planes
-            if _transUnit ~= nil and ctld.inTransitSlingLoadCrates[_name] == nil and _transUnit:inAir() and ctld.unitCanCarryVehicles(_transUnit) == false then
+            if _transUnit ~= nil and ctld.inTransitSlingLoadCrates[_name] == nil and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false then
 
                 local _crates = ctld.getCratesAndDistance(_transUnit)
 
                 for _, _crate in pairs(_crates) do
                     --   env.info("CRATE: ".._crate.crateUnit:getName().. " ".._crate.dist)
-                    if _crate.dist < 5.0 and _crate.details.unit ~= "FOB" then
+                    if _crate.dist < 5.5 and _crate.details.unit ~= "FOB" then
 
                         --check height!
                         local _height = _transUnit:getPoint().y - _crate.crateUnit:getPoint().y
@@ -1715,7 +1730,7 @@ function ctld.getCratesAndDistance(_heli)
 
         --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
         if _crate ~= nil and _crate:getLife() > 0
-                and (_crate:inAir() == false or (ctld.heightDiff(_crate) < 20.0 and mist.vec.mag(_crate:getVelocity()) < 1.0)) then
+                and (ctld.inAir(_crate) == false ) then
 
             local _dist = ctld.getDistance(_crate:getPoint(), _heli:getPoint())
 
@@ -1814,7 +1829,7 @@ function ctld.unpackCrates(_arguments)
 
         local _heli = ctld.getTransportUnit(_args[1])
 
-        if _heli ~= nil and _heli:inAir() == false then
+        if _heli ~= nil and ctld.inAir(_heli) == false then
 
             local _crates = ctld.getCratesAndDistance(_heli)
             local _crate = ctld.getClosestCrate(_heli, _crates)
@@ -1827,12 +1842,12 @@ function ctld.unpackCrates(_arguments)
 
             elseif _crate ~= nil and _crate.dist < 200 then
 
-                --                if ctld.inLogisticsZone(_heli) == true then
-                --
-                --                    ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
-                --
-                --                    return
-                --                end
+                if ctld.inLogisticsZone(_heli) == true then
+
+                    ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+
+                    return
+                end
 
                 -- is multi crate?
                 if ctld.isMultiCrate(_crate.details) then
@@ -1994,16 +2009,21 @@ function ctld.dropSlingCrate(_args)
 
         local _heightDiff = ctld.heightDiff(_heli)
 
-        if _heightDiff > 40.0 then
+        if ctld.inAir(_heli) == false or _heightDiff <= 7.5 then
+            ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely unhooked and is at your 12 o'clock", 10)
+            _point = ctld.getPointAt12Oclock(_heli, 30)
+--        elseif _heightDiff > 40.0 then
+--            ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
+--            ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
+--            return
+        elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
+            ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely dropped below you", 10)
+        else -- _heightDiff > 40.0
             ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
             ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
             return
-        elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
-            ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely dropped below you", 10)
-        else
-            ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely unhooked and is at your 12 o'clock", 10)
-            _point = ctld.getPointAt12Oclock(_heli, 30)
         end
+
 
         --remove crate from cargo
         ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
@@ -2325,7 +2345,7 @@ function ctld.dropRadioBeacon(_args)
     local _heli = ctld.getTransportUnit(_args[1])
     local _message = ""
 
-    if _heli ~= nil and _heli:inAir() == false then
+    if _heli ~= nil and ctld.inAir(_heli) == false then
 
         --deploy 50 m infront
         --try to spawn at 12 oclock to us
@@ -2348,7 +2368,7 @@ function ctld.removeRadioBeacon(_args)
     local _heli = ctld.getTransportUnit(_args[1])
     local _message = ""
 
-    if _heli ~= nil and _heli:inAir() == false then
+    if _heli ~= nil and ctld.inAir(_heli) == false then
 
         -- mark with flare?
 
@@ -2507,11 +2527,15 @@ function ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates)
 
                 trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully rearmed a full HAWK AA System in the field", 10)
 
-                -- remove crate
                 if _heli:getCoalition() == 1 then
                     ctld.spawnedCratesRED[_nearestCrate.crateUnit:getName()] = nil
                 else
                     ctld.spawnedCratesBLUE[_nearestCrate.crateUnit:getName()] = nil
+                end
+
+                -- remove crate
+                if ctld.slingLoad == false then
+                    _nearestCrate.crateUnit:destroy()
                 end
 
                 return true -- all done so quit
@@ -2682,7 +2706,10 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
             end
 
             --destroy
-            -- _crate.crateUnit:destroy()
+            if ctld.slingLoad == false then
+                _crate.crateUnit:destroy()
+            end
+
         end
 
 
@@ -2739,8 +2766,8 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
     end
 
     --mist function
-    _group.category = Group.Category.GROUND;
-    _group.country = _heli:getCountry();
+    _group.category = Group.Category.GROUND
+    _group.country = _heli:getCountry()
 
     local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
 
@@ -2749,7 +2776,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
     --activate by moving and so we can set ROE and Alarm state
 
     local _dest = _spawnedGroup:getUnit(1):getPoint()
-    _dest = { x = _dest.x + 5, _y = _dest.y + 5, z = _dest.z + 5 }
+    _dest = { x = _dest.x + 0.5, _y = _dest.y + 0.5, z = _dest.z + 0.5 }
 
     ctld.orderGroupToMoveToPoint(_spawnedGroup:getUnit(1), _dest)
 
@@ -3005,7 +3032,7 @@ end
 -- are we in pickup zone
 function ctld.inPickupZone(_heli)
 
-    if _heli:inAir() then
+    if ctld.inAir(_heli) then
         return false
     end
 
@@ -3066,7 +3093,7 @@ end
 -- are we in a dropoff zone
 function ctld.inDropoffZone(_heli)
 
-    if _heli:inAir() then
+    if ctld.inAir(_heli) then
         return false
     end
 
@@ -3094,7 +3121,7 @@ end
 -- are we near friendly logistics zone
 function ctld.inLogisticsZone(_heli)
 
-    if _heli:inAir() then
+    if ctld.inAir(_heli) then
         return false
     end
 
@@ -3319,11 +3346,11 @@ function ctld.addF10MenuOptions()
 
 
                     if ctld.enableSmokeDrop then
-                        missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers")
-                        missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", { "Smoke Markers" }, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
+                        local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers",_rootPath)
+                        missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
+                        missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
+                        missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
+                        missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
                     end
 
                     if ctld.enabledRadioBeaconDrop then

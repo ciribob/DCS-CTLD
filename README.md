@@ -13,7 +13,7 @@ The script supports:
 * Coloured Smoke Marker Drops
 * Extractable Soldier Spawn at a trigger zone
 * Extractable soldier groups added via mission editor
-* Unit construction using crates spawned at a logistics area and dropped via cargo sling
+* Unit construction using crates spawned at a logistics area and dropped via Simulated Cargo Sling or Real Cargo Sling 
     * HAWK AA System requires 3 separate and correct crates to build
         * HAWK system can also be rearmed after construction by dropping another Hawk Launcher nearby and unpacking
     * HMMWV TOW
@@ -60,13 +60,9 @@ An example is shown below:
 ###Script Configuration
 The script has lots of configuration options that can be used to further customise the behaviour.
 
-**If you experience crashes with Sling-loading, such as a game crash when shotdown, you can use the simulated sling-load behaviour instead to work around the DCS Bugs.**
-To use the simulated behaviour, set the ```ctld.slingLoad``` option to ```false```.
-The simulated Sling Loading will use a generator static instead of a crate and you just hover above it for 10 seconds to load it. No Need to use the F6 menu to first select the crate.
+**I have now changed the default behaviour of the script to use Simulated Cargo Sling instead of the Real Cargo Sling due to DCS Bugs causing crashing**
+To use the real cargo sling behaviour, set the ```ctld.slingLoad``` option to ```true```.
 
-The crate can then be dropped using the CTLD Commands section of the Radio menu. Make sure you're not too high when the crate is dropped or it will be destroyed!
-
-Unfortunately there is no way to simulate the added weight of the Simulated Sling Load.
 
 ```lua
 
@@ -76,7 +72,7 @@ Unfortunately there is no way to simulate the added weight of the Simulated Slin
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
-ctld.slingLoad = true -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
+ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
 -- There are some bug with Sling-loading that can cause crashes, if these occur set slingLoad to false
 -- to use the other method.
 
@@ -458,7 +454,37 @@ The C-130 / IL-76 can also load and unload FOB crates from a Logistics area, see
 
 ##Cargo Spawning and Sling Loading
 
-Cargo can be spawned by transport helicopters if they are close enough to a friendly logistics unit using the F10 menu. Crates are always spawned off the nose of the unit that requested them. Sling cargo weight differs drastically depending on what you are sling loading. The Huey will need to have 20% fuel and no armaments in order to be able to lift a HMMWV TOW crate! The Mi-8 has a higher max lifting weight than a Huey.
+Cargo can be spawned by transport helicopters if they are close enough to a friendly logistics unit using the F10 menu. Crates are always spawned off the nose of the unit that requested them.
+
+###Simulated Sling Loading
+If ```ctld.slingLoad = false``` then Simulated Sling Loading will be used. This option is now the default due to DCS crashes caused by Sling Loading on multiplayer. Simulated sling loads will not add and weight to your helicopter when loaded.
+
+To pickup a Sling Load, spawn the cargo you want and hover above the crate for 10 seconds. There is no need to select which crate you want to pickup. Status messages will tell you if you are too high or too low. If the countdown stops, it means you are no longer hovering in the correct position and the timer will reset.
+
+Too high:
+
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150628_143131_zpsnowobc4g.png~original "Too high")
+
+Too Low:
+
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150628_143039_zps1wdl0jf5.png~original "Too Low")
+
+Correct height and the countdown is working:
+
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150628_143048_zpslmfo0mz9.png~original "Count Down")
+
+
+Crate Loaded:
+
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150628_143258_zpscgamyq3f.png~original "Crate Loaded")
+
+Once you've loaded the crate, fly to where you want to drop it and drop using the Radio Menu CTLD->CTLD Commands->Drop Crate. If you are hovering the crate will be dropped below you and if you're on the ground it will appear off you're nose.
+
+Once on the ground unpack as normal using the CTLD Commands Menu - CTLD->CTLD Commands->Unpack Crate
+
+###Real Sling Loading
+
+This uses the inbuilt DCS Sling cargo system and crates. Sling cargo weight differs drastically depending on what you are sling loading. The Huey will need to have 20% fuel and no armaments in order to be able to lift a HMMWV TOW crate! The Mi-8 has a higher max lifting weight than a Huey.
 
 Once spawning the crate, to slingload the F6 menu needs to be used to select a cargo of the correct weight. If you've selected the right cargo RED smoke will appear and you can now sling load by hovering over the crate at a height of 15-30 feet or so.
 
