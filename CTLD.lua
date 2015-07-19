@@ -10,12 +10,8 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.25 - 28/06/2015  - Sling Load is now DISABLED by default
-                                - Fast Rope for troops
-                                - Able to Drop Crate and troops while on a building
-                                - You can now pickup troops that are on a pickup zone instead of loading troops, once they're gone you can load as normal
-                                - Bug fix for hawk rearm crate not disappearing
-                                - Bug fix for smoke not being under the CTLD menu when slingload is disabled
+    Version: 1.25 - 19/07/2015  - Changes Autoload behaviour to load troops / vehicles in a pickup zone first
+                                - Fixed bug where AI would load troops while in the air in a heli by holding a perfect hover
                                 
 
 
@@ -910,7 +906,8 @@ function ctld.inAir(_heli)
     end
 
     -- less than 5 cm/s a second so landed
-    if mist.vec.mag(_heli:getVelocity()) < 0.05 then
+    -- BUT AI can hold a perfect hover so ignore AI
+    if mist.vec.mag(_heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
         return false
     end
     return true
@@ -2012,16 +2009,16 @@ function ctld.dropSlingCrate(_args)
         if ctld.inAir(_heli) == false or _heightDiff <= 7.5 then
             ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely unhooked and is at your 12 o'clock", 10)
             _point = ctld.getPointAt12Oclock(_heli, 30)
---        elseif _heightDiff > 40.0 then
---            ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
---            ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
---            return
+            --        elseif _heightDiff > 40.0 then
+            --            ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
+            --            ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
+            --            return
         elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
             ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely dropped below you", 10)
         else -- _heightDiff > 40.0
-            ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
-            ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
-            return
+        ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
+        ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
+        return
         end
 
 
@@ -3237,6 +3234,7 @@ end
 
 
 -- checks the status of all AI troop carriers and auto loads and unloads troops
+-- as long as the troops are on the ground
 function ctld.checkAIStatus()
 
     timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 5)
@@ -3248,10 +3246,23 @@ function ctld.checkAIStatus()
         if _unit ~= nil and _unit:getPlayerName() == nil then
 
             -- no player name means AI!
-
             if ctld.inPickupZone(_unit) and not ctld.troopsOnboard(_unit, true) then
 
-                ctld.loadTroops(_unit, true)
+                -- first check for extractable troop in the pickup zone
+                local _extract
+
+                if _unit:getCoalition() == 1 then
+                    _extract = ctld.findNearestGroup(_unit, ctld.droppedTroopsRED)
+                else
+                    _extract = ctld.findNearestGroup(_unit, ctld.droppedTroopsBLUE)
+                end
+
+                if _extract ~= nil then
+                    -- search for nearest troops to pickup
+                    ctld.extractTroops(_unit,true)
+                else
+                    ctld.loadTroops(_unit, true)
+                end
 
             elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
 
@@ -3262,7 +3273,21 @@ function ctld.checkAIStatus()
 
                 if ctld.inPickupZone(_unit) and not ctld.troopsOnboard(_unit, false) then
 
-                    ctld.loadTroops(_unit, false)
+                    -- first check for extractable vehicles in the pickup zone
+                    local _extract
+
+                    if _unit:getCoalition() == 1 then
+                        _extract = ctld.findNearestGroup(_unit, ctld.droppedVehiclesRED)
+                    else
+                        _extract = ctld.findNearestGroup(_unit, ctld.droppedVehiclesBLUE)
+                    end
+
+                    if _extract ~= nil then
+                        -- search for nearest vehicles to pickup
+                        ctld.extractTroops(_unit,false)
+                    else
+                        ctld.loadTroops(_unit, false)
+                    end
 
                 elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, false) then
 
