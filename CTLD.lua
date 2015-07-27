@@ -10,8 +10,8 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.25 - 19/07/2015  - Changes Autoload behaviour to load troops / vehicles in a pickup zone first
-                                - Fixed bug where AI would load troops while in the air in a heli by holding a perfect hover
+    Version: 1.26 - 27/07/2015  - Added new parameter to Mission Editor added beacons so they can be named
+                                
                                 
 
 
@@ -69,7 +69,7 @@ ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
 ctld.radioSoundFC3 = "beaconsilent.ogg" -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
 
-ctld.deployedBeaconBattery = 20 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
+ctld.deployedBeaconBattery = 30 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
 
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
 
@@ -483,12 +483,12 @@ end
 
 -- Creates a radio beacon on a random UHF - VHF and HF/FM frequency for homing
 -- This WILL NOT WORK if you dont add beacon.ogg and beaconsilent.ogg to the mission!!!
--- e.g. ctld.createRadioBeaconAtZone("beaconZone","red", 1440) will create a beacon at trigger zone "beaconZone" for the Red side
--- that will last 1440 minutes (24 hours )
+-- e.g. ctld.createRadioBeaconAtZone("beaconZone","red", 1440,"Waypoint 1") will create a beacon at trigger zone "beaconZone" for the Red side
+-- that will last 1440 minutes (24 hours ) and named "Waypoint 1" in the list of radio beacons
 --
 -- e.g. ctld.createRadioBeaconAtZone("beaconZoneBlue","blue", 20) will create a beacon at trigger zone "beaconZoneBlue" for the Blue side
 -- that will last 20 minutes
-function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife)
+function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife, _name)
     local _triggerZone = trigger.misc.getZone(_zone) -- trigger to use as reference position
 
     if _triggerZone == nil then
@@ -498,10 +498,16 @@ function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife)
 
     local _zonePos = mist.utils.zoneToVec3(_zone)
 
+    ctld.beaconCount = ctld.beaconCount + 1
+
+    if _name == nil or _name == "" then
+        _name = "Beacon #"..ctld.beaconCount
+    end
+
     if _coalition == "red" then
-        ctld.createRadioBeacon(_zonePos, 1, 0, false, _batteryLife) --1440
+        ctld.createRadioBeacon(_zonePos, 1, 0, _name, _batteryLife) --1440
     else
-        ctld.createRadioBeacon(_zonePos, 2, 2, false, _batteryLife) --1440
+        ctld.createRadioBeacon(_zonePos, 2, 2, _name, _batteryLife) --1440
     end
 end
 
@@ -1955,7 +1961,11 @@ function ctld.unpackFOBCrates(_crates, _heli)
             --make it able to deploy crates
             table.insert(ctld.logisticUnits, _fob:getName())
 
-            local _radioBeaconDetails = ctld.createRadioBeacon(_args[1], _args[3], _args[2], true)
+            ctld.beaconCount = ctld.beaconCount + 1
+
+            local _radioBeaconName = "FOB Beacon #"..ctld.beaconCount
+
+            local _radioBeaconDetails = ctld.createRadioBeacon(_args[1], _args[3], _args[2], _radioBeaconName,nil,true)
 
             ctld.fobBeacons[_name] = { vhf = _radioBeaconDetails.vhf, uhf = _radioBeaconDetails.uhf, fm = _radioBeaconDetails.fm }
 
@@ -2057,7 +2067,7 @@ end
 --spawns a radio beacon made up of two units,
 -- one for VHF and one for UHF
 -- The units are set to to NOT engage
-function ctld.createRadioBeacon(_point, _coalition, _country, _isFOB, _batteryTime)
+function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTime,_isFOB)
 
     local _uhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "UHF")
     local _vhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "VHF")
@@ -2080,14 +2090,14 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _isFOB, _batteryTi
 
     --local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
 
-    local _message = ""
+    local _message = _name
 
     if _isFOB then
-        _message = "FOB " .. _message
+      --  _message = "FOB " .. _message
         _battery = -1 --never run out of power!
     end
 
-    _message = _message .. _latLngStr
+    _message = _message.." - ".. _latLngStr
 
     --  env.info("GEN UHF: ".. _freq.uhf)
     --  env.info("GEN VHF: ".. _freq.vhf)
@@ -2096,7 +2106,7 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _isFOB, _batteryTi
 
     _message = string.format("%s - %.2f MHz", _message, _freq.uhf / 1000000)
 
-    _message = string.format("%s - %.3f MHz ", _message, _freq.fm / 1000000)
+    _message = string.format("%s - %.2f MHz ", _message, _freq.fm / 1000000)
 
 
 
@@ -2348,7 +2358,10 @@ function ctld.dropRadioBeacon(_args)
         --try to spawn at 12 oclock to us
         local _point = ctld.getPointAt12Oclock(_heli, 50)
 
-        local _radioBeaconDetails = ctld.createRadioBeacon(_point, _heli:getCoalition(), _heli:getCountry(), false)
+        ctld.beaconCount = ctld.beaconCount + 1
+        local _name = "Beacon #"..ctld.beaconCount
+
+        local _radioBeaconDetails = ctld.createRadioBeacon(_point, _heli:getCoalition(), _heli:getCountry(), _name,nil,false)
 
         -- mark with flare?
 
@@ -4236,6 +4249,8 @@ ctld.completeHawkSystems = {} -- stores complete spawned groups from multiple cr
 ctld.fobBeacons = {} -- stores FOB radio beacon details, refreshed every 60 seconds
 
 ctld.deployedRadioBeacons = {} -- stores details of deployed radio beacons
+
+ctld.beaconCount = 1
 
 ctld.usedUHFFrequencies = {}
 ctld.usedVHFFrequencies = {}

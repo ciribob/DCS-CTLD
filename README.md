@@ -27,7 +27,7 @@ The script supports:
     * BRMD-2
 * FOB Building
     * Homing using FM Radio Beacon 
-    * Easy Beacon Creation using Mission Editor
+* Easy Beacon Creation using Mission Editor plus Beacon Naming
 * Radio Beacon Deployment
     * Ability to deploy a homing beacon that the A10C, Ka-50, Mi-8 and Huey can home on
 * Pre loading of units into AI vehicles via a DO SCRIPT
@@ -199,11 +199,11 @@ ctld.spawnGroupAtTrigger("blue", 5, "spawnTrigger2", 2000)
 ```
 
 ####Create Radio Beacon at Zone
-A radio beacon can be spawned at any zone by adding a Trigger Once with a Time More set to any time after the CTLD script has been loaded and a DO SCRIPT action of ```ctld.createRadioBeaconAtZone("beaconZone","red", 1440)```
+A radio beacon can be spawned at any zone by adding a Trigger Once with a Time More set to any time after the CTLD script has been loaded and a DO SCRIPT action of ```ctld.createRadioBeaconAtZone("beaconZone","red", 1440,"Waypoint 1")```
 
-Where ```"beaconZone"``` is the name of a Trigger Zone added using the mission editor, ```"red"``` is the side to add the beacon for and ```1440``` the time in minutes for the beacon to broadcast for.
+Where ```"beaconZone"``` is the name of a Trigger Zone added using the mission editor, ```"red"``` is the side to add the beacon for and ```1440``` the time in minutes for the beacon to broadcast for. An optional parameter can be added at the end which can be used to name the beacon and the name will appear in the beacon list.
 
-```ctld.createRadioBeaconAtZone("beaconZoneBlue","blue", 20)``` will create a beacon at trigger zone named ```"beaconZoneBlue"``` for the Blue coalition that will last 20 minutes.
+```ctld.createRadioBeaconAtZone("beaconZoneBlue","blue", 20)``` will create a beacon at trigger zone named ```"beaconZoneBlue"``` for the Blue coalition that will last 20 minutes and have an auto generated name.
 
 Spawned beacons will broadcast on HF/FM, UHF and VHF until their battery runs out and can be used by most aircraft for ADF. The frequencies used on each frequency will be random.
 
