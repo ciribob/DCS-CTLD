@@ -607,7 +607,7 @@ White pointer pointing to beacon on the compass:
 
 ###UH-1 ADF VHF Radio Setup
 To configure the VHF ADF:
-* Switch to the engineer or co-pilot seat
+* Look down at the center console of the Huey
 * Put the VHF Radio in ADF Mode using the switch at the top of the radio to the COMP setting by clicking once.
 * Enter the **KHz** frequency using the clickable switch and wheel on the left Reserve B radio
 * Tune +/- 5 KHz using the bottom left tune knob on the ARC-9
