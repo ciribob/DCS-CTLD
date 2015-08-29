@@ -328,6 +328,8 @@ the mission but there can be a delay of up to 30 seconds after activation for th
 Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger in order to load troops and vehicles.
 The pickup zone needs to be named the same as one of the pickup zones in the ```ctld.pickupZones``` list or the list can be edited to match the name in the mission editor.
 
+Pickup Zones can be configured to limit the number of vehicle or troop groups that can be loaded. To add a limit, add a third parameter after the smoke colour as shown in the example below.
+
 ```lua
 ctld.pickupZones = {
     { "pickzone1", "blue" },
@@ -338,8 +340,8 @@ ctld.pickupZones = {
     { "pickzone6", "none" },
     { "pickzone7", "none" },
     { "pickzone8", "none" },
-    { "pickzone9", "none" },
-    { "pickzone10", "none" },
+  { "pickzone9", "none", 5 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles
+    { "pickzone10", "none", 10 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles
 }
 ```
 

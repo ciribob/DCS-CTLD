@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.26 - 27/07/2015  - Added new parameter to Mission Editor added beacons so they can be named
+    Version: 1.27 - 29/08/2015  - Added new optional parameter to a pickupzone setup to limit the number of groups that can be loaded
                                 
                                 
 
@@ -100,6 +100,9 @@ ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock
 
 -- Use any of the predefined names or set your own ones
 
+-- You can add number as a third option to limit the number of soldier or vehicle groups that can be loaded from a zone.
+-- Dropping back a group at a limited zone will add one more to the limit
+
 
 ctld.pickupZones = {
     { "pickzone1", "blue" },
@@ -110,8 +113,8 @@ ctld.pickupZones = {
     { "pickzone6", "none" },
     { "pickzone7", "none" },
     { "pickzone8", "none" },
-    { "pickzone9", "none" },
-    { "pickzone10", "none" },
+    { "pickzone9", "none", 5 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles
+    { "pickzone10", "none", 10 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles
 }
 
 ctld.dropOffZones = {
@@ -1208,7 +1211,7 @@ function ctld.loadUnloadTroops(_args)
         return
     end
 
-    local _inZone = ctld.inPickupZone(_heli)
+    local _zone = ctld.inPickupZone(_heli)
 
     -- first check for extractable troops regardless of if we're in a zone or not
 
@@ -1244,7 +1247,7 @@ function ctld.loadUnloadTroops(_args)
         end
     end
 
-    if _inZone == true and ctld.troopsOnboard(_heli, _troops) then
+    if _zone.inZone == true and ctld.troopsOnboard(_heli, _troops) then
 
         if _troops then
             ctld.displayMessageToGroup(_heli, "Dropped troops back to base", 20)
@@ -1255,13 +1258,25 @@ function ctld.loadUnloadTroops(_args)
             ctld.inTransitTroops[_heli:getName()].vehicles = nil
         end
 
-    elseif _inZone == false and ctld.troopsOnboard(_heli, _troops) then
+        -- increase zone counter by 1
+        ctld.updateZoneCounter(_zone.index,1)
+
+
+    elseif _zone.inZone == false and ctld.troopsOnboard(_heli, _troops) then
 
         ctld.deployTroops(_heli, _troops)
 
-    elseif _inZone == true and not ctld.troopsOnboard(_heli, _troops) then
+    elseif _zone.inZone == true and not ctld.troopsOnboard(_heli, _troops) then
 
-        ctld.loadTroops(_heli, _troops)
+        if _zone.limit -1 >= 0 then
+            -- decrease zone counter by 1
+            ctld.updateZoneCounter(_zone.index,-1)
+
+            ctld.loadTroops(_heli, _troops)
+        else
+            ctld.displayMessageToGroup(_heli, "This area has no more reinforcements available!", 20)
+        end
+
     else
         -- search for nearest troops to pickup
         ctld.extractTroops(_heli, _troops)
@@ -2093,7 +2108,7 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
     local _message = _name
 
     if _isFOB then
-      --  _message = "FOB " .. _message
+        --  _message = "FOB " .. _message
         _battery = -1 --never run out of power!
     end
 
@@ -3043,12 +3058,12 @@ end
 function ctld.inPickupZone(_heli)
 
     if ctld.inAir(_heli) then
-        return false
+        return {inZone = false,limit = -1,index = -1}
     end
 
     local _heliPoint = _heli:getPoint()
 
-    for _, _zoneDetails in pairs(ctld.pickupZones) do
+    for _i, _zoneDetails in pairs(ctld.pickupZones) do
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
@@ -3059,7 +3074,7 @@ function ctld.inPickupZone(_heli)
             local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
 
             if _dist <= _triggerZone.radius then
-                return true
+                return {inZone = true,limit = _zoneDetails[3],index=_i}
             end
         end
     end
@@ -3074,13 +3089,13 @@ function ctld.inPickupZone(_heli)
         local _dist = ctld.getDistance(_heliPoint, _fob:getPoint())
 
         if _dist <= 150 then
-            return true
+            return {inZone = true,limit= 10000,index=-1};
         end
     end
 
 
 
-    return false
+    return {inZone = false,limit= -1,index=-1};
 end
 
 function ctld.getSpawnedFobs(_heli)
@@ -3244,13 +3259,24 @@ function ctld.isJTACUnitType(_type)
     return false
 end
 
+function ctld.updateZoneCounter(_index,_diff)
+
+    if ctld.pickupZones[_index] ~= nil then
+
+        ctld.pickupZones[_index][3] =   ctld.pickupZones[_index][3]+_diff
+
+      --  env.info(ctld.pickupZones[_index][1].." = " ..ctld.pickupZones[_index][3])
+    end
+
+
+end
 
 
 -- checks the status of all AI troop carriers and auto loads and unloads troops
 -- as long as the troops are on the ground
 function ctld.checkAIStatus()
 
-    timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 5)
+    timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 2)
 
     for _, _unitName in pairs(ctld.transportPilotNames) do
 
@@ -3259,7 +3285,8 @@ function ctld.checkAIStatus()
         if _unit ~= nil and _unit:getPlayerName() == nil then
 
             -- no player name means AI!
-            if ctld.inPickupZone(_unit) and not ctld.troopsOnboard(_unit, true) then
+            local _zone = ctld.inPickupZone(_unit)
+            if _zone.inZone == true and not ctld.troopsOnboard(_unit, true) then
 
                 -- first check for extractable troop in the pickup zone
                 local _extract
@@ -3274,7 +3301,15 @@ function ctld.checkAIStatus()
                     -- search for nearest troops to pickup
                     ctld.extractTroops(_unit,true)
                 else
-                    ctld.loadTroops(_unit, true)
+
+                    --only allow if zone has units
+                    if  _zone.limit - 1 >= 0 then
+
+                        ctld.updateZoneCounter(_zone.index,-1)
+
+                        ctld.loadTroops(_unit, true)
+                    end
+
                 end
 
             elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
@@ -3284,7 +3319,8 @@ function ctld.checkAIStatus()
 
             if ctld.unitCanCarryVehicles(_unit) then
 
-                if ctld.inPickupZone(_unit) and not ctld.troopsOnboard(_unit, false) then
+                local _zone = ctld.inPickupZone(_unit)
+                if _zone.inZone == true and not ctld.troopsOnboard(_unit, false) then
 
                     -- first check for extractable vehicles in the pickup zone
                     local _extract
@@ -3299,7 +3335,13 @@ function ctld.checkAIStatus()
                         -- search for nearest vehicles to pickup
                         ctld.extractTroops(_unit,false)
                     else
-                        ctld.loadTroops(_unit, false)
+                        --only allow if zone has units
+                        if  _zone.limit - 1 >= 0 then
+
+                            ctld.updateZoneCounter(_zone.index,-1)
+
+                            ctld.loadTroops(_unit, false)
+                        end
                     end
 
                 elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, false) then
@@ -4317,6 +4359,13 @@ for _, _zone in pairs(ctld.pickupZones) do
     else
         _zone[2] = -1 -- no smoke colour
     end
+
+    -- add in counter for troops or units
+    if _zone[3] == nil then
+        _zone[3] = 10000;
+    end
+
+
 end
 
 
