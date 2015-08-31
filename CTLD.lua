@@ -4279,7 +4279,7 @@ function ctld.activatePickupZone(_zoneName)
 	
 	for _, _zoneDetails in pairs(ctld.pickupZones) do
 
-        if _triggerZone = trigger.misc.getZone(_zoneDetails[1]) then
+        if _zoneName == _zoneDetails[1] then
 		
 			--smoke could get messy if designer keeps calling this on an active zone, check its not active first
 			if _zoneDetails[4] == 1 then
@@ -4321,7 +4321,7 @@ function ctld.deactivatePickupZone(_zoneName)
 	
 	for _, _zoneDetails in pairs(ctld.pickupZones) do
 
-        if _triggerZone = trigger.misc.getZone(_zoneDetails[1]) then
+        if _zoneName == _zoneDetails[1] then
 		
 			if _zoneDetails[4] == 0 then --this really needed??
 				trigger.action.outText("CTLD.lua ERROR: Pickup Zone already deactiveated: " .. _zoneName, 10)
