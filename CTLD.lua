@@ -10,7 +10,7 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.27 - 29/08/2015  - Added new optional parameter to a pickupzone setup to limit the number of groups that can be loaded
+    Version: 1.28 - 08/09/2015  - Ability to Repair damaged HAWK systems in the field, even if parts have been destroyed
                                 
                                 
 
@@ -294,6 +294,7 @@ ctld.spawnableCrates = {
         { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
         { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
         { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
+        { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" },
         --
 
         { weight = 505, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 4 },
@@ -1811,21 +1812,26 @@ function ctld.findNearestHawk(_heli)
     local _shortestDistance = -1
     local _distance = 0
 
-    for _, _groupName in pairs(ctld.completeHawkSystems) do
+    for _groupName, _hawkDetails in pairs(ctld.completeHawkSystems) do
 
         local _hawkGroup = Group.getByName(_groupName)
 
         if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() then
 
-            local _leader = _hawkGroup:getUnit(1)
+            local _units = _hawkGroup:getUnits()
 
-            if _leader ~= nil and _leader:getLife() > 0 then
+            for _,_leader in pairs(_units) do
 
-                _distance = ctld.getDistance(_leader:getPoint(), _heli:getPoint())
+                if _leader ~= nil and _leader:getLife() > 0 then
 
-                if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
-                    _shortestDistance = _distance
-                    _closestHawkGroup = _hawkGroup
+                    _distance = ctld.getDistance(_leader:getPoint(), _heli:getPoint())
+
+                    if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
+                        _shortestDistance = _distance
+                        _closestHawkGroup = _hawkGroup
+                    end
+
+                    break
                 end
             end
         end
@@ -2548,7 +2554,7 @@ function ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates)
 
                 local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
 
-                ctld.completeHawkSystems[_spawnedGroup:getName()] = _spawnedGroup:getName()
+                ctld.completeHawkSystems[_spawnedGroup:getName()] = ctld.getHawkDetails(_spawnedGroup)
 
                 trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully rearmed a full HAWK AA System in the field", 10)
 
@@ -2569,6 +2575,20 @@ function ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates)
     end
 
     return false
+end
+
+function ctld.getHawkDetails(_hawkGroup)
+
+    local _units = _hawkGroup:getUnits()
+
+    local _hawkDetails = {}
+
+    for _,_unit in pairs(_units) do
+       table.insert(_hawkDetails, {point=_unit:getPoint(), unit = _unit:getTypeName(), name= _unit:getName()})
+    end
+
+    return _hawkDetails
+
 end
 
 function ctld.countTableEntries(_table)
@@ -2680,16 +2700,67 @@ function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
         -- HAWK READY!
         local _spawnedGroup = ctld.spawnCrateGroup(_heli, _posArray, _typeArray)
 
-        ctld.completeHawkSystems[_spawnedGroup:getName()] = _spawnedGroup:getName()
+        ctld.completeHawkSystems[_spawnedGroup:getName()] = ctld.getHawkDetails(_spawnedGroup)
 
         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full HAWK AA System to the field", 10)
+    end
+end
+
+function ctld.repairHawk(_heli, _nearestCrate)
+
+    -- find nearest COMPLETE hawk system
+    local _nearestHawk = ctld.findNearestHawk(_heli)
+
+    if _nearestHawk ~= nil and _nearestHawk.dist < 300 then
+
+        local _oldHawk = ctld.completeHawkSystems[_nearestHawk.group:getName()]
+
+        --spawn new one
+
+        local _types = {}
+        local _points = {}
+
+        for _, _part in pairs(_oldHawk) do
+            table.insert(_points,_part.point)
+            table.insert(_types,_part.unit)
+        end
+
+        --remove old system
+        ctld.completeHawkSystems[_nearestHawk.group:getName()] = nil
+        _nearestHawk.group:destroy()
+
+        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
+
+        ctld.completeHawkSystems[_spawnedGroup:getName()] = ctld.getHawkDetails(_spawnedGroup)
+
+        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully repaired a full HAWK AA System in the field", 10)
+
+        if _heli:getCoalition() == 1 then
+            ctld.spawnedCratesRED[_nearestCrate.crateUnit:getName()] = nil
+        else
+            ctld.spawnedCratesBLUE[_nearestCrate.crateUnit:getName()] = nil
+        end
+
+        -- remove crate
+        if ctld.slingLoad == false then
+            _nearestCrate.crateUnit:destroy()
+        end
+
+
+    else
+        ctld.displayMessageToGroup(_heli, "Cannot repair a HAWK System. No damaged HAWK systems within 300m", 10)
     end
 end
 
 function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 
     if string.match(_nearestCrate.details.desc, "HAWK") then
-        ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
+
+        if string.match(_nearestCrate.details.desc, "Repair") then
+            ctld.repairHawk(_heli, _nearestCrate)
+        else
+            ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
+        end
 
         return -- stop processing
     end
@@ -3265,7 +3336,7 @@ function ctld.updateZoneCounter(_index,_diff)
 
         ctld.pickupZones[_index][3] =   ctld.pickupZones[_index][3]+_diff
 
-      --  env.info(ctld.pickupZones[_index][1].." = " ..ctld.pickupZones[_index][3])
+        --  env.info(ctld.pickupZones[_index][1].." = " ..ctld.pickupZones[_index][3])
     end
 
 
