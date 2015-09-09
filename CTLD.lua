@@ -21,6 +21,7 @@
         - Report status via F10 Radio
         - Report status every 5 minutes or when targets first appear
         - Report vague status like 5 armoured vehicles, soldiers and support trucks ??
+		
 
  ]]
 
@@ -103,18 +104,18 @@ ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock
 -- You can add number as a third option to limit the number of soldier or vehicle groups that can be loaded from a zone.
 -- Dropping back a group at a limited zone will add one more to the limit
 
-
+--pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "active (yes/no)", "side (1 = red / 2 = blue)"}
 ctld.pickupZones = {
-    { "pickzone1", "blue" },
-    { "pickzone2", "blue" },
-    { "pickzone3", "none" },
-    { "pickzone4", "none" },
-    { "pickzone5", "none" },
-    { "pickzone6", "none" },
-    { "pickzone7", "none" },
-    { "pickzone8", "none" },
-    { "pickzone9", "none", 5 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles
-    { "pickzone10", "none", 10 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles
+    { "pickzone1", "red", -1, "yes", 1 }, --unlimited pickups, active on mission start, red side only
+    { "pickzone2", "blue", -1, "yes", 2 }, --unlimited pickups, active on mission start, blue side only
+    { "pickzone3", "none", -1, "no", 1 }, --unlimited pickups, not active on mission start, red side only
+    { "pickzone4", "none", -1, "yes", 1 },
+    { "pickzone5", "none", -1, "yes", 1 },
+    { "pickzone6", "none", -1, "yes", 1 },
+    { "pickzone7", "none", -1, "yes", 1 },
+    { "pickzone7", "none", -1, "yes", 2 }, -- Listing pickzone7 a second time with other team makes it available to both sides.
+    { "pickzone9", "none", 5, "yes", 1 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles, only red can pick up
+    { "pickzone10", "none", 10, "yes", 2 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles, only blue can pick up
 }
 
 ctld.dropOffZones = {
@@ -513,6 +514,85 @@ function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife, _name)
     else
         ctld.createRadioBeacon(_zonePos, 2, 2, _name, _batteryLife) --1440
     end
+end
+
+
+------------------------Steggles Functions-----------------------
+-- Activates a pickup zone
+-- Activates a pickup zone when called from a trigger
+-- EG: ctld.activatePickupZone("pickzone3")
+-- This is enable pickzone3 to be used as a pickup zone for the team set
+function ctld.activatePickupZone(_zoneName)
+	local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
+	
+	if _triggerZone == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zoneName, 10)
+        return
+    end
+	
+	for _, _zoneDetails in pairs(ctld.pickupZones) do
+
+        if _zoneName == _zoneDetails[1] then
+		
+			--smoke could get messy if designer keeps calling this on an active zone, check its not active first
+			if _zoneDetails[4] == 1 then
+				trigger.action.outText("CTLD.lua ERROR: Pickup Zone already active: " .. _zoneName, 10)
+				return
+			end
+			
+			_zoneDetails[4] = 1 --activate zone
+			
+			if ctld.disableAllSmoke == true then --smoke disabled
+				return
+			end
+			
+			if _zoneDetails[2] >= 0 then
+
+				-- Trigger smoke marker
+				-- This will cause an overlapping smoke marker on next refreshsmoke call
+				-- but will only happen once
+				local _pos2 = { x = _triggerZone.point.x, y = _triggerZone.point.z }
+				local _alt = land.getHeight(_pos2)
+				local _pos3 = { x = _pos2.x, y = _alt, z = _pos2.y }
+
+				trigger.action.smoke(_pos3, _zoneDetails[2])
+			end
+			
+		end
+		
+	end
+end
+
+
+-- Deactivates a pickup zone
+-- Deactivates a pickup zone when called from a trigger
+-- EG: ctld.deactivatePickupZone("pickzone3")
+-- This is disables pickzone3 and can no longer be used to as a pickup zone
+-- These functions can be called by triggers, like if a set of buildings is used, you can trigger the zone to be 'not operational'
+-- once they are destroyed
+function ctld.deactivatePickupZone(_zoneName)
+
+	local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
+	
+	if _triggerZone == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zoneName, 10)
+        return
+    end
+	
+	for _, _zoneDetails in pairs(ctld.pickupZones) do
+
+        if _zoneName == _zoneDetails[1] then
+		
+			if _zoneDetails[4] == 0 then --this really needed??
+				trigger.action.outText("CTLD.lua ERROR: Pickup Zone already deactiveated: " .. _zoneName, 10)
+				return
+			end
+			
+			_zoneDetails[4] = 0 --deactivate zone
+			
+		end
+		
+	end
 end
 
 -- ***************************************************************
@@ -3145,7 +3225,10 @@ function ctld.inPickupZone(_heli)
             local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
 
             if _dist <= _triggerZone.radius then
-                return {inZone = true,limit = _zoneDetails[3],index=_i}
+				local _heliCoalition = _heli:getCoalition()
+				if _zoneDetails[4] == 1 and _zoneDetails[5] == _heliCoalition then
+					return {inZone = true,limit = _zoneDetails[3],index=_i}
+				end
             end
         end
     end
@@ -3251,7 +3334,7 @@ function ctld.refreshSmoke()
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
-        if _triggerZone ~= nil and _zoneDetails[2] >= 0 then
+        if _triggerZone ~= nil and _zoneDetails[2] >= 0 and _zoneDetails[4] == 1 then
 
             -- Trigger smoke markers
 
@@ -4416,27 +4499,33 @@ for _, _zone in pairs(ctld.pickupZones) do
 
     local _zoneName = _zone[1]
     local _zoneColor = _zone[2]
-
-    if _zoneColor == "green" then
-        _zone[2] = trigger.smokeColor.Green
-    elseif _zoneColor == "red" then
-        _zone[2] = trigger.smokeColor.Red
-    elseif _zoneColor == "white" then
-        _zone[2] = trigger.smokeColor.White
-    elseif _zoneColor == "orange" then
-        _zone[2] = trigger.smokeColor.Orange
-    elseif _zoneColor == "blue" then
-        _zone[2] = trigger.smokeColor.Blue
-    else
-        _zone[2] = -1 -- no smoke colour
-    end
+	local _zoneActive = _zone[4]
+	
+	if _zoneColor == "green" then
+		_zone[2] = trigger.smokeColor.Green
+	elseif _zoneColor == "red" then
+		_zone[2] = trigger.smokeColor.Red
+	elseif _zoneColor == "white" then
+		_zone[2] = trigger.smokeColor.White
+	elseif _zoneColor == "orange" then
+		_zone[2] = trigger.smokeColor.Orange
+	elseif _zoneColor == "blue" then
+		_zone[2] = trigger.smokeColor.Blue
+	else
+		_zone[2] = -1 -- no smoke colour
+	end
 
     -- add in counter for troops or units
-    if _zone[3] == nil then
+    if _zone[3] == -1 then
         _zone[3] = 10000;
     end
-
-
+	
+	-- change active to 1 / 0
+	if _zoneActive == "yes" then
+		_zone[4] = 1
+	else
+		_zone[4] = 0
+	end
 end
 
 
