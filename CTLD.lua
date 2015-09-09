@@ -10,8 +10,13 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-    Version: 1.28 - 08/09/2015  - Ability to Repair damaged HAWK systems in the field, even if parts have been destroyed
-                                
+	Contributors:
+	    - Steggles - https://github.com/Bob7heBuilder
+
+    Version: 1.29 - 09/09/2015  - Ability to Repair damaged HAWK systems in the field, even if parts have been destroyed
+                                - Ability to enable/disable pickup zones as well as limit them to a side - Thanks Steggles! - https://github.com/Bob7heBuilder
+                                - Drop Off zones now configured per coalition
+                                - Fixed smoke for Drop off zones
                                 
 
 
@@ -21,7 +26,6 @@
         - Report status via F10 Radio
         - Report status every 5 minutes or when targets first appear
         - Report vague status like 5 armoured vehicles, soldiers and support trucks ??
-		
 
  ]]
 
@@ -104,7 +108,7 @@ ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock
 -- You can add number as a third option to limit the number of soldier or vehicle groups that can be loaded from a zone.
 -- Dropping back a group at a limited zone will add one more to the limit
 
---pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "active (yes/no)", "side (1 = red / 2 = blue)"}
+--pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "active (yes/no)", "side (1 = Red / 2 = Blue)"}
 ctld.pickupZones = {
     { "pickzone1", "red", -1, "yes", 1 }, --unlimited pickups, active on mission start, red side only
     { "pickzone2", "blue", -1, "yes", 2 }, --unlimited pickups, active on mission start, blue side only
@@ -118,17 +122,18 @@ ctld.pickupZones = {
     { "pickzone10", "none", 10, "yes", 2 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles, only blue can pick up
 }
 
+-- dropOffZones = {"name","smoke colour",side 1 = Red or 2 = Blue}
 ctld.dropOffZones = {
-    { "dropzone1", "red" },
-    { "dropzone2", "blue" },
-    { "dropzone3", "none" },
-    { "dropzone4", "none" },
-    { "dropzone5", "none" },
-    { "dropzone6", "none" },
-    { "dropzone7", "none" },
-    { "dropzone8", "none" },
-    { "dropzone9", "none" },
-    { "dropzone10", "none" },
+    { "dropzone1", "green", 2 },
+    { "dropzone2", "blue", 2 },
+    { "dropzone3", "orange", 2 },
+    { "dropzone4", "none", 2 },
+    { "dropzone5", "none", 1 },
+    { "dropzone6", "none", 1 },
+    { "dropzone7", "none", 1 },
+    { "dropzone8", "none", 1 },
+    { "dropzone9", "none", 1 },
+    { "dropzone10", "none", 1 },
 }
 
 
@@ -506,7 +511,7 @@ function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife, _name)
     ctld.beaconCount = ctld.beaconCount + 1
 
     if _name == nil or _name == "" then
-        _name = "Beacon #"..ctld.beaconCount
+        _name = "Beacon #" .. ctld.beaconCount
     end
 
     if _coalition == "red" then
@@ -517,50 +522,49 @@ function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife, _name)
 end
 
 
-------------------------Steggles Functions-----------------------
+------------------------ Steggles Functions-----------------------
 -- Activates a pickup zone
 -- Activates a pickup zone when called from a trigger
 -- EG: ctld.activatePickupZone("pickzone3")
 -- This is enable pickzone3 to be used as a pickup zone for the team set
 function ctld.activatePickupZone(_zoneName)
-	local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
-	
-	if _triggerZone == nil then
+    local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
+
+    if _triggerZone == nil then
         trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zoneName, 10)
         return
     end
-	
-	for _, _zoneDetails in pairs(ctld.pickupZones) do
+
+    for _, _zoneDetails in pairs(ctld.pickupZones) do
 
         if _zoneName == _zoneDetails[1] then
-		
-			--smoke could get messy if designer keeps calling this on an active zone, check its not active first
-			if _zoneDetails[4] == 1 then
-				trigger.action.outText("CTLD.lua ERROR: Pickup Zone already active: " .. _zoneName, 10)
-				return
-			end
-			
-			_zoneDetails[4] = 1 --activate zone
-			
-			if ctld.disableAllSmoke == true then --smoke disabled
-				return
-			end
-			
-			if _zoneDetails[2] >= 0 then
 
-				-- Trigger smoke marker
-				-- This will cause an overlapping smoke marker on next refreshsmoke call
-				-- but will only happen once
-				local _pos2 = { x = _triggerZone.point.x, y = _triggerZone.point.z }
-				local _alt = land.getHeight(_pos2)
-				local _pos3 = { x = _pos2.x, y = _alt, z = _pos2.y }
+            --smoke could get messy if designer keeps calling this on an active zone, check its not active first
+            if _zoneDetails[4] == 1 then
+                -- they might have a continuous trigger so i've hidden the warning
+                --trigger.action.outText("CTLD.lua ERROR: Pickup Zone already active: " .. _zoneName, 10)
+                return
+            end
 
-				trigger.action.smoke(_pos3, _zoneDetails[2])
-			end
-			
-		end
-		
-	end
+            _zoneDetails[4] = 1 --activate zone
+
+            if ctld.disableAllSmoke == true then --smoke disabled
+            return
+            end
+
+            if _zoneDetails[2] >= 0 then
+
+                -- Trigger smoke marker
+                -- This will cause an overlapping smoke marker on next refreshsmoke call
+                -- but will only happen once
+                local _pos2 = { x = _triggerZone.point.x, y = _triggerZone.point.z }
+                local _alt = land.getHeight(_pos2)
+                local _pos3 = { x = _pos2.x, y = _alt, z = _pos2.y }
+
+                trigger.action.smoke(_pos3, _zoneDetails[2])
+            end
+        end
+    end
 end
 
 
@@ -572,27 +576,26 @@ end
 -- once they are destroyed
 function ctld.deactivatePickupZone(_zoneName)
 
-	local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
-	
-	if _triggerZone == nil then
+    local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
+
+    if _triggerZone == nil then
         trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zoneName, 10)
         return
     end
-	
-	for _, _zoneDetails in pairs(ctld.pickupZones) do
+
+    for _, _zoneDetails in pairs(ctld.pickupZones) do
 
         if _zoneName == _zoneDetails[1] then
-		
-			if _zoneDetails[4] == 0 then --this really needed??
-				trigger.action.outText("CTLD.lua ERROR: Pickup Zone already deactiveated: " .. _zoneName, 10)
-				return
-			end
-			
-			_zoneDetails[4] = 0 --deactivate zone
-			
-		end
-		
-	end
+
+            -- i'd just ignore it if its already been deactivated
+            --            if _zoneDetails[4] == 0 then --this really needed??
+            --            trigger.action.outText("CTLD.lua ERROR: Pickup Zone already deactiveated: " .. _zoneName, 10)
+            --            return
+            --            end
+
+            _zoneDetails[4] = 0 --deactivate zone
+        end
+    end
 end
 
 -- ***************************************************************
@@ -978,15 +981,13 @@ function ctld.safeToFastRope(_heli)
     if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and mist.vec.mag(_heli:getVelocity()) < 2.2)) then
         return true
     end
-
 end
 
 function ctld.metersToFeet(_meters)
 
-    local _feet = _meters *3.2808399
+    local _feet = _meters * 3.2808399
 
     return mist.utils.round(_feet)
-
 end
 
 function ctld.inAir(_heli)
@@ -1050,10 +1051,9 @@ function ctld.deployTroops(_heli, _troops)
                     else
                         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops dropped from " .. _heli:getTypeName() .. " into " .. _extractZone.name, 10)
                     end
-
                 end
             else
-                ctld.displayMessageToGroup(_heli, "Too high or too fast to drop troops into combat! Hover below "..ctld.metersToFeet(ctld.fastRopeMaximumHeight).." feet or land.",10)
+                ctld.displayMessageToGroup(_heli, "Too high or too fast to drop troops into combat! Hover below " .. ctld.metersToFeet(ctld.fastRopeMaximumHeight) .. " feet or land.", 10)
             end
         end
 
@@ -1296,7 +1296,7 @@ function ctld.loadUnloadTroops(_args)
 
     -- first check for extractable troops regardless of if we're in a zone or not
 
-    if  not ctld.troopsOnboard(_heli,_troops) then
+    if not ctld.troopsOnboard(_heli, _troops) then
 
         local _extract
 
@@ -1317,12 +1317,11 @@ function ctld.loadUnloadTroops(_args)
 
                 _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesBLUE)
             end
-
         end
 
         if _extract ~= nil then
             -- search for nearest troops to pickup
-            ctld.extractTroops(_heli,_troops)
+            ctld.extractTroops(_heli, _troops)
 
             return -- stop
         end
@@ -1340,7 +1339,7 @@ function ctld.loadUnloadTroops(_args)
         end
 
         -- increase zone counter by 1
-        ctld.updateZoneCounter(_zone.index,1)
+        ctld.updateZoneCounter(_zone.index, 1)
 
 
     elseif _zone.inZone == false and ctld.troopsOnboard(_heli, _troops) then
@@ -1349,9 +1348,9 @@ function ctld.loadUnloadTroops(_args)
 
     elseif _zone.inZone == true and not ctld.troopsOnboard(_heli, _troops) then
 
-        if _zone.limit -1 >= 0 then
+        if _zone.limit - 1 >= 0 then
             -- decrease zone counter by 1
-            ctld.updateZoneCounter(_zone.index,-1)
+            ctld.updateZoneCounter(_zone.index, -1)
 
             ctld.loadTroops(_heli, _troops)
         else
@@ -1829,7 +1828,7 @@ function ctld.getCratesAndDistance(_heli)
 
         --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
         if _crate ~= nil and _crate:getLife() > 0
-                and (ctld.inAir(_crate) == false ) then
+                and (ctld.inAir(_crate) == false) then
 
             local _dist = ctld.getDistance(_crate:getPoint(), _heli:getPoint())
 
@@ -1900,7 +1899,7 @@ function ctld.findNearestHawk(_heli)
 
             local _units = _hawkGroup:getUnits()
 
-            for _,_leader in pairs(_units) do
+            for _, _leader in pairs(_units) do
 
                 if _leader ~= nil and _leader:getLife() > 0 then
 
@@ -2064,9 +2063,9 @@ function ctld.unpackFOBCrates(_crates, _heli)
 
             ctld.beaconCount = ctld.beaconCount + 1
 
-            local _radioBeaconName = "FOB Beacon #"..ctld.beaconCount
+            local _radioBeaconName = "FOB Beacon #" .. ctld.beaconCount
 
-            local _radioBeaconDetails = ctld.createRadioBeacon(_args[1], _args[3], _args[2], _radioBeaconName,nil,true)
+            local _radioBeaconDetails = ctld.createRadioBeacon(_args[1], _args[3], _args[2], _radioBeaconName, nil, true)
 
             ctld.fobBeacons[_name] = { vhf = _radioBeaconDetails.vhf, uhf = _radioBeaconDetails.uhf, fm = _radioBeaconDetails.fm }
 
@@ -2168,7 +2167,7 @@ end
 --spawns a radio beacon made up of two units,
 -- one for VHF and one for UHF
 -- The units are set to to NOT engage
-function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTime,_isFOB)
+function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTime, _isFOB)
 
     local _uhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "UHF")
     local _vhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "VHF")
@@ -2198,7 +2197,7 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
         _battery = -1 --never run out of power!
     end
 
-    _message = _message.." - ".. _latLngStr
+    _message = _message .. " - " .. _latLngStr
 
     --  env.info("GEN UHF: ".. _freq.uhf)
     --  env.info("GEN VHF: ".. _freq.vhf)
@@ -2460,9 +2459,9 @@ function ctld.dropRadioBeacon(_args)
         local _point = ctld.getPointAt12Oclock(_heli, 50)
 
         ctld.beaconCount = ctld.beaconCount + 1
-        local _name = "Beacon #"..ctld.beaconCount
+        local _name = "Beacon #" .. ctld.beaconCount
 
-        local _radioBeaconDetails = ctld.createRadioBeacon(_point, _heli:getCoalition(), _heli:getCountry(), _name,nil,false)
+        local _radioBeaconDetails = ctld.createRadioBeacon(_point, _heli:getCoalition(), _heli:getCountry(), _name, nil, false)
 
         -- mark with flare?
 
@@ -2663,12 +2662,11 @@ function ctld.getHawkDetails(_hawkGroup)
 
     local _hawkDetails = {}
 
-    for _,_unit in pairs(_units) do
-       table.insert(_hawkDetails, {point=_unit:getPoint(), unit = _unit:getTypeName(), name= _unit:getName()})
+    for _, _unit in pairs(_units) do
+        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName() })
     end
 
     return _hawkDetails
-
 end
 
 function ctld.countTableEntries(_table)
@@ -2801,8 +2799,8 @@ function ctld.repairHawk(_heli, _nearestCrate)
         local _points = {}
 
         for _, _part in pairs(_oldHawk) do
-            table.insert(_points,_part.point)
-            table.insert(_types,_part.unit)
+            table.insert(_points, _part.point)
+            table.insert(_types, _part.unit)
         end
 
         --remove old system
@@ -2885,7 +2883,6 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
             if ctld.slingLoad == false then
                 _crate.crateUnit:destroy()
             end
-
         end
 
 
@@ -3209,7 +3206,7 @@ end
 function ctld.inPickupZone(_heli)
 
     if ctld.inAir(_heli) then
-        return {inZone = false,limit = -1,index = -1}
+        return { inZone = false, limit = -1, index = -1 }
     end
 
     local _heliPoint = _heli:getPoint()
@@ -3225,10 +3222,10 @@ function ctld.inPickupZone(_heli)
             local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
 
             if _dist <= _triggerZone.radius then
-				local _heliCoalition = _heli:getCoalition()
-				if _zoneDetails[4] == 1 and _zoneDetails[5] == _heliCoalition then
-					return {inZone = true,limit = _zoneDetails[3],index=_i}
-				end
+                local _heliCoalition = _heli:getCoalition()
+                if _zoneDetails[4] == 1 and _zoneDetails[5] == _heliCoalition then
+                    return { inZone = true, limit = _zoneDetails[3], index = _i }
+                end
             end
         end
     end
@@ -3243,13 +3240,13 @@ function ctld.inPickupZone(_heli)
         local _dist = ctld.getDistance(_heliPoint, _fob:getPoint())
 
         if _dist <= 150 then
-            return {inZone = true,limit= 10000,index=-1};
+            return { inZone = true, limit = 10000, index = -1 };
         end
     end
 
 
 
-    return {inZone = false,limit= -1,index=-1};
+    return { inZone = false, limit = -1, index = -1 };
 end
 
 function ctld.getSpawnedFobs(_heli)
@@ -3282,7 +3279,7 @@ function ctld.inDropoffZone(_heli)
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
-        if _triggerZone ~= nil then
+        if _triggerZone ~= nil and _zoneDetails[3] == _heli:getCoalition() then
 
             --get distance to center
 
@@ -3330,22 +3327,25 @@ function ctld.refreshSmoke()
         return
     end
 
-    for _, _zoneDetails in pairs(ctld.pickupZones) do
+    for _, _zoneGroup in pairs({ ctld.pickupZones, ctld.dropOffZones }) do
 
-        local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
+        for _, _zoneDetails in pairs(_zoneGroup) do
 
-        if _triggerZone ~= nil and _zoneDetails[2] >= 0 and _zoneDetails[4] == 1 then
+            local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
-            -- Trigger smoke markers
+            --only trigger if smoke is on AND zone is active
+            if _triggerZone ~= nil and _zoneDetails[2] >= 0 and _zoneDetails[4] == 1 then
 
-            local _pos2 = { x = _triggerZone.point.x, y = _triggerZone.point.z }
-            local _alt = land.getHeight(_pos2)
-            local _pos3 = { x = _pos2.x, y = _alt, z = _pos2.y }
+                -- Trigger smoke markers
 
-            trigger.action.smoke(_pos3, _zoneDetails[2])
+                local _pos2 = { x = _triggerZone.point.x, y = _triggerZone.point.z }
+                local _alt = land.getHeight(_pos2)
+                local _pos3 = { x = _pos2.x, y = _alt, z = _pos2.y }
+
+                trigger.action.smoke(_pos3, _zoneDetails[2])
+            end
         end
     end
-
 
     --refresh in 5 minutes
     timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 300)
@@ -3413,16 +3413,14 @@ function ctld.isJTACUnitType(_type)
     return false
 end
 
-function ctld.updateZoneCounter(_index,_diff)
+function ctld.updateZoneCounter(_index, _diff)
 
     if ctld.pickupZones[_index] ~= nil then
 
-        ctld.pickupZones[_index][3] =   ctld.pickupZones[_index][3]+_diff
+        ctld.pickupZones[_index][3] = ctld.pickupZones[_index][3] + _diff
 
         --  env.info(ctld.pickupZones[_index][1].." = " ..ctld.pickupZones[_index][3])
     end
-
-
 end
 
 
@@ -3453,17 +3451,16 @@ function ctld.checkAIStatus()
 
                 if _extract ~= nil then
                     -- search for nearest troops to pickup
-                    ctld.extractTroops(_unit,true)
+                    ctld.extractTroops(_unit, true)
                 else
 
                     --only allow if zone has units
-                    if  _zone.limit - 1 >= 0 then
+                    if _zone.limit - 1 >= 0 then
 
-                        ctld.updateZoneCounter(_zone.index,-1)
+                        ctld.updateZoneCounter(_zone.index, -1)
 
                         ctld.loadTroops(_unit, true)
                     end
-
                 end
 
             elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
@@ -3487,12 +3484,12 @@ function ctld.checkAIStatus()
 
                     if _extract ~= nil then
                         -- search for nearest vehicles to pickup
-                        ctld.extractTroops(_unit,false)
+                        ctld.extractTroops(_unit, false)
                     else
                         --only allow if zone has units
-                        if  _zone.limit - 1 >= 0 then
+                        if _zone.limit - 1 >= 0 then
 
-                            ctld.updateZoneCounter(_zone.index,-1)
+                            ctld.updateZoneCounter(_zone.index, -1)
 
                             ctld.loadTroops(_unit, false)
                         end
@@ -3580,7 +3577,7 @@ function ctld.addF10MenuOptions()
 
 
                     if ctld.enableSmokeDrop then
-                        local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers",_rootPath)
+                        local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers", _rootPath)
                         missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
                         missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
                         missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
@@ -4499,35 +4496,57 @@ for _, _zone in pairs(ctld.pickupZones) do
 
     local _zoneName = _zone[1]
     local _zoneColor = _zone[2]
-	local _zoneActive = _zone[4]
-	
-	if _zoneColor == "green" then
-		_zone[2] = trigger.smokeColor.Green
-	elseif _zoneColor == "red" then
-		_zone[2] = trigger.smokeColor.Red
-	elseif _zoneColor == "white" then
-		_zone[2] = trigger.smokeColor.White
-	elseif _zoneColor == "orange" then
-		_zone[2] = trigger.smokeColor.Orange
-	elseif _zoneColor == "blue" then
-		_zone[2] = trigger.smokeColor.Blue
-	else
-		_zone[2] = -1 -- no smoke colour
-	end
+    local _zoneActive = _zone[4]
+
+    if _zoneColor == "green" then
+        _zone[2] = trigger.smokeColor.Green
+    elseif _zoneColor == "red" then
+        _zone[2] = trigger.smokeColor.Red
+    elseif _zoneColor == "white" then
+        _zone[2] = trigger.smokeColor.White
+    elseif _zoneColor == "orange" then
+        _zone[2] = trigger.smokeColor.Orange
+    elseif _zoneColor == "blue" then
+        _zone[2] = trigger.smokeColor.Blue
+    else
+        _zone[2] = -1 -- no smoke colour
+    end
 
     -- add in counter for troops or units
     if _zone[3] == -1 then
         _zone[3] = 10000;
     end
-	
-	-- change active to 1 / 0
-	if _zoneActive == "yes" then
-		_zone[4] = 1
-	else
-		_zone[4] = 0
-	end
+
+    -- change active to 1 / 0
+    if _zoneActive == "yes" then
+        _zone[4] = 1
+    else
+        _zone[4] = 0
+    end
 end
 
+--sort out dropoff zones
+for _, _zone in pairs(ctld.dropOffZones) do
+
+    local _zoneColor = _zone[2]
+
+    if _zoneColor == "green" then
+        _zone[2] = trigger.smokeColor.Green
+    elseif _zoneColor == "red" then
+        _zone[2] = trigger.smokeColor.Red
+    elseif _zoneColor == "white" then
+        _zone[2] = trigger.smokeColor.White
+    elseif _zoneColor == "orange" then
+        _zone[2] = trigger.smokeColor.Orange
+    elseif _zoneColor == "blue" then
+        _zone[2] = trigger.smokeColor.Blue
+    else
+        _zone[2] = -1 -- no smoke colour
+    end
+
+    --mark as active for refresh smoke logic to work
+    _zone[4] = 1
+end
 
 -- Sort out extractable groups
 for _, _groupName in pairs(ctld.extractableGroups) do

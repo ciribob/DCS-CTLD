@@ -142,20 +142,22 @@ ctld.spawnableCrates = {
 
         { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
 
-        { weight = 500, desc = "SPH 2S19 Msta", unit = "SAU Msta", side=1, cratesRequired = 3 },
-        { weight = 501, desc = "M-109", unit = "M-109", side=2, cratesRequired = 3 },
+        { weight = 500, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
+        { weight = 501, desc = "M-109", unit = "M-109", side = 2, cratesRequired = 3 },
     },
     ["AA Crates"] = {
         { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
         { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
+        -- Hawk System
         { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
         { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
         { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
-        --
+        { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" }, --used to repair a damaged HAWK system
+        -- End of Hawk
 
-        { weight = 505, desc =  "Strela-1 9P31", unit = "Strela-1 9P31", side =1, cratesRequired = 4 },
-        { weight = 506, desc =  "M1097 Avenger", unit = "M1097 Avenger", side =2, cratesRequired = 4 },
+        { weight = 505, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 4 },
+        { weight = 506, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 4 },
     },
 }
 
@@ -325,23 +327,26 @@ The script doesn't care if the unit isn't activated when run, as it'll automatic
 the mission but there can be a delay of up to 30 seconds after activation for the JTAC to start searching for targets.
 
 ###Pickup and Dropoff Zones Setup
-Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger in order to load troops and vehicles.
+Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger and the right side (RED or BLUE) in order to load troops and vehicles.
 The pickup zone needs to be named the same as one of the pickup zones in the ```ctld.pickupZones``` list or the list can be edited to match the name in the mission editor.
 
-Pickup Zones can be configured to limit the number of vehicle or troop groups that can be loaded. To add a limit, add a third parameter after the smoke colour as shown in the example below.
+Pickup Zones can be configured to limit the number of vehicle or troop groups that can be loaded. To add a limit, edit the 3rd parameter to be any number greater than 0 as shown below.
+
+If your pickup zone isn't working, make sure you've set the 5th parameter, the coalition side, correctly.
 
 ```lua
+--pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "active (yes/no)", "side (1 = Red / 2 = Blue)"}
 ctld.pickupZones = {
-    { "pickzone1", "blue" },
-    { "pickzone2", "blue" },
-    { "pickzone3", "none" },
-    { "pickzone4", "none" },
-    { "pickzone5", "none" },
-    { "pickzone6", "none" },
-    { "pickzone7", "none" },
-    { "pickzone8", "none" },
-  { "pickzone9", "none", 5 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles
-    { "pickzone10", "none", 10 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles
+    { "pickzone1", "red", -1, "yes", 1 }, --unlimited pickups, active on mission start, red side only
+    { "pickzone2", "blue", -1, "yes", 2 }, --unlimited pickups, active on mission start, blue side only
+    { "pickzone3", "none", -1, "no", 1 }, --unlimited pickups, not active on mission start, red side only
+    { "pickzone4", "none", -1, "yes", 1 },
+    { "pickzone5", "none", -1, "yes", 1 },
+    { "pickzone6", "none", -1, "yes", 1 },
+    { "pickzone7", "none", -1, "yes", 1 },
+    { "pickzone7", "none", -1, "yes", 2 }, -- Listing pickzone7 a second time with other team makes it available to both sides.
+    { "pickzone9", "none", 5, "yes", 1 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles, only red can pick up
+    { "pickzone10", "none", 10, "yes", 2 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles, only blue can pick up
 }
 ```
 
@@ -359,20 +364,23 @@ If ```ctld.numberOfTroops``` is 6 or more than the soldier group will consist of
 Example:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-22-48-57_zpsc5u7bymy.png~original "Pickup zone")
 
-Dropoff zones are used by AI units to automatically unload any loaded troops or vehicles. This will occurr as long as the AI unit has some units onboard and stays in the radius of the zone for a few seconds and the zone is named in the ```ctld.dropoffZones``` list. Again units do not need to stop but aircraft need to be on the ground in order to unload the troops.
+Dropoff zones are used by AI units to automatically unload any loaded troops or vehicles. This will occur as long as the AI unit has some units onboard and stays in the radius of the zone for a few seconds and the zone is named in the ```ctld.dropoffZones``` list. Again units do not need to stop but aircraft need to be on the ground in order to unload the troops.
+
+If your dropoff zone isn't working, make sure the 3rd parameter, the coalition side, is set correctly.
 
 ```lua
+-- dropOffZones = {"name","smoke colour",side 1 = Red or 2 = Blue}
 ctld.dropOffZones = {
-    { "dropzone1", "red" },
-    { "dropzone2", "blue" },
-    { "dropzone3", "none" },
-    { "dropzone4", "none" },
-    { "dropzone5", "none" },
-    { "dropzone6", "none" },
-    { "dropzone7", "none" },
-    { "dropzone8", "none" },
-    { "dropzone9", "none" },
-    { "dropzone10", "none" },
+    { "dropzone1", "green", 2 },
+    { "dropzone2", "blue", 2 },
+    { "dropzone3", "orange", 2 },
+    { "dropzone4", "none", 2 },
+    { "dropzone5", "none", 1 },
+    { "dropzone6", "none", 1 },
+    { "dropzone7", "none", 1 },
+    { "dropzone8", "none", 1 },
+    { "dropzone9", "none", 1 },
+    { "dropzone10", "none", 1 },
 }
 ```
 
@@ -528,6 +536,8 @@ Rearming:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-46-10-44_zpsqr8oducw.png~original "Hawk Rearmed")
 
 **Note: Once unpacked a crate will not disappear from the field or the F6 Menu, but will disappear from the F10 Nearby Crates list. There is currently no way to remove crates due to a DCS Bug AFAIK. This can make picking the right crate tricky, but by using the F10 List crates option, you can keep readjusting your position until you are close to the crate that you want and then it's trial and error, using the F6 menu to pick the right crate for sling loading. **
+
+You can also repair a partially destroyed HAWK system by dropping a repair crate next to it and unpacking. A repair crate will also re-arm the system.
 
 ##Forward Operating Base (FOB) Construction
 FOBs can be built by loading special FOB crates from a **Logistics** unit into a C-130 or other large aircraft configured in the script. To load the crate use the F10 - Troop Commands Menu. The idea behind FOBs is to make player vs player missions even more dynamic as these can be deployed in most locations. Once destroyed the FOB can no longer be used.
