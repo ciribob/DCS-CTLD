@@ -200,6 +200,17 @@ or
 ctld.spawnGroupAtTrigger("blue", 5, "spawnTrigger2", 2000)
 ```
 
+###Activate / Deactivate Pickup Zone
+You can activate and deactive a pickup zone as shown below. When a zone is active, troops can be loaded from it as long as there are troops remaining and you are the same side as the pickup zone.
+
+```lua
+ctld.activatePickupZone("pickzone3")
+```
+or
+```lua
+ctld.deactivatePickupZone("pickzone3")
+```
+
 ####Create Radio Beacon at Zone
 A radio beacon can be spawned at any zone by adding a Trigger Once with a Time More set to any time after the CTLD script has been loaded and a DO SCRIPT action of ```ctld.createRadioBeaconAtZone("beaconZone","red", 1440,"Waypoint 1")```
 
@@ -332,7 +343,7 @@ The pickup zone needs to be named the same as one of the pickup zones in the ```
 
 Pickup Zones can be configured to limit the number of vehicle or troop groups that can be loaded. To add a limit, edit the 3rd parameter to be any number greater than 0 as shown below.
 
-If your pickup zone isn't working, make sure you've set the 5th parameter, the coalition side, correctly.
+***If your pickup zone isn't working, make sure you've set the 5th parameter, the coalition side, correctly and that the zone is active.***
 
 ```lua
 --pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "active (yes/no)", "side (1 = Red / 2 = Blue)"}
