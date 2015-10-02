@@ -13,11 +13,12 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.29 - 09/09/2015  - Ability to Repair damaged HAWK systems in the field, even if parts have been destroyed
+    Version: 1.30 - 02/10/2015  - 1.5 Compatible
+                                - Ability to Repair damaged HAWK systems in the field, even if parts have been destroyed
                                 - Ability to enable/disable pickup zones as well as limit them to a side - Thanks Steggles! - https://github.com/Bob7heBuilder
                                 - Drop Off zones now configured per coalition
                                 - Fixed smoke for Drop off zones
-                                
+
 
 
     TODO Support for Spotter Groups
@@ -1557,10 +1558,10 @@ function ctld.checkHoverStatus()
                             end
 
                             if _time > 0 then
-                                ctld.displayMessageToGroup(_transUnit, "Hovering above " .. _crate.details.desc .. " crate. \n\nHold hover for " .. _time .. " seconds! \n\nIf the countdown stops you're too far away!", 10)
+                                ctld.displayMessageToGroup(_transUnit, "Hovering above " .. _crate.details.desc .. " crate. \n\nHold hover for " .. _time .. " seconds! \n\nIf the countdown stops you're too far away!", 10,true)
                             else
                                 ctld.hoverStatus[_transUnit:getName()] = nil
-                                ctld.displayMessageToGroup(_transUnit, "Loaded  " .. _crate.details.desc .. " crate!", 10)
+                                ctld.displayMessageToGroup(_transUnit, "Loaded  " .. _crate.details.desc .. " crate!", 10,true)
 
                                 if _transUnit:getCoalition() == 1 then
                                     ctld.spawnedCratesRED[_crate.crateUnit:getName()] = nil
@@ -1577,10 +1578,10 @@ function ctld.checkHoverStatus()
 
                             break
                         elseif _height <= 7.5 then
-                            ctld.displayMessageToGroup(_transUnit, "Too low to hook " .. _crate.details.desc .. " crate.\n\nHold hover for 10 seconds", 5)
+                            ctld.displayMessageToGroup(_transUnit, "Too low to hook " .. _crate.details.desc .. " crate.\n\nHold hover for 10 seconds", 5,true)
                             break
                         else
-                            ctld.displayMessageToGroup(_transUnit, "Too high to hook " .. _crate.details.desc .. " crate.\n\nHold hover for 10 seconds", 5)
+                            ctld.displayMessageToGroup(_transUnit, "Too high to hook " .. _crate.details.desc .. " crate.\n\nHold hover for 10 seconds", 5, true)
                             break
                         end
                     end
@@ -1794,9 +1795,13 @@ function ctld.getFOBPositionString(_fob)
 end
 
 
-function ctld.displayMessageToGroup(_unit, _text, _time)
+function ctld.displayMessageToGroup(_unit, _text, _time,_clear)
 
-    trigger.action.outTextForGroup(_unit:getGroup():getID(), _text, _time)
+    if _clear == true then
+        trigger.action.outTextForGroup(_unit:getGroup():getID(), _text, _time,_clear)
+    else
+        trigger.action.outTextForGroup(_unit:getGroup():getID(), _text, _time)
+    end
 end
 
 function ctld.heightDiff(_unit)
