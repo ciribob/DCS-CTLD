@@ -338,7 +338,7 @@ The script doesn't care if the unit isn't activated when run, as it'll automatic
 the mission but there can be a delay of up to 30 seconds after activation for the JTAC to start searching for targets.
 
 ###Pickup and Dropoff Zones Setup
-Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger and the right side (RED or BLUE) in order to load troops and vehicles.
+Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger and the right side (RED or BLUE or BOTH) in order to load troops and vehicles.
 The pickup zone needs to be named the same as one of the pickup zones in the ```ctld.pickupZones``` list or the list can be edited to match the name in the mission editor.
 
 Pickup Zones can be configured to limit the number of vehicle or troop groups that can be loaded. To add a limit, edit the 3rd parameter to be any number greater than 0 as shown below.
@@ -346,18 +346,29 @@ Pickup Zones can be configured to limit the number of vehicle or troop groups th
 ***If your pickup zone isn't working, make sure you've set the 5th parameter, the coalition side, correctly and that the zone is active.***
 
 ```lua
---pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "active (yes/no)", "side (1 = Red / 2 = Blue)"}
+--pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )"}
 ctld.pickupZones = {
-    { "pickzone1", "red", -1, "yes", 1 }, --unlimited pickups, active on mission start, red side only
-    { "pickzone2", "blue", -1, "yes", 2 }, --unlimited pickups, active on mission start, blue side only
-    { "pickzone3", "none", -1, "no", 1 }, --unlimited pickups, not active on mission start, red side only
-    { "pickzone4", "none", -1, "yes", 1 },
-    { "pickzone5", "none", -1, "yes", 1 },
-    { "pickzone6", "none", -1, "yes", 1 },
-    { "pickzone7", "none", -1, "yes", 1 },
-    { "pickzone7", "none", -1, "yes", 2 }, -- Listing pickzone7 a second time with other team makes it available to both sides.
+    { "pickzone1", "blue", -1, "yes", 0 },
+    { "pickzone2", "red", -1, "yes", 0 },
+    { "pickzone3", "none", -1, "yes", 0 },
+    { "pickzone4", "none", -1, "yes", 0 },
+    { "pickzone5", "none", -1, "yes", 0 },
+    { "pickzone6", "none", -1, "yes", 0 },
+    { "pickzone7", "none", -1, "yes", 0 },
+    { "pickzone8", "none", -1, "yes", 0 },
     { "pickzone9", "none", 5, "yes", 1 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles, only red can pick up
     { "pickzone10", "none", 10, "yes", 2 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles, only blue can pick up
+
+    { "pickzone11", "blue", 20, "no", 2 },  -- limits pickup zone 11 to 20 groups of soldiers or vehicles, only blue can pick up. Zone starts inactive!
+    { "pickzone12", "red", 20, "no", 1 },  -- limits pickup zone 11 to 20 groups of soldiers or vehicles, only blue can pick up. Zone starts inactive!
+    { "pickzone13", "none", -1, "yes", 0 },
+    { "pickzone14", "none", -1, "yes", 0 },
+    { "pickzone15", "none", -1, "yes", 0 },
+    { "pickzone16", "none", -1, "yes", 0 },
+    { "pickzone17", "none", -1, "yes", 0 },
+    { "pickzone18", "none", -1, "yes", 0 },
+    { "pickzone19", "none", 5, "yes", 0 },
+    { "pickzone20", "none", 10, "yes", 0 },
 }
 ```
 
@@ -380,7 +391,8 @@ Dropoff zones are used by AI units to automatically unload any loaded troops or 
 If your dropoff zone isn't working, make sure the 3rd parameter, the coalition side, is set correctly.
 
 ```lua
--- dropOffZones = {"name","smoke colour",side 1 = Red or 2 = Blue}
+
+-- dropOffZones = {"name","smoke colour",0,side 1 = Red or 2 = Blue or 0 = Both sides}
 ctld.dropOffZones = {
     { "dropzone1", "green", 2 },
     { "dropzone2", "blue", 2 },
