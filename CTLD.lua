@@ -13,7 +13,8 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.30 - 02/10/2015  - 1.5 Compatible
+    Version: 1.31 - 03/10/2015  - 1.5 Compatible
+                                - New option for pickup and dropoff zone configuration allowing both sides to use it
                                 - Ability to Repair damaged HAWK systems in the field, even if parts have been destroyed
                                 - Ability to enable/disable pickup zones as well as limit them to a side - Thanks Steggles! - https://github.com/Bob7heBuilder
                                 - Drop Off zones now configured per coalition
@@ -86,7 +87,7 @@ ctld.JTAC_LIMIT_BLUE = 10 -- max number of JTAC Crates for the BLUE Side
 
 ctld.JTAC_dropEnabled = true -- allow JTAC Crate spawn from F10 menu
 
-ctld.JTAC_maxDistance = 5000 -- How far a JTAC can "see" in meters (with Line of Sight)
+ctld.JTAC_maxDistance = 15000 -- How far a JTAC can "see" in meters (with Line of Sight)
 
 ctld.JTAC_smokeOn_RED = true -- enables marking of target with smoke for RED forces
 ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE forces
@@ -109,21 +110,37 @@ ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock
 -- You can add number as a third option to limit the number of soldier or vehicle groups that can be loaded from a zone.
 -- Dropping back a group at a limited zone will add one more to the limit
 
---pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "active (yes/no)", "side (1 = Red / 2 = Blue)"}
+-- If a zone isn't ACTIVE then you can't pickup from that zone until the zone is activated by ctld.activatePickupZone
+-- using the Mission editor
+
+-- Side - Controls which side can load/unload troops at the zone
+
+--pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )"}
 ctld.pickupZones = {
-    { "pickzone1", "red", -1, "yes", 1 }, --unlimited pickups, active on mission start, red side only
-    { "pickzone2", "blue", -1, "yes", 2 }, --unlimited pickups, active on mission start, blue side only
-    { "pickzone3", "none", -1, "no", 1 }, --unlimited pickups, not active on mission start, red side only
-    { "pickzone4", "none", -1, "yes", 1 },
-    { "pickzone5", "none", -1, "yes", 1 },
-    { "pickzone6", "none", -1, "yes", 1 },
-    { "pickzone7", "none", -1, "yes", 1 },
-    { "pickzone7", "none", -1, "yes", 2 }, -- Listing pickzone7 a second time with other team makes it available to both sides.
+    { "pickzone1", "blue", -1, "yes", 0 },
+    { "pickzone2", "red", -1, "yes", 0 },
+    { "pickzone3", "none", -1, "yes", 0 },
+    { "pickzone4", "none", -1, "yes", 0 },
+    { "pickzone5", "none", -1, "yes", 0 },
+    { "pickzone6", "none", -1, "yes", 0 },
+    { "pickzone7", "none", -1, "yes", 0 },
+    { "pickzone8", "none", -1, "yes", 0 },
     { "pickzone9", "none", 5, "yes", 1 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles, only red can pick up
     { "pickzone10", "none", 10, "yes", 2 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles, only blue can pick up
+
+    { "pickzone11", "blue", 20, "no", 2 },  -- limits pickup zone 11 to 20 groups of soldiers or vehicles, only blue can pick up. Zone starts inactive!
+    { "pickzone12", "red", 20, "no", 1 },  -- limits pickup zone 11 to 20 groups of soldiers or vehicles, only blue can pick up. Zone starts inactive!
+    { "pickzone13", "none", -1, "yes", 0 },
+    { "pickzone14", "none", -1, "yes", 0 },
+    { "pickzone15", "none", -1, "yes", 0 },
+    { "pickzone16", "none", -1, "yes", 0 },
+    { "pickzone17", "none", -1, "yes", 0 },
+    { "pickzone18", "none", -1, "yes", 0 },
+    { "pickzone19", "none", 5, "yes", 0 },
+    { "pickzone20", "none", 10, "yes", 0 },
 }
 
--- dropOffZones = {"name","smoke colour",side 1 = Red or 2 = Blue}
+-- dropOffZones = {"name","smoke colour",0,side 1 = Red or 2 = Blue or 0 = Both sides}
 ctld.dropOffZones = {
     { "dropzone1", "green", 2 },
     { "dropzone2", "blue", 2 },
@@ -141,7 +158,6 @@ ctld.dropOffZones = {
 -- ******************** Transports names **********************
 
 -- Use any of the predefined names or set your own ones
-
 ctld.transportPilotNames = {
     "helicargo1",
     "helicargo2",
@@ -170,6 +186,67 @@ ctld.transportPilotNames = {
     "helicargo23",
     "helicargo24",
     "helicargo25",
+
+    "MEDEVAC #1",
+    "MEDEVAC #2",
+    "MEDEVAC #3",
+    "MEDEVAC #4",
+    "MEDEVAC #5",
+    "MEDEVAC #6",
+    "MEDEVAC #7",
+    "MEDEVAC #8",
+    "MEDEVAC #9",
+    "MEDEVAC #10",
+    "MEDEVAC #11",
+    "MEDEVAC #12",
+    "MEDEVAC #13",
+    "MEDEVAC #14",
+    "MEDEVAC #15",
+    "MEDEVAC #16",
+
+    "MEDEVAC RED #1",
+    "MEDEVAC RED #2",
+    "MEDEVAC RED #3",
+    "MEDEVAC RED #4",
+    "MEDEVAC RED #5",
+    "MEDEVAC RED #6",
+    "MEDEVAC RED #7",
+    "MEDEVAC RED #8",
+    "MEDEVAC RED #9",
+    "MEDEVAC RED #10",
+    "MEDEVAC RED #11",
+    "MEDEVAC RED #12",
+    "MEDEVAC RED #13",
+    "MEDEVAC RED #14",
+    "MEDEVAC RED #15",
+    "MEDEVAC RED #16",
+    "MEDEVAC RED #17",
+    "MEDEVAC RED #18",
+    "MEDEVAC RED #19",
+    "MEDEVAC RED #20",
+    "MEDEVAC RED #21",
+
+    "MEDEVAC BLUE #1",
+    "MEDEVAC BLUE #2",
+    "MEDEVAC BLUE #3",
+    "MEDEVAC BLUE #4",
+    "MEDEVAC BLUE #5",
+    "MEDEVAC BLUE #6",
+    "MEDEVAC BLUE #7",
+    "MEDEVAC BLUE #8",
+    "MEDEVAC BLUE #9",
+    "MEDEVAC BLUE #10",
+    "MEDEVAC BLUE #11",
+    "MEDEVAC BLUE #12",
+    "MEDEVAC BLUE #13",
+    "MEDEVAC BLUE #14",
+    "MEDEVAC BLUE #15",
+    "MEDEVAC BLUE #16",
+    "MEDEVAC BLUE #17",
+    "MEDEVAC BLUE #18",
+    "MEDEVAC BLUE #19",
+    "MEDEVAC BLUE #20",
+    "MEDEVAC BLUE #21",
 
     -- *** AI transports names (different names only to ease identification in mission) ***
 
@@ -1797,10 +1874,13 @@ end
 
 function ctld.displayMessageToGroup(_unit, _text, _time,_clear)
 
-    if _clear == true then
-        trigger.action.outTextForGroup(_unit:getGroup():getID(), _text, _time,_clear)
-    else
-        trigger.action.outTextForGroup(_unit:getGroup():getID(), _text, _time)
+    local _groupId = ctld.getGroupId(_unit)
+    if _groupId then
+        if _clear == true then
+            trigger.action.outTextForGroup(_groupId, _text, _time,_clear)
+        else
+            trigger.action.outTextForGroup(_groupId, _text, _time)
+        end
     end
 end
 
@@ -2411,9 +2491,9 @@ function ctld.updateRadioBeacon(_beaconDetails)
 
         local _groupController = _radio.group:getController()
 
-        local _sound = ctld.radioSound
+        local _sound = "l10n/DEFAULT/"..ctld.radioSound
         if _radio.silent then
-            _sound = ctld.radioSoundFC3
+            _sound = "l10n/DEFAULT/"..ctld.radioSoundFC3
         end
         _groupController:setOption(AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.WEAPON_HOLD)
 
@@ -3228,7 +3308,7 @@ function ctld.inPickupZone(_heli)
 
             if _dist <= _triggerZone.radius then
                 local _heliCoalition = _heli:getCoalition()
-                if _zoneDetails[4] == 1 and _zoneDetails[5] == _heliCoalition then
+                if _zoneDetails[4] == 1 and (_zoneDetails[5] == _heliCoalition or _zoneDetails[5] == 0) then
                     return { inZone = true, limit = _zoneDetails[3], index = _i }
                 end
             end
@@ -3284,7 +3364,7 @@ function ctld.inDropoffZone(_heli)
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
-        if _triggerZone ~= nil and _zoneDetails[3] == _heli:getCoalition() then
+        if _triggerZone ~= nil and (_zoneDetails[3] == _heli:getCoalition() or _zoneDetails[3]== 0) then
 
             --get distance to center
 
@@ -3514,94 +3594,107 @@ end
 function ctld.addF10MenuOptions()
     -- Loop through all Heli units
 
-    pcall(function()
-        for _, _unitName in pairs(ctld.transportPilotNames) do
+    timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 10)
+
+    for _, _unitName in pairs(ctld.transportPilotNames) do
+
+        local status, error = pcall(function()
 
             local _unit = ctld.getTransportUnit(_unitName)
 
             if _unit ~= nil then
 
-                local _groupId = _unit:getGroup():getID()
+                local _groupId = ctld.getGroupId(_unit)
 
-                if ctld.addedTo[tostring(_groupId)] == nil then
+                if _groupId then
 
-                    local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
+                    if ctld.addedTo[tostring(_groupId)] == nil then
 
-                    local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport", _rootPath)
+                        local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
 
-                    missionCommands.addCommandForGroup(_groupId, "Load / Unload Troops", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, true })
+                        local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport", _rootPath)
 
-                    if ctld.unitCanCarryVehicles(_unit) then
+                        missionCommands.addCommandForGroup(_groupId, "Load / Unload Troops", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, true })
 
-                        missionCommands.addCommandForGroup(_groupId, "Load / Unload Vehicles", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, false })
+                        if ctld.unitCanCarryVehicles(_unit) then
 
-                        if ctld.enabledFOBBuilding then
+                            missionCommands.addCommandForGroup(_groupId, "Load / Unload Vehicles", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, false })
 
-                            missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _troopCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
+                            if ctld.enabledFOBBuilding then
+
+                                missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _troopCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
+                            end
                         end
-                    end
 
-                    missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
+                        missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
 
-                    if ctld.enableCrates then
+                        if ctld.enableCrates then
 
-                        if ctld.unitCanCarryVehicles(_unit) == false then
+                            if ctld.unitCanCarryVehicles(_unit) == false then
 
-                            -- add menu for spawning crates
-                            for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
+                                -- add menu for spawning crates
+                                for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
 
-                                local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _rootPath)
-                                for _, _crate in pairs(_crates) do
+                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _rootPath)
+                                    for _, _crate in pairs(_crates) do
 
-                                    if ctld.isJTACUnitType(_crate.unit) == false
-                                            or (ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled) then
-                                        if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
-                                            missionCommands.addCommandForGroup(_groupId, _crate.desc, _cratePath, ctld.spawnCrate, { _unitName, _crate.weight })
+                                        if ctld.isJTACUnitType(_crate.unit) == false
+                                                or (ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled) then
+                                            if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
+                                                missionCommands.addCommandForGroup(_groupId, _crate.desc, _cratePath, ctld.spawnCrate, { _unitName, _crate.weight })
+                                            end
                                         end
                                     end
                                 end
                             end
                         end
-                    end
 
 
-                    if ctld.enabledFOBBuilding or ctld.enableCrates then
-                        local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", _crateCommands, ctld.listNearbyCrates, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
+                        if ctld.enabledFOBBuilding or ctld.enableCrates then
+                            local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
+                            missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", _crateCommands, ctld.listNearbyCrates, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
 
-                        if ctld.slingLoad == false then
-                            missionCommands.addCommandForGroup(_groupId, "Drop Crate", _crateCommands, ctld.dropSlingCrate, { _unitName })
-                            missionCommands.addCommandForGroup(_groupId, "Current Cargo Status", _crateCommands, ctld.slingCargoStatus, { _unitName })
+                            if ctld.slingLoad == false then
+                                missionCommands.addCommandForGroup(_groupId, "Drop Crate", _crateCommands, ctld.dropSlingCrate, { _unitName })
+                                missionCommands.addCommandForGroup(_groupId, "Current Cargo Status", _crateCommands, ctld.slingCargoStatus, { _unitName })
+                            end
+
+                            if ctld.enabledFOBBuilding then
+                                missionCommands.addCommandForGroup(_groupId, "List FOBs", _crateCommands, ctld.listFOBS, { _unitName })
+                            end
                         end
 
-                        if ctld.enabledFOBBuilding then
-                            missionCommands.addCommandForGroup(_groupId, "List FOBs", _crateCommands, ctld.listFOBS, { _unitName })
+
+                        if ctld.enableSmokeDrop then
+                            local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers", _rootPath)
+                            missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
+                            missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
+                            missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
+                            missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
                         end
+
+                        if ctld.enabledRadioBeaconDrop then
+                            local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, "Radio Beacons", _rootPath)
+                            missionCommands.addCommandForGroup(_groupId, "List Beacons", _radioCommands, ctld.listRadioBeacons, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, "Drop Beacon", _radioCommands, ctld.dropRadioBeacon, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, "Remove Closet Beacon", _radioCommands, ctld.removeRadioBeacon, { _unitName })
+                        end
+
+                        ctld.addedTo[tostring(_groupId)] = true
                     end
-
-
-                    if ctld.enableSmokeDrop then
-                        local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers", _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
-                    end
-
-                    if ctld.enabledRadioBeaconDrop then
-                        local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, "Radio Beacons", _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, "List Beacons", _radioCommands, ctld.listRadioBeacons, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, "Drop Beacon", _radioCommands, ctld.dropRadioBeacon, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, "Remove Closet Beacon", _radioCommands, ctld.removeRadioBeacon, { _unitName })
-                    end
-
-                    ctld.addedTo[tostring(_groupId)] = true
                 end
             else
                 -- env.info(string.format("unit nil %s",_unitName))
             end
+        end)
+
+        if (not status) then
+            env.error(string.format("Error adding f10 to transport: %s", error), false)
         end
+    end
+
+    local status, error = pcall(function()
 
         -- now do any player controlled aircraft that ARENT transport units
         if ctld.enabledRadioBeaconDrop then
@@ -3620,8 +3713,14 @@ function ctld.addF10MenuOptions()
             -- get all RED players
             ctld.addJTACRadioCommand(1)
         end
+
     end)
-    timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
+
+    if (not status) then
+        env.error(string.format("Error adding f10 to other players: %s", error), false)
+    end
+
+
 end
 
 --add to all players that arent transport
@@ -3633,11 +3732,14 @@ function ctld.addRadioListCommand(_side)
 
         for _, _playerUnit in pairs(_players) do
 
-            local _groupId = _playerUnit:getGroup():getID()
+            local _groupId = ctld.getGroupId(_playerUnit)
 
-            if ctld.addedTo[tostring(_groupId)] == nil then
-                missionCommands.addCommandForGroup(_groupId, "List Radio Beacons", nil, ctld.listRadioBeacons, { _playerUnit:getName() })
-                ctld.addedTo[tostring(_groupId)] = true
+            if _groupId then
+
+                if ctld.addedTo[tostring(_groupId)] == nil then
+                    missionCommands.addCommandForGroup(_groupId, "List Radio Beacons", nil, ctld.listRadioBeacons, { _playerUnit:getName() })
+                    ctld.addedTo[tostring(_groupId)] = true
+                end
             end
         end
     end
@@ -3651,17 +3753,31 @@ function ctld.addJTACRadioCommand(_side)
 
         for _, _playerUnit in pairs(_players) do
 
-            local _groupId = _playerUnit:getGroup():getID()
+            local _groupId = ctld.getGroupId(_playerUnit)
 
-            --   env.info("adding command for "..index)
-            if ctld.jtacRadioAdded[tostring(_groupId)] == nil then
-                -- env.info("about command for "..index)
-                missionCommands.addCommandForGroup(_groupId, "JTAC Status", nil, ctld.getJTACStatus, { _playerUnit:getName() })
-                ctld.jtacRadioAdded[tostring(_groupId)] = true
-                -- env.info("Added command for " .. index)
+            if _groupId then
+                --   env.info("adding command for "..index)
+                if ctld.jtacRadioAdded[tostring(_groupId)] == nil then
+                    -- env.info("about command for "..index)
+                    missionCommands.addCommandForGroup(_groupId, "JTAC Status", nil, ctld.getJTACStatus, { _playerUnit:getName() })
+                    ctld.jtacRadioAdded[tostring(_groupId)] = true
+                    -- env.info("Added command for " .. index)
+                end
             end
+
+
         end
     end
+end
+
+function ctld.getGroupId(_unit)
+
+    local _unitDB =  mist.DBs.unitsById[tonumber(_unit:getID())]
+    if _unitDB ~= nil and _unitDB.groupId then
+        return _unitDB.groupId
+    end
+
+    return nil
 end
 
 --get distance in meters assuming a Flat world
