@@ -43,7 +43,7 @@ You can also edit the CTLD.lua file to change some configuration options. Make s
 ##Setup in Mission Editor
 
 ###Script Setup
-**This script requires MIST version 3.7 or above: https://github.com/mrSkortch/MissionScriptingTools**
+**This script requires MIST version 4.0.55 or above: https://github.com/mrSkortch/MissionScriptingTools**
 
 First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a "TIME MORE" of 1. "TIME MORE" means run the actions after X seconds into the mission.
 
