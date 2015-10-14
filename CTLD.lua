@@ -13,21 +13,8 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.31 - 03/10/2015  - 1.5 Compatible
-                                - New option for pickup and dropoff zone configuration allowing both sides to use it
-                                - Ability to Repair damaged HAWK systems in the field, even if parts have been destroyed
-                                - Ability to enable/disable pickup zones as well as limit them to a side - Thanks Steggles! - https://github.com/Bob7heBuilder
-                                - Drop Off zones now configured per coalition
-                                - Fixed smoke for Drop off zones
+    Version: 1.32 - 14/10/2015  - Bug fix for Waypoint after troops dropped
 
-
-
-    TODO Support for Spotter Groups
-        - Spotter group will deploy smoke at their position with Radio Beacon
-        - Wont engage unless fired upon
-        - Report status via F10 Radio
-        - Report status every 5 minutes or when targets first appear
-        - Report vague status like 5 armoured vehicles, soldiers and support trucks ??
 
  ]]
 
@@ -48,7 +35,7 @@ ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to dro
 ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a group extraction
 ctld.maximumDistanceLogistic = 200 -- max distance from vehicle to logistics to allow a loading or spawning operation
 ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
-ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop point if no enemy is nearby
+ctld.maximumMoveDistance = 2000 -- max distance for troops to move from drop point if no enemy is nearby
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
 ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
@@ -87,7 +74,7 @@ ctld.JTAC_LIMIT_BLUE = 10 -- max number of JTAC Crates for the BLUE Side
 
 ctld.JTAC_dropEnabled = true -- allow JTAC Crate spawn from F10 menu
 
-ctld.JTAC_maxDistance = 15000 -- How far a JTAC can "see" in meters (with Line of Sight)
+ctld.JTAC_maxDistance = 10000 -- How far a JTAC can "see" in meters (with Line of Sight)
 
 ctld.JTAC_smokeOn_RED = true -- enables marking of target with smoke for RED forces
 ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE forces
@@ -3160,13 +3147,15 @@ function ctld.findNearestEnemy(_side, _point, _searchDistance)
     -- no enemy - move to random point
     if _closestEnemy ~= nil then
 
+       -- env.info("found enemy")
         return _closestEnemy
     else
 
         local _x = _heliPoint.x + math.random(0, ctld.maximumMoveDistance) - math.random(0, ctld.maximumMoveDistance)
         local _z = _heliPoint.z + math.random(0, ctld.maximumMoveDistance) - math.random(0, ctld.maximumMoveDistance)
+        local _y = _heliPoint.y + math.random(0, ctld.maximumMoveDistance) - math.random(0, ctld.maximumMoveDistance)
 
-        return { x = _x, z = _z }
+        return { x = _x, z = _z,y=_y }
     end
 end
 
@@ -3252,39 +3241,32 @@ function ctld.orderGroupToMoveToPoint(_leader, _destination)
 
     local _group = _leader:getGroup()
 
+    local _path = {}
+    table.insert(_path, mist.ground.buildWP(_leader:getPoint(), 'Off Road', 50))
+    table.insert(_path, mist.ground.buildWP(_destination, 'Off Road', 50))
+
     local _mission = {
         id = 'Mission',
         params = {
             route = {
-                points = {
-                    [1] = {
-                        action = 0,
-                        x = _leader:getPoint().x,
-                        y = _leader:getPoint().z,
-                        speed = 0,
-                        ETA = 100,
-                        ETA_locked = false,
-                        name = "Starting point",
-                        task = nil
-                    },
-                    [2] = {
-                        action = 0,
-                        x = _destination.x,
-                        y = _destination.z,
-                        speed = 100,
-                        ETA = 100,
-                        ETA_locked = false,
-                        name = "End Point",
-                        task = nil
-                    },
-                }
+                points =_path
             },
-        }
+        },
     }
-    local _controller = _group:getController();
-    Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
-    Controller.setOption(_controller, AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.OPEN_FIRE)
-    _controller:setTask(_mission)
+
+    -- delayed 2 second to work around bug
+    timer.scheduleFunction(function(_arg)
+            local _grp = ctld.getAliveGroup(_arg[1])
+
+            if _grp ~= nil then
+                local _controller = _grp:getController();
+                Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
+                Controller.setOption(_controller, AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.OPEN_FIRE)
+                _controller:setTask(_arg[2])
+            end
+        end
+        , {_group:getName(), _mission}, timer.getTime() + 2)
+
 end
 
 -- are we in pickup zone
@@ -3810,7 +3792,6 @@ ctld.jtacLaserPointCodes = {}
 
 function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
 
-
     if _lock == nil then
 
         _lock = ctld.JTAC_lock
@@ -3823,6 +3804,31 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
     local _jtacUnit
 
     if _jtacGroup == nil or #_jtacGroup == 0 then
+
+        --check not in a heli
+        for _, _onboard in pairs(ctld.inTransitTroops) do
+            if _onboard ~= nil then
+                if _onboard.troops ~= nil and _onboard.troops.groupName ~= nil and _onboard.troops.groupName == _jtacGroupName then
+
+                    --jtac soldier being transported by heli
+                    ctld.cleanupJTAC(_jtacGroupName)
+
+                    env.info(_jtacGroupName .. ' in Transport - Waiting 10 seconds')
+                    timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 10)
+                    return
+                end
+
+                if _onboard.vehicles ~= nil and _onboard.vehicles.groupName ~= nil and _onboard.vehicles.groupName == _jtacGroupName then
+                    --jtac vehicle being transported by heli
+                    ctld.cleanupJTAC(_jtacGroupName)
+
+                    env.info(_jtacGroupName .. ' in Transport - Waiting 10 seconds')
+                    timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 10)
+                    return
+                end
+            end
+        end
+
 
         if ctld.jtacUnits[_jtacGroupName] ~= nil then
             ctld.notifyCoalition("JTAC Group " .. _jtacGroupName .. " KIA!", 10, ctld.jtacUnits[_jtacGroupName].side)
@@ -4228,6 +4234,16 @@ function ctld.getGroup(groupName)
     return _filteredUnits
 end
 
+function ctld.getAliveGroup(_groupName)
+
+    local _group = Group.getByName(_groupName)
+
+    if _group and _group:isExist() == true and #_group:getUnits() > 0 then
+        return _group
+    end
+
+    return nil
+end
 
 -- gets the JTAC status and displays to coalition units
 function ctld.getJTACStatus(_args)
