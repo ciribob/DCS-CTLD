@@ -13,7 +13,9 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.32 - 14/10/2015  - Bug fix for Waypoint after troops dropped
+    Version: 1.34 - 19/10/2015  - Added ctld.unloadInProximityToEnemy - can be used with a continuous trigger
+                                - Added KUB launcher system instead of HAWK for Red side
+                                - Added optional BUK launcher system
 
 
  ]]
@@ -362,14 +364,28 @@ ctld.spawnableCrates = {
         { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
         { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
-        { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
-        { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
-        { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
-        { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" },
-        --
+        -- HAWK System
+        --  { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
+      --  { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
+      --  { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+      --  { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+        -- End of HAWK
 
-        { weight = 505, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 4 },
-        { weight = 506, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 4 },
+        -- BUK System
+--        { weight = 1022, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
+--        { weight = 1023, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
+--        { weight = 1024, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
+--        { weight = 1025, desc = "BUK Repair", unit = "BUK Repair"},
+        -- END of BUK
+        { weight = 1026, desc = "KUB Launcher", unit = "Kub 2P25 ln"},
+        { weight = 1027, desc = "KUB Radar", unit = "Kub 1S91 str" },
+        { weight = 1025, desc = "KUB Repair", unit = "KUB Repair"},
+        -- KUB System
+
+        -- End of KUB
+
+        { weight = 505, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
+        { weight = 506, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
     },
 }
 
@@ -587,7 +603,6 @@ function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife, _name)
 end
 
 
------------------------- Steggles Functions-----------------------
 -- Activates a pickup zone
 -- Activates a pickup zone when called from a trigger
 -- EG: ctld.activatePickupZone("pickzone3")
@@ -662,6 +677,41 @@ function ctld.deactivatePickupZone(_zoneName)
         end
     end
 end
+
+
+-- Continuous Trigger Function
+-- Causes an AI unit with the specified name to unload troops / vehicles when
+-- an enemy is detected within a specified distance
+-- The enemy must have Line or Sight to the unit to be detected
+function ctld.unloadInProximityToEnemy(_unitName,_distance)
+
+    local _unit = ctld.getTransportUnit(_unitName)
+
+    if _unit ~= nil and _unit:getPlayerName() == nil then
+
+        -- no player name means AI!
+        -- the findNearest visible enemy you'd want to modify as it'll find enemies quite far away
+        -- limited by  ctld.JTAC_maxDistance
+        local _nearestEnemy = ctld.findNearestVisibleEnemy(_unit,"all",_distance)
+
+        if _nearestEnemy ~= nil then
+
+            if   ctld.troopsOnboard(_unit, true) then
+                ctld.deployTroops(_unit, true)
+                return true
+            end
+
+            if ctld.unitCanCarryVehicles(_unit) and ctld.troopsOnboard(_unit, false) then
+                ctld.deployTroops(_unit, false)
+                return true
+            end
+        end
+    end
+
+    return false
+
+end
+
 
 -- ***************************************************************
 -- **************** BE CAREFUL BELOW HERE ************************
@@ -1957,17 +2007,18 @@ function ctld.getClosestCrate(_heli, _crates, _type)
     return _closetCrate
 end
 
-function ctld.findNearestHawk(_heli)
+function ctld.findNearestAASystem(_heli,_type)
 
     local _closestHawkGroup = nil
     local _shortestDistance = -1
     local _distance = 0
 
-    for _groupName, _hawkDetails in pairs(ctld.completeHawkSystems) do
+    for _groupName, _hawkDetails in pairs(ctld.completeAASystems) do
 
         local _hawkGroup = Group.getByName(_groupName)
 
-        if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() then
+      --  env.info(_groupName..": "..mist.utils.tableShow(_hawkDetails))
+        if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() and _hawkDetails[1].groupType == _type then
 
             local _units = _hawkGroup:getUnits()
 
@@ -1989,6 +2040,7 @@ function ctld.findNearestHawk(_heli)
     end
 
     if _closestHawkGroup ~= nil then
+
         return { group = _closestHawkGroup, dist = _shortestDistance }
     end
     return nil
@@ -2658,20 +2710,24 @@ end
 function ctld.isMultiCrate(_crateDetails)
 
     if string.match(_crateDetails.desc, "HAWK")
-            or (_crateDetails.cratesRequired ~= nil and _crateDetails.cratesRequired > 1) then
+            or (_crateDetails.cratesRequired ~= nil and _crateDetails.cratesRequired > 1)
+            or string.match(_crateDetails.desc,"BUK")
+            or string.match(_crateDetails.desc,"KUB") then
         return true
     else
         return false
     end
 end
 
-function ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates)
-
+function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
+    
     -- are we adding to existing hawk system?
-    if _nearestCrate.details.unit == "Hawk ln" then
+    if _nearestCrate.details.unit == "Hawk ln"
+            or string.match(_nearestCrate.details.unit, "Buk LN 9A310M1")
+            or string.match(_nearestCrate.details.unit,"Kub 2P25 ln") then
 
         -- find nearest COMPLETE hawk system
-        local _nearestHawk = ctld.findNearestHawk(_heli)
+        local _nearestHawk = ctld.findNearestAASystem(_heli,_type)
 
         if _nearestHawk ~= nil and _nearestHawk.dist < 300 then
 
@@ -2695,19 +2751,20 @@ function ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates)
                 end
             end
 
-            if ctld.countTableEntries(_uniqueTypes) == 3 and #_points >= 3 then
+            if (_type == "kub" and ctld.countTableEntries(_uniqueTypes) == 2 and #_points >= 2)
+                    or (ctld.countTableEntries(_uniqueTypes) == 3 and #_points >= 3) then
 
                 -- rearm hawk
                 -- destroy old group
-                ctld.completeHawkSystems[_nearestHawk.group:getName()] = nil
+                ctld.completeAASystems[_nearestHawk.group:getName()] = nil
 
                 _nearestHawk.group:destroy()
 
                 local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
 
-                ctld.completeHawkSystems[_spawnedGroup:getName()] = ctld.getHawkDetails(_spawnedGroup)
+                ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_type)
 
-                trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully rearmed a full HAWK AA System in the field", 10)
+                trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully rearmed a full "..string.upper(_type).." AA System in the field", 10)
 
                 if _heli:getCoalition() == 1 then
                     ctld.spawnedCratesRED[_nearestCrate.crateUnit:getName()] = nil
@@ -2728,14 +2785,14 @@ function ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates)
     return false
 end
 
-function ctld.getHawkDetails(_hawkGroup)
+function ctld.getAASystemDetails(_hawkGroup,_type)
 
     local _units = _hawkGroup:getUnits()
 
     local _hawkDetails = {}
 
     for _, _unit in pairs(_units) do
-        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName() })
+        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName(), groupType=_type})
     end
 
     return _hawkDetails
@@ -2758,27 +2815,50 @@ function ctld.countTableEntries(_table)
     return _count
 end
 
-function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
+function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
 
-    if ctld.rearmHawk(_heli, _nearestCrate, _nearbyCrates) then
+    if ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates,_type) then
         -- rearmed hawk
         return
     end
 
     -- are there all the pieces close enough together
-    local _hawkParts = { ["Hawk ln"] = false, ["Hawk tr"] = false, ["Hawk sr"] = false }
+    local _hawkParts = nil
+
+    if _type == "hawk" then
+           _hawkParts =  { ["Hawk ln"] = false, ["Hawk tr"] = false, ["Hawk sr"] = false }
+    elseif _type == "buk" then
+           _hawkParts =  { ["Buk SR 9S18M1"] = false, ["Buk CC 9S470M1"] = false, ["Buk LN 9A310M1"] = false }
+    else
+        _hawkParts =  { ["Kub 2P25 ln"] = false, ["Kub 1S91 str"] = false }
+    end
+
 
     for _, _nearbyCrate in pairs(_nearbyCrates) do
 
         if _nearbyCrate.dist < 500 then
 
-            if _nearbyCrate.details.unit == "Hawk ln" or _nearbyCrate.details.unit == "Hawk sr" or _nearbyCrate.details.unit == "Hawk tr" then
+            if _type == "hawk" then
+                if _nearbyCrate.details.unit == "Hawk ln" or _nearbyCrate.details.unit == "Hawk sr" or _nearbyCrate.details.unit == "Hawk tr" then
+                    _hawkParts[_nearbyCrate.details.unit] = _nearbyCrate
+                else
+                    -- not part of hawk
+                end
+            elseif _type == "buk" then
+                if string.match(_nearbyCrate.details.unit, "Buk SR 9S18M1") then
+                    _hawkParts["Buk SR 9S18M1"] =  _nearbyCrate
+                elseif string.match(_nearbyCrate.details.unit,  "Buk CC 9S470M1") then
+                    _hawkParts["Buk CC 9S470M1"] =  _nearbyCrate
+                elseif string.match(_nearbyCrate.details.unit, "Buk LN 9A310M1") then
+                    _hawkParts["Buk LN 9A310M1"] = _nearbyCrate
+                end
+            elseif _type == "kub" then
+                if _nearbyCrate.details.unit == "Kub 2P25 ln" or _nearbyCrate.details.unit == "Kub 1S91 str" then
+                    _hawkParts[_nearbyCrate.details.unit] = _nearbyCrate
+                end
 
-                _hawkParts[_nearbyCrate.details.unit] = _nearbyCrate
-
-            else
-                -- not part of hawk
             end
+
         end
     end
 
@@ -2791,17 +2871,40 @@ function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
 
         if _hawkPart == false then
 
-            if _name == "Hawk ln" then
-                _txt = "Missing HAWK Launcher\n"
-            elseif _name == "Hawk sr" then
-                _txt = _txt .. "Missing HAWK Search Radar\n"
-            else
-                _txt = _txt .. "Missing HAWK Track Radar\n"
+            if _type == "hawk" then
+                if _name == "Hawk ln" then
+                    _txt = "Missing HAWK Launcher\n"
+                elseif _name == "Hawk sr" then
+                    _txt = _txt .. "Missing HAWK Search Radar\n"
+                else
+                    _txt = _txt .. "Missing HAWK Track Radar\n"
+                end
+            elseif _type == "buk" then
+                if string.match(_name, "Buk SR 9S18M1") then
+                    _txt = "Missing BUK Search Radar\n"
+                elseif string.match(_name, "Buk CC 9S470M1") then
+                    _txt = _txt .. "Missing BUK CC Radar\n"
+                else
+                    _txt = _txt .. "Missing BUK Launcher\n"
+                end
+            elseif _type == "kub" then
+                if string.match(_name, "Kub 1S91 str") then
+                    _txt = "Missing KUB Radar\n"
+                else
+                    _txt = _txt .. "Missing KUB Launcher\n"
+                end
             end
+
+
         else
 
+            -- add back REAL buk part names as the - doesnt match for some reason
+            if _type == "buk" then
+                _name = "SA-11 ".._name
+            end
+
             --handle multiple launchers from one crate
-            if _name == "Hawk ln" and ctld.hawkLaunchers > 1 then
+            if (_name == "Hawk ln" or string.match(_name, "Buk LN 9A310M1") or string.match(_name,"Kub 2P25 ln")) and ctld.hawkLaunchers > 1 then
 
                 --add multiple launchers
                 for _i = 1, ctld.hawkLaunchers do
@@ -2816,7 +2919,7 @@ function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
                     _point = { x = _point.x + _xOffset, y = _point.y, z = _point.z + _yOffset }
 
                     table.insert(_posArray, _point)
-                    table.insert(_typeArray, "Hawk ln")
+                    table.insert(_typeArray, _name)
                 end
             else
                 table.insert(_posArray, _hawkPart.crateUnit:getPoint())
@@ -2826,9 +2929,7 @@ function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
     end
 
     if _txt ~= "" then
-
-        ctld.displayMessageToGroup(_heli, "Cannot build Hawk\n" .. _txt .. "\n\nOr the crates are not close enough together", 20)
-
+        ctld.displayMessageToGroup(_heli, "Cannot build "..string.upper(_type).."\n" .. _txt .. "\n\nOr the crates are not close enough together", 20)
         return
     else
 
@@ -2847,23 +2948,25 @@ function ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
             end
         end
 
-        -- HAWK READY!
+        -- HAWK / BUK READY!
         local _spawnedGroup = ctld.spawnCrateGroup(_heli, _posArray, _typeArray)
 
-        ctld.completeHawkSystems[_spawnedGroup:getName()] = ctld.getHawkDetails(_spawnedGroup)
+        ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_type)
 
-        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full HAWK AA System to the field", 10)
+        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full "..string.upper(_type).." AA System to the field", 10)
+
     end
 end
 
-function ctld.repairHawk(_heli, _nearestCrate)
 
-    -- find nearest COMPLETE hawk system
-    local _nearestHawk = ctld.findNearestHawk(_heli)
+function ctld.repairAASystem(_heli, _nearestCrate,_type)
+
+    -- find nearest COMPLETE AA system
+    local _nearestHawk = ctld.findNearestAASystem(_heli,_type)
 
     if _nearestHawk ~= nil and _nearestHawk.dist < 300 then
 
-        local _oldHawk = ctld.completeHawkSystems[_nearestHawk.group:getName()]
+        local _oldHawk = ctld.completeAASystems[_nearestHawk.group:getName()]
 
         --spawn new one
 
@@ -2876,14 +2979,14 @@ function ctld.repairHawk(_heli, _nearestCrate)
         end
 
         --remove old system
-        ctld.completeHawkSystems[_nearestHawk.group:getName()] = nil
+        ctld.completeAASystems[_nearestHawk.group:getName()] = nil
         _nearestHawk.group:destroy()
 
         local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
 
-        ctld.completeHawkSystems[_spawnedGroup:getName()] = ctld.getHawkDetails(_spawnedGroup)
+        ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_type)
 
-        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully repaired a full HAWK AA System in the field", 10)
+        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully repaired a full "..string.upper(_type).." AA System in the field", 10)
 
         if _heli:getCoalition() == 1 then
             ctld.spawnedCratesRED[_nearestCrate.crateUnit:getName()] = nil
@@ -2896,20 +2999,29 @@ function ctld.repairHawk(_heli, _nearestCrate)
             _nearestCrate.crateUnit:destroy()
         end
 
-
     else
-        ctld.displayMessageToGroup(_heli, "Cannot repair a HAWK System. No damaged HAWK systems within 300m", 10)
+        ctld.displayMessageToGroup(_heli, "Cannot repair a "..string.upper(_type).." System. No damaged "..string.upper(_type).." systems within 300m", 10)
     end
 end
 
 function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 
-    if string.match(_nearestCrate.details.desc, "HAWK") then
+    local _type = nil
+
+    if string.match(_nearestCrate.details.desc, "BUK") then
+        _type = "buk"
+    elseif string.match(_nearestCrate.details.desc, "HAWK") then
+        _type = "hawk"
+    elseif string.match(_nearestCrate.details.desc, "KUB") then
+        _type = "kub"
+    end
+
+    if _type ~= nil then
 
         if string.match(_nearestCrate.details.desc, "Repair") then
-            ctld.repairHawk(_heli, _nearestCrate)
+            ctld.repairAASystem(_heli, _nearestCrate,_type)
         else
-            ctld.unpackHawk(_heli, _nearestCrate, _nearbyCrates)
+            ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
         end
 
         return -- stop processing
@@ -3147,7 +3259,7 @@ function ctld.findNearestEnemy(_side, _point, _searchDistance)
     -- no enemy - move to random point
     if _closestEnemy ~= nil then
 
-       -- env.info("found enemy")
+        -- env.info("found enemy")
         return _closestEnemy
     else
 
@@ -3256,15 +3368,15 @@ function ctld.orderGroupToMoveToPoint(_leader, _destination)
 
     -- delayed 2 second to work around bug
     timer.scheduleFunction(function(_arg)
-            local _grp = ctld.getAliveGroup(_arg[1])
+        local _grp = ctld.getAliveGroup(_arg[1])
 
-            if _grp ~= nil then
-                local _controller = _grp:getController();
-                Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
-                Controller.setOption(_controller, AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.OPEN_FIRE)
-                _controller:setTask(_arg[2])
-            end
+        if _grp ~= nil then
+            local _controller = _grp:getController();
+            Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
+            Controller.setOption(_controller, AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.OPEN_FIRE)
+            _controller:setTask(_arg[2])
         end
+    end
         , {_group:getName(), _mission}, timer.getTime() + 2)
 
 end
@@ -4111,8 +4223,9 @@ end
 
 
 -- Find nearest enemy to JTAC that isn't blocked by terrain
-function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType)
+function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType,_distance)
 
+    local _maxDistance = _distance or ctld.JTAC_maxDistance
     local _x = 1
     local _i = 1
 
@@ -4120,7 +4233,7 @@ function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType)
     local _groupName = nil
 
     local _nearestUnit = nil
-    local _nearestDistance = ctld.JTAC_maxDistance
+    local _nearestDistance = _maxDistance
 
     local _enemyGroups
 
@@ -4147,8 +4260,14 @@ function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType)
 
                 for _x = 1, #_units do
 
-                    --check to see if a JTAC has already targeted this unit
-                    local _targeted = ctld.alreadyTarget(_jtacUnit, _units[_x])
+                    --check to see if a JTAC has already targeted this unit only if a distance
+                    --wasnt passed in
+                    local _targeted = false
+                    if not _distance then
+                        _targeted = ctld.alreadyTarget(_jtacUnit, _units[_x])
+                    end
+
+
                     local _allowedTarget = true
 
                     if _targetType == "vehicle" then
@@ -4166,7 +4285,7 @@ function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType)
                         _tempPoint = _units[_x]:getPoint()
                         _tempDist = ctld.getDistance(_tempPoint, _jtacPoint)
 
-                        if _tempDist < ctld.JTAC_maxDistance and _tempDist < _nearestDistance then
+                        if _tempDist < _maxDistance and _tempDist < _nearestDistance then
 
                             local _offsetEnemyPos = { x = _tempPoint.x, y = _tempPoint.y + 2.0, z = _tempPoint.z }
                             local _offsetJTACPos = { x = _jtacPoint.x, y = _jtacPoint.y + 2.0, z = _jtacPoint.z }
@@ -4574,7 +4693,7 @@ ctld.droppedFOBCratesBLUE = {}
 
 ctld.builtFOBS = {} -- stores fully built fobs
 
-ctld.completeHawkSystems = {} -- stores complete spawned groups from multiple crates
+ctld.completeAASystems = {} -- stores complete spawned groups from multiple crates
 
 ctld.fobBeacons = {} -- stores FOB radio beacon details, refreshed every 60 seconds
 
