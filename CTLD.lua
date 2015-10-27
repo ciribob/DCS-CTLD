@@ -13,10 +13,10 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.34 - 19/10/2015  - Added ctld.unloadInProximityToEnemy - can be used with a continuous trigger
-                                - Added KUB launcher system instead of HAWK for Red side
-                                - Added optional BUK launcher system
-
+    Version: 1.35 - 27/10/2015  - Added ctld.unloadTransport Mission Editor Function
+                                - Added flag option to the pickup zones
+                                - Added ctld.changeRemainingGroupsForPickupZone Editor Function
+                                - Added ability to use a SHIP as a pickup zone, just add the Ship UNIT NAME to the ctld.pickupZone list
 
  ]]
 
@@ -102,9 +102,13 @@ ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock
 -- If a zone isn't ACTIVE then you can't pickup from that zone until the zone is activated by ctld.activatePickupZone
 -- using the Mission editor
 
+-- You can pickup from a SHIP by adding the SHIP UNIT NAME instead of a zone name
+
 -- Side - Controls which side can load/unload troops at the zone
 
---pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )"}
+-- Flag Number - Optional last field. If set the current number of groups remaining can be obtained from the flag value
+
+--pickupZones = { "Zone name or Ship Unit Name", "smoke color", "limit (-1 unlimited)", "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", flag number (optional) }
 ctld.pickupZones = {
     { "pickzone1", "blue", -1, "yes", 0 },
     { "pickzone2", "red", -1, "yes", 0 },
@@ -126,8 +130,11 @@ ctld.pickupZones = {
     { "pickzone17", "none", -1, "yes", 0 },
     { "pickzone18", "none", -1, "yes", 0 },
     { "pickzone19", "none", 5, "yes", 0 },
-    { "pickzone20", "none", 10, "yes", 0 },
+    { "pickzone20", "none", 10, "yes", 0, 1000 }, -- optional extra flag number to store the current number of groups available in
+
+    { "USA Carrier", "blue", 10, "yes", 0, 1001 }, -- instead of a Zone Name you can also use the UNIT NAME of a ship
 }
+
 
 -- dropOffZones = {"name","smoke colour",0,side 1 = Red or 2 = Blue or 0 = Both sides}
 ctld.dropOffZones = {
@@ -365,24 +372,24 @@ ctld.spawnableCrates = {
         { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
         -- HAWK System
-        --  { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
-      --  { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
-      --  { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
-      --  { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+          { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
+          { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
+          { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+          { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
-        -- BUK System
---        { weight = 1022, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
---        { weight = 1023, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
---        { weight = 1024, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
---        { weight = 1025, desc = "BUK Repair", unit = "BUK Repair"},
-        -- END of BUK
-        { weight = 1026, desc = "KUB Launcher", unit = "Kub 2P25 ln"},
-        { weight = 1027, desc = "KUB Radar", unit = "Kub 1S91 str" },
-        { weight = 1025, desc = "KUB Repair", unit = "KUB Repair"},
-        -- KUB System
-
+        -- KUB SYSTEM
+        { weight = 1026, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
+        { weight = 1027, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
+        { weight = 1025, desc = "KUB Repair", unit = "KUB Repair", side = 1},
         -- End of KUB
+
+        -- BUK System
+        --        { weight = 1022, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
+        --        { weight = 1023, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
+        --        { weight = 1024, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
+        --        { weight = 1025, desc = "BUK Repair", unit = "BUK Repair"},
+        -- END of BUK
 
         { weight = 505, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
         { weight = 506, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
@@ -611,8 +618,19 @@ function ctld.activatePickupZone(_zoneName)
     local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
 
     if _triggerZone == nil then
-        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zoneName, 10)
-        return
+        local _ship = ctld.getTransportUnit(_triggerZone)
+
+        if _ship then
+            local _point = _ship:getPoint()
+            _triggerZone = {}
+            _triggerZone.point = _point
+        end
+
+    end
+
+    if _triggerZone == nil  then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone or ship called " .. _zoneName, 10)
+
     end
 
     for _, _zoneDetails in pairs(ctld.pickupZones) do
@@ -629,7 +647,7 @@ function ctld.activatePickupZone(_zoneName)
             _zoneDetails[4] = 1 --activate zone
 
             if ctld.disableAllSmoke == true then --smoke disabled
-            return
+                return
             end
 
             if _zoneDetails[2] >= 0 then
@@ -659,6 +677,17 @@ function ctld.deactivatePickupZone(_zoneName)
     local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
 
     if _triggerZone == nil then
+        local _ship = ctld.getTransportUnit(_triggerZone)
+
+        if _ship then
+            local _point = _ship:getPoint()
+            _triggerZone = {}
+            _triggerZone.point = _point
+        end
+
+    end
+
+    if _triggerZone == nil then
         trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zoneName, 10)
         return
     end
@@ -678,6 +707,38 @@ function ctld.deactivatePickupZone(_zoneName)
     end
 end
 
+
+-- Change the remaining groups currently available for pickup at a zone
+-- e.g. ctld.changeRemainingGroupsForPickupZone("pickup1", 5) -- adds 5 groups
+-- ctld.changeRemainingGroupsForPickupZone("pickup1", -3) -- remove 3 groups
+function ctld.changeRemainingGroupsForPickupZone(_zoneName, _amount)
+    local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
+
+    if _triggerZone == nil then
+        local _ship = ctld.getTransportUnit(_triggerZone)
+
+        if _ship then
+            local _point = _ship:getPoint()
+            _triggerZone = {}
+            _triggerZone.point = _point
+        end
+
+    end
+
+    if _triggerZone == nil  then
+        trigger.action.outText("CTLD.lua ctld.changeRemainingGroupsForPickupZone ERROR: Cant find zone called " .. _zoneName, 10)
+        return
+    end
+
+    for _, _zoneDetails in pairs(ctld.pickupZones) do
+
+        if _zoneName == _zoneDetails[1] then
+            ctld.updateZoneCounter(_zoneName, _amount)
+        end
+    end
+
+
+end
 
 -- Continuous Trigger Function
 -- Causes an AI unit with the specified name to unload troops / vehicles when
@@ -712,6 +773,26 @@ function ctld.unloadInProximityToEnemy(_unitName,_distance)
 
 end
 
+
+
+-- Unit will unload any units onboard if the unit is on the ground
+-- when this function is called
+function ctld.unloadTransport(_unitName)
+
+    local _unit = ctld.getTransportUnit(_unitName)
+
+    if _unit ~= nil  then
+
+        if ctld.troopsOnboard(_unit, true) then
+            ctld.deployTroops(_unit, true)
+        end
+
+        if ctld.unitCanCarryVehicles(_unit) and ctld.troopsOnboard(_unit, false) then
+            ctld.deployTroops(_unit, false)
+        end
+    end
+
+end
 
 -- ***************************************************************
 -- **************** BE CAREFUL BELOW HERE ************************
@@ -839,105 +920,6 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     return _spawnedCrate
 end
 
---function ctld.spawnFARP(_country,_point)
---
---    local _crate = {
---        ["type"] = "FARP",
---        ["unitId"] = _unitId,
---        ["heliport_modulation"] = 0,
---        ["y"] = _point.z+1,
---        ["x"] = _point.x+1,
---        ["name"] = _name,
---        ["category"] = "Heliports",
---        ["canCargo"] = false,
---        ["heliport_frequency"] = 127.5,
---        ["heliport_callsign_id"] = 1,
---        ["heading"] = 3.1415926535898,
---
---    }
---
---
---    local _farpPiece =   {
---        ["shape_name"] = "PalatkaB",
---        ["type"] = "FARP Tent",
---
---        ["y"] = _point.z+1.5,
---        ["x"] = _point.x+1.5,
---        ["name"] = "Unit #"..mist.getNextUnitId(),
---        ["unitId"] = mist.getNextUnitId(),
---        ["category"] = "Fortifications",
---        ["heading"] = 3.1415926535898,
---    }
---
---    coalition.addStaticObject(_country, _farpPiece)
---    local _farpPiece =      {
---        ["shape_name"] = "SetkaKP",
---        ["type"] = "FARP Ammo Dump Coating",
---
---        ["y"] = _point.z+2,
---        ["x"] = _point.x+2,
---        ["name"] = "Unit #"..mist.getNextUnitId(),
---        ["unitId"] = mist.getNextUnitId(),
---        ["category"] = "Fortifications",
---        ["heading"] = 3.1415926535898,
---    }
---    coalition.addStaticObject(_country, _farpPiece)
---    local _farpPiece =     {
---        ["shape_name"] = "GSM Rus",
---        ["type"] = "FARP Fuel Depot",
---
---        ["y"] = _point.z+2.5,
---        ["x"] = _point.x+2.5,
---        ["name"] = "Unit #"..mist.getNextUnitId(),
---        ["unitId"] = mist.getNextUnitId(),
---        ["category"] = "Fortifications",
---        ["heading"] = 3.1415926535898,
---    }
---    coalition.addStaticObject(_country, _farpPiece)
---
---
---
---    local _farpUnits = {
---        {
---
---            ["type"] = "M978 HEMTT Tanker",
---            ["name"] = "Unit #"..mist.getNextUnitId(),
---            ["unitId"] = mist.getNextUnitId(),
---            ["heading"] = 4.7822021504645,
---            ["playerCanDrive"] = true,
---            ["skill"] = "Average",
---            ["x"] = _point.x,
---            ["y"] = _point.z,
---        },
---        {
---
---            ["type"] = "M 818",
---            ["name"] = "Unit #"..mist.getNextUnitId(),
---            ["unitId"] = mist.getNextUnitId(),
---            ["heading"] = 4.7822021504645,
---            ["playerCanDrive"] = true,
---            ["skill"] = "Average",
---            ["x"] = _point.x,
---            ["y"] = _point.z,
---
---        },
---        {
---
---            ["type"] = "M-113",
---            ["name"] = "Unit #"..mist.getNextUnitId(),
---            ["unitId"] = mist.getNextUnitId(),
---            ["heading"] = 4.7822021504645,
---            ["playerCanDrive"] = true,
---            ["skill"] = "Average",
---            ["x"] = _point.x,
---            ["y"] = _point.z,
---
---        },
---    }
---
---    mist.dynAdd({units = _farpUnits,country=_country,category=Group.Category.GROUND})
---
---end
 
 function ctld.spawnCrate(_arguments)
 
@@ -2017,7 +1999,7 @@ function ctld.findNearestAASystem(_heli,_type)
 
         local _hawkGroup = Group.getByName(_groupName)
 
-      --  env.info(_groupName..": "..mist.utils.tableShow(_hawkDetails))
+        --  env.info(_groupName..": "..mist.utils.tableShow(_hawkDetails))
         if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() and _hawkDetails[1].groupType == _type then
 
             local _units = _hawkGroup:getUnits()
@@ -2468,66 +2450,6 @@ function ctld.updateRadioBeacon(_beaconDetails)
 
     for _, _radio in pairs(_radioLoop) do
 
-        --        if _radio.silent then
-        --            local _setFrequency = {
-        --                ["enabled"] = true,
-        --                ["auto"] = false,
-        --                ["id"] = "WrappedAction",
-        --                ["number"] = 1, -- first task
-        --                ["params"] = {
-        --                    ["action"] = {
-        --                        ["id"] = "SetFrequency",
-        --                        ["params"] = {
-        --                            ["modulation"] = _radio.mode, -- 0 is AM 1 is FM --if FM you cant read the message... might be the only fix to stop FC3 aircraft hearing it... :(
-        --                            ["frequency"] = _radio.freq,
-        --                        },
-        --                    },
-        --                },
-        --            }
-        --
-        --
-        --            local _radioText = _text
-        --            local _sound = ctld.radioSound
-        --            --dont show radio text on UHF as that should hide it from FC3 aircraft
-        --            if _radio.silent then
-        --                _radioText = ""
-        --                _sound = ctld.radioSoundFC3
-        --            end
-        --
-        --
-        --            local _setupDetails = {
-        --                ["enabled"] = true,
-        --                ["auto"] = false,
-        --                ["id"] = "WrappedAction",
-        --                ["number"] = 2, -- second task
-        --                ["params"] = {
-        --                    ["action"] = {
-        --                        ["id"] = "TransmitMessage",
-        --                        ["params"] = {
-        --                            ["loop"] = true, --false works too
-        --                            ["subtitle"] = "", --_text
-        --                            ["duration"] =  60, -- reset every 60 seconds --used to have timer.getTime() +60
-        --                            ["file"] = _sound,
-        --                        },
-        --                    },
-        --                }
-        --            }
-        --
-        --            local _groupController = _radio.group:getController()
-        --
-        --            --reset!
-        --            _groupController:resetTask()
-        --
-        --           _groupController:setTask(_setFrequency)
-        --           _groupController:setTask(_setupDetails)
-        --
-        --            --Make the unit NOT engage as its simulating a radio...!
-        --
-        --
-        --            --env.info("Radio Beacon: ".. _text)
-        --        else
-        -- Above function doesnt work for simulating VHF in multiplayer but DOES in single player.... WHY DCS WHY!?!?!
-
         local _groupController = _radio.group:getController()
 
         local _sound = "l10n/DEFAULT/"..ctld.radioSound
@@ -2654,40 +2576,6 @@ function ctld.removeRadioBeacon(_args)
     end
 end
 
---function ctld.generateRadioFMRadioFrequency()
---
---    --pick random frequency!
---    -- first digit 3-7
---    -- second digit 0-5
---    -- third digit 0-9
---    -- fourth digit 0 or 5
---    -- times by 10000
---
---
---    local _first = math.random(3, 7)
---    local _second = math.random(0, 5)
---    local _third = math.random(0, 9)
---
---    local _frequency = ((100 * _first) + (10 * _second) + _third) * 100000 --extra 0 because we didnt bother with 4th digit
---
---    local _found = false
---    for _, _beacon in ipairs(ctld.fobBeacons) do
---
---        if _beacon.frequency == _frequency then
---            _found = true
---            break
---        end
---    end
---
---    if _found then
---        --try again!
---        return ctld.generateRadioFMFrequency()
---    else
---        return _frequency
---    end
---end
-
-
 -- gets the center of a bunch of points!
 -- return proper DCS point with height
 function ctld.getCentroid(_points)
@@ -2720,7 +2608,7 @@ function ctld.isMultiCrate(_crateDetails)
 end
 
 function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
-    
+
     -- are we adding to existing hawk system?
     if _nearestCrate.details.unit == "Hawk ln"
             or string.match(_nearestCrate.details.unit, "Buk LN 9A310M1")
@@ -2826,9 +2714,9 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
     local _hawkParts = nil
 
     if _type == "hawk" then
-           _hawkParts =  { ["Hawk ln"] = false, ["Hawk tr"] = false, ["Hawk sr"] = false }
+        _hawkParts =  { ["Hawk ln"] = false, ["Hawk tr"] = false, ["Hawk sr"] = false }
     elseif _type == "buk" then
-           _hawkParts =  { ["Buk SR 9S18M1"] = false, ["Buk CC 9S470M1"] = false, ["Buk LN 9A310M1"] = false }
+        _hawkParts =  { ["Buk SR 9S18M1"] = false, ["Buk CC 9S470M1"] = false, ["Buk LN 9A310M1"] = false }
     else
         _hawkParts =  { ["Kub 2P25 ln"] = false, ["Kub 1S91 str"] = false }
     end
@@ -3394,6 +3282,18 @@ function ctld.inPickupZone(_heli)
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
+        if _triggerZone == nil then
+            local _ship = ctld.getTransportUnit(_zoneDetails[1])
+
+            if _ship then
+                local _point = _ship:getPoint()
+                _triggerZone = {}
+                _triggerZone.point = _point
+                _triggerZone.radius = 200 -- should be big enough for ship
+            end
+
+        end
+
         if _triggerZone ~= nil then
 
             --get distance to center
@@ -3512,6 +3412,18 @@ function ctld.refreshSmoke()
 
             local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
+            if _triggerZone == nil then
+                local _ship = ctld.getTransportUnit(_triggerZone)
+
+                if _ship then
+                    local _point = _ship:getPoint()
+                    _triggerZone = {}
+                    _triggerZone.point = _point
+                end
+
+            end
+
+
             --only trigger if smoke is on AND zone is active
             if _triggerZone ~= nil and _zoneDetails[2] >= 0 and _zoneDetails[4] == 1 then
 
@@ -3598,6 +3510,13 @@ function ctld.updateZoneCounter(_index, _diff)
 
         ctld.pickupZones[_index][3] = ctld.pickupZones[_index][3] + _diff
 
+        if ctld.pickupZones[_index][3] < 0 then
+            ctld.pickupZones[_index][3] = 0
+        end
+
+        if ctld.pickupZones[_index][6] ~= nil then
+            trigger.action.setUserFlag(ctld.pickupZones[_index][6], ctld.pickupZones[_index][3])
+        end
         --  env.info(ctld.pickupZones[_index][1].." = " ..ctld.pickupZones[_index][3])
     end
 end

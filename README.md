@@ -32,7 +32,7 @@ The script supports:
     * Ability to deploy a homing beacon that the A10C, Ka-50, Mi-8 and Huey can home on
 * Pre loading of units into AI vehicles via a DO SCRIPT
 * Mission Editor Trigger functions - They store the numbers in flags for use by triggers
-	* Count Crates in Zone
+    * Count Crates in Zone
 	    * Works for both crates added by the Mission Editor and Crates spawned by Transports
 	* Count soldiers extracted to a zone (the soldiers disappear)
 
@@ -112,7 +112,7 @@ ctld.deployedBeaconBattery = 20 -- the battery on deployed beacons will last for
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
 ```
 
-To change what units can be dropped from crates modify the spawnable crates section. An extra parameter, ```cratesRequired = NUMBER``` can be added so you need more than one crate to build a unit. This parameter cannot be used for the HAWK system as that is already broken into 3 crates. You can also specify the coalition side so RED and BLUE have different crates to drop. If the parameter is missing the crate will appear for both sides.
+To change what units can be dropped from crates modify the spawnable crates section. An extra parameter, ```cratesRequired = NUMBER``` can be added so you need more than one crate to build a unit. This parameter cannot be used for the HAWK, BUK or KUB system as that is already broken into 3 crates. You can also specify the coalition side so RED and BLUE have different crates to drop. If the parameter is missing the crate will appear for both sides.
 
 ```--``` in lua means ignore this line :)
 
@@ -149,17 +149,31 @@ ctld.spawnableCrates = {
         { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
         { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
-        -- Hawk System
-        { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln" },
-        { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr" },
-        { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr" },
-        { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" }, --used to repair a damaged HAWK system
-        -- End of Hawk
+        -- HAWK System
+          { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
+          { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
+          { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+          { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+        -- End of HAWK
 
-        { weight = 505, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 4 },
-        { weight = 506, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 4 },
+        -- KUB SYSTEM
+        { weight = 1026, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
+        { weight = 1027, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
+        { weight = 1025, desc = "KUB Repair", unit = "KUB Repair", side = 1},
+        -- End of KUB
+
+        -- BUK System
+        --        { weight = 1022, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
+        --        { weight = 1023, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
+        --        { weight = 1024, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
+        --        { weight = 1025, desc = "BUK Repair", unit = "BUK Repair"},
+        -- END of BUK
+
+        { weight = 505, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
+        { weight = 506, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
     },
 }
+
 
 ```
 
@@ -209,6 +223,34 @@ ctld.activatePickupZone("pickzone3")
 or
 ```lua
 ctld.deactivatePickupZone("pickzone3")
+```
+
+###Change Remaining Groups For a Pickup Zone
+In the configuration of a pickup zone / pickup ship you can limit the number of groups that can be loaded.
+
+Call the function below to add or remove groups from the remaining groups at a zone.
+
+```lua
+
+ctld.changeRemainingGroupsForPickupZone("pickup1", 5) -- adds 5 groups for zone or ship pickup1
+
+ctld.changeRemainingGroupsForPickupZone("pickup1", -3) -- remove 3 groups for zone or ship pickup1
+
+```
+
+
+###Unload Transport
+You can force a unit to unload its units (as long as its on the ground) by calling this function.
+
+```lua
+ ctld.unloadTransport("helicargo1")
+```
+
+###Auto Unload Transport in Proximity to Enemies
+If you add the below as a DO SCRIPT for a CONTINOUS TRIGGER, an AI unit will automatically drop its troops if its landed and there are enemies within the specificed distance (in meters)
+
+```lua
+ctld.unloadInProximityToEnemy("helicargo1",500) --distance is 500
 ```
 
 ####Create Radio Beacon at Zone
@@ -343,10 +385,12 @@ The pickup zone needs to be named the same as one of the pickup zones in the ```
 
 Pickup Zones can be configured to limit the number of vehicle or troop groups that can be loaded. To add a limit, edit the 3rd parameter to be any number greater than 0 as shown below.
 
+You can also list the UNIT NAME of ship instead of a trigger zone to allow the loading/unloading of troops from a ship. You will not be able to fast rope troops onto the deck so you must land to drop the troops off.
+
 ***If your pickup zone isn't working, make sure you've set the 5th parameter, the coalition side, correctly and that the zone is active.***
 
 ```lua
---pickupZones = { "name", "smoke color", "limit (-1 unlimited)", "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )"}
+--pickupZones = { "Zone name or Ship Unit Name", "smoke color", "limit (-1 unlimited)", "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", flag number (optional) }
 ctld.pickupZones = {
     { "pickzone1", "blue", -1, "yes", 0 },
     { "pickzone2", "red", -1, "yes", 0 },
@@ -368,7 +412,9 @@ ctld.pickupZones = {
     { "pickzone17", "none", -1, "yes", 0 },
     { "pickzone18", "none", -1, "yes", 0 },
     { "pickzone19", "none", 5, "yes", 0 },
-    { "pickzone20", "none", 10, "yes", 0 },
+    { "pickzone20", "none", 10, "yes", 0, 1000 }, -- optional extra flag number to store the current number of groups available in
+
+    { "USA Carrier", "blue", 10, "yes", 0, 1001 }, -- instead of a Zone Name you can also use the UNIT NAME of a ship
 }
 ```
 
@@ -545,7 +591,7 @@ Unfortunately there is no way to simulate the added weight of the Simulated Slin
 ##Crate Unpacking
 Once you have sling loaded and successfully dropped your crate, you can land and list nearby crates that have yet to be unpacked using the F10 Crate Commands Menu, as well as unpack nearby crates using the same menu. Crates cannot be unpacked near a logistics unit.
 
-To build a HAWK AA system you will need to slingload all 3 parts - Launcher, Track Radar and Search Radar - and drop the crates within 100m of each other. If you try to build the system without all the parts, a message will list which parts are missing. The HAWK system by default will spawn with 3 launchers as it usually fires off 3 missiles at one target at a time. If you want to change the amount of launchers it has, edit the ```ctld.hawkLaunchers``` option in the user configuration at the top of the CTLD.lua file.
+To build a HAWK or BUK AA system you will need to slingload all 3 parts - Launcher, Track Radar and Search Radar - and drop the crates within 100m of each other. The KUB only requries 2 parts. If you try to build the system without all the parts, a message will list which parts are missing. The air defence system by default will spawn with 3 launchers as it usually fires off 3 missiles at one target at a time. If you want to change the amount of launchers it has, edit the ```ctld.hawkLaunchers``` option in the user configuration at the top of the CTLD.lua file.
 
 Parts Missing:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-10%2016-45-15-05_zpsv856jhw3.png~original "Hawk Parts missing")
@@ -560,7 +606,7 @@ Rearming:
 
 **Note: Once unpacked a crate will not disappear from the field or the F6 Menu, but will disappear from the F10 Nearby Crates list. There is currently no way to remove crates due to a DCS Bug AFAIK. This can make picking the right crate tricky, but by using the F10 List crates option, you can keep readjusting your position until you are close to the crate that you want and then it's trial and error, using the F6 menu to pick the right crate for sling loading. **
 
-You can also repair a partially destroyed HAWK system by dropping a repair crate next to it and unpacking. A repair crate will also re-arm the system.
+You can also repair a partially destroyed HAWK / BUK or KUB system by dropping a repair crate next to it and unpacking. A repair crate will also re-arm the system.
 
 ##Forward Operating Base (FOB) Construction
 FOBs can be built by loading special FOB crates from a **Logistics** unit into a C-130 or other large aircraft configured in the script. To load the crate use the F10 - Troop Commands Menu. The idea behind FOBs is to make player vs player missions even more dynamic as these can be deployed in most locations. Once destroyed the FOB can no longer be used.
