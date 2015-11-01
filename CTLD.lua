@@ -4329,7 +4329,7 @@ function ctld.getGroup(groupName)
     local _filteredUnits = {} --contains alive units
     local _x = 1
 
-    if _groupUnits ~= nil then
+    if _groupUnits ~= nil and _groupUnits:isExist() then
 
         _groupUnits = _groupUnits:getUnits()
 
