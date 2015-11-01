@@ -244,6 +244,12 @@ You can force a unit to unload its units (as long as its on the ground) by calli
 
 ```lua
  ctld.unloadTransport("helicargo1")
+
+ ###Load Transport
+You can force a unit to load its units (as long as its on the ground) by calling this function.
+
+```lua
+ ctld.loadTransport("helicargo1")
 ```
 
 ###Auto Unload Transport in Proximity to Enemies
@@ -273,6 +279,16 @@ An Extraction zone can be created by adding a Trigger Once with a Time More set 
 Where ```"extractzone1"``` is the name of a Trigger Zone added using the mission editor, ```2``` is the flag where we want the total number of troops dropped in a zone added and ```-1``` the smoke colour.
 
 The settings for smoke are: Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4, NO SMOKE = -1
+
+####Count Extractable UNITS in zone
+You can count the number of extractable UNITS in a zone using: ```ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)``` as a DO SCRIPT of a CONTINUOUS TRIGGER.
+
+Where ```_zone``` is the zone name, ```_blueFlag``` is the flag to store the count of Blue units in and ```_redFlag``` is the flag to store the count of red units in
+
+####Count Extractable GROUPS in zone
+You can count the number of extractable GROUPS in a zone using: ```ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)``` as a DO SCRIPT of a CONTINUOUS TRIGGER.
+
+Where ```_zone``` is the zone name, ```_blueFlag``` is the flag to store the count of Blue groups in and ```_redFlag``` is the flag to store the count of red groups in
 
 ####Create Crate Drop Zone
 A crate drop zone is a zone where the number of crates in a zone in counted every 5 seconds and the current amount stored in a flag specified by the script.

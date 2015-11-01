@@ -4,7 +4,7 @@
     Allows Huey, Mi-8 and C130 to transport troops internally and Helicopters to transport Logistic / Vehicle units to the field via sling-loads
     without requiring external mods.
 
-    Supports some of the original CTTS functionality such as AI auto troop load and unload as well as group spawning and preloading of troops into units.
+    Supports all of the original CTTS functionality such as AI auto troop load and unload as well as group spawning and preloading of troops into units.
 
     Supports deployment of Auto Lasing JTAC to the field
 
@@ -13,10 +13,9 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.35 - 27/10/2015  - Added ctld.unloadTransport Mission Editor Function
-                                - Added flag option to the pickup zones
-                                - Added ctld.changeRemainingGroupsForPickupZone Editor Function
-                                - Added ability to use a SHIP as a pickup zone, just add the Ship UNIT NAME to the ctld.pickupZone list
+    Version: 1.36 -01/11/2015  - Added ctld.loadTransport Mission Editor Function
+                                - Added ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
+                                - Added ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
 
  ]]
 
@@ -46,7 +45,7 @@ ctld.fastRopeMaximumHeight = 18.28 -- in meters which is 60 ft max fast rope (no
 ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
 ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
 
-ctld.hawkLaunchers = 3 -- controls how many launchers to add to the hawk when its spawned.
+ctld.hawkLaunchers = 3 -- controls how many launchers to add to the hawk/kub/buk when its spawned.
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 ctld.spawnStinger = false -- spawns a stinger / igla soldier with a group of 6 or more soldiers!
@@ -579,6 +578,107 @@ function ctld.createExtractZone(_zone, _flagNumber, _smoke)
     end
 end
 
+-- CONTINUOUS TRIGGER FUNCTION
+-- This function will count the current number of extractable RED and BLUE
+-- GROUPS in a zone and store the values in two flags
+-- A group is only counted as being in a zone when the leader of that group
+-- is in the zone
+-- Use: ctld.countDroppedGroupsInZone("Zone Name", flagBlue, flagRed)
+function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
+
+    local _triggerZone = trigger.misc.getZone(_zone) -- trigger to use as reference position
+
+    if _triggerZone == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zone, 10)
+        return
+    end
+
+    local _zonePos = mist.utils.zoneToVec3(_zone)
+
+    local _redCount = 0;
+    local _blueCount = 0;
+
+    local _allGroups = {ctld.droppedTroopsRED,ctld.droppedTroopsBLUE,ctld.droppedVehiclesRED,ctld.droppedVehiclesBLUE}
+    for _, _extractGroups in pairs(_allGroups) do
+        for _,_groupName  in pairs(_extractGroups) do
+            local _groupUnits = ctld.getGroup(_groupName)
+
+            if #_groupUnits > 0 then
+                local _zonePos = mist.utils.zoneToVec3(_zone)
+                local _dist = ctld.getDistance(_groupUnits[1]:getPoint(), _zonePos)
+
+                if _dist <= _triggerZone.radius then
+
+                    if (_groupUnits[1]:getCoalition() == 1) then
+                        _redCount = _redCount + 1;
+                    else
+                        _blueCount = _blueCount + 1;
+                    end
+                end
+            end
+        end
+    end
+    --set flag stuff
+    trigger.action.setUserFlag(_blueFlag, _blueCount)
+    trigger.action.setUserFlag(_redFlag, _redCount)
+
+  --  env.info("Groups in zone ".._blueCount.." ".._redCount)
+
+end
+
+-- CONTINUOUS TRIGGER FUNCTION
+-- This function will count the current number of extractable RED and BLUE
+-- UNITS in a zone and store the values in two flags
+
+-- Use: ctld.countDroppedUnitsInZone("Zone Name", flagBlue, flagRed)
+function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
+
+    local _triggerZone = trigger.misc.getZone(_zone) -- trigger to use as reference position
+
+    if _triggerZone == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zone, 10)
+        return
+    end
+
+    local _zonePos = mist.utils.zoneToVec3(_zone)
+
+    local _redCount = 0;
+    local _blueCount = 0;
+
+    local _allGroups = {ctld.droppedTroopsRED,ctld.droppedTroopsBLUE,ctld.droppedVehiclesRED,ctld.droppedVehiclesBLUE}
+
+    for _, _extractGroups in pairs(_allGroups) do
+        for _,_groupName  in pairs(_extractGroups) do
+            local _groupUnits = ctld.getGroup(_groupName)
+
+            if #_groupUnits > 0 then
+
+                local _zonePos = mist.utils.zoneToVec3(_zone)
+                for _,_unit in pairs(_groupUnits) do
+                    local _dist = ctld.getDistance(_unit:getPoint(), _zonePos)
+
+                    if _dist <= _triggerZone.radius then
+
+                        if (_unit:getCoalition() == 1) then
+                            _redCount = _redCount + 1;
+                        else
+                            _blueCount = _blueCount + 1;
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+
+    --set flag stuff
+    trigger.action.setUserFlag(_blueFlag, _blueCount)
+    trigger.action.setUserFlag(_redFlag, _redCount)
+
+  --  env.info("Units in zone ".._blueCount.." ".._redCount)
+end
+
+
 -- Creates a radio beacon on a random UHF - VHF and HF/FM frequency for homing
 -- This WILL NOT WORK if you dont add beacon.ogg and beaconsilent.ogg to the mission!!!
 -- e.g. ctld.createRadioBeaconAtZone("beaconZone","red", 1440,"Waypoint 1") will create a beacon at trigger zone "beaconZone" for the Red side
@@ -757,7 +857,7 @@ function ctld.unloadInProximityToEnemy(_unitName,_distance)
 
         if _nearestEnemy ~= nil then
 
-            if   ctld.troopsOnboard(_unit, true) then
+            if ctld.troopsOnboard(_unit, true) then
                 ctld.deployTroops(_unit, true)
                 return true
             end
@@ -784,12 +884,29 @@ function ctld.unloadTransport(_unitName)
     if _unit ~= nil  then
 
         if ctld.troopsOnboard(_unit, true) then
-            ctld.deployTroops(_unit, true)
+            ctld.loadUnloadTroops({_unitName,true,"unload"})
         end
 
         if ctld.unitCanCarryVehicles(_unit) and ctld.troopsOnboard(_unit, false) then
-            ctld.deployTroops(_unit, false)
+            ctld.loadUnloadTroops({_unitName,false,"unload"})
         end
+    end
+
+end
+
+-- Loads Troops and Vehicles from a zone or picks up nearby troops or vehicles
+function ctld.loadTransport(_unitName)
+
+    local _unit = ctld.getTransportUnit(_unitName)
+
+    if _unit ~= nil  then
+
+        ctld.loadUnloadTroops({_unitName,true,"load"})
+
+        if ctld.unitCanCarryVehicles(_unit)  then
+            ctld.loadUnloadTroops({_unitName,false,"load"})
+        end
+
     end
 
 end
@@ -1384,6 +1501,7 @@ function ctld.loadUnloadTroops(_args)
 
     local _heli = ctld.getTransportUnit(_args[1])
     local _troops = _args[2]
+    local _mode = _args[3] or ""
 
     if _heli == nil then
         return
@@ -1391,27 +1509,22 @@ function ctld.loadUnloadTroops(_args)
 
     local _zone = ctld.inPickupZone(_heli)
 
-    -- first check for extractable troops regardless of if we're in a zone or not
-
-    if not ctld.troopsOnboard(_heli, _troops) then
+    if not ctld.troopsOnboard(_heli, _troops) and (_mode == "load" or _mode == "") then
 
         local _extract
 
+        -- first check for extractable troops regardless of if we're in a zone or not
         if _troops then
             if _heli:getCoalition() == 1 then
-
                 _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsRED)
             else
-
                 _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsBLUE)
             end
         else
 
             if _heli:getCoalition() == 1 then
-
                 _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesRED)
             else
-
                 _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesBLUE)
             end
         end
@@ -1421,43 +1534,45 @@ function ctld.loadUnloadTroops(_args)
             ctld.extractTroops(_heli, _troops)
 
             return -- stop
+        elseif _zone.inZone == true  then
+
+            if _zone.limit - 1 >= 0 then
+                -- decrease zone counter by 1
+                ctld.updateZoneCounter(_zone.index, -1)
+
+                ctld.loadTroops(_heli, _troops)
+            else
+                ctld.displayMessageToGroup(_heli, "This area has no more reinforcements available!", 20)
+            end
+
+        else
+            -- search for nearest troops to pickup
+            ctld.extractTroops(_heli, _troops)
+        end
+
+    elseif ( _mode == "unload" or _mode == "") then -- dont unload if we just want to force loading
+
+        -- troops must be onboard to get here
+        if _zone.inZone == true  then
+
+            if _troops then
+                ctld.displayMessageToGroup(_heli, "Dropped troops back to base", 20)
+                ctld.inTransitTroops[_heli:getName()].troops = nil
+
+            else
+                ctld.displayMessageToGroup(_heli, "Dropped vehicles back to base", 20)
+                ctld.inTransitTroops[_heli:getName()].vehicles = nil
+            end
+
+            -- increase zone counter by 1
+            ctld.updateZoneCounter(_zone.index, 1)
+
+        elseif _zone.inZone == false and ctld.troopsOnboard(_heli, _troops)  then
+
+            ctld.deployTroops(_heli, _troops)
         end
     end
 
-    if _zone.inZone == true and ctld.troopsOnboard(_heli, _troops) then
-
-        if _troops then
-            ctld.displayMessageToGroup(_heli, "Dropped troops back to base", 20)
-            ctld.inTransitTroops[_heli:getName()].troops = nil
-
-        else
-            ctld.displayMessageToGroup(_heli, "Dropped vehicles back to base", 20)
-            ctld.inTransitTroops[_heli:getName()].vehicles = nil
-        end
-
-        -- increase zone counter by 1
-        ctld.updateZoneCounter(_zone.index, 1)
-
-
-    elseif _zone.inZone == false and ctld.troopsOnboard(_heli, _troops) then
-
-        ctld.deployTroops(_heli, _troops)
-
-    elseif _zone.inZone == true and not ctld.troopsOnboard(_heli, _troops) then
-
-        if _zone.limit - 1 >= 0 then
-            -- decrease zone counter by 1
-            ctld.updateZoneCounter(_zone.index, -1)
-
-            ctld.loadTroops(_heli, _troops)
-        else
-            ctld.displayMessageToGroup(_heli, "This area has no more reinforcements available!", 20)
-        end
-
-    else
-        -- search for nearest troops to pickup
-        ctld.extractTroops(_heli, _troops)
-    end
 end
 
 function ctld.extractTroops(_heli, _troops)
@@ -3532,70 +3647,28 @@ function ctld.checkAIStatus()
 
         local _unit = ctld.getTransportUnit(_unitName)
 
+        -- no player name means AI!
         if _unit ~= nil and _unit:getPlayerName() == nil then
-
-            -- no player name means AI!
             local _zone = ctld.inPickupZone(_unit)
+
             if _zone.inZone == true and not ctld.troopsOnboard(_unit, true) then
 
-                -- first check for extractable troop in the pickup zone
-                local _extract
-
-                if _unit:getCoalition() == 1 then
-                    _extract = ctld.findNearestGroup(_unit, ctld.droppedTroopsRED)
-                else
-                    _extract = ctld.findNearestGroup(_unit, ctld.droppedTroopsBLUE)
-                end
-
-                if _extract ~= nil then
-                    -- search for nearest troops to pickup
-                    ctld.extractTroops(_unit, true)
-                else
-
-                    --only allow if zone has units
-                    if _zone.limit - 1 >= 0 then
-
-                        ctld.updateZoneCounter(_zone.index, -1)
-
-                        ctld.loadTroops(_unit, true)
-                    end
-                end
+                ctld.loadUnloadTroops({_unitName,true,"load"})
 
             elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
 
-                ctld.deployTroops(_unit, true)
+                ctld.loadUnloadTroops({_unitName,true,"unload"})
             end
 
             if ctld.unitCanCarryVehicles(_unit) then
 
-                local _zone = ctld.inPickupZone(_unit)
                 if _zone.inZone == true and not ctld.troopsOnboard(_unit, false) then
 
-                    -- first check for extractable vehicles in the pickup zone
-                    local _extract
-
-                    if _unit:getCoalition() == 1 then
-                        _extract = ctld.findNearestGroup(_unit, ctld.droppedVehiclesRED)
-                    else
-                        _extract = ctld.findNearestGroup(_unit, ctld.droppedVehiclesBLUE)
-                    end
-
-                    if _extract ~= nil then
-                        -- search for nearest vehicles to pickup
-                        ctld.extractTroops(_unit, false)
-                    else
-                        --only allow if zone has units
-                        if _zone.limit - 1 >= 0 then
-
-                            ctld.updateZoneCounter(_zone.index, -1)
-
-                            ctld.loadTroops(_unit, false)
-                        end
-                    end
+                    ctld.loadUnloadTroops({_unitName,false,"load"})
 
                 elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, false) then
 
-                    ctld.deployTroops(_unit, false)
+                    ctld.loadUnloadTroops({_unitName,false,"unload"})
                 end
             end
         end
@@ -4262,7 +4335,7 @@ function ctld.getGroup(groupName)
 
         if _groupUnits ~= nil and #_groupUnits > 0 then
             for _x = 1, #_groupUnits do
-                if _groupUnits[_x]:getLife() > 0 and _groupUnits[_x]:isExist() then
+                if _groupUnits[_x]:getLife() > 0  then -- removed and _groupUnits[_x]:isExist() as isExist doesnt work on single units!
                     table.insert(_filteredUnits, _groupUnits[_x])
                 end
             end
