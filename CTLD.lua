@@ -13,9 +13,7 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.36 -01/11/2015  - Added ctld.loadTransport Mission Editor Function
-                                - Added ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
-                                - Added ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
+    Version: 1.37 - 11/11/2015  - Added new callback interface
 
  ]]
 
@@ -371,10 +369,10 @@ ctld.spawnableCrates = {
         { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
         -- HAWK System
-          { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
-          { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
-          { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
-          { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+        { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
+        { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
+        { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+        { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
         -- KUB SYSTEM
@@ -622,7 +620,7 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
     trigger.action.setUserFlag(_blueFlag, _blueCount)
     trigger.action.setUserFlag(_redFlag, _redCount)
 
-  --  env.info("Groups in zone ".._blueCount.." ".._redCount)
+    --  env.info("Groups in zone ".._blueCount.." ".._redCount)
 
 end
 
@@ -675,7 +673,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
     trigger.action.setUserFlag(_blueFlag, _blueCount)
     trigger.action.setUserFlag(_redFlag, _redCount)
 
-  --  env.info("Units in zone ".._blueCount.." ".._redCount)
+    --  env.info("Units in zone ".._blueCount.." ".._redCount)
 end
 
 
@@ -747,7 +745,7 @@ function ctld.activatePickupZone(_zoneName)
             _zoneDetails[4] = 1 --activate zone
 
             if ctld.disableAllSmoke == true then --smoke disabled
-                return
+            return
             end
 
             if _zoneDetails[2] >= 0 then
@@ -908,6 +906,12 @@ function ctld.loadTransport(_unitName)
         end
 
     end
+
+end
+
+function ctld.addCallback(_callback)
+
+    table.insert(ctld.callbacks,_callback)
 
 end
 
@@ -1250,6 +1254,9 @@ function ctld.deployTroops(_heli, _troops)
                         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops dropped from " .. _heli:getTypeName() .. " into combat", 10)
                     end
 
+                    ctld.processCallback({unit = _heli, unloaded = _droppedTroops, action = "dropped_troops"})
+
+
                 else
                     --extract zone!
                     local _droppedCount = trigger.misc.getUserFlag(_extractZone.flag)
@@ -1259,6 +1266,7 @@ function ctld.deployTroops(_heli, _troops)
                     trigger.action.setUserFlag(_extractZone.flag, _droppedCount)
 
                     ctld.inTransitTroops[_heli:getName()].troops = nil
+
 
                     if ctld.inAir(_heli) then
                         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " troops fast-ropped from " .. _heli:getTypeName() .. " into " .. _extractZone.name, 10)
@@ -1286,6 +1294,8 @@ function ctld.deployTroops(_heli, _troops)
                 end
 
                 ctld.inTransitTroops[_heli:getName()].vehicles = nil
+
+                ctld.processCallback({unit = _heli, unloaded = _droppedVehicles, action = "dropped_vehicles"})
 
                 trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped vehicles from " .. _heli:getTypeName() .. " into combat", 10)
             end
@@ -1369,11 +1379,14 @@ function ctld.loadTroops(_heli, _troops, _number)
 
         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " loaded " .. _number .. " troops into " .. _heli:getTypeName(), 10)
 
+        ctld.processCallback({unit = _heli, onboard = _onboard.troops, action = "load_troops"})
     else
 
         _onboard.vehicles = ctld.generateVehiclesForTransport(_heli:getCoalition(), _heli:getCountry())
 
         local _count = #_list
+
+        ctld.processCallback({unit = _heli, onboard = _onboard.vehicles, action = "load_vehicles"})
 
         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " loaded " .. _count .. " vehicles into " .. _heli:getTypeName(), 10)
     end
@@ -1557,10 +1570,16 @@ function ctld.loadUnloadTroops(_args)
 
             if _troops then
                 ctld.displayMessageToGroup(_heli, "Dropped troops back to base", 20)
+
+                ctld.processCallback({unit = _heli, unloaded = ctld.inTransitTroops[_heli:getName()].troops, action = "unload_troops_zone"})
+
                 ctld.inTransitTroops[_heli:getName()].troops = nil
 
             else
                 ctld.displayMessageToGroup(_heli, "Dropped vehicles back to base", 20)
+
+                ctld.processCallback({unit = _heli, unloaded = ctld.inTransitTroops[_heli:getName()].vehicles, action = "unload_vehicles_zone"})
+
                 ctld.inTransitTroops[_heli:getName()].vehicles = nil
             end
 
@@ -1611,6 +1630,8 @@ function ctld.extractTroops(_heli, _troops)
                 ctld.droppedTroopsBLUE[_extractTroops.group:getName()] = nil
             end
 
+            ctld.processCallback({unit = _heli, extracted = _extractTroops, action = "extract_troops"})
+
             --remove
             _extractTroops.group:destroy()
 
@@ -1646,6 +1667,7 @@ function ctld.extractTroops(_heli, _troops)
 
             trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " extracted vehicles in " .. _heli:getTypeName() .. " from combat", 10)
 
+            ctld.processCallback({unit = _heli, extracted = _extractVehicles, action = "extract_vehicles"})
             --remove
             _extractVehicles.group:destroy()
             _extracted = true
@@ -2199,6 +2221,8 @@ function ctld.unpackCrates(_arguments)
                         ctld.spawnedCratesBLUE[_crateName] = nil
                     end
 
+                    ctld.processCallback({unit = _heli, crate = _crate , spawnedGroup = _spawnedGroups, action = "unpack"})
+
                     trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed " .. _crate.details.desc .. " to the field", 10)
 
                     if ctld.isJTACUnitType(_crate.details.unit) and ctld.JTAC_dropEnabled then
@@ -2300,6 +2324,8 @@ function ctld.unpackFOBCrates(_crates, _heli)
         end, { _centroid, _heli:getCountry(), _heli:getCoalition() }, timer.getTime() + ctld.buildTimeFOB)
 
         local _txt = string.format("%s started building FOB using %d FOB crates, it will be finished in %d seconds.\nPosition marked with smoke.", ctld.getPlayerNameOrType(_heli), #_nearbyMultiCrates, ctld.buildTimeFOB)
+
+        ctld.processCallback({unit = _heli, position = _centroid, action = "fob"})
 
         trigger.action.smoke(_centroid, trigger.smokeColor.Green)
 
@@ -2767,6 +2793,8 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
 
                 ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_type)
 
+                ctld.processCallback({unit = _heli, crate =  _nearestCrate , spawnedGroup = _spawnedGroup, action = "rearm"})
+
                 trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully rearmed a full "..string.upper(_type).." AA System in the field", 10)
 
                 if _heli:getCoalition() == 1 then
@@ -2956,6 +2984,8 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
 
         ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_type)
 
+        ctld.processCallback({unit = _heli, crate = _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})
+
         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full "..string.upper(_type).." AA System to the field", 10)
 
     end
@@ -2988,6 +3018,8 @@ function ctld.repairAASystem(_heli, _nearestCrate,_type)
         local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
 
         ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_type)
+
+        ctld.processCallback({unit = _heli, crate = _nearestCrate , spawnedGroup = _spawnedGroup, action = "repair"})
 
         trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully repaired a full "..string.upper(_type).." AA System in the field", 10)
 
@@ -3074,6 +3106,8 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 
 
         local _spawnedGroup = ctld.spawnCrateGroup(_heli, { _point }, { _nearestCrate.details.unit })
+
+        ctld.processCallback({unit = _heli, crate =  _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})
 
         local _txt = string.format("%s successfully deployed %s to the field using %d crates", ctld.getPlayerNameOrType(_heli), _nearestCrate.details.desc, #_nearbyMultiCrates)
 
@@ -3633,6 +3667,22 @@ function ctld.updateZoneCounter(_index, _diff)
             trigger.action.setUserFlag(ctld.pickupZones[_index][6], ctld.pickupZones[_index][3])
         end
         --  env.info(ctld.pickupZones[_index][1].." = " ..ctld.pickupZones[_index][3])
+    end
+end
+
+function ctld.processCallback(_callbackArgs)
+
+    for _, _callback in pairs(ctld.callbacks) do
+
+        local _status, _result = pcall(function()
+
+           _callback(_callbackArgs)
+
+        end)
+
+        if (not _status) then
+            env.error(string.format("CTLD Callback Error: %s", _result))
+        end
     end
 end
 
@@ -4336,7 +4386,7 @@ function ctld.getGroup(groupName)
         if _groupUnits ~= nil and #_groupUnits > 0 then
             for _x = 1, #_groupUnits do
                 if _groupUnits[_x]:getLife() > 0  then -- removed and _groupUnits[_x]:isExist() as isExist doesnt work on single units!
-                    table.insert(_filteredUnits, _groupUnits[_x])
+                table.insert(_filteredUnits, _groupUnits[_x])
                 end
             end
         end
@@ -4708,6 +4758,9 @@ ctld.extractZones = {} -- stored extract zones
 
 ctld.missionEditorCargoCrates = {} --crates added by mission editor for triggering cratesinzone
 ctld.hoverStatus = {} -- tracks status of a helis hover above a crate
+
+ctld.callbacks = {} -- function callback
+
 
 -- Remove intransit troops when heli / cargo plane dies
 --ctld.eventHandler = {}
