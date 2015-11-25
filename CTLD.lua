@@ -13,11 +13,14 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.37 - 11/11/2015  - Added new callback interface
+    Version: 1.40 - 11/11/2015  - Added new callback interface
+                                - Added Different Pickup Groups for F10 and for the spawn group command
 
  ]]
 
 ctld = {} -- DONT REMOVE!
+
+ctld.openBeta15 = true -- set to false if you're on 1.2
 
 -- ************************************************************************
 -- *********************  USER CONFIGURATION ******************************
@@ -335,6 +338,23 @@ ctld.vehicleTransportEnabled = {
     "C-130",
 }
 
+-- ************** INFANTRY GROUPS FOR PICKUP ******************
+-- Unit Types
+-- inf is normal infantry
+-- mg is M249
+-- at is RPG-16
+-- aa is Stinger or Igla
+-- mortar is a 2B11 mortar unit
+-- You must add a name to the group for it to work
+-- You can also add an optional coalition side to limit the group to one side
+-- for the side - 2 is BLUE and 1 is RED
+ctld.loadableGroups = {
+    {name = "Standard Group", inf = 6, mg = 2, at = 2 }, -- will make a loadable group with 5 infantry, 2 MGs and 2 anti-tank for both coalitions
+    {name = "Anti Air", inf = 2, aa = 3  },
+    {name = "Anti Tank", inf = 2, at = 6  },
+    {name = "Mortar Squad", mortar = 6 },
+    -- {name = "Mortar Squad Red", inf = 2, mortar = 5, side =1 }, --would make a group loadable by RED only
+}
 
 -- ************** SPAWNABLE CRATES ******************
 -- Weights must be unique as we use the weight to change the cargo to the correct unit
@@ -350,46 +370,49 @@ ctld.spawnableCrates = {
         -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
         -- side is optional but 2 is BLUE and 1 is RED
         -- dont use that option with the HAWK Crates
-        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW", side = 2 },
-        { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
+        { weight = 500, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW", side = 2 },
+        { weight = 505, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
 
-        { weight = 1700, desc = "BTR-D", unit = "BTR_D", side = 1 },
-        { weight = 1900, desc = "BRDM-2", unit = "BRDM-2", side = 1 },
+        { weight = 510, desc = "BTR-D", unit = "BTR_D", side = 1 },
+        { weight = 515, desc = "BRDM-2", unit = "BRDM-2", side = 1 },
 
-        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer", side = 2, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
-        { weight = 1500, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 520, desc = "HMMWV - JTAC", unit = "Hummer", side = 2, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 525, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
 
-        { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
+        { weight = 100, desc = "2B11 Mortar", unit = "2B11 mortar" },
 
-        { weight = 500, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
-        { weight = 501, desc = "M-109", unit = "M-109", side = 2, cratesRequired = 3 },
+        { weight = 250, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
+        { weight = 255, desc = "M-109", unit = "M-109", side = 2, cratesRequired = 3 },
     },
     ["AA Crates"] = {
-        { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
-        { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
+        { weight = 50, desc = "Stinger", unit = "Stinger manpad", side = 2 },
+        { weight = 55, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
         -- HAWK System
-        { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
-        { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
-        { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
-        { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+        { weight = 540, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
+        { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
+        { weight = 550, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+        { weight = 555, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
         -- KUB SYSTEM
-        { weight = 1026, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
-        { weight = 1027, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
-        { weight = 1025, desc = "KUB Repair", unit = "KUB Repair", side = 1},
+        { weight = 560, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
+        { weight = 565, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
+        { weight = 570, desc = "KUB Repair", unit = "KUB Repair", side = 1},
         -- End of KUB
 
         -- BUK System
-        --        { weight = 1022, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
-        --        { weight = 1023, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
-        --        { weight = 1024, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
-        --        { weight = 1025, desc = "BUK Repair", unit = "BUK Repair"},
+        --        { weight = 575, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
+        --        { weight = 580, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
+        --        { weight = 585, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
+        --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
         -- END of BUK
 
-        { weight = 505, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
-        { weight = 506, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
+        { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR" },
+
+        { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
+        { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
+
     },
 }
 
@@ -431,10 +454,6 @@ function ctld.spawnGroupAtTrigger(_groupSide, _number, _triggerName, _searchRadi
     else
         _groupSide = 2
         _country = 2
-    end
-
-    if _number < 1 then
-        _number = 1
     end
 
     if _searchRadius < 0 then
@@ -882,11 +901,11 @@ function ctld.unloadTransport(_unitName)
     if _unit ~= nil  then
 
         if ctld.troopsOnboard(_unit, true) then
-            ctld.loadUnloadTroops({_unitName,true,"unload"})
+            ctld.unloadTroops({_unitName,true})
         end
 
         if ctld.unitCanCarryVehicles(_unit) and ctld.troopsOnboard(_unit, false) then
-            ctld.loadUnloadTroops({_unitName,false,"unload"})
+            ctld.unloadTroops({_unitName,false})
         end
     end
 
@@ -899,10 +918,10 @@ function ctld.loadTransport(_unitName)
 
     if _unit ~= nil  then
 
-        ctld.loadUnloadTroops({_unitName,true,"load"})
+        ctld.loadTroopsFromZone({ _unitName, true,"",true })
 
         if ctld.unitCanCarryVehicles(_unit)  then
-            ctld.loadUnloadTroops({_unitName,false,"load"})
+            ctld.loadTroopsFromZone({ _unitName, false,"",true })
         end
 
     end
@@ -1303,44 +1322,86 @@ function ctld.deployTroops(_heli, _troops)
     end
 end
 
+function ctld.insertIntoTroopsArray(_troopType,_count,_troopArray)
+
+    for _i = 1, _count do
+        local _unitId = mist.getNextUnitId()
+        table.insert(_troopArray, { type = _troopType, unitId = _unitId, name = string.format("Dropped %s #%i", _troopType, _unitId) })
+    end
+
+    return _troopArray
+
+end
 
 
-function ctld.generateTroopTypes(_side, _count, _country)
+function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
 
     local _troops = {}
 
-    for _i = 1, _count do
+    if type(_countOrTemplate) == "table" then
 
-        local _unitType = "Soldier AK"
-
-        if _side == 2 then
-            _unitType = "Soldier M4"
-
-            if _i <= 5 and ctld.spawnStinger then
-                _unitType = "Stinger manpad"
-            end
-            if _i <= 4 and ctld.spawnRPGWithCoalition then
-                _unitType = "Paratrooper RPG-16"
-            end
-            if _i <= 2 then
-                _unitType = "Soldier M249"
-            end
-        else
-            _unitType = "Infantry AK"
-            if _i <= 5 and ctld.spawnStinger then
-                _unitType = "SA-18 Igla manpad"
-            end
-            if _i <= 4 then
-                _unitType = "Paratrooper RPG-16"
-            end
-            if _i <= 2 then
-                _unitType = "Paratrooper AKS-74"
+        if _countOrTemplate.aa then
+            if _side == 2 then
+                _troops = ctld.insertIntoTroopsArray("Stinger manpad",_countOrTemplate.aa,_troops)
+            else
+                _troops = ctld.insertIntoTroopsArray("SA-18 Igla manpad",_countOrTemplate.aa,_troops)
             end
         end
 
-        local _unitId = mist.getNextUnitId()
+        if _countOrTemplate.inf then
+            if _side == 2 then
+                _troops = ctld.insertIntoTroopsArray("Soldier M4",_countOrTemplate.inf,_troops)
+            else
+                _troops = ctld.insertIntoTroopsArray("Soldier AK",_countOrTemplate.inf,_troops)
+            end
+        end
 
-        _troops[_i] = { type = _unitType, unitId = _unitId, name = string.format("Dropped %s #%i", _unitType, _unitId) }
+        if _countOrTemplate.mg then
+            _troops = ctld.insertIntoTroopsArray("Soldier M249",_countOrTemplate.mg,_troops)
+        end
+
+        if _countOrTemplate.at then
+            _troops = ctld.insertIntoTroopsArray("Paratrooper RPG-16",_countOrTemplate.at,_troops)
+        end
+
+        if _countOrTemplate.mortar then
+            _troops = ctld.insertIntoTroopsArray("2B11 mortar",_countOrTemplate.mortar,_troops)
+        end
+
+    else
+        for _i = 1, _countOrTemplate do
+
+            local _unitType = "Soldier AK"
+
+            if _side == 2 then
+                _unitType = "Soldier M4"
+
+                if _i <= 5 and ctld.spawnStinger then
+                    _unitType = "Stinger manpad"
+                end
+                if _i <= 4 and ctld.spawnRPGWithCoalition then
+                    _unitType = "Paratrooper RPG-16"
+                end
+                if _i <= 2 then
+                    _unitType = "Soldier M249"
+                end
+            else
+                _unitType = "Infantry AK"
+                if _i <= 5 and ctld.spawnStinger then
+                    _unitType = "SA-18 Igla manpad"
+                end
+                if _i <= 4 then
+                    _unitType = "Paratrooper RPG-16"
+                end
+                if _i <= 2 then
+                    _unitType = "Paratrooper AKS-74"
+                end
+            end
+
+            local _unitId = mist.getNextUnitId()
+
+            _troops[_i] = { type = _unitType, unitId = _unitId, name = string.format("Dropped %s #%i", _unitType, _unitId) }
+        end
     end
 
     local _groupId = mist.getNextGroupId()
@@ -1350,7 +1411,7 @@ function ctld.generateTroopTypes(_side, _count, _country)
 end
 
 -- load troops onto vehicle
-function ctld.loadTroops(_heli, _troops, _number)
+function ctld.loadTroops(_heli, _troops, _numberOrTemplate)
 
     -- load troops + vehicles if c130 or herc
     -- "M1045 HMMWV TOW"
@@ -1358,8 +1419,8 @@ function ctld.loadTroops(_heli, _troops, _number)
     local _onboard = ctld.inTransitTroops[_heli:getName()]
 
     --number doesnt apply to vehicles
-    if _number == nil then
-        _number = ctld.numberOfTroops
+    if _numberOrTemplate == nil then
+        _numberOrTemplate = ctld.numberOfTroops
     end
 
     if _onboard == nil then
@@ -1375,9 +1436,9 @@ function ctld.loadTroops(_heli, _troops, _number)
 
     if _troops then
 
-        _onboard.troops = ctld.generateTroopTypes(_heli:getCoalition(), _number, _heli:getCountry())
+        _onboard.troops = ctld.generateTroopTypes(_heli:getCoalition(), _numberOrTemplate, _heli:getCountry())
 
-        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " loaded " .. _number .. " troops into " .. _heli:getTypeName(), 10)
+        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " loaded troops into " .. _heli:getTypeName(), 10)
 
         ctld.processCallback({unit = _heli, onboard = _onboard.troops, action = "load_troops"})
     else
@@ -1510,22 +1571,33 @@ function ctld.loadUnloadFOBCrate(_args)
     end
 end
 
-function ctld.loadUnloadTroops(_args)
+function ctld.loadTroopsFromZone(_args)
 
     local _heli = ctld.getTransportUnit(_args[1])
     local _troops = _args[2]
-    local _mode = _args[3] or ""
+    local _groupTemplate = _args[3] or ""
+    local _allowExtract = _args[4]
 
     if _heli == nil then
-        return
+        return false
     end
 
     local _zone = ctld.inPickupZone(_heli)
 
-    if not ctld.troopsOnboard(_heli, _troops) and (_mode == "load" or _mode == "") then
+    if ctld.troopsOnboard(_heli, _troops) then
 
-        local _extract
+        if _troops then
+            ctld.displayMessageToGroup(_heli, "You already have troops onboard.", 10)
+        else
+            ctld.displayMessageToGroup(_heli, "You already have vehicles onboard.", 10)
+        end
 
+        return false
+    end
+
+    local _extract
+
+    if _allowExtract then
         -- first check for extractable troops regardless of if we're in a zone or not
         if _troops then
             if _heli:getCoalition() == 1 then
@@ -1541,29 +1613,54 @@ function ctld.loadUnloadTroops(_args)
                 _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesBLUE)
             end
         end
+    end
 
-        if _extract ~= nil then
-            -- search for nearest troops to pickup
-            ctld.extractTroops(_heli, _troops)
+    if _extract ~= nil then
+        -- search for nearest troops to pickup
+        return ctld.extractTroops({_heli:getName(), _troops})
+    elseif _zone.inZone == true then
 
-            return -- stop
-        elseif _zone.inZone == true  then
+        if _zone.limit - 1 >= 0 then
+            -- decrease zone counter by 1
+            ctld.updateZoneCounter(_zone.index, -1)
 
-            if _zone.limit - 1 >= 0 then
-                -- decrease zone counter by 1
-                ctld.updateZoneCounter(_zone.index, -1)
+            ctld.loadTroops(_heli, _troops,_groupTemplate)
 
-                ctld.loadTroops(_heli, _troops)
-            else
-                ctld.displayMessageToGroup(_heli, "This area has no more reinforcements available!", 20)
-            end
-
+            return true
         else
-            -- search for nearest troops to pickup
-            ctld.extractTroops(_heli, _troops)
+            ctld.displayMessageToGroup(_heli, "This area has no more reinforcements available!", 20)
+
+            return false
         end
 
-    elseif ( _mode == "unload" or _mode == "") then -- dont unload if we just want to force loading
+    else
+        if _allowExtract then
+            ctld.displayMessageToGroup(_heli, "You are not in a pickup zone and no one is nearby to extract", 10)
+        else
+            ctld.displayMessageToGroup(_heli, "You are not in a pickup zone", 10)
+        end
+
+        return false
+    end
+end
+
+
+
+function ctld.unloadTroops(_args)
+
+    local _heli = ctld.getTransportUnit(_args[1])
+    local _troops = _args[2]
+
+    if _heli == nil then
+        return false
+    end
+
+    local _zone = ctld.inPickupZone(_heli)
+    if not ctld.troopsOnboard(_heli, _troops)  then
+        ctld.displayMessageToGroup(_heli, "No one to unload", 10)
+
+        return false
+    else
 
         -- troops must be onboard to get here
         if _zone.inZone == true  then
@@ -1586,18 +1683,37 @@ function ctld.loadUnloadTroops(_args)
             -- increase zone counter by 1
             ctld.updateZoneCounter(_zone.index, 1)
 
+            return true
+
         elseif _zone.inZone == false and ctld.troopsOnboard(_heli, _troops)  then
 
-            ctld.deployTroops(_heli, _troops)
+            return ctld.deployTroops(_heli, _troops)
         end
     end
 
 end
 
-function ctld.extractTroops(_heli, _troops)
+function ctld.extractTroops(_args)
+
+    local _heli = ctld.getTransportUnit(_args[1])
+    local _troops = _args[2]
+
+    if _heli == nil then
+        return false
+    end
 
     if ctld.inAir(_heli) then
-        return
+        return false
+    end
+
+    if  ctld.troopsOnboard(_heli, _troops)  then
+        if _troops then
+            ctld.displayMessageToGroup(_heli, "You already have troops onboard.", 10)
+        else
+            ctld.displayMessageToGroup(_heli, "You already have vehicles onboard.", 10)
+        end
+
+        return false
     end
 
     local _onboard = ctld.inTransitTroops[_heli:getName()]
@@ -1638,7 +1754,7 @@ function ctld.extractTroops(_heli, _troops)
             _extracted = true
         else
             _onboard.troops = nil
-            ctld.displayMessageToGroup(_heli, "No extractable troops nearby and not in a pickup zone", 20)
+            ctld.displayMessageToGroup(_heli, "No extractable troops nearby!", 20)
         end
 
     else
@@ -1674,7 +1790,7 @@ function ctld.extractTroops(_heli, _troops)
 
         else
             _onboard.vehicles = nil
-            ctld.displayMessageToGroup(_heli, "No extractable vehicles nearby and not in a pickup zone", 20)
+            ctld.displayMessageToGroup(_heli, "No extractable vehicles nearby!", 20)
         end
     end
 
@@ -2593,10 +2709,16 @@ function ctld.updateRadioBeacon(_beaconDetails)
 
         local _groupController = _radio.group:getController()
 
-        local _sound = "l10n/DEFAULT/"..ctld.radioSound
+        local _sound = ctld.radioSound
         if _radio.silent then
-            _sound = "l10n/DEFAULT/"..ctld.radioSoundFC3
+            _sound = ctld.radioSoundFC3
         end
+
+
+        if ctld.openBeta15 then
+            _sound = "l10n/DEFAULT/".._sound
+        end
+
         _groupController:setOption(AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.WEAPON_HOLD)
 
         trigger.action.radioTransmission(_sound, _radio.group:getUnit(1):getPoint(), _radio.mode, false, _radio.freq, 1000)
@@ -3676,7 +3798,7 @@ function ctld.processCallback(_callbackArgs)
 
         local _status, _result = pcall(function()
 
-           _callback(_callbackArgs)
+            _callback(_callbackArgs)
 
         end)
 
@@ -3703,22 +3825,22 @@ function ctld.checkAIStatus()
 
             if _zone.inZone == true and not ctld.troopsOnboard(_unit, true) then
 
-                ctld.loadUnloadTroops({_unitName,true,"load"})
+                ctld.loadTroopsFromZone({ _unitName, true,"",true })
 
             elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
 
-                ctld.loadUnloadTroops({_unitName,true,"unload"})
+                ctld.unloadTroops( { _unitName, true })
             end
 
             if ctld.unitCanCarryVehicles(_unit) then
 
                 if _zone.inZone == true and not ctld.troopsOnboard(_unit, false) then
 
-                    ctld.loadUnloadTroops({_unitName,false,"load"})
+                    ctld.loadTroopsFromZone({ _unitName, false,"",true })
 
                 elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, false) then
 
-                    ctld.loadUnloadTroops({_unitName,false,"unload"})
+                    ctld.unloadTroops( { _unitName, false })
                 end
             end
         end
@@ -3750,19 +3872,32 @@ function ctld.addF10MenuOptions()
 
                         local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport", _rootPath)
 
-                        missionCommands.addCommandForGroup(_groupId, "Load / Unload Troops", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, true })
+                        missionCommands.addCommandForGroup(_groupId, "Unload Troops", _troopCommandsPath, ctld.unloadTroops, { _unitName, true })
+                        missionCommands.addCommandForGroup(_groupId, "Extract Troops", _troopCommandsPath, ctld.extractTroops, { _unitName, true })
 
-                        if ctld.unitCanCarryVehicles(_unit) then
+                        missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
 
-                            missionCommands.addCommandForGroup(_groupId, "Load / Unload Vehicles", _troopCommandsPath, ctld.loadUnloadTroops, { _unitName, false })
-
-                            if ctld.enabledFOBBuilding then
-
-                                missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _troopCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
+                        local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
+                        for _,_loadGroup in pairs(ctld.loadableGroups) do
+                            if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
+                                missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _loadPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
                             end
                         end
 
-                        missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
+                        if ctld.unitCanCarryVehicles(_unit) then
+
+                            local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Transport", _rootPath)
+
+                            missionCommands.addCommandForGroup(_groupId, "Unload Vehicles", _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
+                            missionCommands.addCommandForGroup(_groupId, "Load / Extract Vehicles", _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
+
+                            if ctld.enabledFOBBuilding then
+
+                                missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
+                            end
+                            missionCommands.addCommandForGroup(_groupId, "Check Cargo", _vehicleCommandsPath, ctld.checkTroopStatus, { _unitName })
+                        end
+
 
                         if ctld.enableCrates then
 
@@ -3784,7 +3919,6 @@ function ctld.addF10MenuOptions()
                                 end
                             end
                         end
-
 
                         if ctld.enabledFOBBuilding or ctld.enableCrates then
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)

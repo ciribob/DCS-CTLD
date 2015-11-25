@@ -1,13 +1,34 @@
+
 # DCS-CTLD
+
 Complete Troops and Logistics Deployment for DCS World
+
+## Contents
+
+- [Features](#features)
+- [Setup in Mission Editor](#setup-in-mission-editor)
+- [In Game](#in-game)
+    - [Troop Loading and Unloading](#troop-loading-and-unloading)
+    - [Cargo Spawning and Sling Loading](#cargo-spawning-and-sling-loading)
+    - [Crate Unpacking](#crate-unpacking)
+    - [Forward Operating Base (FOB) Construction](#forward-operating-base-fob-construction)
+    - [Radio Beacon Deployment](#radio-beacon-deployment)
+- [Advanced Scripting](#advanced-scripting)
+
 
 This script is a rewrite of some of the functionality of the original Complete Combat Troop Transport Script (CTTS) by Geloxo (http://forums.eagle.ru/showthread.php?t=108523), as well as adding new features.
 
+## Features
 The script supports:
 
 * Troop Loading / Unloading via Radio Menu
     * AI Units can also load and unload troops automatically
     * Troops can spawn with RPGs and Stingers / Iglas if enabled.
+    * Different troop groups can be loaded. The groups can easily be modifed by editing CTLD. By Default the groups are:
+        * AT Group
+        * AA Group
+        * Mortar Group
+        * Standard Group
 * Vehicle Loading / Unloading via Radio Menu for C-130 / IL-76 (Other large aircraft can easily be added) (https://www.digitalcombatsimulator.com/en/files/668878/?sphrase_id=1196134)
     * You will need to download the modded version of the C-130 from here (JSGME Ready) that fixes the Radio Menu 
 * Coloured Smoke Marker Drops
@@ -15,7 +36,11 @@ The script supports:
 * Extractable soldier groups added via mission editor
 * Unit construction using crates spawned at a logistics area and dropped via Simulated Cargo Sling or Real Cargo Sling 
     * HAWK AA System requires 3 separate and correct crates to build
-        * HAWK system can also be rearmed after construction by dropping another Hawk Launcher nearby and unpacking
+        * HAWK system can also be rearmed after construction by dropping another Hawk Launcher nearby and unpacking. Separate repair crate can also be used.
+    * BUK AA System requires 2 separate and correct crates to build
+        * BUK system can also be rearmed after construction by dropping another BUK Launcher nearby and unpacking. Separate repair crate can also be used.
+    * KUB AA System requires 2 separate and correct crates to build
+        * KUB system can also be rearmed after construction by dropping another KUB Launcher nearby and unpacking. Separate repair crate can also be used.
     * HMMWV TOW
     * HMMWV MG
     * HMMWV JTAC - Will Auto Lase and mark targets with smoke if enabled
@@ -35,15 +60,16 @@ The script supports:
     * Count Crates in Zone
 	    * Works for both crates added by the Mission Editor and Crates spawned by Transports
 	* Count soldiers extracted to a zone (the soldiers disappear)
+* Advanced Scripting Callback system
 
 A complete test mission is included.
 
 You can also edit the CTLD.lua file to change some configuration options. Make sure you re-add the lua file to the mission after editing by deleting the trigger that loads the file, then readding the trigger and the DO SCRIPT FILE action. 
 
-##Setup in Mission Editor
+## Setup in Mission Editor
 
-###Script Setup
-**This script requires MIST version 4.0.55 or above: https://github.com/mrSkortch/MissionScriptingTools**
+### Script Setup
+**This script requires MIST version 4.0.57 or above: https://github.com/mrSkortch/MissionScriptingTools**
 
 First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a "TIME MORE" of 1. "TIME MORE" means run the actions after X seconds into the mission.
 
@@ -57,7 +83,7 @@ An example is shown below:
 
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-31%2016-19-38-18_zpsmd8k6sqh.png~original "Script Setup")
 
-###Script Configuration
+### Script Configuration
 The script has lots of configuration options that can be used to further customise the behaviour.
 
 **I have now changed the default behaviour of the script to use Simulated Cargo Sling instead of the Real Cargo Sling due to DCS Bugs causing crashing**
@@ -183,8 +209,8 @@ Example showing what happens if you dont have enough crates:
 
 **Make sure that after making any changes to the script you remove and re-add the script to the mission. **
 
-###Mission Editor Script Functions
-####Preload Troops into Transport
+### Mission Editor Script Functions
+#### Preload Troops into Transport
 You can also preload troops into AI transports once the CTLD script has been loaded, instead of having the AI enter a pickup zone, using the code below where the parameters are:
 * Pilot name of the unit
 * number of troops / vehicles to load
@@ -194,15 +220,15 @@ If you try to load vehicles into anything other than a unit listed in ```ctld.ve
 ```lua
 ctld.preLoadTransport("helicargo1", 10,true)
 ```
-####Create Extractable Groups without Pickup Zone
+#### Create Extractable Groups without Pickup Zone
 You can also make existing mission editor groups extractable by adding their group name to the ```ctld.extractableGroups``` list
 
-####Spawn Extractable Groups without Pickup Zone
+#### Spawn Extractable Groups without Pickup Zone
 You can also spawn extractable infantry groups at a specified trigger zone using the code below.
 
 The parameters are:
 * group side (red or blue)
-* number of troops to spawn
+* number of troops to spawn OR Group Description
 * the name of the trigger to spawn the extractable troops at
 * the distance the troops should search for enemies on spawning in meters
 
@@ -213,8 +239,14 @@ or
 ```lua
 ctld.spawnGroupAtTrigger("blue", 5, "spawnTrigger2", 2000)
 ```
+or
+```lua
+ctld.spawnGroupAtTrigger("blue", {mg=1,at=2,aa=3,inf=4,mortar=5}, "spawnTrigger2", 2000)
+-- Spawns 1 machine gun, 2 anti tank, 3 anti air, 4 standard soldiers and 5 mortars
 
-###Activate / Deactivate Pickup Zone
+```
+
+### Activate / Deactivate Pickup Zone
 You can activate and deactive a pickup zone as shown below. When a zone is active, troops can be loaded from it as long as there are troops remaining and you are the same side as the pickup zone.
 
 ```lua
@@ -225,7 +257,7 @@ or
 ctld.deactivatePickupZone("pickzone3")
 ```
 
-###Change Remaining Groups For a Pickup Zone
+### Change Remaining Groups For a Pickup Zone
 In the configuration of a pickup zone / pickup ship you can limit the number of groups that can be loaded.
 
 Call the function below to add or remove groups from the remaining groups at a zone.
@@ -239,7 +271,7 @@ ctld.changeRemainingGroupsForPickupZone("pickup1", -3) -- remove 3 groups for zo
 ```
 
 
-###Unload Transport
+### Unload Transport
 You can force a unit to unload its units (as long as its on the ground) by calling this function.
 
 ```lua
@@ -252,14 +284,14 @@ You can force a unit to load its units (as long as its on the ground) by calling
  ctld.loadTransport("helicargo1")
 ```
 
-###Auto Unload Transport in Proximity to Enemies
+### Auto Unload Transport in Proximity to Enemies
 If you add the below as a DO SCRIPT for a CONTINOUS TRIGGER, an AI unit will automatically drop its troops if its landed and there are enemies within the specificed distance (in meters)
 
 ```lua
 ctld.unloadInProximityToEnemy("helicargo1",500) --distance is 500
 ```
 
-####Create Radio Beacon at Zone
+#### Create Radio Beacon at Zone
 A radio beacon can be spawned at any zone by adding a Trigger Once with a Time More set to any time after the CTLD script has been loaded and a DO SCRIPT action of ```ctld.createRadioBeaconAtZone("beaconZone","red", 1440,"Waypoint 1")```
 
 Where ```"beaconZone"``` is the name of a Trigger Zone added using the mission editor, ```"red"``` is the side to add the beacon for and ```1440``` the time in minutes for the beacon to broadcast for. An optional parameter can be added at the end which can be used to name the beacon and the name will appear in the beacon list.
@@ -270,7 +302,7 @@ Spawned beacons will broadcast on HF/FM, UHF and VHF until their battery runs ou
 
 **Again, beacons will not work if beacon.ogg and beaconsilent.ogg are not in the mission!**
 
-####Create Extract Zone
+#### Create Extract Zone
 An extact zone is a zone where troops (not vehicles) can be dropped by transports and used to trigger another action based on the number of troops dropped. The radius of the zone sets how big the extract zone will be.
 
 When troops are dropped, the troops disappear and the number of troops dropped added to the flag number configured by the function. This means you can make a trigger such that 10 troops have to be rescued and dropped at the extract zone, and when this happens you can trigger another action.
@@ -280,17 +312,17 @@ Where ```"extractzone1"``` is the name of a Trigger Zone added using the mission
 
 The settings for smoke are: Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4, NO SMOKE = -1
 
-####Count Extractable UNITS in zone
+#### Count Extractable UNITS in zone
 You can count the number of extractable UNITS in a zone using: ```ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)``` as a DO SCRIPT of a CONTINUOUS TRIGGER.
 
 Where ```_zone``` is the zone name, ```_blueFlag``` is the flag to store the count of Blue units in and ```_redFlag``` is the flag to store the count of red units in
 
-####Count Extractable GROUPS in zone
+#### Count Extractable GROUPS in zone
 You can count the number of extractable GROUPS in a zone using: ```ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)``` as a DO SCRIPT of a CONTINUOUS TRIGGER.
 
 Where ```_zone``` is the zone name, ```_blueFlag``` is the flag to store the count of Blue groups in and ```_redFlag``` is the flag to store the count of red groups in
 
-####Create Crate Drop Zone
+#### Create Crate Drop Zone
 A crate drop zone is a zone where the number of crates in a zone in counted every 5 seconds and the current amount stored in a flag specified by the script.
 
 The flag number can be used to trigger other actions added using the mission editor, i.e only activate vehicles once a certain number of crates have been dropped in a zone.  The radius of the zone in the mission editor sets how big the crate drop zone will be.
@@ -304,7 +336,7 @@ A crate drop zone can be added to any zone by adding a Trigger Once with a Time 
 Where ```"crateZone"``` is the name of a Trigger Zone added using the mission editor, and ```1``` is the number of the flag where the current number of crates in the zone will be stored.
 
 
-####JTAC Automatic Targeting and Laser
+#### JTAC Automatic Targeting and Laser
 This script has been merged with https://github.com/ciribob/DCS-JTACAutoLaze . JTACs can either be deployed by Helicopters and configured with the options in the script or pre added to the mission. By default each side can drop 5 JTACs.
 
 The JTAC Script configuration is shown below and can easily be disabled using the ```ctld.JTAC_dropEnabled``` option.
@@ -340,7 +372,7 @@ The JTAC will automatically switch targets when a target is destroyed or goes ou
 
 The JTACs can be configured globally to target only vehicles or troops or all ground targets.
 
-***NOTE: LOS doesn't include buildings or tree's... Sorry! ***
+*** NOTE: LOS doesn't include buildings or tree's... Sorry! ***
 
 The script can also be useful in daylight by enabling the JTAC to mark enemy positions with Smoke. The JTAC will only move the smoke to the target every 5 minutes (to stop a huge trail of smoke markers) unless the target is destroyed, in which case the new target will be marked straight away with smoke. There is also an F10 menu option for units allowing the JTAC(s) to report their current status but if a JTAC is down it won't report in.
 
@@ -395,7 +427,7 @@ Smoke colours are: Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 The script doesn't care if the unit isn't activated when run, as it'll automatically activate when the JTAC is activated in
 the mission but there can be a delay of up to 30 seconds after activation for the JTAC to start searching for targets.
 
-###Pickup and Dropoff Zones Setup
+### Pickup and Dropoff Zones Setup
 Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger and the right side (RED or BLUE or BOTH) in order to load troops and vehicles.
 The pickup zone needs to be named the same as one of the pickup zones in the ```ctld.pickupZones``` list or the list can be edited to match the name in the mission editor.
 
@@ -483,7 +515,7 @@ Available colours are:
 
 Smoke can be disabled for all zones regardless of the settings above using the option ```ctld.disableAllSmoke = true``` in the User Configuration part of the script.
 
-###Transport Unit Setup
+### Transport Unit Setup
 Any unit that you want to be able to transport troops needs to have the **"Pilot Name"** in the ```ctld.transportPilotNames``` list. **Player controlled transport units should be in a group of their own and be the only unit in the group, otherwise other players may have radio commands they shouldn't**. The group name isn't important and can be set to whatever you like. A snippet of the list is shown below. 
 
 If the unit is player controlled, troops have to be manually loaded when in a pickup zone, AI units will auto load troops in a pickup zone.
@@ -513,7 +545,7 @@ Example for AI APC:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-50-65_zpsdiztodm5.png~original "AI APC")
 
 
-###Logistic Setup
+### Logistic Setup
 Logistic crates can also be spawned by Player-controlled Transport Helicopters, as long as they are near a friendly logistic unit listed in ```ctld.logisticUnits```. The distance that the heli's can spawn crates at can be configured at the top of the script. Any static object can be used for Logistics.
 
 ```lua
@@ -536,8 +568,8 @@ Example:
 
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2016-01-53-20_zps1ccbwnop.png~original "Logistic Unit")
 
-#In Game
-##Troop Loading and Unloading
+# In Game
+## Troop Loading and Unloading
 
 Troops can be loaded and unloaded using the F10 Menu. Troops can only be loaded in a pickup zone or from a FOB (if enabled) but can be dropped anywhere you like. Troops dropped by transports can also be extracted by any transport unit using the radio menu, as long as you are close enough.
 
@@ -547,11 +579,36 @@ The C130 / IL-76 gets an extra radio option for loading and deploying vehicles. 
 
 The C-130 / IL-76 can also load and unload FOB crates from a Logistics area, see FOB Construction for more details.
 
-##Cargo Spawning and Sling Loading
+Different Troop Groups can be loaded from a pickup zone. The ```ctld.loadableGroups``` list can be modified if you want to change the loadable groups.
+
+```lua
+
+-- ************** INFANTRY GROUPS FOR PICKUP ******************
+-- Unit Types
+-- inf is normal infantry
+-- mg is M249
+-- at is RPG-16
+-- aa is Stinger or Igla
+-- mortar is a 2B11 mortar unit
+-- You must add a name to the group for it to work
+-- You can also add an optional coalition side to limit the group to one side
+-- for the side - 2 is BLUE and 1 is RED
+ctld.loadableGroups = {
+    {name = "Standard Group", inf = 6, mg = 2, at = 2 }, -- will make a loadable group with 5 infantry, 2 MGs and 2 anti-tank for both coalitions
+    {name = "Anti Air", inf = 2, aa = 3  },
+    {name = "Anti Tank", inf = 2, at = 6  },
+    {name = "Mortar Squad", mortar = 6 },
+    -- {name = "Mortar Squad Red", inf = 2, mortar = 5, side =1 }, --would make a group loadable by RED only
+}
+
+```
+
+
+## Cargo Spawning and Sling Loading
 
 Cargo can be spawned by transport helicopters if they are close enough to a friendly logistics unit using the F10 menu. Crates are always spawned off the nose of the unit that requested them.
 
-###Simulated Sling Loading
+### Simulated Sling Loading
 If ```ctld.slingLoad = false``` then Simulated Sling Loading will be used. This option is now the default due to DCS crashes caused by Sling Loading on multiplayer. Simulated sling loads will not add and weight to your helicopter when loaded.
 
 To pickup a Sling Load, spawn the cargo you want and hover above the crate for 10 seconds. There is no need to select which crate you want to pickup. Status messages will tell you if you are too high or too low. If the countdown stops, it means you are no longer hovering in the correct position and the timer will reset.
@@ -577,7 +634,7 @@ Once you've loaded the crate, fly to where you want to drop it and drop using th
 
 Once on the ground unpack as normal using the CTLD Commands Menu - CTLD->CTLD Commands->Unpack Crate
 
-###Real Sling Loading
+### Real Sling Loading
 
 This uses the inbuilt DCS Sling cargo system and crates. Sling cargo weight differs drastically depending on what you are sling loading. The Huey will need to have 20% fuel and no armaments in order to be able to lift a HMMWV TOW crate! The Mi-8 has a higher max lifting weight than a Huey.
 
@@ -604,7 +661,7 @@ The crate can then be dropped using the CTLD Commands section of the Radio menu.
 
 Unfortunately there is no way to simulate the added weight of the Simulated Sling Load.
 
-##Crate Unpacking
+## Crate Unpacking
 Once you have sling loaded and successfully dropped your crate, you can land and list nearby crates that have yet to be unpacked using the F10 Crate Commands Menu, as well as unpack nearby crates using the same menu. Crates cannot be unpacked near a logistics unit.
 
 To build a HAWK or BUK AA system you will need to slingload all 3 parts - Launcher, Track Radar and Search Radar - and drop the crates within 100m of each other. The KUB only requries 2 parts. If you try to build the system without all the parts, a message will list which parts are missing. The air defence system by default will spawn with 3 launchers as it usually fires off 3 missiles at one target at a time. If you want to change the amount of launchers it has, edit the ```ctld.hawkLaunchers``` option in the user configuration at the top of the CTLD.lua file.
@@ -624,7 +681,7 @@ Rearming:
 
 You can also repair a partially destroyed HAWK / BUK or KUB system by dropping a repair crate next to it and unpacking. A repair crate will also re-arm the system.
 
-##Forward Operating Base (FOB) Construction
+## Forward Operating Base (FOB) Construction
 FOBs can be built by loading special FOB crates from a **Logistics** unit into a C-130 or other large aircraft configured in the script. To load the crate use the F10 - Troop Commands Menu. The idea behind FOBs is to make player vs player missions even more dynamic as these can be deployed in most locations. Once destroyed the FOB can no longer be used.
 
 The amount of FOB crates required and the time to build can be configured at the top of the CTLD script. By default the FOB required 3 crates to build.
@@ -646,7 +703,7 @@ Once built, FOBs can be located using the F10 CTLD Commands menu -> List FOBS.
 
 You will get a position as well as a UHF / VHF frequency that the Huey / Mi-8 (VHF) and Ka-50 / A10-C (UHF) can use to find the FOB. How to configure the radios is shown in the section below
 
-##Radio Beacon Deployment
+## Radio Beacon Deployment
 Radio beacons can be dropped by any transport unit and there is no enforced limit on the number of beacons that can be dropped. There is however a finite limit of available frequencies so don't drop too many or you won't be able to distinguise the beacons from one another. 
 
 By default a beacon will disappear after 15 minutes, when it's battery runs out. FOB beacons will never run out power. You can give the beacon more time by editing the ```ctld.deployedBeaconBattery``` setting.
@@ -656,7 +713,7 @@ To deploy a beacon you must be on the ground and then use the F10 radio menu. Th
 The guides below are not necessarily the best or only way to set up the ADF in each aircraft but it works :)
 
 
-###A10-C UHF ADF Radio Setup
+### A10-C UHF ADF Radio Setup
 To configure ADF on the UHF Radio you must 
 * Put the UHF Radio in ADF Mode using the mode select knob (rightmost setting)
 * Enter the **MHz** frequency using the clickable knobs below the digital display
@@ -672,7 +729,7 @@ UHF Radio Configured: - Bottom left of Picture:
 Pointer towards Radio Signal at 9 o'clock:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075457_zpscoezd0fg.png~original "Radio Pointer")
 
-###KA-50 UHF ADF Radio Setup
+### KA-50 UHF ADF Radio Setup
 To configure ADF on the UHF Radio you must 
 * Put the UHF Radio in ADF Mode using the single ADF switch on the second row of switches on the Radio
 * Enter the **MHz** frequency using the clickable orange wheels below the  display
@@ -686,7 +743,7 @@ Radio configured to the correct frequency for a beacon:
 Gold pointer pointing to beacon on the compass:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075852_zpstypoehpu.png~original "UHF Radio")
 
-###Mi-8 ARC-9 VHF Radio Setup
+### Mi-8 ARC-9 VHF Radio Setup
 To configure ADF on the VHF Radio you must 
 * Switch to the engineer or co-pilot seat
 * Put the VHF Radio in ADF Mode using the switch at the top of the radio to the COMP setting by clicking once.
@@ -702,7 +759,7 @@ Radio configured to the correct frequency for a beacon:
 White pointer pointing to beacon on the compass:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_080142_zpsfsuucw84.png~original "Radio Compass")
 
-###UH-1 ADF VHF Radio Setup
+### UH-1 ADF VHF Radio Setup
 To configure the VHF ADF:
 * Look down at the center console of the Huey
 * Put the VHF Radio in ADF Mode using the switch at the top of the radio to the COMP setting by clicking once.
@@ -715,9 +772,38 @@ Once you've got the right frequency, you should see a white arrow on the compass
 The Huey ADF can be a dodgy and occasionaly points the wrong direction but it should eventually settle on the correct direction.
 
 Radio configured to the correct frequency for a beacon:
+
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075150_zps0uqgw4zt.png~original "ARC-9 Radio")
 
 White pointer pointing to beacon on the compass:
+
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075211_zpsdaus4wxt.png~original "Radio Compass")
 
+# Advanced Scripting
 
+CTLD has an optional callback API that can be used to trigger actions in code
+
+The example below as a DO SCRIPT will output the callback "action" type for every action:
+
+```lua
+ctld.addCallback(function(_args)
+
+    trigger.action.outText(_args.action,10)
+
+end)
+```
+
+Below is a complete list of all the "actions" plus the data that is sent through. For more information its best to check the CTLD Code to see more details of the arguments.
+
+* ```{unit = "Unit that did the action", unloaded = "DCS Troops Group", action = "dropped_troops"}```
+* ```{unit = "Unit that did the action", unloaded = "DCS Vehicles Group", action = "dropped_vehicles"}```
+* ```{unit = "Unit that did the action", unloaded = "List of picked up vehicles", action = "load_vehicles"}```
+* ```{unit = "Unit that did the action", unloaded = "List of picked up troops", action = "load_troops"}```
+* ```{unit = "Unit that did the action", unloaded = "List of dropped troops", action = "unload_troops_zone"}```
+* ```{unit = "Unit that did the action", unloaded = "List of dropped vehicles", action = "unload_vehicles_zone"}```
+* ```{unit = "Unit that did the action", extracted = "DCS Troops Group", action = "extract_troops"}```
+* ```{unit = "Unit that did the action", extracted = "DCS Vehicles Group", action = "extract_vehicles"}```
+* ```{unit = "Unit that did the action",position = "Point of FOB", action = "fob" }```
+* ```{unit = "Unit that did the action",crate = "Crate Details", spawnedGroup = "Group rearmed by crate", action = "rearm"}```
+* ```{unit = "Unit that did the action",crate = "Crate Details", spawnedGroup = "Group spawned by crate", action = "unpack"}```
+* ```{unit = "Unit that did the action",crate = "Crate Details", spawnedGroup = "Group repaired by crate", action = "repair"}```
