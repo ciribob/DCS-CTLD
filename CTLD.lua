@@ -20,6 +20,8 @@
 
 ctld = {} -- DONT REMOVE!
 
+ctld.openBeta15 = true -- set to false if you're on 1.2
+
 -- ************************************************************************
 -- *********************  USER CONFIGURATION ******************************
 -- ************************************************************************
@@ -347,11 +349,11 @@ ctld.vehicleTransportEnabled = {
 -- You can also add an optional coalition side to limit the group to one side
 -- for the side - 2 is BLUE and 1 is RED
 ctld.loadableGroups = {
-    {name = "Standard Group", inf = 5, mg = 3, at = 2 }, -- will make a loadable group with 5 infantry, 3 MGs and 2 anti-tank for both coalitions
+    {name = "Standard Group", inf = 6, mg = 2, at = 2 }, -- will make a loadable group with 5 infantry, 2 MGs and 2 anti-tank for both coalitions
     {name = "Anti Air", inf = 2, aa = 3  },
- --   {name = "Anti Tank", inf = 2, at = 6  },
-    {name = "Mortar Squad", inf = 2, mortar = 5 },
-   -- {name = "Mortar Squad Red", inf = 2, mortar = 5, side =1 }, --would make a group loadable by RED only
+    {name = "Anti Tank", inf = 2, at = 6  },
+    {name = "Mortar Squad", mortar = 6 },
+    -- {name = "Mortar Squad Red", inf = 2, mortar = 5, side =1 }, --would make a group loadable by RED only
 }
 
 -- ************** SPAWNABLE CRATES ******************
@@ -368,46 +370,49 @@ ctld.spawnableCrates = {
         -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
         -- side is optional but 2 is BLUE and 1 is RED
         -- dont use that option with the HAWK Crates
-        { weight = 1400, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW", side = 2 },
-        { weight = 1200, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
+        { weight = 500, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW", side = 2 },
+        { weight = 505, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
 
-        { weight = 1700, desc = "BTR-D", unit = "BTR_D", side = 1 },
-        { weight = 1900, desc = "BRDM-2", unit = "BRDM-2", side = 1 },
+        { weight = 510, desc = "BTR-D", unit = "BTR_D", side = 1 },
+        { weight = 515, desc = "BRDM-2", unit = "BRDM-2", side = 1 },
 
-        { weight = 1100, desc = "HMMWV - JTAC", unit = "Hummer", side = 2, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
-        { weight = 1500, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 520, desc = "HMMWV - JTAC", unit = "Hummer", side = 2, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 525, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
 
-        { weight = 200, desc = "2B11 Mortar", unit = "2B11 mortar" },
+        { weight = 100, desc = "2B11 Mortar", unit = "2B11 mortar" },
 
-        { weight = 500, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
-        { weight = 501, desc = "M-109", unit = "M-109", side = 2, cratesRequired = 3 },
+        { weight = 250, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
+        { weight = 255, desc = "M-109", unit = "M-109", side = 2, cratesRequired = 3 },
     },
     ["AA Crates"] = {
-        { weight = 210, desc = "Stinger", unit = "Stinger manpad", side = 2 },
-        { weight = 215, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
+        { weight = 50, desc = "Stinger", unit = "Stinger manpad", side = 2 },
+        { weight = 55, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
         -- HAWK System
-        { weight = 1000, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
-        { weight = 1010, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
-        { weight = 1020, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
-        { weight = 1021, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+        { weight = 540, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
+        { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
+        { weight = 550, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+        { weight = 555, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
         -- KUB SYSTEM
-        { weight = 1026, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
-        { weight = 1027, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
-        { weight = 1025, desc = "KUB Repair", unit = "KUB Repair", side = 1},
+        { weight = 560, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
+        { weight = 565, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
+        { weight = 570, desc = "KUB Repair", unit = "KUB Repair", side = 1},
         -- End of KUB
 
         -- BUK System
-        --        { weight = 1022, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
-        --        { weight = 1023, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
-        --        { weight = 1024, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
-        --        { weight = 1025, desc = "BUK Repair", unit = "BUK Repair"},
+        --        { weight = 575, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
+        --        { weight = 580, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
+        --        { weight = 585, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
+        --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
         -- END of BUK
 
-        { weight = 505, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
-        { weight = 506, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
+        { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR" },
+
+        { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
+        { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
+
     },
 }
 
@@ -2704,10 +2709,16 @@ function ctld.updateRadioBeacon(_beaconDetails)
 
         local _groupController = _radio.group:getController()
 
-        local _sound = "l10n/DEFAULT/"..ctld.radioSound
+        local _sound = ctld.radioSound
         if _radio.silent then
-            _sound = "l10n/DEFAULT/"..ctld.radioSoundFC3
+            _sound = ctld.radioSoundFC3
         end
+
+
+        if ctld.openBeta15 then
+            _sound = "l10n/DEFAULT/".._sound
+        end
+
         _groupController:setOption(AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.WEAPON_HOLD)
 
         trigger.action.radioTransmission(_sound, _radio.group:getUnit(1):getPoint(), _radio.mode, false, _radio.freq, 1000)
@@ -3864,13 +3875,14 @@ function ctld.addF10MenuOptions()
                         missionCommands.addCommandForGroup(_groupId, "Unload Troops", _troopCommandsPath, ctld.unloadTroops, { _unitName, true })
                         missionCommands.addCommandForGroup(_groupId, "Extract Troops", _troopCommandsPath, ctld.extractTroops, { _unitName, true })
 
+                        missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
+
+                        local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
                         for _,_loadGroup in pairs(ctld.loadableGroups) do
                             if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
-                                missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _troopCommandsPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
+                                missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _loadPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
                             end
                         end
-
-                        missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
 
                         if ctld.unitCanCarryVehicles(_unit) then
 
