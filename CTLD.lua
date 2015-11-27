@@ -13,8 +13,9 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.40 - 11/11/2015  - Added new callback interface
+    Version: 1.41 - 11/11/2015  - Added new callback interface
                                 - Added Different Pickup Groups for F10 and for the spawn group command
+                                - EWR now activates
 
  ]]
 
@@ -408,7 +409,7 @@ ctld.spawnableCrates = {
         --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
         -- END of BUK
 
-        { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR" },
+        { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR", side = 1 },
 
         { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
         { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
@@ -2339,6 +2340,13 @@ function ctld.unpackCrates(_arguments)
 
                     ctld.processCallback({unit = _heli, crate = _crate , spawnedGroup = _spawnedGroups, action = "unpack"})
 
+                    if _crate.details.unit == "1L13 EWR" then
+                        ctld.addEWRTask(_spawnedGroups)
+
+                        env.info("Added EWR")
+                    end
+
+
                     trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed " .. _crate.details.desc .. " to the field", 10)
 
                     if ctld.isJTACUnitType(_crate.details.unit) and ctld.JTAC_dropEnabled then
@@ -3508,6 +3516,27 @@ function ctld.createUnit(_x, _y, _angle, _details)
     return _newUnit
 end
 
+function ctld.addEWRTask(_group)
+
+    -- delayed 2 second to work around bug
+    timer.scheduleFunction(function(_ewrGroup)
+        local _grp = ctld.getAliveGroup(_ewrGroup)
+
+        if _grp ~= nil then
+            local _controller = _grp:getController();
+            local _EWR = {
+                id = 'EWR',
+                auto = true,
+                params = {
+                }
+            }
+            _controller:setTask(_EWR)
+        end
+    end
+        , _group:getName(), timer.getTime() + 2)
+
+end
+
 function ctld.orderGroupToMoveToPoint(_leader, _destination)
 
     local _group = _leader:getGroup()
@@ -3524,6 +3553,7 @@ function ctld.orderGroupToMoveToPoint(_leader, _destination)
             },
         },
     }
+
 
     -- delayed 2 second to work around bug
     timer.scheduleFunction(function(_arg)
