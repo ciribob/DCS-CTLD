@@ -384,6 +384,9 @@ ctld.spawnableCrates = {
 
         { weight = 250, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
         { weight = 255, desc = "M-109", unit = "M-109", side = 2, cratesRequired = 3 },
+
+        { weight = 250, desc = "Ural-375 Ammo Truck", unit = "Ural-375", side = 1, cratesRequired = 2 },
+        { weight = 255, desc = "M-818 Ammo Truck", unit = "M 818", side = 2, cratesRequired = 2 },
     },
     ["AA Crates"] = {
         { weight = 50, desc = "Stinger", unit = "Stinger manpad", side = 2 },
@@ -409,7 +412,7 @@ ctld.spawnableCrates = {
         --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
         -- END of BUK
 
-        { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR", side = 1 },
+        { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR", side = 1 }, -- cant be used by BLUE coalition
 
         { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
         { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
@@ -3933,10 +3936,11 @@ function ctld.addF10MenuOptions()
 
                             if ctld.unitCanCarryVehicles(_unit) == false then
 
+                                local _cratePath = missionCommands.addSubMenuForGroup(_groupId, "Spawn Crate", _rootPath)
                                 -- add menu for spawning crates
                                 for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
 
-                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _rootPath)
+                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratePath)
                                     for _, _crate in pairs(_crates) do
 
                                         if ctld.isJTACUnitType(_crate.unit) == false
@@ -3952,13 +3956,15 @@ function ctld.addF10MenuOptions()
 
                         if ctld.enabledFOBBuilding or ctld.enableCrates then
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
-                            missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", _crateCommands, ctld.listNearbyCrates, { _unitName })
+
                             missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
 
                             if ctld.slingLoad == false then
                                 missionCommands.addCommandForGroup(_groupId, "Drop Crate", _crateCommands, ctld.dropSlingCrate, { _unitName })
                                 missionCommands.addCommandForGroup(_groupId, "Current Cargo Status", _crateCommands, ctld.slingCargoStatus, { _unitName })
                             end
+
+                            missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", _crateCommands, ctld.listNearbyCrates, { _unitName })
 
                             if ctld.enabledFOBBuilding then
                                 missionCommands.addCommandForGroup(_groupId, "List FOBs", _crateCommands, ctld.listFOBS, { _unitName })
