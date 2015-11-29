@@ -385,8 +385,8 @@ ctld.spawnableCrates = {
         { weight = 250, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
         { weight = 255, desc = "M-109", unit = "M-109", side = 2, cratesRequired = 3 },
 
-        { weight = 250, desc = "Ural-375 Ammo Truck", unit = "Ural-375", side = 1, cratesRequired = 2 },
-        { weight = 255, desc = "M-818 Ammo Truck", unit = "M 818", side = 2, cratesRequired = 2 },
+        { weight = 252, desc = "Ural-375 Ammo Truck", unit = "Ural-375", side = 1, cratesRequired = 2 },
+        { weight = 253, desc = "M-818 Ammo Truck", unit = "M 818", side = 2, cratesRequired = 2 },
     },
     ["AA Crates"] = {
         { weight = 50, desc = "Stinger", unit = "Stinger manpad", side = 2 },
