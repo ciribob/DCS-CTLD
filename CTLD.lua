@@ -13,9 +13,10 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.41 - 11/11/2015  - Added new callback interface
+    Version: 1.42 - 11/11/2015  - Added new callback interface
                                 - Added Different Pickup Groups for F10 and for the spawn group command
                                 - EWR now activates
+                                - Bug fix for AI Group Load
 
  ]]
 
@@ -1423,7 +1424,7 @@ function ctld.loadTroops(_heli, _troops, _numberOrTemplate)
     local _onboard = ctld.inTransitTroops[_heli:getName()]
 
     --number doesnt apply to vehicles
-    if _numberOrTemplate == nil then
+    if _numberOrTemplate == nil  or (type(_numberOrTemplate) ~= "table" and type(_numberOrTemplate) ~= "number")  then
         _numberOrTemplate = ctld.numberOfTroops
     end
 
@@ -3848,36 +3849,45 @@ function ctld.checkAIStatus()
 
     timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 2)
 
+
     for _, _unitName in pairs(ctld.transportPilotNames) do
+        local status, error = pcall(function()
 
-        local _unit = ctld.getTransportUnit(_unitName)
+            local _unit = ctld.getTransportUnit(_unitName)
 
-        -- no player name means AI!
-        if _unit ~= nil and _unit:getPlayerName() == nil then
-            local _zone = ctld.inPickupZone(_unit)
+            -- no player name means AI!
+            if _unit ~= nil and _unit:getPlayerName() == nil then
+                local _zone = ctld.inPickupZone(_unit)
+              --  env.error("Checking.. ".._unit:getName())
+                if _zone.inZone == true and not ctld.troopsOnboard(_unit, true) then
+                 --   env.error("in zone, loading.. ".._unit:getName())
+                    ctld.loadTroopsFromZone({ _unitName, true,"",true })
 
-            if _zone.inZone == true and not ctld.troopsOnboard(_unit, true) then
+                elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
+               --     env.error("in dropoff zone, unloading.. ".._unit:getName())
+                    ctld.unloadTroops( { _unitName, true })
+                end
 
-                ctld.loadTroopsFromZone({ _unitName, true,"",true })
+                if ctld.unitCanCarryVehicles(_unit) then
 
-            elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
+                    if _zone.inZone == true and not ctld.troopsOnboard(_unit, false) then
 
-                ctld.unloadTroops( { _unitName, true })
-            end
+                        ctld.loadTroopsFromZone({ _unitName, false,"",true })
 
-            if ctld.unitCanCarryVehicles(_unit) then
+                    elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, false) then
 
-                if _zone.inZone == true and not ctld.troopsOnboard(_unit, false) then
-
-                    ctld.loadTroopsFromZone({ _unitName, false,"",true })
-
-                elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, false) then
-
-                    ctld.unloadTroops( { _unitName, false })
+                        ctld.unloadTroops( { _unitName, false })
+                    end
                 end
             end
+        end)
+
+        if (not status) then
+            env.error(string.format("Error with ai status: %s", error), false)
         end
     end
+
+
 end
 
 
@@ -5039,7 +5049,7 @@ end
 
 timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
-timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 5)
+timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 1)
 timer.scheduleFunction(ctld.checkTransportStatus, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
 
