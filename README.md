@@ -56,6 +56,7 @@ The script supports:
 * Radio Beacon Deployment
     * Ability to deploy a homing beacon that the A10C, Ka-50, Mi-8 and Huey can home on
 * Pre loading of units into AI vehicles via a DO SCRIPT
+* Spawning of sling loadable crates at a specified zone or Point
 * Mission Editor Trigger functions - They store the numbers in flags for use by triggers
     * Count Crates in Zone
 	    * Works for both crates added by the Mission Editor and Crates spawned by Transports
@@ -335,6 +336,33 @@ A crate drop zone can be added to any zone by adding a Trigger Once with a Time 
 
 Where ```"crateZone"``` is the name of a Trigger Zone added using the mission editor, and ```1``` is the number of the flag where the current number of crates in the zone will be stored.
 
+#### Spawn Sling loadable crate at a Zone
+You can spawn a sling loadable crate at a specified trigger zone using the code below:
+
+The parameters are:
+* group side ("red" or "blue")
+* weight of the crate - Determines what the crate contains. Weights are on the ctld.spawnableCrates list.
+* the name of the trigger to spawn the crate at
+```lua
+ctld.spawnCrateAtZone("blue", 500, "crateSpawnTrigger") -- spawns a BLUE coalition HMMWV at the trigger zone "crateSpawnTrigger"
+```
+or
+```lua
+ctld.spawnCrateAtZone("red", 500, "crateSpawnTrigger") -- spawns a RED coalition HMMWV at the trigger zone "crateSpawnTrigger"
+```
+#### Spawn Sling loadable crate at a Point
+You can spawn a sling loadable crate at a specified point using the code below:
+
+The parameters are:
+* group side ("red" or "blue")
+* weight of the crate - Determines what the crate contains. Weights are on the ctld.spawnableCrates list.
+* Point (x,y,z) of where to spawn the crate
+
+The point of a unit can be obtained by Unit.getByName("PilotName"):getPoint().
+
+```lua
+ctld.spawnCrateAtPoint("blue",500, {x=20, y=10,z=20}) -- spawns a RED coalition HMMWV at the specified point
+```
 
 #### JTAC Automatic Targeting and Laser
 This script has been merged with https://github.com/ciribob/DCS-JTACAutoLaze . JTACs can either be deployed by Helicopters and configured with the options in the script or pre added to the mission. By default each side can drop 5 JTACs.

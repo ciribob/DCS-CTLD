@@ -13,10 +13,9 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.42 - 11/11/2015  - Added new callback interface
-                                - Added Different Pickup Groups for F10 and for the spawn group command
-                                - EWR now activates
-                                - Bug fix for AI Group Load
+    Version: 1.43 - 13/12/2015  - Added Spawn crate at zone
+                                - Added Spawn crate at Point
+                                - Changed menu to have a maximum level of 3
 
  ]]
 
@@ -933,9 +932,87 @@ function ctld.loadTransport(_unitName)
 
 end
 
+-- adds a callback that will be called for many actions ingame
 function ctld.addCallback(_callback)
 
     table.insert(ctld.callbacks,_callback)
+
+end
+
+-- Spawns a sling loadable crate at a Trigger Zone
+--
+-- Weights can be found in the ctld.spawnableCrates list
+-- e.g. ctld.spawnCrateAtZone("red", 500,"triggerzone1") -- spawn a humvee at triggerzone 1 for red side
+-- e.g. ctld.spawnCrateAtZone("blue", 505,"triggerzone1") -- spawn a tow humvee at triggerzone1 for blue side
+--
+function ctld.spawnCrateAtZone(_side, _weight,_zone)
+    local _spawnTrigger = trigger.misc.getZone(_zone) -- trigger to use as reference position
+
+    if _spawnTrigger == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zone, 10)
+        return
+    end
+
+    local _crateType = ctld.crateLookupTable[tostring(_weight)]
+
+    if _crateType == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find crate with weight " .. _weight, 10)
+        return
+    end
+
+    local _country
+    if _side == "red" then
+        _side = 1
+        _country = 0
+    else
+        _side = 2
+        _country = 2
+    end
+
+    local _pos2 = { x = _spawnTrigger.point.x, y = _spawnTrigger.point.z }
+    local _alt = land.getHeight(_pos2)
+    local _point = { x = _pos2.x, y = _alt, z = _pos2.y }
+
+    local _unitId = mist.getNextUnitId()
+
+    local _name = string.format("%s #%i", _crateType.desc, _unitId)
+
+    local _spawnedCrate = ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight,_side)
+
+end
+
+-- Spawns a sling loadable crate at a Point
+--
+-- Weights can be found in the ctld.spawnableCrates list
+-- Points can be made by hand or obtained from a Unit position by Unit.getByName("PilotName"):getPoint()
+-- e.g. ctld.spawnCrateAtZone("red", 500,{x=1,y=2,z=3}) -- spawn a humvee at triggerzone 1 for red side at a specified point
+-- e.g. ctld.spawnCrateAtZone("blue", 505,{x=1,y=2,z=3}) -- spawn a tow humvee at triggerzone1 for blue side at a specified point
+--
+--
+function ctld.spawnCrateAtPoint(_side, _weight,_point)
+
+
+    local _crateType = ctld.crateLookupTable[tostring(_weight)]
+
+    if _crateType == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find crate with weight " .. _weight, 10)
+        return
+    end
+
+    local _country
+    if _side == "red" then
+        _side = 1
+        _country = 0
+    else
+        _side = 2
+        _country = 2
+    end
+
+    local _unitId = mist.getNextUnitId()
+
+    local _name = string.format("%s #%i", _crateType.desc, _unitId)
+
+    local _spawnedCrate = ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight,_side)
 
 end
 
@@ -960,7 +1037,7 @@ function ctld.getTransportUnit(_unitName)
     return nil
 end
 
-function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight)
+function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
 
     local _crate
     if ctld.slingLoad then
@@ -998,6 +1075,14 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight)
     mist.dynAddStatic(_crate)
     local _spawnedCrate = StaticObject.getByName(_crate["name"])
     --local _spawnedCrate = coalition.addStaticObject(_country, _crate)
+
+    local _crateType = ctld.crateLookupTable[tostring(_weight)]
+
+    if _side == 1 then
+        ctld.spawnedCratesRED[_name] =_crateType
+    else
+        ctld.spawnedCratesBLUE[_name] = _crateType
+    end
 
     return _spawnedCrate
 end
@@ -1124,15 +1209,7 @@ function ctld.spawnCrate(_arguments)
 
             local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-            local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight)
-
-            if _side == 1 then
-                --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
-                ctld.spawnedCratesRED[_name] = _crateType
-            else
-                --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
-                ctld.spawnedCratesBLUE[_name] = _crateType
-            end
+            local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight,_side)
 
             ctld.displayMessageToGroup(_heli, string.format("A %s crate weighing %s kg has been brought out and is at your 12 o'clock ", _crateType.desc, _crateType.weight), 20)
 
@@ -2510,15 +2587,7 @@ function ctld.dropSlingCrate(_args)
         --remove crate from cargo
         ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
 
-        local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight)
-
-        if _side == 1 then
-            --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
-            ctld.spawnedCratesRED[_name] = _currentCrate
-        else
-            --   _spawnedCrate = coalition.addStaticObject(_side, _spawnedCrate)
-            ctld.spawnedCratesBLUE[_name] = _currentCrate
-        end
+        local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight,_side)
     end
 end
 
@@ -3858,13 +3927,13 @@ function ctld.checkAIStatus()
             -- no player name means AI!
             if _unit ~= nil and _unit:getPlayerName() == nil then
                 local _zone = ctld.inPickupZone(_unit)
-              --  env.error("Checking.. ".._unit:getName())
+                --  env.error("Checking.. ".._unit:getName())
                 if _zone.inZone == true and not ctld.troopsOnboard(_unit, true) then
-                 --   env.error("in zone, loading.. ".._unit:getName())
+                    --   env.error("in zone, loading.. ".._unit:getName())
                     ctld.loadTroopsFromZone({ _unitName, true,"",true })
 
                 elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
-               --     env.error("in dropoff zone, unloading.. ".._unit:getName())
+                    --     env.error("in dropoff zone, unloading.. ".._unit:getName())
                     ctld.unloadTroops( { _unitName, true })
                 end
 
@@ -3920,10 +3989,10 @@ function ctld.addF10MenuOptions()
 
                         missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
 
-                        local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
+                       -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
                         for _,_loadGroup in pairs(ctld.loadableGroups) do
                             if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
-                                missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _loadPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
+                                missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _troopCommandsPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
                             end
                         end
 
@@ -3946,11 +4015,11 @@ function ctld.addF10MenuOptions()
 
                             if ctld.unitCanCarryVehicles(_unit) == false then
 
-                                local _cratePath = missionCommands.addSubMenuForGroup(_groupId, "Spawn Crate", _rootPath)
+                               -- local _cratePath = missionCommands.addSubMenuForGroup(_groupId, "Spawn Crate", _rootPath)
                                 -- add menu for spawning crates
                                 for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
 
-                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratePath)
+                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _rootPath)
                                     for _, _crate in pairs(_crates) do
 
                                         if ctld.isJTACUnitType(_crate.unit) == false
