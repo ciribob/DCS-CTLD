@@ -13,9 +13,10 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.43 - 13/12/2015  - Added Spawn crate at zone
+    Version: 1.44 - 13/12/2015  - Added Spawn crate at zone
                                 - Added Spawn crate at Point
                                 - Changed menu to have a maximum level of 3
+                                - FOB Building using smaller crates
 
  ]]
 
@@ -57,7 +58,9 @@ ctld.enabledFOBBuilding = true -- if true, you can load a crate INTO a C-130 tha
 -- You can also enable troop Pickup at FOBS
 
 ctld.cratesRequiredForFOB = 3 -- The amount of crates required to build a FOB. Once built, helis can spawn crates at this outpost to be carried and deployed in another area.
--- The crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
+-- The large crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
+-- Small FOB crates can be moved by helicopter. The FOB will require ctld.cratesRequiredForFOB larges crates and small crates are 1/3 of a large fob crate
+-- To build the FOB entirely out of small crates you will need ctld.cratesRequiredForFOB * 3
 
 ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a created FOB
 
@@ -387,6 +390,8 @@ ctld.spawnableCrates = {
 
         { weight = 252, desc = "Ural-375 Ammo Truck", unit = "Ural-375", side = 1, cratesRequired = 2 },
         { weight = 253, desc = "M-818 Ammo Truck", unit = "M 818", side = 2, cratesRequired = 2 },
+
+        { weight = 800, desc = "FOB Crate - Small", unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
     },
     ["AA Crates"] = {
         { weight = 50, desc = "Stinger", unit = "Stinger manpad", side = 2 },
@@ -2378,7 +2383,8 @@ function ctld.unpackCrates(_arguments)
             local _crates = ctld.getCratesAndDistance(_heli)
             local _crate = ctld.getClosestCrate(_heli, _crates)
 
-            if _crate ~= nil and _crate.dist < 750 and _crate.details.unit == "FOB" then
+            if _crate ~= nil and _crate.dist < 750
+                    and (_crate.details.unit == "FOB" or _crate.details.unit == "FOB-SMALL") then
 
                 ctld.unpackFOBCrates(_crates, _heli)
 
@@ -2466,20 +2472,37 @@ function ctld.unpackFOBCrates(_crates, _heli)
     -- unpack multi crate
     local _nearbyMultiCrates = {}
 
+    local _bigFobCrates = 0
+    local _smallFobCrates = 0
+    local _totalCrates = 0
+
     for _, _nearbyCrate in pairs(_crates) do
 
-        if _nearbyCrate.dist < 750 and _nearbyCrate.details.unit == "FOB" then
+        if _nearbyCrate.dist < 750  then
 
-            table.insert(_nearbyMultiCrates, _nearbyCrate)
+            if  _nearbyCrate.details.unit == "FOB" then
+                _bigFobCrates = _bigFobCrates + 1
+                table.insert(_nearbyMultiCrates, _nearbyCrate)
+            elseif _nearbyCrate.details.unit == "FOB-SMALL" then
+                _smallFobCrates = _smallFobCrates + 1
+                table.insert(_nearbyMultiCrates, _nearbyCrate)
+            end
 
-            if #_nearbyMultiCrates == ctld.cratesRequiredForFOB then
+            --catch divide by 0
+            if _smallFobCrates > 0 then
+                _totalCrates = _bigFobCrates + (_smallFobCrates/3.0)
+            else
+                _totalCrates = _bigFobCrates
+            end
+
+            if _totalCrates >= ctld.cratesRequiredForFOB then
                 break
             end
         end
     end
 
     --- check crate count
-    if #_nearbyMultiCrates == ctld.cratesRequiredForFOB then
+    if _totalCrates >= ctld.cratesRequiredForFOB then
 
         -- destroy crates
 
@@ -2489,8 +2512,10 @@ function ctld.unpackFOBCrates(_crates, _heli)
 
             if _heli:getCoalition() == 1 then
                 ctld.droppedFOBCratesRED[_crate.crateUnit:getName()] = nil
+                ctld.spawnedCratesRED[_crate.crateUnit:getName()] = nil
             else
-                ctld.droppedFOBCratesRED[_crate.crateUnit:getName()] = nil
+                ctld.droppedFOBCratesBLUE[_crate.crateUnit:getName()] = nil
+                ctld.spawnedCratesBLUE[_crate.crateUnit:getName()] = nil
             end
 
             table.insert(_points, _crate.crateUnit:getPoint())
@@ -2528,7 +2553,7 @@ function ctld.unpackFOBCrates(_crates, _heli)
             end
         end, { _centroid, _heli:getCountry(), _heli:getCoalition() }, timer.getTime() + ctld.buildTimeFOB)
 
-        local _txt = string.format("%s started building FOB using %d FOB crates, it will be finished in %d seconds.\nPosition marked with smoke.", ctld.getPlayerNameOrType(_heli), #_nearbyMultiCrates, ctld.buildTimeFOB)
+        local _txt = string.format("%s started building FOB using %d FOB crates, it will be finished in %d seconds.\nPosition marked with smoke.", ctld.getPlayerNameOrType(_heli), _totalCrates, ctld.buildTimeFOB)
 
         ctld.processCallback({unit = _heli, position = _centroid, action = "fob"})
 
@@ -2536,7 +2561,7 @@ function ctld.unpackFOBCrates(_crates, _heli)
 
         trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
     else
-        local _txt = string.format("Cannot build FOB!\n\nIt requires %d FOB crates and there are %d \n\nOr the crates are not within 750m of each other", ctld.cratesRequiredForFOB, #_nearbyMultiCrates)
+        local _txt = string.format("Cannot build FOB!\n\nIt requires %d Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %d large FOB crates nearby\n\nOr the crates are not within 750m of each other", ctld.cratesRequiredForFOB, _totalCrates)
         ctld.displayMessageToGroup(_heli, _txt, 20)
     end
 end
