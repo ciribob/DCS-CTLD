@@ -13,11 +13,9 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.44 - 13/12/2015  - Added Spawn crate at zone
-                                - Added Spawn crate at Point
-                                - Changed menu to have a maximum level of 3
-                                - FOB Building using smaller crates
-
+    Version: 1.45 - 18/12/2015  - Added indicator for number of crates required
+                                - Re-organised F10 Troop Menu slightly. Merged Unload / Extract into one
+                                - Added new easy config settings for the simulated sling loads
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -72,6 +70,16 @@ ctld.radioSoundFC3 = "beaconsilent.ogg" -- name of the second silent radio file,
 ctld.deployedBeaconBattery = 30 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
 
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
+
+
+-- Simulated Sling load configuration
+
+ctld.minimumHoverHeight = 7.5 -- Lowest allowable height for crate hover
+ctld.maximumHoverHeight = 12.0 -- Highest allowable height for crate hover
+ctld.maxDistanceFromCrate = 5.5 -- Maximum distance from from crate for hover
+ctld.hoverTime = 10 -- Time to hold hover above a crate for loading in seconds
+
+-- end of Simulated Sling load configuration
 
 -- ***************** JTAC CONFIGURATION *****************
 
@@ -1497,6 +1505,36 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
     return _details
 end
 
+--Special F10 function for players for troops
+function ctld.unloadExtractTroops(_args)
+
+    local _heli = ctld.getTransportUnit(_args[1])
+
+    if _heli == nil then
+        return false
+    end
+
+
+    local _extract = nil
+    if not ctld.inAir(_heli) then
+        if _heli:getCoalition() == 1 then
+            _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsRED)
+        else
+            _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsBLUE)
+        end
+
+    end
+
+    if _extract ~= nil and not ctld.troopsOnboard(_heli, true) then
+        -- search for nearest troops to pickup
+        return ctld.extractTroops({_heli:getName(), true})
+    else
+        return ctld.unloadTroops({_heli:getName(),true,true})
+    end
+
+
+end
+
 -- load troops onto vehicle
 function ctld.loadTroops(_heli, _troops, _numberOrTemplate)
 
@@ -1744,6 +1782,7 @@ function ctld.unloadTroops(_args)
 
     local _zone = ctld.inPickupZone(_heli)
     if not ctld.troopsOnboard(_heli, _troops)  then
+
         ctld.displayMessageToGroup(_heli, "No one to unload", 10)
 
         return false
@@ -1973,7 +2012,7 @@ function ctld.checkHoverStatus()
 
                 for _, _crate in pairs(_crates) do
                     --   env.info("CRATE: ".._crate.crateUnit:getName().. " ".._crate.dist)
-                    if _crate.dist < 5.5 and _crate.details.unit ~= "FOB" then
+                    if _crate.dist < ctld.maxDistanceFromCrate and _crate.details.unit ~= "FOB" then
 
                         --check height!
                         local _height = _transUnit:getPoint().y - _crate.crateUnit:getPoint().y
@@ -1981,13 +2020,13 @@ function ctld.checkHoverStatus()
                         --  ctld.heightDiff(_transUnit)
                         --env.info("HEIGHT ABOVE GROUD ".._name.." ".._height.." ".._transUnit:getPoint().y.." ".._crate.crateUnit:getPoint().y)
 
-                        if _height > 7.5 and _height <= 12.0 then
+                        if _height > ctld.minimumHoverHeight and _height <= ctld.maximumHoverHeight then
 
                             local _time = ctld.hoverStatus[_transUnit:getName()]
 
                             if _time == nil then
-                                ctld.hoverStatus[_transUnit:getName()] = 10
-                                _time = 10
+                                ctld.hoverStatus[_transUnit:getName()] = ctld.hoverTime
+                                _time = ctld.hoverTime
                             else
                                 _time = ctld.hoverStatus[_transUnit:getName()] - 1
                                 ctld.hoverStatus[_transUnit:getName()] = _time
@@ -2013,11 +2052,11 @@ function ctld.checkHoverStatus()
                             _reset = false
 
                             break
-                        elseif _height <= 7.5 then
-                            ctld.displayMessageToGroup(_transUnit, "Too low to hook " .. _crate.details.desc .. " crate.\n\nHold hover for 10 seconds", 5,true)
+                        elseif _height <= ctld.minimumHoverHeight then
+                            ctld.displayMessageToGroup(_transUnit, "Too low to hook " .. _crate.details.desc .. " crate.\n\nHold hover for " .. ctld.hoverTime .. " seconds", 5,true)
                             break
                         else
-                            ctld.displayMessageToGroup(_transUnit, "Too high to hook " .. _crate.details.desc .. " crate.\n\nHold hover for 10 seconds", 5, true)
+                            ctld.displayMessageToGroup(_transUnit, "Too high to hook " .. _crate.details.desc .. " crate.\n\nHold hover for " .. ctld.hoverTime .. " seconds", 5, true)
                             break
                         end
                     end
@@ -4009,12 +4048,11 @@ function ctld.addF10MenuOptions()
 
                         local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport", _rootPath)
 
-                        missionCommands.addCommandForGroup(_groupId, "Unload Troops", _troopCommandsPath, ctld.unloadTroops, { _unitName, true })
-                        missionCommands.addCommandForGroup(_groupId, "Extract Troops", _troopCommandsPath, ctld.extractTroops, { _unitName, true })
+                        missionCommands.addCommandForGroup(_groupId, "Unload / Extract Troops", _troopCommandsPath, ctld.unloadExtractTroops, { _unitName })
 
                         missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
 
-                       -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
+                        -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
                         for _,_loadGroup in pairs(ctld.loadableGroups) do
                             if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
                                 missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _troopCommandsPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
@@ -4040,7 +4078,7 @@ function ctld.addF10MenuOptions()
 
                             if ctld.unitCanCarryVehicles(_unit) == false then
 
-                               -- local _cratePath = missionCommands.addSubMenuForGroup(_groupId, "Spawn Crate", _rootPath)
+                                -- local _cratePath = missionCommands.addSubMenuForGroup(_groupId, "Spawn Crate", _rootPath)
                                 -- add menu for spawning crates
                                 for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
 
@@ -4050,7 +4088,15 @@ function ctld.addF10MenuOptions()
                                         if ctld.isJTACUnitType(_crate.unit) == false
                                                 or (ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled) then
                                             if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
-                                                missionCommands.addCommandForGroup(_groupId, _crate.desc, _cratePath, ctld.spawnCrate, { _unitName, _crate.weight })
+
+                                                local _crateRadioMsg = _crate.desc
+
+                                                --add in the number of crates required to build something
+                                                if _crate.cratesRequired ~= nil and _crate.cratesRequired > 1 then
+                                                    _crateRadioMsg = _crateRadioMsg.." (".._crate.cratesRequired..")"
+                                                end
+
+                                                missionCommands.addCommandForGroup(_groupId,_crateRadioMsg, _cratePath, ctld.spawnCrate, { _unitName, _crate.weight })
                                             end
                                         end
                                     end
