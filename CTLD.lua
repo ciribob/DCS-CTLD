@@ -409,6 +409,7 @@ ctld.spawnableCrates = {
         { weight = 540, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
         { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
         { weight = 550, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+        -- { weight = 535, desc = "HAWK Platoon Command Post", unit = "Hawk pcp", side = 2 },
         { weight = 555, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
@@ -432,6 +433,20 @@ ctld.spawnableCrates = {
 
     },
 }
+
+-- Hawk pcp needed after OpenBeta 1.5
+if ctld.openBeta15 then
+    -- find position of Hawk tr, put pcp after that
+    local _pos = 1 -- start with valid position
+    for _ = 1, #ctld.spawnableCrates["AA Crates"] do
+        if ctld.spawnableCrates["AA Crates"][_]["unit"] == "Hawk tr" then
+            _pos = ( _ + 1 )
+            break
+        end
+    end
+
+    table.insert(ctld.spawnableCrates["AA Crates"], _pos, { weight = 535, desc = "HAWK Platoon Command Post", unit = "Hawk pcp", side = 2 })
+end
 
 -- if the unit is on this list, it will be made into a JTAC when deployed
 ctld.jtacUnitTypes = {
@@ -3125,6 +3140,9 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
 
     if _type == "hawk" then
         _hawkParts =  { ["Hawk ln"] = false, ["Hawk tr"] = false, ["Hawk sr"] = false }
+        if ctld.openBeta15 then
+            _hawkParts["Hawk pcp"] = false
+        end
     elseif _type == "buk" then
         _hawkParts =  { ["Buk SR 9S18M1"] = false, ["Buk CC 9S470M1"] = false, ["Buk LN 9A310M1"] = false }
     else
@@ -3137,7 +3155,7 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
         if _nearbyCrate.dist < 500 then
 
             if _type == "hawk" then
-                if _nearbyCrate.details.unit == "Hawk ln" or _nearbyCrate.details.unit == "Hawk sr" or _nearbyCrate.details.unit == "Hawk tr" then
+                if _nearbyCrate.details.unit == "Hawk ln" or _nearbyCrate.details.unit == "Hawk sr" or _nearbyCrate.details.unit == "Hawk tr" or _nearbyCrate.details.unit == "Hawk pcp" then
                     _hawkParts[_nearbyCrate.details.unit] = _nearbyCrate
                 else
                     -- not part of hawk
@@ -3172,6 +3190,8 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_type)
             if _type == "hawk" then
                 if _name == "Hawk ln" then
                     _txt = "Missing HAWK Launcher\n"
+                elseif _name == "Hawk pcp" then
+                    _txt = _txt .. "Missing HAWK Platoon Command Post\n"
                 elseif _name == "Hawk sr" then
                     _txt = _txt .. "Missing HAWK Search Radar\n"
                 else
