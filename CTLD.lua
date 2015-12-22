@@ -13,10 +13,11 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.50 - 18/12/2015  - Internal Rewrite of AA System Creation
+    Version: 1.50 - 22/12/2015  - Internal Rewrite of AA System Creation
                                 - Added HAWK PCP to HAWK System to fix non firing
                                 - Added more launchers to HAWK to balance difficulty of building
                                 - Added ctld.spawnGroupAtPoint
+                                - Added 326 KHz to ignore list
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -4962,7 +4963,8 @@ function ctld.generateVHFrequencies()
         920, 662,
         866, 907, 309.5, 822, 515, 470, 342, 1182, 309.5, 720, 528,
         337, 312.5, 830, 740, 309.5, 641, 312, 722, 682, 1050,
-        1116, 935, 1000, 430, 577
+        1116, 935, 1000, 430, 577,
+        326 -- Nevada
     }
 
     ctld.freeVHFFrequencies = {}

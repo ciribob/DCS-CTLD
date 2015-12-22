@@ -224,7 +224,7 @@ ctld.preLoadTransport("helicargo1", 10,true)
 #### Create Extractable Groups without Pickup Zone
 You can also make existing mission editor groups extractable by adding their group name to the ```ctld.extractableGroups``` list
 
-#### Spawn Extractable Groups without Pickup Zone
+#### Spawn Extractable Groups without Pickup Zone at a Trigger Zone
 You can also spawn extractable infantry groups at a specified trigger zone using the code below.
 
 The parameters are:
@@ -243,6 +243,29 @@ ctld.spawnGroupAtTrigger("blue", 5, "spawnTrigger2", 2000)
 or
 ```lua
 ctld.spawnGroupAtTrigger("blue", {mg=1,at=2,aa=3,inf=4,mortar=5}, "spawnTrigger2", 2000)
+-- Spawns 1 machine gun, 2 anti tank, 3 anti air, 4 standard soldiers and 5 mortars
+
+```
+
+#### Spawn Extractable Groups without Pickup Zone at a Point
+You spawn extractable infantry groups at a specified Vec3 point ```{x=1,y=2,z=3}``` using the code below.
+
+The parameters are:
+* group side (red or blue)
+* number of troops to spawn OR Group Description
+* Vec3 point ```{x=1,y=2,z=3}```
+* the distance the troops should search for enemies on spawning in meters
+
+```lua
+ctld.spawnGroupAtPoint("red", 10, {x=1,y=2,z=3}, 1000)
+```
+or
+```lua
+ctld.spawnGroupAtPoint("blue", 5, {x=1,y=2,z=3}, 2000)
+```
+or
+```lua
+ctld.spawnGroupAtPoint("blue", {mg=1,at=2,aa=3,inf=4,mortar=5}, {x=1,y=2,z=3}, 2000)
 -- Spawns 1 machine gun, 2 anti tank, 3 anti air, 4 standard soldiers and 5 mortars
 
 ```
