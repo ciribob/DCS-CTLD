@@ -72,6 +72,7 @@ ctld.deployedBeaconBattery = 30 -- the battery on deployed beacons will last for
 
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
 
+ctld.allowRandomAiTeamPickups = true -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
 
 -- Simulated Sling load configuration
 
@@ -4051,7 +4052,19 @@ function ctld.checkAIStatus()
                 --  env.error("Checking.. ".._unit:getName())
                 if _zone.inZone == true and not ctld.troopsOnboard(_unit, true) then
                     --   env.error("in zone, loading.. ".._unit:getName())
-                    ctld.loadTroopsFromZone({ _unitName, true,"",true })
+					
+					if ctld.allowRandomAiTeamPickups == true then
+						-- Random troop pickup implementation
+						if _unit:getCoalition() == 1 then
+							_team = math.floor((math.random(#ctld.redTeams * 100) / 100) + 1)
+							ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.redTeams[_team]],true })
+						else
+							_team = math.floor((math.random(#ctld.blueTeams * 100) / 100) + 1)
+							ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.blueTeams[_team]],true })
+						end
+					else
+						 ctld.loadTroopsFromZone({ _unitName, true,"",true })
+					end
 
                 elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
                     --     env.error("in dropoff zone, unloading.. ".._unit:getName())
@@ -5240,6 +5253,23 @@ for _, _groupName in pairs(ctld.extractableGroups) do
             table.insert(ctld.droppedTroopsBLUE, _group:getName())
         end
     end
+end
+
+
+-- Seperate troop teams into red and blue for random AI pickups
+if ctld.allowRandomAiTeamPickups == true then
+	ctld.redTeams = {}
+	ctld.blueTeams = {}
+	for _,_loadGroup in pairs(ctld.loadableGroups) do
+		if not _loadGroup.side then
+			table.insert(ctld.redTeams, _)
+			table.insert(ctld.blueTeams, _)
+		elseif _loadGroup.side == 1 then
+			table.insert(ctld.redTeams, _)
+		elseif _loadGroup.side == 2 then
+			table.insert(ctld.blueTeams, _)
+		end
+	end
 end
 
 
