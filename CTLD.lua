@@ -39,7 +39,7 @@ ctld.maximumDistanceLogistic = 200 -- max distance from vehicle to logistics to 
 ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
 ctld.maximumMoveDistance = 2000 -- max distance for troops to move from drop point if no enemy is nearby
 
-ctld.numberOfTroops = 8 -- default number of troops to load on a transport heli or C-130
+ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
 ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
 ctld.fastRopeMaximumHeight = 18.28 -- in meters which is 60 ft max fast rope (not rappell) safe height
 
@@ -72,6 +72,7 @@ ctld.deployedBeaconBattery = 30 -- the battery on deployed beacons will last for
 
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
 
+ctld.allowRandomAiTeamPickups = true -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
 
 -- Simulated Sling load configuration
 
@@ -364,7 +365,7 @@ ctld.vehicleTransportEnabled = {
 ctld.loadableGroups = {
     {name = "Standard Group", inf = 6, mg = 2, at = 2 }, -- will make a loadable group with 5 infantry, 2 MGs and 2 anti-tank for both coalitions
     {name = "Anti Air", inf = 2, aa = 3  },
-    {name = "Anti Tank", inf = 3, at = 6  },
+    {name = "Anti Tank", inf = 2, at = 6  },
     {name = "Mortar Squad", mortar = 6 },
     -- {name = "Mortar Squad Red", inf = 2, mortar = 5, side =1 }, --would make a group loadable by RED only
 }
@@ -4052,14 +4053,17 @@ function ctld.checkAIStatus()
                 if _zone.inZone == true and not ctld.troopsOnboard(_unit, true) then
                     --   env.error("in zone, loading.. ".._unit:getName())
 					
-                    --ctld.loadTroopsFromZone({ _unitName, true,"",true })
-					-- Random troop pickup implementation
-					if _unit:getCoalition() == 1 then
-						_team = math.floor((math.random(#ctld.redTeams * 100) / 100) + 1)
-						ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.redTeams[_team]],true })
+					if ctld.allowRandomAiTeamPickups == true then
+						-- Random troop pickup implementation
+						if _unit:getCoalition() == 1 then
+							_team = math.floor((math.random(#ctld.redTeams * 100) / 100) + 1)
+							ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.redTeams[_team]],true })
+						else
+							_team = math.floor((math.random(#ctld.blueTeams * 100) / 100) + 1)
+							ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.blueTeams[_team]],true })
+						end
 					else
-						_team = math.floor((math.random(#ctld.blueTeams * 100) / 100) + 1)
-						ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.blueTeams[_team]],true })
+						 ctld.loadTroopsFromZone({ _unitName, true,"",true })
 					end
 
                 elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
@@ -5253,16 +5257,18 @@ end
 
 
 -- Seperate troop teams into red and blue for random AI pickups
-ctld.redTeams = {}
-ctld.blueTeams = {}
-for _,_loadGroup in pairs(ctld.loadableGroups) do
-	if not _loadGroup.side then
-		table.insert(ctld.redTeams, _)
-		table.insert(ctld.blueTeams, _)
-	elseif _loadGroup.side == 1 then
-		table.insert(ctld.redTeams, _)
-	elseif _loadGroup.side == 2 then
-		table.insert(ctld.blueTeams, _)
+if ctld.allowRandomAiTeamPickups == true then
+	ctld.redTeams = {}
+	ctld.blueTeams = {}
+	for _,_loadGroup in pairs(ctld.loadableGroups) do
+		if not _loadGroup.side then
+			table.insert(ctld.redTeams, _)
+			table.insert(ctld.blueTeams, _)
+		elseif _loadGroup.side == 1 then
+			table.insert(ctld.redTeams, _)
+		elseif _loadGroup.side == 2 then
+			table.insert(ctld.blueTeams, _)
+		end
 	end
 end
 
