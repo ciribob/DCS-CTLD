@@ -13,11 +13,8 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.50 - 22/12/2015  - Internal Rewrite of AA System Creation
-                                - Added HAWK PCP to HAWK System to fix non firing
-                                - Added more launchers to HAWK to balance difficulty of building
-                                - Added ctld.spawnGroupAtPoint
-                                - Added 326 KHz to ignore list
+    Version: 1.51 - 06/01/2015  - Steggles Contribution - Random AI group pickups from a zone
+                                - Sorted nearby crates list by distance
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -72,7 +69,7 @@ ctld.deployedBeaconBattery = 30 -- the battery on deployed beacons will last for
 
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
 
-ctld.allowRandomAiTeamPickups = true -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
+ctld.allowRandomAiTeamPickups = false -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
 
 -- Simulated Sling load configuration
 
@@ -422,10 +419,10 @@ ctld.spawnableCrates = {
         -- End of KUB
 
         -- BUK System
---        { weight = 575, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
---        { weight = 580, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
---        { weight = 585, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
---        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
+        --        { weight = 575, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
+        --        { weight = 580, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
+        --        { weight = 585, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
+        --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
         -- END of BUK
 
         { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR", side = 1 }, -- cant be used by BLUE coalition
@@ -2263,6 +2260,10 @@ function ctld.listNearbyCrates(_args)
 
     local _crates = ctld.getCratesAndDistance(_heli)
 
+    --sort
+    local _sort = function( a,b ) return a.dist < b.dist end
+    table.sort(_crates,_sort)
+
     for _, _crate in pairs(_crates) do
 
         if _crate.dist < 1000 and _crate.details.unit ~= "FOB" then
@@ -2536,7 +2537,7 @@ function ctld.unpackCrates(_arguments)
                     end
 
                     return -- stop processing
-                -- is multi crate?
+                    -- is multi crate?
                 elseif _crate.details.cratesRequired ~= nil and _crate.details.cratesRequired > 1 then
                     -- multicrate
 
@@ -2569,7 +2570,7 @@ function ctld.unpackCrates(_arguments)
                     if _crate.details.unit == "1L13 EWR" then
                         ctld.addEWRTask(_spawnedGroups)
 
-                 --       env.info("Added EWR")
+                        --       env.info("Added EWR")
                     end
 
 
@@ -4052,19 +4053,20 @@ function ctld.checkAIStatus()
                 --  env.error("Checking.. ".._unit:getName())
                 if _zone.inZone == true and not ctld.troopsOnboard(_unit, true) then
                     --   env.error("in zone, loading.. ".._unit:getName())
-					
-					if ctld.allowRandomAiTeamPickups == true then
-						-- Random troop pickup implementation
-						if _unit:getCoalition() == 1 then
-							_team = math.floor((math.random(#ctld.redTeams * 100) / 100) + 1)
-							ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.redTeams[_team]],true })
-						else
-							_team = math.floor((math.random(#ctld.blueTeams * 100) / 100) + 1)
-							ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.blueTeams[_team]],true })
-						end
-					else
-						 ctld.loadTroopsFromZone({ _unitName, true,"",true })
-					end
+
+                    if ctld.allowRandomAiTeamPickups == true then
+                        -- Random troop pickup implementation
+                        local _team = nil
+                        if _unit:getCoalition() == 1 then
+                            _team = math.floor((math.random(#ctld.redTeams * 100) / 100) + 1)
+                            ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.redTeams[_team]],true })
+                        else
+                            _team = math.floor((math.random(#ctld.blueTeams * 100) / 100) + 1)
+                            ctld.loadTroopsFromZone({ _unitName, true,ctld.loadableGroups[ctld.blueTeams[_team]],true })
+                        end
+                    else
+                        ctld.loadTroopsFromZone({ _unitName, true,"",true })
+                    end
 
                 elseif ctld.inDropoffZone(_unit) and ctld.troopsOnboard(_unit, true) then
                     --     env.error("in dropoff zone, unloading.. ".._unit:getName())
@@ -5258,18 +5260,18 @@ end
 
 -- Seperate troop teams into red and blue for random AI pickups
 if ctld.allowRandomAiTeamPickups == true then
-	ctld.redTeams = {}
-	ctld.blueTeams = {}
-	for _,_loadGroup in pairs(ctld.loadableGroups) do
-		if not _loadGroup.side then
-			table.insert(ctld.redTeams, _)
-			table.insert(ctld.blueTeams, _)
-		elseif _loadGroup.side == 1 then
-			table.insert(ctld.redTeams, _)
-		elseif _loadGroup.side == 2 then
-			table.insert(ctld.blueTeams, _)
-		end
-	end
+    ctld.redTeams = {}
+    ctld.blueTeams = {}
+    for _,_loadGroup in pairs(ctld.loadableGroups) do
+        if not _loadGroup.side then
+            table.insert(ctld.redTeams, _)
+            table.insert(ctld.blueTeams, _)
+        elseif _loadGroup.side == 1 then
+            table.insert(ctld.redTeams, _)
+        elseif _loadGroup.side == 2 then
+            table.insert(ctld.blueTeams, _)
+        end
+    end
 end
 
 
