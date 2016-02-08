@@ -478,6 +478,8 @@ Smoke colours are: Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 The script doesn't care if the unit isn't activated when run, as it'll automatically activate when the JTAC is activated in
 the mission but there can be a delay of up to 30 seconds after activation for the JTAC to start searching for targets.
 
+You can also change the name of a unit (unit, not group) to include "hpriority" to make it high priority for the JTAC, or "priority" to set it to be medium priority. JTAC's will prioritize targets within view by first marking hpriority targets, then priority targets, and finally all others. This works seemlessly with the all/vehicle/troop functionality as well. In this way you can have them lase SAMS, then AAA, then armor, or any other order you decide is preferable.
+
 ### Pickup and Dropoff Zones Setup
 Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger and the right side (RED or BLUE or BOTH) in order to load troops and vehicles.
 The pickup zone needs to be named the same as one of the pickup zones in the ```ctld.pickupZones``` list or the list can be edited to match the name in the mission editor.
