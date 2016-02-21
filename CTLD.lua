@@ -13,8 +13,7 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.51 - 06/01/2015  - Steggles Contribution - Random AI group pickups from a zone
-                                - Sorted nearby crates list by distance
+    Version: 1.52 - 20/02/2015  - BUG FIX - Disabled Crate static until ED bug is fixed
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -22,6 +21,9 @@ ctld = {} -- DONT REMOVE!
 -- ************************************************************************
 -- *********************  USER CONFIGURATION ******************************
 -- ************************************************************************
+
+ctld.staticBugFix = true --  When statics are destroyed, DCS Crashes. Set this to FALSE when this bug is fixed :)
+
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
@@ -584,7 +586,7 @@ function ctld.cratesInZone(_zone, _flagNumber)
         for _crateName, _dontUse in pairs(_crates) do
 
             --get crate
-            local _crate = StaticObject.getByName(_crateName)
+            local _crate = ctld.getCrateObject(_crateName)
 
             --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
             if _crate ~= nil and _crate:getLife() > 0
@@ -1137,41 +1139,74 @@ end
 function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
 
     local _crate
-    if ctld.slingLoad then
-        _crate = {
-            ["category"] = "Cargo",
-            ["shape_name"] = "ab-212_cargo",
-            ["type"] = "Cargo1",
-            ["unitId"] = _unitId,
-            ["y"] = _point.z,
-            ["x"] = _point.x,
-            ["mass"] = _weight,
-            ["name"] = _name,
-            ["canCargo"] = true,
-            ["heading"] = 0,
-            --            ["displayName"] = "name 2", -- getCargoDisplayName function exists but no way to set the variable
-            --            ["DisplayName"] = "name 2",
-            --            ["cargoDisplayName"] = "cargo123",
-            --            ["CargoDisplayName"] = "cargo123",
+    local _spawnedCrate
+
+    if ctld.staticBugFix then
+        local _groupId = mist.getNextGroupId()
+        local _groupName = "Crate Group #".._groupId
+
+        local _group = {
+            ["visible"] = false,
+            ["groupId"] = _groupId,
+            ["hidden"] = false,
+            ["units"] = {},
+            --        ["y"] = _positions[1].z,
+            --        ["x"] = _positions[1].x,
+            ["name"] = _groupName,
+            ["task"] = {},
         }
+
+        _group.units[1] = ctld.createUnit(_point.x , _point.z , 0, {type="UAZ-469",name=_name,unitId=_unitId})
+
+        --switch to MIST
+        _group.category = Group.Category.GROUND;
+        _group.country = _country;
+
+         local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
+
+        -- Turn off AI
+        trigger.action.setGroupAIOff(_spawnedGroup)
+
+        _spawnedCrate = Unit.getByName(_name)
     else
-        _crate = {
-            ["shape_name"] = "GeneratorF",
-            ["type"] = "GeneratorF",
-            ["unitId"] = _unitId,
-            ["y"] = _point.z,
-            ["x"] = _point.x,
-            ["name"] = _name,
-            ["category"] = "Fortifications",
-            ["canCargo"] = false,
-            ["heading"] = 0,
-        }
+
+        if ctld.slingLoad then
+            _crate = {
+                ["category"] = "Cargo",
+                ["shape_name"] = "ab-212_cargo",
+                ["type"] = "Cargo1",
+                ["unitId"] = _unitId,
+                ["y"] = _point.z,
+                ["x"] = _point.x,
+                ["mass"] = _weight,
+                ["name"] = _name,
+                ["canCargo"] = true,
+                ["heading"] = 0,
+                --            ["displayName"] = "name 2", -- getCargoDisplayName function exists but no way to set the variable
+                --            ["DisplayName"] = "name 2",
+                --            ["cargoDisplayName"] = "cargo123",
+                --            ["CargoDisplayName"] = "cargo123",
+            }
+        else
+            _crate = {
+                ["shape_name"] = "GeneratorF",
+                ["type"] = "GeneratorF",
+                ["unitId"] = _unitId,
+                ["y"] = _point.z,
+                ["x"] = _point.x,
+                ["name"] = _name,
+                ["category"] = "Fortifications",
+                ["canCargo"] = false,
+                ["heading"] = 0,
+            }
+        end
+
+        _crate["country"] = _country
+        mist.dynAddStatic(_crate)
+
+        _spawnedCrate = StaticObject.getByName(_crate["name"])
     end
 
-    _crate["country"] = _country
-    mist.dynAddStatic(_crate)
-    local _spawnedCrate = StaticObject.getByName(_crate["name"])
-    --local _spawnedCrate = coalition.addStaticObject(_country, _crate)
 
     local _crateType = ctld.crateLookupTable[tostring(_weight)]
 
@@ -2395,7 +2430,7 @@ function ctld.getCratesAndDistance(_heli)
     for _crateName, _details in pairs(_allCrates) do
 
         --get crate
-        local _crate = StaticObject.getByName(_crateName)
+        local _crate = ctld.getCrateObject(_crateName)
 
         --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
         if _crate ~= nil and _crate:getLife() > 0
@@ -2419,7 +2454,7 @@ function ctld.getCratesAndDistance(_heli)
     for _crateName, _details in pairs(_fobCrates) do
 
         --get crate
-        local _crate = StaticObject.getByName(_crateName)
+        local _crate = ctld.getCrateObject(_crateName)
 
         if _crate ~= nil and _crate:getLife() > 0 then
 
@@ -2493,6 +2528,17 @@ function ctld.findNearestAASystem(_heli,_aaSystem)
         return { group = _closestHawkGroup, dist = _shortestDistance }
     end
     return nil
+end
+
+function ctld.getCrateObject(_name)
+    local _crate
+
+    if ctld.staticBugFix then
+        _crate  = Unit.getByName(_name)
+    else
+        _crate = StaticObject.getByName(_name)
+    end
+    return _crate
 end
 
 
@@ -4138,7 +4184,7 @@ function ctld.addF10MenuOptions()
                             missionCommands.addCommandForGroup(_groupId, "Unload Vehicles", _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                             missionCommands.addCommandForGroup(_groupId, "Load / Extract Vehicles", _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
 
-                            if ctld.enabledFOBBuilding then
+                            if ctld.enabledFOBBuilding and ctld.staticBugFix == false then
 
                                 missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
                             end
