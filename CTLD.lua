@@ -4330,6 +4330,7 @@ ctld.jtacLaserPoints = {}
 ctld.jtacIRPoints = {}
 ctld.jtacSmokeMarks = {}
 ctld.jtacUnits = {} -- list of JTAC units for f10 command
+ctld.jtacStop = {} -- jtacs to tell to stop lasing
 ctld.jtacCurrentTargets = {}
 ctld.jtacRadioAdded = {} --keeps track of who's had the radio command added
 ctld.jtacGeneratedLaserCodes = {} -- keeps track of generated codes, cycles when they run out
@@ -4337,6 +4338,12 @@ ctld.jtacLaserPointCodes = {}
 
 
 function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
+
+    if ctld.jtacStop[_jtacGroupName] == true then
+        ctld.jtacStop[_jtacGroupName] = nil
+        ctld.cleanupJTAC(_jtacGroupName)
+        return
+    end
 
     if _lock == nil then
 
@@ -4501,6 +4508,9 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
     end
 end
 
+function ctld.JTACAutoLaseStop(_jtacGroupName)
+    ctld.jtacStop[_jtacGroupName] = true
+end
 
 -- used by the timer function
 function ctld.timerJTACAutoLase(_args)
