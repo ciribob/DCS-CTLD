@@ -96,26 +96,34 @@ To use the real cargo sling behaviour, set the ```ctld.slingLoad``` option to ``
 -- ************************************************************************
 -- *********************  USER CONFIGURATION ******************************
 -- ************************************************************************
+ctld.staticBugFix = true --  When statics are destroyed, DCS Crashes. Set this to FALSE when this bug is fixed or if you want to use REAL sling loads :)
+
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
+
+ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering...!
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
 -- There are some bug with Sling-loading that can cause crashes, if these occur set slingLoad to false
 -- to use the other method.
+-- Set staticBugFix  to FALSE if use set ctld.slingLoad to TRUE
 
 ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
 
 ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a group extraction
 ctld.maximumDistanceLogistic = 200 -- max distance from vehicle to logistics to allow a loading or spawning operation
 ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
-ctld.maximumMoveDistance = 1000 -- max distance for troops to move from drop point if no enemy is nearby
+ctld.maximumMoveDistance = 2000 -- max distance for troops to move from drop point if no enemy is nearby
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
+ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
+ctld.fastRopeMaximumHeight = 18.28 -- in meters which is 60 ft max fast rope (not rappell) safe height
 
 ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
 ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
 
-ctld.hawkLaunchers = 3 -- controls how many launchers to add to the hawk when its spawned.
+ctld.aaLaunchers = 3 -- controls how many launchers to add to the kub/buk when its spawned.
+ctld.hawkLaunchers = 5 -- controls how many launchers to add to the hawk when its spawned.
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 ctld.spawnStinger = false -- spawns a stinger / igla soldier with a group of 6 or more soldiers!
@@ -125,7 +133,9 @@ ctld.enabledFOBBuilding = true -- if true, you can load a crate INTO a C-130 tha
 -- You can also enable troop Pickup at FOBS
 
 ctld.cratesRequiredForFOB = 3 -- The amount of crates required to build a FOB. Once built, helis can spawn crates at this outpost to be carried and deployed in another area.
--- The crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
+-- The large crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
+-- Small FOB crates can be moved by helicopter. The FOB will require ctld.cratesRequiredForFOB larges crates and small crates are 1/3 of a large fob crate
+-- To build the FOB entirely out of small crates you will need ctld.cratesRequiredForFOB * 3
 
 ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a created FOB
 
@@ -134,9 +144,34 @@ ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
 ctld.radioSoundFC3 = "beaconsilent.ogg" -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
 
-ctld.deployedBeaconBattery = 20 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
+ctld.deployedBeaconBattery = 30 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
 
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
+
+ctld.allowRandomAiTeamPickups = false -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
+
+-- Simulated Sling load configuration
+
+ctld.minimumHoverHeight = 7.5 -- Lowest allowable height for crate hover
+ctld.maximumHoverHeight = 12.0 -- Highest allowable height for crate hover
+ctld.maxDistanceFromCrate = 5.5 -- Maximum distance from from crate for hover
+ctld.hoverTime = 10 -- Time to hold hover above a crate for loading in seconds
+
+-- end of Simulated Sling load configuration
+
+-- AA SYSTEM CONFIG --
+-- Sets a limit on the number of active AA systems that can be built for RED.
+-- A system is counted as Active if its fully functional and has all parts
+-- If a system is partially destroyed, it no longer counts towards the total
+-- When this limit is hit, a player will still be able to get crates for an AA system, just unable
+-- to unpack them
+
+ctld.AASystemLimitRED = 20 -- Red side limit
+
+ctld.AASystemLimitBLUE = 20 -- Blue side limit
+
+--END AA SYSTEM CONFIG --
+
 ```
 
 To change what units can be dropped from crates modify the spawnable crates section. An extra parameter, ```cratesRequired = NUMBER``` can be added so you need more than one crate to build a unit. This parameter cannot be used for the HAWK, BUK or KUB system as that is already broken into 3 crates. You can also specify the coalition side so RED and BLUE have different crates to drop. If the parameter is missing the crate will appear for both sides.
@@ -326,7 +361,7 @@ Spawned beacons will broadcast on HF/FM, UHF and VHF until their battery runs ou
 
 **Again, beacons will not work if beacon.ogg and beaconsilent.ogg are not in the mission!**
 
-#### Create Extract Zone
+#### Create / Remove Extract Zone
 An extact zone is a zone where troops (not vehicles) can be dropped by transports and used to trigger another action based on the number of troops dropped. The radius of the zone sets how big the extract zone will be.
 
 When troops are dropped, the troops disappear and the number of troops dropped added to the flag number configured by the function. This means you can make a trigger such that 10 troops have to be rescued and dropped at the extract zone, and when this happens you can trigger another action.
@@ -335,6 +370,10 @@ An Extraction zone can be created by adding a Trigger Once with a Time More set 
 Where ```"extractzone1"``` is the name of a Trigger Zone added using the mission editor, ```2``` is the flag where we want the total number of troops dropped in a zone added and ```-1``` the smoke colour.
 
 The settings for smoke are: Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4, NO SMOKE = -1
+
+An extract zone can be removed by using DO SCRIPT action of ```ctld.removeExtractZone("extractzone1", 2)```. Where again ```"extractzone1"``` is the name of a Trigger Zone added using the mission editor, ```2``` is the flag
+
+The smoke for the extract zone will take up to 5 minutes to disappate.
 
 #### Count Extractable UNITS in zone
 You can count the number of extractable UNITS in a zone using: ```ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)``` as a DO SCRIPT of a CONTINUOUS TRIGGER.
@@ -478,7 +517,7 @@ Smoke colours are: Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 The script doesn't care if the unit isn't activated when run, as it'll automatically activate when the JTAC is activated in
 the mission but there can be a delay of up to 30 seconds after activation for the JTAC to start searching for targets.
 
-You can also change the name of a unit (unit, not group) to include "hpriority" to make it high priority for the JTAC, or "priority" to set it to be medium priority. JTAC's will prioritize targets within view by first marking hpriority targets, then priority targets, and finally all others. This works seemlessly with the all/vehicle/troop functionality as well. In this way you can have them lase SAMS, then AAA, then armor, or any other order you decide is preferable.
+You can also change the **name of a unit*** (unit, not group) to include "**hpriority**" to make it high priority for the JTAC, or "**priority**" to set it to be medium priority. JTAC's will prioritize targets within view by first marking hpriority targets, then priority targets, and finally all others. This works seemlessly with the all/vehicle/troop functionality as well. In this way you can have them lase SAMS, then AAA, then armor, or any other order you decide is preferable.
 
 ### Pickup and Dropoff Zones Setup
 Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger and the right side (RED or BLUE or BOTH) in order to load troops and vehicles.
@@ -687,6 +726,8 @@ Once you've loaded the crate, fly to where you want to drop it and drop using th
 
 Once on the ground unpack as normal using the CTLD Commands Menu - CTLD->CTLD Commands->Unpack Crate
 
+**Note: You can also set ```ctld.hoverPickup = false``` so you can load crates using the F10 menu instead of Hovering. **
+ 
 ### Real Sling Loading
 
 This uses the inbuilt DCS Sling cargo system and crates. Sling cargo weight differs drastically depending on what you are sling loading. The Huey will need to have 20% fuel and no armaments in order to be able to lift a HMMWV TOW crate! The Mi-8 has a higher max lifting weight than a Huey.

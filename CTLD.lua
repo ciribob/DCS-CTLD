@@ -13,7 +13,12 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.52 - 20/02/2015  - BUG FIX - Disabled Crate static until ED bug is fixed
+    Version: 1.60 - 20/03/2015
+      - Added ability to disable hover pickup and instead load crates with F10
+      - Added new function - ctld.removeExtractZone to stop an extract zone after a while
+      - Added ability to limit the number of AA systems that can be built and active at one time
+
+
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -22,14 +27,17 @@ ctld = {} -- DONT REMOVE!
 -- *********************  USER CONFIGURATION ******************************
 -- ************************************************************************
 
-ctld.staticBugFix = true --  When statics are destroyed, DCS Crashes. Set this to FALSE when this bug is fixed :)
+ctld.staticBugFix = true --  When statics are destroyed, DCS Crashes. Set this to FALSE when this bug is fixed or if you want to use REAL sling loads :)
 
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
+
+ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering...
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
 -- There are some bug with Sling-loading that can cause crashes, if these occur set slingLoad to false
 -- to use the other method.
+-- Set staticBugFix  to FALSE if use set ctld.slingLoad to TRUE
 
 ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
 
@@ -81,6 +89,19 @@ ctld.maxDistanceFromCrate = 5.5 -- Maximum distance from from crate for hover
 ctld.hoverTime = 10 -- Time to hold hover above a crate for loading in seconds
 
 -- end of Simulated Sling load configuration
+
+-- AA SYSTEM CONFIG --
+-- Sets a limit on the number of active AA systems that can be built for RED.
+-- A system is counted as Active if its fully functional and has all parts
+-- If a system is partially destroyed, it no longer counts towards the total
+-- When this limit is hit, a player will still be able to get crates for an AA system, just unable
+-- to unpack them
+
+ctld.AASystemLimitRED = 20 -- Red side limit
+
+ctld.AASystemLimitBLUE = 20 -- Blue side limit
+
+--END AA SYSTEM CONFIG --
 
 -- ***************** JTAC CONFIGURATION *****************
 
@@ -642,14 +663,23 @@ function ctld.createExtractZone(_zone, _flagNumber, _smoke)
 
     trigger.action.setUserFlag(_flagNumber, 0) --start at 0
 
-    local _details = { point = _pos3, name = _zone, smoke = _smoke, flag = _flagNumber, radius = _triggerZone.radius }
-    table.insert(ctld.extractZones, _details)
+    local _details = { point = _pos3, name = _zone, smoke = _smoke, flag = _flagNumber, radius = _triggerZone.radius}
+
+    ctld.extractZones[_zone.."-".._flagNumber] =  _details
 
     if _smoke ~= nil and _smoke > -1 then
 
         local _smokeFunction
 
         _smokeFunction = function(_args)
+
+            local _extractDetails = ctld.extractZones[_zone.."-".._flagNumber]
+            -- check zone is still active
+            if _extractDetails == nil then
+                -- stop refreshing smoke, zone is done
+                return
+            end
+
 
             trigger.action.smoke(_args.point, _args.smoke)
             --refresh in 5 minutes
@@ -658,6 +688,29 @@ function ctld.createExtractZone(_zone, _flagNumber, _smoke)
 
         --run local function
         _smokeFunction(_details)
+    end
+end
+
+
+-- Removes an extraction zone
+--
+-- The smoke will take up to 5 minutes to disappear depending on the last time the smoke was activated
+--
+-- The ctld.removeExtractZone function needs to be called once in a trigger action do script.
+--
+-- e.g. ctld.removeExtractZone("extractzone1", 2) will remove an extraction zone at trigger zone "extractzone1"
+-- that was setup with flag 2
+--
+--
+--
+function ctld.removeExtractZone(_zone,_flagNumber)
+
+    local _extractDetails = ctld.extractZones[_zone.."-".._flagNumber]
+
+    if _extractDetails ~= nil then
+        --remove zone
+        ctld.extractZones[_zone.."-".._flagNumber] = nil
+
     end
 end
 
@@ -1141,7 +1194,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
     local _crate
     local _spawnedCrate
 
-    if ctld.staticBugFix then
+    if ctld.staticBugFix and ctld.slingLoad == false then
         local _groupId = mist.getNextGroupId()
         local _groupName = "Crate Group #".._groupId
 
@@ -1162,7 +1215,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
         _group.category = Group.Category.GROUND;
         _group.country = _country;
 
-         local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
+        local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
 
         -- Turn off AI
         trigger.action.setGroupAIOff(_spawnedGroup)
@@ -2193,6 +2246,53 @@ function ctld.checkHoverStatus()
     end
 end
 
+function ctld.loadNearbyCrate(_name)
+    local _transUnit = ctld.getTransportUnit(_name)
+
+    if _transUnit ~= nil  then
+
+        if ctld.inAir(_transUnit) then
+            ctld.displayMessageToGroup(_transUnit, "You must land before you can load a crate!", 10,true)
+            return
+        end
+
+        if ctld.inTransitSlingLoadCrates[_name] == nil then
+            local _crates = ctld.getCratesAndDistance(_transUnit)
+
+            for _, _crate in pairs(_crates) do
+
+                if _crate.dist < 50.0 then
+                    ctld.displayMessageToGroup(_transUnit, "Loaded  " .. _crate.details.desc .. " crate!", 10,true)
+
+                    if _transUnit:getCoalition() == 1 then
+                        ctld.spawnedCratesRED[_crate.crateUnit:getName()] = nil
+                    else
+                        ctld.spawnedCratesBLUE[_crate.crateUnit:getName()] = nil
+                    end
+
+                    _crate.crateUnit:destroy()
+
+                    local _copiedCrate = mist.utils.deepCopy(_crate.details)
+
+                    ctld.inTransitSlingLoadCrates[_name] = _copiedCrate
+                    return
+                end
+            end
+
+            ctld.displayMessageToGroup(_transUnit, "No Crates within 50m to load!", 10,true)
+
+        else
+            -- crate onboard
+
+            local _currentCrate =  mist.utils.deepCopy(ctld.inTransitSlingLoadCrates[_name])
+
+            ctld.displayMessageToGroup(_transUnit, "You already have a ".._currentCrate.desc.." crate onboard!", 10,true)
+        end
+    end
+
+
+end
+
 --recreates beacons to make sure they work!
 function ctld.refreshRadioBeacons()
 
@@ -2763,7 +2863,11 @@ function ctld.dropSlingCrate(_args)
     local _currentCrate = ctld.inTransitSlingLoadCrates[_heli:getName()]
 
     if _currentCrate == nil then
-        ctld.displayMessageToGroup(_heli, "You are not currently transporting any crates. \n\nTo Pickup a crate, hover for 10 seconds above the crate", 10)
+        if ctld.hoverPickup then
+            ctld.displayMessageToGroup(_heli, "You are not currently transporting any crates. \n\nTo Pickup a crate, hover for "..ctld.hoverTime.." seconds above the crate", 10)
+        else
+            ctld.displayMessageToGroup(_heli, "You are not currently transporting any crates. \n\nTo Pickup a crate - land and use F10 Crate Commands to load one.", 10)
+        end
     else
 
         local _heli = ctld.getTransportUnit(_args[1])
@@ -3251,7 +3355,7 @@ function ctld.getAASystemDetails(_hawkGroup,_aaSystemTemplate)
     local _hawkDetails = {}
 
     for _, _unit in pairs(_units) do
-        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName(), system=_aaSystemTemplate})
+        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName(), system =_aaSystemTemplate})
     end
 
     return _hawkDetails
@@ -3350,7 +3454,18 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
         end
     end
 
-    if _txt ~= "" then
+    local _activeLaunchers = ctld.countCompleteAASystems(_heli)
+
+    local _allowed = ctld.getAllowedAASystems(_heli)
+
+    env.info("Active: ".._activeLaunchers.." Allowed: ".._allowed)
+
+    if _activeLaunchers + 1 > _allowed then
+        trigger.action.outTextForCoalition(_heli:getCoalition(), "Out of parts for AA Systems. Current limit is ".._allowed.." \n", 10)
+        return
+    end
+
+    if _txt ~= ""  then
         ctld.displayMessageToGroup(_heli, "Cannot build ".._aaSystemTemplate.name.."\n" .. _txt .. "\n\nOr the crates are not close enough together", 20)
         return
     else
@@ -3377,9 +3492,68 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
 
         ctld.processCallback({unit = _heli, crate = _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})
 
-        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full ".._aaSystemTemplate.name.." to the field", 10)
+        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full ".._aaSystemTemplate.name.." to the field. \n\nAA Active System limit is: ".._allowed.."\nActive: "..(_activeLaunchers+1), 10)
 
     end
+end
+
+--count the number of captured cities, sets the amount of allowed AA Systems
+function ctld.getAllowedAASystems(_heli)
+
+    if _heli:getCoalition() == 1 then
+        return ctld.AASystemLimitBLUE
+    else
+        return ctld.AASystemLimitRED
+    end
+
+
+end
+
+
+function ctld.countCompleteAASystems(_heli)
+
+    local _count = 0
+
+    for _groupName, _hawkDetails in pairs(ctld.completeAASystems) do
+
+        local _hawkGroup = Group.getByName(_groupName)
+
+        --  env.info(_groupName..": "..mist.utils.tableShow(_hawkDetails))
+        if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() then
+
+            local _units = _hawkGroup:getUnits()
+
+            if _units ~=nil and #_units > 0 then
+                --get the system template
+                local _aaSystemTemplate = _hawkDetails[1].system
+
+                local _uniqueTypes = {} -- stores each unique part of system
+                local _types = {}
+                local _points = {}
+
+                if _units ~= nil and #_units > 0 then
+
+                    for x = 1, #_units do
+                        if _units[x]:getLife() > 0 then
+
+                            --this allows us to count each type once
+                            _uniqueTypes[_units[x]:getTypeName()] = _units[x]:getTypeName()
+
+                            table.insert(_points, _units[x]:getPoint())
+                            table.insert(_types, _units[x]:getTypeName())
+                        end
+                    end
+                end
+
+                -- do we have the correct number of unique pieces and do we have enough points for all the pieces
+                if ctld.countTableEntries(_uniqueTypes) == _aaSystemTemplate.count and #_points >= _aaSystemTemplate.count then
+                    _count = _count +1
+                end
+            end
+        end
+    end
+
+    return _count
 end
 
 
@@ -4224,6 +4398,9 @@ function ctld.addF10MenuOptions()
 
                         if ctld.enabledFOBBuilding or ctld.enableCrates then
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
+                            if ctld.hoverPickup == false then
+                                missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
+                            end
 
                             missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
 
@@ -4386,7 +4563,7 @@ ctld.jtacLaserPointCodes = {}
 function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
 
     if ctld.jtacStop[_jtacGroupName] == true then
-        ctld.jtacStop[_jtacGroupName] = nil
+        ctld.jtacStop[_jtacGroupName] = nil -- allow it to be started again
         ctld.cleanupJTAC(_jtacGroupName)
         return
     end
@@ -5391,7 +5568,7 @@ timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 1)
 timer.scheduleFunction(ctld.checkTransportStatus, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
 
-if ctld.enableCrates == true and ctld.slingLoad == false then
+if ctld.enableCrates == true and ctld.slingLoad == false and ctld.hoverPickup  then
     timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
 end
 
