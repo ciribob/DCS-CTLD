@@ -31,7 +31,7 @@ ctld.staticBugFix = true --  When statics are destroyed, DCS Crashes. Set this t
 
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
-ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering
+ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering...
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
@@ -3355,7 +3355,7 @@ function ctld.getAASystemDetails(_hawkGroup,_aaSystemTemplate)
     local _hawkDetails = {}
 
     for _, _unit in pairs(_units) do
-        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName(), system=_aaSystemTemplate})
+        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName(), system =_aaSystemTemplate})
     end
 
     return _hawkDetails
@@ -3492,7 +3492,7 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
 
         ctld.processCallback({unit = _heli, crate = _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})
 
-        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full ".._aaSystemTemplate.name.." to the field. \n\nAA Active System limit is: ".._allowed, 10)
+        trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " successfully deployed a full ".._aaSystemTemplate.name.." to the field. \n\nAA Active System limit is: ".._allowed.."\nActive: "..(_activeLaunchers+1), 10)
 
     end
 end
@@ -3525,7 +3525,7 @@ function ctld.countCompleteAASystems(_heli)
 
             if _units ~=nil and #_units > 0 then
                 --get the system template
-                local _aaSystemTemplate = _hawkDetails.system
+                local _aaSystemTemplate = _hawkDetails[1].system
 
                 local _uniqueTypes = {} -- stores each unique part of system
                 local _types = {}
