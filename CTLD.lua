@@ -1234,6 +1234,23 @@ function ctld.getFacUnit(_unitName)
     return nil
 end
 
+-- gets the FAC player name if available
+function ctld.getFacName(_facUnitName)
+    local _facUnit = Unit.getByName(_facUnitName)
+    local _facName = _facUnitName
+    
+    if _facUnit == nil then
+        env.info('CTLD FAC: ctld.getFacName: unit not found: '.._facUnitName)
+        return _facUnitName
+    end
+    
+    if _facUnit:getPlayerName() ~= nil then
+        _facName = _facUnit:getPlayerName()
+    end
+    
+    return _facName
+end
+
 function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
 
     local _crate
@@ -2291,7 +2308,7 @@ function ctld.checkHoverStatus()
     end
 end
 
--- search for FAC units and schedule facAutoLase
+-- search for activated FAC units and schedule facAutoLase
 function ctld.checkFacStatus()
     --env.info("CTLD FAC checkFacStatus")
     timer.scheduleFunction(ctld.checkFacStatus, nil, timer.getTime() + 1.0)
@@ -2310,12 +2327,7 @@ function ctld.checkFacStatus()
                 --put to the end
                 table.insert(ctld.jtacGeneratedLaserCodes, _code)
 
-                -- get player name if available
-                local _facName = _name
-                if _facUnit:getPlayerName() ~= nil then
-                    _facName = _facUnit:getPlayerName()
-                end
-                ctld.notifyCoalition("Forward Air Controller \"" .. _facName .. "\" on station using CODE: ".._code..".", 10, _facUnit:getCoalition())
+                ctld.notifyCoalition("Forward Air Controller \"" .. ctld.getFacName(_name) .. "\" on station using CODE: ".._code..".", 10, _facUnit:getCoalition())
 
                 ctld.facAutoLase(_name, _code) --(_unitName, _laserCode, _smoke, _lock, _colour)
             end
@@ -4974,17 +4986,11 @@ function ctld.facAutoLase(_facUnitName, _laserCode, _smoke, _lock, _colour)
 
     local _facUnit = Unit.getByName(_facUnitName)
 
-    -- get player name if available
-    local _facName = _facUnitName
-    if _facUnit:getPlayerName() ~= nil then
-        _facName = _facUnit:getPlayerName()
-    end
-
     if _facUnit == nil then
 
         -- FAC was in the list, now the unit is missing: probably dead
         if ctld.facUnits[_facUnitName] ~= nil then
-            ctld.notifyCoalition("Forward Air Controller \"" .. _facName .. "\" MIA.", 10, ctld.facUnits[_facUnitName].side)
+            ctld.notifyCoalition("Forward Air Controller \"" ..ctld.getFacName(_facUnitName).. "\" MIA.", 10, ctld.facUnits[_facUnitName].side)
         end
 
         --remove from list
@@ -4995,10 +5001,10 @@ function ctld.facAutoLase(_facUnitName, _laserCode, _smoke, _lock, _colour)
         return
 
     elseif not ctld.inAir(_facUnit) then
-
+        
         -- FAC was in the list, now the unit isn't flying: probably landed
         if ctld.facUnits[_facUnitName] ~= nil then
-            ctld.notifyCoalition("Forward Air Controller \"" .. _facName .. "\" off station.", 10, ctld.facUnits[_facUnitName].side)
+            ctld.notifyCoalition("Forward Air Controller \"" ..ctld.getFacName(_facUnitName).. "\" off station.", 10, ctld.facUnits[_facUnitName].side)
         end
 
         --remove from list
@@ -5055,15 +5061,10 @@ function ctld.facAutoLase(_facUnitName, _laserCode, _smoke, _lock, _colour)
 
         local _tempUnit = Unit.getByName(_tempUnitInfo.name)
 
-        -- get player name if available
-        local _facName = _facUnitName
-        if _facUnit:getPlayerName() ~= nil then
-            _facName = _facUnit:getPlayerName()
-        end
         if _tempUnit ~= nil and _tempUnit:getLife() > 0 and _tempUnit:isActive() == true then
-            ctld.notifyCoalition(_facName .. " target " .. _tempUnitInfo.unitType .. " lost. Scanning for Targets. ", 10, _facUnit:getCoalition())
+            ctld.notifyCoalition(ctld.getFacName(_facUnitName) .. " target " .. _tempUnitInfo.unitType .. " lost. Scanning for Targets. ", 10, _facUnit:getCoalition())
         else
-            ctld.notifyCoalition(_facName .. " target " .. _tempUnitInfo.unitType .. " KIA. Good Job! Scanning for Targets. ", 10, _facUnit:getCoalition())
+            ctld.notifyCoalition(ctld.getFacName(_facUnitName) .. " target " .. _tempUnitInfo.unitType .. " KIA. Good Job! Scanning for Targets. ", 10, _facUnit:getCoalition())
         end
 
         --remove from smoke list
@@ -5083,14 +5084,9 @@ function ctld.facAutoLase(_facUnitName, _laserCode, _smoke, _lock, _colour)
         if _enemyUnit ~= nil then
 
             -- store current target for easy lookup
-            -- get player name if available
-            local _facName = _facUnitName
-            if _facUnit:getPlayerName() ~= nil then
-                _facName = _facUnit:getPlayerName()
-            end
             ctld.facCurrentTargets[_facUnitName] = { name = _enemyUnit:getName(), unitType = _enemyUnit:getTypeName(), unitId = _enemyUnit:getID() }
 
-            ctld.notifyCoalition(_facName .. " lasing new target " .. _enemyUnit:getTypeName() .. '. CODE: ' .. _laserCode .. ctld.getFacPositionString(_enemyUnit), 10, _facUnit:getCoalition())
+            ctld.notifyCoalition(ctld.getFacName(_facUnitName) .. " lasing new target " .. _enemyUnit:getTypeName() .. '. CODE: ' .. _laserCode .. ctld.getFacPositionString(_enemyUnit), 10, _facUnit:getCoalition())
 
             -- create smoke
             if _smoke == true then
@@ -5129,6 +5125,10 @@ function ctld.facAutoLase(_facUnitName, _laserCode, _smoke, _lock, _colour)
 
         timer.scheduleFunction(ctld.timerFacAutoLase, { _facUnitName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 5)
     end
+end
+
+function ctld.facAutoLaseStop(_facUnitName)
+    ctld.facStop[_facUnitName] = true
 end
 
 function ctld.JTACAutoLaseStop(_jtacGroupName)
