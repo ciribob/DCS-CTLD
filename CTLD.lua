@@ -4718,31 +4718,6 @@ function ctld.addFacRadioCommand(_side)
     end
 end
 
-function ctld.addFacRadioCommand(_side)
-
-    local _players = coalition.getPlayers(_side)
-
-    if _players ~= nil then
-
-        for _, _playerUnit in pairs(_players) do
-
-            local _groupId = ctld.getGroupId(_playerUnit)
-
-            if _groupId then
-                --   env.info("adding command for "..index)
-                if ctld.facRadioAdded[tostring(_groupId)] == nil then
-                    -- env.info("about command for "..index)
-                    missionCommands.addCommandForGroup(_groupId, "FAC Status", nil, ctld.getFacStatus, { _playerUnit:getName() })
-                    ctld.facRadioAdded[tostring(_groupId)] = true
-                    -- env.info("Added command for " .. index)
-                end
-            end
-
-
-        end
-    end
-end
-
 function ctld.getGroupId(_unit)
 
     local _unitDB =  mist.DBs.unitsById[tonumber(_unit:getID())]
