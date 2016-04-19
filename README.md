@@ -7,10 +7,6 @@ Complete Troops and Logistics Deployment for DCS World
 
 This script is a rewrite of some of the functionality of the original Complete Combat Troop Transport Script (CTTS) by Geloxo (http://forums.eagle.ru/showthread.php?t=108523), as well as adding new features.
 
-
-## Features
-The script supports:
-
 * [Contents](#contents)
 * [Features](#features)
 * [Setup in Mission Editor](#setup-in-mission-editor)
@@ -53,6 +49,51 @@ The script supports:
   * [UH\-1 ADF VHF Radio Setup](#uh-1-adf-vhf-radio-setup)
 * [Advanced Scripting](#advanced-scripting)
 
+## Features
+The script supports:
+
+* Troop Loading / Unloading via Radio Menu
+    * AI Units can also load and unload troops automatically
+    * Troops can spawn with RPGs and Stingers / Iglas if enabled.
+    * Different troop groups can be loaded. The groups can easily be modifed by editing CTLD. By Default the groups are:
+        * AT Group
+        * AA Group
+        * Mortar Group
+        * Standard Group
+* Vehicle Loading / Unloading via Radio Menu for C-130 / IL-76 (Other large aircraft can easily be added) (https://www.digitalcombatsimulator.com/en/files/668878/?sphrase_id=1196134)
+    * You will need to download the modded version of the C-130 from here (JSGME Ready) that fixes the Radio Menu
+* Coloured Smoke Marker Drops
+* Extractable Soldier Spawn at a trigger zone
+* Extractable soldier groups added via mission editor
+* Unit construction using crates spawned at a logistics area and dropped via Simulated Cargo Sling or Real Cargo Sling
+    * HAWK AA System requires 3 separate and correct crates to build
+        * HAWK system can also be rearmed after construction by dropping another Hawk Launcher nearby and unpacking. Separate repair crate can also be used.
+    * BUK AA System requires 2 separate and correct crates to build
+        * BUK system can also be rearmed after construction by dropping another BUK Launcher nearby and unpacking. Separate repair crate can also be used.
+    * KUB AA System requires 2 separate and correct crates to build
+        * KUB system can also be rearmed after construction by dropping another KUB Launcher nearby and unpacking. Separate repair crate can also be used.
+    * HMMWV TOW
+    * HMMWV MG
+    * HMMWV JTAC - Will Auto Lase and mark targets with smoke if enabled
+    * SKP-11 JTAC - Will Auto Lase and mark targets with smoke if enabled
+    * Mortar
+    * Stinger MANPAD
+    * Igla MANPAD
+    * BTR-D
+    * BRMD-2
+* FOB Building
+    * Homing using FM Radio Beacon
+* Easy Beacon Creation using Mission Editor plus Beacon Naming
+* Radio Beacon Deployment
+    * Ability to deploy a homing beacon that the A10C, Ka-50, Mi-8 and Huey can home on
+* Pre loading of units into AI vehicles via a DO SCRIPT
+* Spawning of sling loadable crates at a specified zone or Point
+* Mission Editor Trigger functions - They store the numbers in flags for use by triggers
+    * Count Crates in Zone
+	    * Works for both crates added by the Mission Editor and Crates spawned by Transports
+	* Count soldiers extracted to a zone (the soldiers disappear)
+* Waypoint triggers to force dropped groups to head to a location
+* Advanced Scripting Callback system
 
 A complete test mission is included.
 
