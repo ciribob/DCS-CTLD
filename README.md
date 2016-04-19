@@ -5,18 +5,49 @@ Complete Troops and Logistics Deployment for DCS World
 
 ## Contents
 
-- [Features](#features)
-- [Setup in Mission Editor](#setup-in-mission-editor)
-- [In Game](#in-game)
-    - [Troop Loading and Unloading](#troop-loading-and-unloading)
-    - [Cargo Spawning and Sling Loading](#cargo-spawning-and-sling-loading)
-    - [Crate Unpacking](#crate-unpacking)
-    - [Forward Operating Base (FOB) Construction](#forward-operating-base-fob-construction)
-    - [Radio Beacon Deployment](#radio-beacon-deployment)
-- [Advanced Scripting](#advanced-scripting)
-
-
 This script is a rewrite of some of the functionality of the original Complete Combat Troop Transport Script (CTTS) by Geloxo (http://forums.eagle.ru/showthread.php?t=108523), as well as adding new features.
+
+* [Contents](#contents)
+* [Features](#features)
+* [Setup in Mission Editor](#setup-in-mission-editor)
+  * [Script Setup](#script-setup)
+  * [Script Configuration](#script-configuration)
+  * [Mission Editor Script Functions](#mission-editor-script-functions)
+    * [Preload Troops into Transport](#preload-troops-into-transport)
+    * [Create Extractable Groups without Pickup Zone](#create-extractable-groups-without-pickup-zone)
+    * [Spawn Extractable Groups without Pickup Zone at a Trigger Zone](#spawn-extractable-groups-without-pickup-zone-at-a-trigger-zone)
+    * [Spawn Extractable Groups without Pickup Zone at a Point](#spawn-extractable-groups-without-pickup-zone-at-a-point)
+    * [Activate / Deactivate Pickup Zone](#activate--deactivate-pickup-zone)
+    * [Change Remaining Groups For a Pickup Zone](#change-remaining-groups-for-a-pickup-zone)
+    * [Activate / Deactivate Waypoint Zone](#activate--deactivate-waypoint-zone)
+    * [Unload Transport](#unload-transport)
+    * [Load Transport](#load-transport)
+    * [Auto Unload Transport in Proximity to Enemies](#auto-unload-transport-in-proximity-to-enemies)
+    * [Create Radio Beacon at Zone](#create-radio-beacon-at-zone)
+    * [Create / Remove Extract Zone](#create--remove-extract-zone)
+    * [Count Extractable UNITS in zone](#count-extractable-units-in-zone)
+    * [Count Extractable GROUPS in zone](#count-extractable-groups-in-zone)
+    * [Create Crate Drop Zone](#create-crate-drop-zone)
+    * [Spawn Sling loadable crate at a Zone](#spawn-sling-loadable-crate-at-a-zone)
+    * [Spawn Sling loadable crate at a Point](#spawn-sling-loadable-crate-at-a-point)
+    * [JTAC Automatic Targeting and Laser](#jtac-automatic-targeting-and-laser)
+  * [Pickup and Dropoff Zones Setup](#pickup-and-dropoff-zones-setup)
+  * [Waypoint Zones Setup](#waypoint-zones-setup)
+  * [Transport Unit Setup](#transport-unit-setup)
+  * [Logistic Setup](#logistic-setup)
+* [In Game](#in-game)
+* [Troop Loading and Unloading](#troop-loading-and-unloading)
+* [Cargo Spawning and Sling Loading](#cargo-spawning-and-sling-loading)
+  * [Simulated Sling Loading](#simulated-sling-loading)
+  * [Real Sling Loading](#real-sling-loading)
+* [Crate Unpacking](#crate-unpacking)
+* [Forward Operating Base (FOB) Construction](#forward-operating-base-fob-construction)
+* [Radio Beacon Deployment](#radio-beacon-deployment)
+  * [A10\-C UHF ADF Radio Setup](#a10-c-uhf-adf-radio-setup)
+  * [KA\-50 UHF ADF Radio Setup](#ka-50-uhf-adf-radio-setup)
+  * [Mi\-8 ARC\-9 VHF Radio Setup](#mi-8-arc-9-vhf-radio-setup)
+  * [UH\-1 ADF VHF Radio Setup](#uh-1-adf-vhf-radio-setup)
+* [Advanced Scripting](#advanced-scripting)
 
 ## Features
 The script supports:
@@ -306,7 +337,7 @@ ctld.spawnGroupAtPoint("blue", {mg=1,at=2,aa=3,inf=4,mortar=5}, {x=1,y=2,z=3}, 2
 
 ```
 
-### Activate / Deactivate Pickup Zone
+#### Activate / Deactivate Pickup Zone
 You can activate and deactivate a pickup zone as shown below. When a zone is active, troops can be loaded from it as long as there are troops remaining and you are the same side as the pickup zone.
 
 ```lua
@@ -317,7 +348,7 @@ or
 ctld.deactivatePickupZone("pickzone3")
 ```
 
-### Change Remaining Groups For a Pickup Zone
+#### Change Remaining Groups For a Pickup Zone
 In the configuration of a pickup zone / pickup ship you can limit the number of groups that can be loaded.
 
 Call the function below to add or remove groups from the remaining groups at a zone.
@@ -330,7 +361,7 @@ ctld.changeRemainingGroupsForPickupZone("pickup1", -3) -- remove 3 groups for zo
 
 ```
 
-### Activate / Deactivate Waypoint Zone
+#### Activate / Deactivate Waypoint Zone
 You can activate and deactivate a waypoint zone as shown below. When a waypoint zone is active, and the right coalition of troops is dropped inside, the troops will attempt to head to the center of the zone.
 
 ```lua
@@ -341,21 +372,21 @@ or
 ctld.deactivateWaypointZone("wpzone1")
 ```
 
-### Unload Transport
+#### Unload Transport
 You can force a unit to unload its units (as long as its on the ground) by calling this function.
 
 ```lua
  ctld.unloadTransport("helicargo1")
 ```
 
- ###Load Transport
+#### Load Transport
 You can force a unit to load its units (as long as its on the ground) by calling this function.
 
 ```lua
  ctld.loadTransport("helicargo1")
 ```
 
-### Auto Unload Transport in Proximity to Enemies
+#### Auto Unload Transport in Proximity to Enemies
 If you add the below as a DO SCRIPT for a CONTINOUS TRIGGER, an AI unit will automatically drop its troops if its landed and there are enemies within the specificed distance (in meters)
 
 ```lua
