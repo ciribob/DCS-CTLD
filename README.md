@@ -61,6 +61,7 @@ The script supports:
     * Count Crates in Zone
 	    * Works for both crates added by the Mission Editor and Crates spawned by Transports
 	* Count soldiers extracted to a zone (the soldiers disappear)
+* Waypoint triggers to force dropped groups to head to a location
 * Advanced Scripting Callback system
 
 A complete test mission is included.
@@ -306,7 +307,7 @@ ctld.spawnGroupAtPoint("blue", {mg=1,at=2,aa=3,inf=4,mortar=5}, {x=1,y=2,z=3}, 2
 ```
 
 ### Activate / Deactivate Pickup Zone
-You can activate and deactive a pickup zone as shown below. When a zone is active, troops can be loaded from it as long as there are troops remaining and you are the same side as the pickup zone.
+You can activate and deactivate a pickup zone as shown below. When a zone is active, troops can be loaded from it as long as there are troops remaining and you are the same side as the pickup zone.
 
 ```lua
 ctld.activatePickupZone("pickzone3")
@@ -329,12 +330,23 @@ ctld.changeRemainingGroupsForPickupZone("pickup1", -3) -- remove 3 groups for zo
 
 ```
 
+### Activate / Deactivate Waypoint Zone
+You can activate and deactivate a waypoint zone as shown below. When a waypoint zone is active, and the right coalition of troops is dropped inside, the troops will attempt to head to the center of the zone.
+
+```lua
+ctld.activateWaypointZone("wpzone1")
+```
+or
+```lua
+ctld.deactivateWaypointZone("wpzone1")
+```
 
 ### Unload Transport
 You can force a unit to unload its units (as long as its on the ground) by calling this function.
 
 ```lua
  ctld.unloadTransport("helicargo1")
+```
 
  ###Load Transport
 You can force a unit to load its units (as long as its on the ground) by calling this function.
@@ -599,6 +611,41 @@ Smoke can be enabled or disabled individually for pickup or dropoff zones by edi
 
 Available colours are:
 * ```"green"``` 
+* ```"red"```
+* ```"white"```
+* ```"orange"```
+* ```"blue"```
+* ```"none"```
+
+Smoke can be disabled for all zones regardless of the settings above using the option ```ctld.disableAllSmoke = true``` in the User Configuration part of the script.
+
+### Waypoint Zones Setup
+
+Waypoint zones can be used to make dropped or spawned troops automatically head to the center of a zone. The troops will head to the center of the zone if the coalition matches (or the coalition is set to 0) and if the zone is currently active.
+
+If your Waypoint zone isn't working, make sure the 3rd parameter, the coalition side, is set correctly and the zone is set to active.
+
+```lua
+
+--wpZones = { "Zone name", "smoke color",  "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", }
+ctld.wpZones = {
+    { "wpzone1", "green","yes", 2 },
+    { "wpzone2", "blue","yes", 2 },
+    { "wpzone3", "orange","yes", 2 },
+    { "wpzone4", "none","yes", 2 },
+    { "wpzone5", "none","yes", 1 },
+    { "wpzone6", "none","yes", 1 },
+    { "wpzone7", "none","yes", 1 },
+    { "wpzone8", "none","yes", 1 },
+    { "wpzone9", "none","yes", 1 },
+    { "wpzone10", "none","no", 1 },
+}
+```
+
+Smoke can be enabled or disabled individually for waypoiny zones exactly the same as Pickup and Dropoff zones by editing the second column in the list.
+
+The available colours are:
+* ```"green"```
 * ```"red"```
 * ```"white"```
 * ```"orange"```
