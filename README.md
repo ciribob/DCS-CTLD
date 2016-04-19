@@ -7,11 +7,19 @@ Complete Troops and Logistics Deployment for DCS World
 
 This script is a rewrite of some of the functionality of the original Complete Combat Troop Transport Script (CTTS) by Geloxo (http://forums.eagle.ru/showthread.php?t=108523), as well as adding new features.
 
+
+## Features
+The script supports:
+
 * [Contents](#contents)
 * [Features](#features)
 * [Setup in Mission Editor](#setup-in-mission-editor)
   * [Script Setup](#script-setup)
   * [Script Configuration](#script-configuration)
+  * [Pickup and Dropoff Zones Setup](#pickup-and-dropoff-zones-setup)
+  * [Waypoint Zones Setup](#waypoint-zones-setup)
+  * [Transport Unit Setup](#transport-unit-setup)
+  * [Logistic Setup](#logistic-setup)
   * [Mission Editor Script Functions](#mission-editor-script-functions)
     * [Preload Troops into Transport](#preload-troops-into-transport)
     * [Create Extractable Groups without Pickup Zone](#create-extractable-groups-without-pickup-zone)
@@ -31,10 +39,6 @@ This script is a rewrite of some of the functionality of the original Complete C
     * [Spawn Sling loadable crate at a Zone](#spawn-sling-loadable-crate-at-a-zone)
     * [Spawn Sling loadable crate at a Point](#spawn-sling-loadable-crate-at-a-point)
     * [JTAC Automatic Targeting and Laser](#jtac-automatic-targeting-and-laser)
-  * [Pickup and Dropoff Zones Setup](#pickup-and-dropoff-zones-setup)
-  * [Waypoint Zones Setup](#waypoint-zones-setup)
-  * [Transport Unit Setup](#transport-unit-setup)
-  * [Logistic Setup](#logistic-setup)
 * [In Game](#in-game)
 * [Troop Loading and Unloading](#troop-loading-and-unloading)
 * [Cargo Spawning and Sling Loading](#cargo-spawning-and-sling-loading)
@@ -49,51 +53,6 @@ This script is a rewrite of some of the functionality of the original Complete C
   * [UH\-1 ADF VHF Radio Setup](#uh-1-adf-vhf-radio-setup)
 * [Advanced Scripting](#advanced-scripting)
 
-## Features
-The script supports:
-
-* Troop Loading / Unloading via Radio Menu
-    * AI Units can also load and unload troops automatically
-    * Troops can spawn with RPGs and Stingers / Iglas if enabled.
-    * Different troop groups can be loaded. The groups can easily be modifed by editing CTLD. By Default the groups are:
-        * AT Group
-        * AA Group
-        * Mortar Group
-        * Standard Group
-* Vehicle Loading / Unloading via Radio Menu for C-130 / IL-76 (Other large aircraft can easily be added) (https://www.digitalcombatsimulator.com/en/files/668878/?sphrase_id=1196134)
-    * You will need to download the modded version of the C-130 from here (JSGME Ready) that fixes the Radio Menu 
-* Coloured Smoke Marker Drops
-* Extractable Soldier Spawn at a trigger zone
-* Extractable soldier groups added via mission editor
-* Unit construction using crates spawned at a logistics area and dropped via Simulated Cargo Sling or Real Cargo Sling 
-    * HAWK AA System requires 3 separate and correct crates to build
-        * HAWK system can also be rearmed after construction by dropping another Hawk Launcher nearby and unpacking. Separate repair crate can also be used.
-    * BUK AA System requires 2 separate and correct crates to build
-        * BUK system can also be rearmed after construction by dropping another BUK Launcher nearby and unpacking. Separate repair crate can also be used.
-    * KUB AA System requires 2 separate and correct crates to build
-        * KUB system can also be rearmed after construction by dropping another KUB Launcher nearby and unpacking. Separate repair crate can also be used.
-    * HMMWV TOW
-    * HMMWV MG
-    * HMMWV JTAC - Will Auto Lase and mark targets with smoke if enabled
-    * SKP-11 JTAC - Will Auto Lase and mark targets with smoke if enabled
-    * Mortar
-    * Stinger MANPAD
-    * Igla MANPAD
-    * BTR-D
-    * BRMD-2
-* FOB Building
-    * Homing using FM Radio Beacon 
-* Easy Beacon Creation using Mission Editor plus Beacon Naming
-* Radio Beacon Deployment
-    * Ability to deploy a homing beacon that the A10C, Ka-50, Mi-8 and Huey can home on
-* Pre loading of units into AI vehicles via a DO SCRIPT
-* Spawning of sling loadable crates at a specified zone or Point
-* Mission Editor Trigger functions - They store the numbers in flags for use by triggers
-    * Count Crates in Zone
-	    * Works for both crates added by the Mission Editor and Crates spawned by Transports
-	* Count soldiers extracted to a zone (the soldiers disappear)
-* Waypoint triggers to force dropped groups to head to a location
-* Advanced Scripting Callback system
 
 A complete test mission is included.
 
@@ -276,6 +235,184 @@ Example showing what happens if you dont have enough crates:
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs%202015-05-19%2019-39-33-98_zps0hynlgc0.png~original "Not enough crates!")
 
 **Make sure that after making any changes to the script you remove and re-add the script to the mission. **
+
+
+### Pickup and Dropoff Zones Setup
+Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger and the right side (RED or BLUE or BOTH) in order to load troops and vehicles.
+The pickup zone needs to be named the same as one of the pickup zones in the ```ctld.pickupZones``` list or the list can be edited to match the name in the mission editor.
+
+Pickup Zones can be configured to limit the number of vehicle or troop groups that can be loaded. To add a limit, edit the 3rd parameter to be any number greater than 0 as shown below.
+
+You can also list the UNIT NAME of ship instead of a trigger zone to allow the loading/unloading of troops from a ship. You will not be able to fast rope troops onto the deck so you must land to drop the troops off.
+
+***If your pickup zone isn't working, make sure you've set the 5th parameter, the coalition side, correctly and that the zone is active.***
+
+```lua
+--pickupZones = { "Zone name or Ship Unit Name", "smoke color", "limit (-1 unlimited)", "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", flag number (optional) }
+ctld.pickupZones = {
+    { "pickzone1", "blue", -1, "yes", 0 },
+    { "pickzone2", "red", -1, "yes", 0 },
+    { "pickzone3", "none", -1, "yes", 0 },
+    { "pickzone4", "none", -1, "yes", 0 },
+    { "pickzone5", "none", -1, "yes", 0 },
+    { "pickzone6", "none", -1, "yes", 0 },
+    { "pickzone7", "none", -1, "yes", 0 },
+    { "pickzone8", "none", -1, "yes", 0 },
+    { "pickzone9", "none", 5, "yes", 1 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles, only red can pick up
+    { "pickzone10", "none", 10, "yes", 2 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles, only blue can pick up
+
+    { "pickzone11", "blue", 20, "no", 2 },  -- limits pickup zone 11 to 20 groups of soldiers or vehicles, only blue can pick up. Zone starts inactive!
+    { "pickzone12", "red", 20, "no", 1 },  -- limits pickup zone 11 to 20 groups of soldiers or vehicles, only blue can pick up. Zone starts inactive!
+    { "pickzone13", "none", -1, "yes", 0 },
+    { "pickzone14", "none", -1, "yes", 0 },
+    { "pickzone15", "none", -1, "yes", 0 },
+    { "pickzone16", "none", -1, "yes", 0 },
+    { "pickzone17", "none", -1, "yes", 0 },
+    { "pickzone18", "none", -1, "yes", 0 },
+    { "pickzone19", "none", 5, "yes", 0 },
+    { "pickzone20", "none", 10, "yes", 0, 1000 }, -- optional extra flag number to store the current number of groups available in
+
+    { "USA Carrier", "blue", 10, "yes", 0, 1001 }, -- instead of a Zone Name you can also use the UNIT NAME of a ship
+}
+```
+
+AI transport units will automatically load troops and vehicles when entering a pickup zone as long as they stay in the zone for a few seconds. They do not need to stop to load troops but Aircraft will need to be on the ground in order to load troops.
+
+The number of troops that can be loaded from a pickup zone can be configured by changing ```ctld.numberOfTroops``` which by default is 10. You can also enable troop groups to have RPGs and Stingers / Iglas by  ```ctld.spawnRPGWithCoalition``` and ```ctld.spawnStinger```.
+
+If ```ctld.numberOfTroops``` is 6 or more than the soldier group will consist of:
+
+ - 2 MG Soldiers with M249s or Paratroopers with AKS-74
+ - 2 RPG Soldiers (only on the RED side if ```ctld.spawnRPGWithCoalition``` is ```false```
+ - 1 Igla / Stinger
+ - The rest will be standard soldiers
+
+Example:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-22-48-57_zpsc5u7bymy.png~original "Pickup zone")
+
+Dropoff zones are used by AI units to automatically unload any loaded troops or vehicles. This will occur as long as the AI unit has some units onboard and stays in the radius of the zone for a few seconds and the zone is named in the ```ctld.dropoffZones``` list. Again units do not need to stop but aircraft need to be on the ground in order to unload the troops.
+
+If your dropoff zone isn't working, make sure the 3rd parameter, the coalition side, is set correctly.
+
+```lua
+
+-- dropOffZones = {"name","smoke colour",0,side 1 = Red or 2 = Blue or 0 = Both sides}
+ctld.dropOffZones = {
+    { "dropzone1", "green", 2 },
+    { "dropzone2", "blue", 2 },
+    { "dropzone3", "orange", 2 },
+    { "dropzone4", "none", 2 },
+    { "dropzone5", "none", 1 },
+    { "dropzone6", "none", 1 },
+    { "dropzone7", "none", 1 },
+    { "dropzone8", "none", 1 },
+    { "dropzone9", "none", 1 },
+    { "dropzone10", "none", 1 },
+}
+```
+
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-23-15-72_zpsrmfzbdtr.png~original "Dropoff Zone")
+
+Smoke can be enabled or disabled individually for pickup or dropoff zones by editing the second column in the list.
+
+Available colours are:
+* ```"green"```
+* ```"red"```
+* ```"white"```
+* ```"orange"```
+* ```"blue"```
+* ```"none"```
+
+Smoke can be disabled for all zones regardless of the settings above using the option ```ctld.disableAllSmoke = true``` in the User Configuration part of the script.
+
+### Waypoint Zones Setup
+
+Waypoint zones can be used to make dropped or spawned troops automatically head to the center of a zone. The troops will head to the center of the zone if the coalition matches (or the coalition is set to 0) and if the zone is currently active.
+
+If your Waypoint zone isn't working, make sure the 3rd parameter, the coalition side, is set correctly and the zone is set to active.
+
+```lua
+
+--wpZones = { "Zone name", "smoke color",  "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", }
+ctld.wpZones = {
+    { "wpzone1", "green","yes", 2 },
+    { "wpzone2", "blue","yes", 2 },
+    { "wpzone3", "orange","yes", 2 },
+    { "wpzone4", "none","yes", 2 },
+    { "wpzone5", "none","yes", 1 },
+    { "wpzone6", "none","yes", 1 },
+    { "wpzone7", "none","yes", 1 },
+    { "wpzone8", "none","yes", 1 },
+    { "wpzone9", "none","yes", 1 },
+    { "wpzone10", "none","no", 1 },
+}
+```
+
+Smoke can be enabled or disabled individually for waypoiny zones exactly the same as Pickup and Dropoff zones by editing the second column in the list.
+
+The available colours are:
+* ```"green"```
+* ```"red"```
+* ```"white"```
+* ```"orange"```
+* ```"blue"```
+* ```"none"```
+
+Smoke can be disabled for all zones regardless of the settings above using the option ```ctld.disableAllSmoke = true``` in the User Configuration part of the script.
+
+### Transport Unit Setup
+Any unit that you want to be able to transport troops needs to have the **"Pilot Name"** in the ```ctld.transportPilotNames``` list. **Player controlled transport units should be in a group of their own and be the only unit in the group, otherwise other players may have radio commands they shouldn't**. The group name isn't important and can be set to whatever you like. A snippet of the list is shown below.
+
+If the unit is player controlled, troops have to be manually loaded when in a pickup zone, AI units will auto load troops in a pickup zone.
+
+```lua
+ctld.transportPilotNames = {
+    "helicargo1",
+    "helicargo2",
+    "helicargo3",
+    "helicargo4",
+    "helicargo5",
+    "helicargo6",
+    "helicargo7",
+    "helicargo8",
+    "helicargo9",
+    "helicargo10",
+    }
+```
+
+Example for C-130:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-26-26-40_zpswy4s4p7p.png~original "C-130FR")
+
+Example for Huey:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-26-30-78_zpsm8bxsofc.png~original "Huey")
+
+Example for AI APC:
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-50-65_zpsdiztodm5.png~original "AI APC")
+
+
+### Logistic Setup
+Logistic crates can also be spawned by Player-controlled Transport Helicopters, as long as they are near a friendly logistic unit listed in ```ctld.logisticUnits```. The distance that the heli's can spawn crates at can be configured at the top of the script. Any static object can be used for Logistics.
+
+```lua
+ctld.logisticUnits = {
+    "logistic1",
+    "logistic2",
+    "logistic3",
+    "logistic4",
+    "logistic5",
+    "logistic6",
+    "logistic7",
+    "logistic8",
+    "logistic9",
+    "logistic10",
+}
+
+```
+
+Example:
+
+![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2016-01-53-20_zps1ccbwnop.png~original "Logistic Unit")
+
 
 ### Mission Editor Script Functions
 #### Preload Troops into Transport
@@ -561,182 +698,6 @@ The script doesn't care if the unit isn't activated when run, as it'll automatic
 the mission but there can be a delay of up to 30 seconds after activation for the JTAC to start searching for targets.
 
 You can also change the **name of a unit*** (unit, not group) to include "**hpriority**" to make it high priority for the JTAC, or "**priority**" to set it to be medium priority. JTAC's will prioritize targets within view by first marking hpriority targets, then priority targets, and finally all others. This works seemlessly with the all/vehicle/troop functionality as well. In this way you can have them lase SAMS, then AAA, then armor, or any other order you decide is preferable.
-
-### Pickup and Dropoff Zones Setup
-Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger and the right side (RED or BLUE or BOTH) in order to load troops and vehicles.
-The pickup zone needs to be named the same as one of the pickup zones in the ```ctld.pickupZones``` list or the list can be edited to match the name in the mission editor.
-
-Pickup Zones can be configured to limit the number of vehicle or troop groups that can be loaded. To add a limit, edit the 3rd parameter to be any number greater than 0 as shown below.
-
-You can also list the UNIT NAME of ship instead of a trigger zone to allow the loading/unloading of troops from a ship. You will not be able to fast rope troops onto the deck so you must land to drop the troops off.
-
-***If your pickup zone isn't working, make sure you've set the 5th parameter, the coalition side, correctly and that the zone is active.***
-
-```lua
---pickupZones = { "Zone name or Ship Unit Name", "smoke color", "limit (-1 unlimited)", "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", flag number (optional) }
-ctld.pickupZones = {
-    { "pickzone1", "blue", -1, "yes", 0 },
-    { "pickzone2", "red", -1, "yes", 0 },
-    { "pickzone3", "none", -1, "yes", 0 },
-    { "pickzone4", "none", -1, "yes", 0 },
-    { "pickzone5", "none", -1, "yes", 0 },
-    { "pickzone6", "none", -1, "yes", 0 },
-    { "pickzone7", "none", -1, "yes", 0 },
-    { "pickzone8", "none", -1, "yes", 0 },
-    { "pickzone9", "none", 5, "yes", 1 }, -- limits pickup zone 9 to 5 groups of soldiers or vehicles, only red can pick up
-    { "pickzone10", "none", 10, "yes", 2 },  -- limits pickup zone 10 to 10 groups of soldiers or vehicles, only blue can pick up
-
-    { "pickzone11", "blue", 20, "no", 2 },  -- limits pickup zone 11 to 20 groups of soldiers or vehicles, only blue can pick up. Zone starts inactive!
-    { "pickzone12", "red", 20, "no", 1 },  -- limits pickup zone 11 to 20 groups of soldiers or vehicles, only blue can pick up. Zone starts inactive!
-    { "pickzone13", "none", -1, "yes", 0 },
-    { "pickzone14", "none", -1, "yes", 0 },
-    { "pickzone15", "none", -1, "yes", 0 },
-    { "pickzone16", "none", -1, "yes", 0 },
-    { "pickzone17", "none", -1, "yes", 0 },
-    { "pickzone18", "none", -1, "yes", 0 },
-    { "pickzone19", "none", 5, "yes", 0 },
-    { "pickzone20", "none", 10, "yes", 0, 1000 }, -- optional extra flag number to store the current number of groups available in
-
-    { "USA Carrier", "blue", 10, "yes", 0, 1001 }, -- instead of a Zone Name you can also use the UNIT NAME of a ship
-}
-```
-
-AI transport units will automatically load troops and vehicles when entering a pickup zone as long as they stay in the zone for a few seconds. They do not need to stop to load troops but Aircraft will need to be on the ground in order to load troops.
-
-The number of troops that can be loaded from a pickup zone can be configured by changing ```ctld.numberOfTroops``` which by default is 10. You can also enable troop groups to have RPGs and Stingers / Iglas by  ```ctld.spawnRPGWithCoalition``` and ```ctld.spawnStinger```. 
-
-If ```ctld.numberOfTroops``` is 6 or more than the soldier group will consist of:
-
- - 2 MG Soldiers with M249s or Paratroopers with AKS-74
- - 2 RPG Soldiers (only on the RED side if ```ctld.spawnRPGWithCoalition``` is ```false```
- - 1 Igla / Stinger
- - The rest will be standard soldiers
-
-Example:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-22-48-57_zpsc5u7bymy.png~original "Pickup zone")
-
-Dropoff zones are used by AI units to automatically unload any loaded troops or vehicles. This will occur as long as the AI unit has some units onboard and stays in the radius of the zone for a few seconds and the zone is named in the ```ctld.dropoffZones``` list. Again units do not need to stop but aircraft need to be on the ground in order to unload the troops.
-
-If your dropoff zone isn't working, make sure the 3rd parameter, the coalition side, is set correctly.
-
-```lua
-
--- dropOffZones = {"name","smoke colour",0,side 1 = Red or 2 = Blue or 0 = Both sides}
-ctld.dropOffZones = {
-    { "dropzone1", "green", 2 },
-    { "dropzone2", "blue", 2 },
-    { "dropzone3", "orange", 2 },
-    { "dropzone4", "none", 2 },
-    { "dropzone5", "none", 1 },
-    { "dropzone6", "none", 1 },
-    { "dropzone7", "none", 1 },
-    { "dropzone8", "none", 1 },
-    { "dropzone9", "none", 1 },
-    { "dropzone10", "none", 1 },
-}
-```
-
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-23-15-72_zpsrmfzbdtr.png~original "Dropoff Zone")
-
-Smoke can be enabled or disabled individually for pickup or dropoff zones by editing the second column in the list.
-
-Available colours are:
-* ```"green"``` 
-* ```"red"```
-* ```"white"```
-* ```"orange"```
-* ```"blue"```
-* ```"none"```
-
-Smoke can be disabled for all zones regardless of the settings above using the option ```ctld.disableAllSmoke = true``` in the User Configuration part of the script.
-
-### Waypoint Zones Setup
-
-Waypoint zones can be used to make dropped or spawned troops automatically head to the center of a zone. The troops will head to the center of the zone if the coalition matches (or the coalition is set to 0) and if the zone is currently active.
-
-If your Waypoint zone isn't working, make sure the 3rd parameter, the coalition side, is set correctly and the zone is set to active.
-
-```lua
-
---wpZones = { "Zone name", "smoke color",  "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", }
-ctld.wpZones = {
-    { "wpzone1", "green","yes", 2 },
-    { "wpzone2", "blue","yes", 2 },
-    { "wpzone3", "orange","yes", 2 },
-    { "wpzone4", "none","yes", 2 },
-    { "wpzone5", "none","yes", 1 },
-    { "wpzone6", "none","yes", 1 },
-    { "wpzone7", "none","yes", 1 },
-    { "wpzone8", "none","yes", 1 },
-    { "wpzone9", "none","yes", 1 },
-    { "wpzone10", "none","no", 1 },
-}
-```
-
-Smoke can be enabled or disabled individually for waypoiny zones exactly the same as Pickup and Dropoff zones by editing the second column in the list.
-
-The available colours are:
-* ```"green"```
-* ```"red"```
-* ```"white"```
-* ```"orange"```
-* ```"blue"```
-* ```"none"```
-
-Smoke can be disabled for all zones regardless of the settings above using the option ```ctld.disableAllSmoke = true``` in the User Configuration part of the script.
-
-### Transport Unit Setup
-Any unit that you want to be able to transport troops needs to have the **"Pilot Name"** in the ```ctld.transportPilotNames``` list. **Player controlled transport units should be in a group of their own and be the only unit in the group, otherwise other players may have radio commands they shouldn't**. The group name isn't important and can be set to whatever you like. A snippet of the list is shown below. 
-
-If the unit is player controlled, troops have to be manually loaded when in a pickup zone, AI units will auto load troops in a pickup zone.
-
-```lua
-ctld.transportPilotNames = {
-    "helicargo1",
-    "helicargo2",
-    "helicargo3",
-    "helicargo4",
-    "helicargo5",
-    "helicargo6",
-    "helicargo7",
-    "helicargo8",
-    "helicargo9",
-    "helicargo10",
-    }
-```
-
-Example for C-130:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-26-26-40_zpswy4s4p7p.png~original "C-130FR")
-
-Example for Huey:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-26-30-78_zpsm8bxsofc.png~original "Huey")
-
-Example for AI APC:
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2015-25-50-65_zpsdiztodm5.png~original "AI APC")
-
-
-### Logistic Setup
-Logistic crates can also be spawned by Player-controlled Transport Helicopters, as long as they are near a friendly logistic unit listed in ```ctld.logisticUnits```. The distance that the heli's can spawn crates at can be configured at the top of the script. Any static object can be used for Logistics.
-
-```lua
-ctld.logisticUnits = {
-    "logistic1",
-    "logistic2",
-    "logistic3",
-    "logistic4",
-    "logistic5",
-    "logistic6",
-    "logistic7",
-    "logistic8",
-    "logistic9",
-    "logistic10",
-}
-
-```
-
-Example:
-
-![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/Launcher%202015-05-10%2016-01-53-20_zps1ccbwnop.png~original "Logistic Unit")
 
 # In Game
 ## Troop Loading and Unloading
