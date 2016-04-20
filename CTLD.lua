@@ -190,12 +190,12 @@ ctld.wpZones = {
     { "wpzone2", "blue","yes", 2 },
     { "wpzone3", "orange","yes", 2 },
     { "wpzone4", "none","yes", 2 },
-    { "wpzone5", "none","yes", 1 },
+    { "wpzone5", "none","yes", 2 },
     { "wpzone6", "none","yes", 1 },
     { "wpzone7", "none","yes", 1 },
     { "wpzone8", "none","yes", 1 },
     { "wpzone9", "none","yes", 1 },
-    { "wpzone10", "none","no", 1 },
+    { "wpzone10", "none","no", 0 }, -- Both sides as its set to 0
 }
 
 
