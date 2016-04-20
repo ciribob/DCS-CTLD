@@ -13,10 +13,9 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.60 - 20/03/2015
-      - Added ability to disable hover pickup and instead load crates with F10
-      - Added new function - ctld.removeExtractZone to stop an extract zone after a while
-      - Added ability to limit the number of AA systems that can be built and active at one time
+    Version: 1.61 - 19/04/2015
+      - Added ability to add Waypoint zones
+       -- Troops dropped in a waypoint zone will automatically head to the center of the zone
 
 
  ]]
@@ -124,7 +123,7 @@ ctld.JTAC_location = true -- shows location of target in JTAC message
 
 ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
 
--- ***************** Pickup and dropoff zones *****************
+-- ***************** Pickup, dropoff and waypoint zones *****************
 
 -- Available colors (anything else like "none" disables smoke): "green", "red", "white", "orange", "blue", "none",
 
@@ -182,6 +181,21 @@ ctld.dropOffZones = {
     { "dropzone8", "none", 1 },
     { "dropzone9", "none", 1 },
     { "dropzone10", "none", 1 },
+}
+
+
+--wpZones = { "Zone name", "smoke color",  "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", }
+ctld.wpZones = {
+    { "wpzone1", "green","yes", 2 },
+    { "wpzone2", "blue","yes", 2 },
+    { "wpzone3", "orange","yes", 2 },
+    { "wpzone4", "none","yes", 2 },
+    { "wpzone5", "none","yes", 2 },
+    { "wpzone6", "none","yes", 1 },
+    { "wpzone7", "none","yes", 1 },
+    { "wpzone8", "none","yes", 1 },
+    { "wpzone9", "none","yes", 1 },
+    { "wpzone10", "none","no", 0 }, -- Both sides as its set to 0
 }
 
 
@@ -943,7 +957,6 @@ function ctld.deactivatePickupZone(_zoneName)
     end
 end
 
-
 -- Change the remaining groups currently available for pickup at a zone
 -- e.g. ctld.changeRemainingGroupsForPickupZone("pickup1", 5) -- adds 5 groups
 -- ctld.changeRemainingGroupsForPickupZone("pickup1", -3) -- remove 3 groups
@@ -974,6 +987,77 @@ function ctld.changeRemainingGroupsForPickupZone(_zoneName, _amount)
     end
 
 
+end
+
+-- Activates a Waypoint zone
+-- Activates a Waypoint zone when called from a trigger
+-- EG: ctld.activateWaypointZone("pickzone3")
+-- This means that troops dropped within the radius of the zone will head to the center
+-- of the zone instead of searching for troops
+function ctld.activateWaypointZone(_zoneName)
+    local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
+
+
+    if _triggerZone == nil  then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone  called " .. _zoneName, 10)
+
+        return
+    end
+
+    for _, _zoneDetails in pairs(ctld.wpZones) do
+
+        if _zoneName == _zoneDetails[1] then
+
+            --smoke could get messy if designer keeps calling this on an active zone, check its not active first
+            if _zoneDetails[3] == 1 then
+                -- they might have a continuous trigger so i've hidden the warning
+                --trigger.action.outText("CTLD.lua ERROR: Pickup Zone already active: " .. _zoneName, 10)
+                return
+            end
+
+            _zoneDetails[3] = 1 --activate zone
+
+            if ctld.disableAllSmoke == true then --smoke disabled
+            return
+            end
+
+            if _zoneDetails[2] >= 0 then
+
+                -- Trigger smoke marker
+                -- This will cause an overlapping smoke marker on next refreshsmoke call
+                -- but will only happen once
+                local _pos2 = { x = _triggerZone.point.x, y = _triggerZone.point.z }
+                local _alt = land.getHeight(_pos2)
+                local _pos3 = { x = _pos2.x, y = _alt, z = _pos2.y }
+
+                trigger.action.smoke(_pos3, _zoneDetails[2])
+            end
+        end
+    end
+end
+
+
+-- Deactivates a Waypoint zone
+-- Deactivates a Waypoint zone when called from a trigger
+-- EG: ctld.deactivateWaypointZone("wpzone3")
+-- This  disables wpzone3 so that troops dropped in this zone will search for troops as normal
+-- These functions can be called by triggers
+function ctld.deactivateWaypointZone(_zoneName)
+
+    local _triggerZone = trigger.misc.getZone(_zoneName)
+
+    if _triggerZone == nil then
+        trigger.action.outText("CTLD.lua ERROR: Cant find zone called " .. _zoneName, 10)
+        return
+    end
+
+    for _, _zoneDetails in pairs(ctld.pickupZones) do
+
+        if _zoneName == _zoneDetails[1] then
+
+            _zoneDetails[3] = 0 --deactivate zone
+        end
+    end
 end
 
 -- Continuous Trigger Function
@@ -3786,10 +3870,17 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
         _maxSearch = ctld.maximumSearchDistance
     end
 
-    local _enemyPos = ctld.findNearestEnemy(_details.side, _point, _maxSearch)
+    local _wpZone = ctld.inWaypointZone(_point,_spawnedGroup:getCoalition())
 
-    ctld.orderGroupToMoveToPoint(_spawnedGroup:getUnit(1), _enemyPos)
+    if _wpZone.inZone then
+        ctld.orderGroupToMoveToPoint(_spawnedGroup:getUnit(1), _wpZone.point)
+        env.info("Heading to waypoint - In Zone ".._wpZone.name)
+    else
+        local _enemyPos = ctld.findNearestEnemy(_details.side, _point, _maxSearch)
 
+        ctld.orderGroupToMoveToPoint(_spawnedGroup:getUnit(1), _enemyPos)
+    end
+    
     return _spawnedGroup
 end
 
@@ -4090,6 +4181,29 @@ function ctld.inDropoffZone(_heli)
     return false
 end
 
+-- are we in a waypoint zone
+function ctld.inWaypointZone(_point,_coalition)
+
+    for _, _zoneDetails in pairs(ctld.wpZones) do
+
+        local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
+
+        --right coalition and active?
+        if _triggerZone ~= nil and (_zoneDetails[4] == _coalition or _zoneDetails[4]== 0) and _zoneDetails[3] == 1 then
+
+            --get distance to center
+
+            local _dist = ctld.getDistance(_point, _triggerZone.point)
+
+            if _dist <= _triggerZone.radius then
+                return {inZone = true, point = _triggerZone.point, name = _zoneDetails[1]}
+            end
+        end
+    end
+
+    return {inZone = false}
+end
+
 -- are we near friendly logistics zone
 function ctld.inLogisticsZone(_heli)
 
@@ -4154,6 +4268,25 @@ function ctld.refreshSmoke()
             end
         end
     end
+
+    --waypoint zones
+   for _, _zoneDetails in pairs(ctld.wpZones) do
+
+        local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
+
+        --only trigger if smoke is on AND zone is active
+        if _triggerZone ~= nil and _zoneDetails[2] >= 0 and _zoneDetails[3] == 1 then
+
+            -- Trigger smoke markers
+
+            local _pos2 = { x = _triggerZone.point.x, y = _triggerZone.point.z }
+            local _alt = land.getHeight(_pos2)
+            local _pos3 = { x = _pos2.x, y = _alt, z = _pos2.y }
+
+            trigger.action.smoke(_pos3, _zoneDetails[2])
+        end
+    end
+
 
     --refresh in 5 minutes
     timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 300)
@@ -5525,6 +5658,34 @@ for _, _zone in pairs(ctld.dropOffZones) do
 
     --mark as active for refresh smoke logic to work
     _zone[4] = 1
+end
+
+--sort out waypoint zones
+for _, _zone in pairs(ctld.wpZones) do
+
+    local _zoneColor = _zone[2]
+
+    if _zoneColor == "green" then
+        _zone[2] = trigger.smokeColor.Green
+    elseif _zoneColor == "red" then
+        _zone[2] = trigger.smokeColor.Red
+    elseif _zoneColor == "white" then
+        _zone[2] = trigger.smokeColor.White
+    elseif _zoneColor == "orange" then
+        _zone[2] = trigger.smokeColor.Orange
+    elseif _zoneColor == "blue" then
+        _zone[2] = trigger.smokeColor.Blue
+    else
+        _zone[2] = -1 -- no smoke colour
+    end
+
+    --mark as active for refresh smoke logic to work
+    -- change active to 1 / 0
+    if  _zone[3] == "yes" then
+        _zone[3] = 1
+    else
+        _zone[3] = 0
+    end
 end
 
 -- Sort out extractable groups
