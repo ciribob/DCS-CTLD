@@ -13,10 +13,9 @@
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
 
-    Version: 1.61 - 19/04/2015
-      - Added ability to add Waypoint zones
-       -- Troops dropped in a waypoint zone will automatically head to the center of the zone
-
+    Version: 1.62 - 01/08/2016
+      - Changed staticBugWorkaround to false as the bug is fixed
+      - Sling load crates will now be destroyed when deployed - THIS IS GREAT! :D
 
  ]]
 
@@ -26,11 +25,11 @@ ctld = {} -- DONT REMOVE!
 -- *********************  USER CONFIGURATION ******************************
 -- ************************************************************************
 
-ctld.staticBugFix = true --  When statics are destroyed, DCS Crashes. Set this to FALSE when this bug is fixed or if you want to use REAL sling loads :)
+ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics would cause a crash. If this happens again, set this to TRUE
 
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
-ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering...
+ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
@@ -1278,7 +1277,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
     local _crate
     local _spawnedCrate
 
-    if ctld.staticBugFix and ctld.slingLoad == false then
+    if ctld.staticBugWorkaround and ctld.slingLoad == false then
         local _groupId = mist.getNextGroupId()
         local _groupName = "Crate Group #".._groupId
 
@@ -2717,7 +2716,7 @@ end
 function ctld.getCrateObject(_name)
     local _crate
 
-    if ctld.staticBugFix then
+    if ctld.staticBugWorkaround then
         _crate  = Unit.getByName(_name)
     else
         _crate = StaticObject.getByName(_name)
@@ -2783,9 +2782,9 @@ function ctld.unpackCrates(_arguments)
                     -- ctld.spawnCrateStatic( _heli:getCoalition(),mist.getNextUnitId(),{x=100,z=100},_crateName,100)
 
                     --remove crate
-                    if ctld.slingLoad == false then
+                  --  if ctld.slingLoad == false then
                         _crate.crateUnit:destroy()
-                    end
+                   -- end
 
                     local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
 
@@ -3420,9 +3419,9 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
                 end
 
                 -- remove crate
-                if ctld.slingLoad == false then
+           --     if ctld.slingLoad == false then
                     _nearestCrate.crateUnit:destroy()
-                end
+              --  end
 
                 return true -- all done so quit
             end
@@ -3564,9 +3563,9 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
             end
 
             --destroy
-            if ctld.slingLoad == false then
+           -- if ctld.slingLoad == false then
                 _systemPart.crate.crateUnit:destroy()
-            end
+            --end
         end
 
         -- HAWK / BUK READY!
@@ -3681,9 +3680,9 @@ function ctld.repairAASystem(_heli, _nearestCrate,_aaSystem)
         end
 
         -- remove crate
-        if ctld.slingLoad == false then
+       -- if ctld.slingLoad == false then
             _nearestCrate.crateUnit:destroy()
-        end
+       -- end
 
     else
         ctld.displayMessageToGroup(_heli, "Cannot repair  ".._aaSystem.name..". No damaged ".._aaSystem.name.." within 300m", 10)
@@ -3729,9 +3728,9 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
             end
 
             --destroy
-            if ctld.slingLoad == false then
+         --   if ctld.slingLoad == false then
                 _crate.crateUnit:destroy()
-            end
+         --   end
         end
 
 
@@ -3880,7 +3879,7 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
 
         ctld.orderGroupToMoveToPoint(_spawnedGroup:getUnit(1), _enemyPos)
     end
-    
+
     return _spawnedGroup
 end
 
@@ -4270,7 +4269,7 @@ function ctld.refreshSmoke()
     end
 
     --waypoint zones
-   for _, _zoneDetails in pairs(ctld.wpZones) do
+    for _, _zoneDetails in pairs(ctld.wpZones) do
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
@@ -4491,7 +4490,7 @@ function ctld.addF10MenuOptions()
                             missionCommands.addCommandForGroup(_groupId, "Unload Vehicles", _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                             missionCommands.addCommandForGroup(_groupId, "Load / Extract Vehicles", _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
 
-                            if ctld.enabledFOBBuilding and ctld.staticBugFix == false then
+                            if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
 
                                 missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
                             end
@@ -4531,7 +4530,7 @@ function ctld.addF10MenuOptions()
 
                         if ctld.enabledFOBBuilding or ctld.enableCrates then
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
-                            if ctld.hoverPickup == false then
+                            if ctld.hoverPickup == false or ctld.slingLoad == true then
                                 missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
                             end
 
@@ -5118,9 +5117,9 @@ function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType,_distance)
                         _allowedTarget = (string.match(_units[_x]:getName(), "priority") ~= nil) and ctld.isVehicle(_units[_x])
                     elseif _targetType == "vehicle" then
                         _allowedTarget = ctld.isVehicle(_units[_x])
-                    elseif _targetType == "troop" and _hpriority == true then
+                    elseif _targetType == "troop" and _thpriority == true then
                         _allowedTarget = (string.match(_units[_x]:getName(), "hpriority") ~= nil) and ctld.isInfantry(_units[_x])
-                    elseif _targetType == "troop" and _priority == true then
+                    elseif _targetType == "troop" and _tpriority == true then
                         _allowedTarget = (string.match(_units[_x]:getName(), "priority") ~= nil) and ctld.isInfantry(_units[_x])
                     elseif _targetType == "troop" then
                         _allowedTarget = ctld.isInfantry(_units[_x])
@@ -5729,7 +5728,7 @@ timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 1)
 timer.scheduleFunction(ctld.checkTransportStatus, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
 
-if ctld.enableCrates == true and ctld.slingLoad == false and ctld.hoverPickup  then
+if ctld.enableCrates == true and ctld.slingLoad == false and ctld.hoverPickup == true then
     timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
 end
 
