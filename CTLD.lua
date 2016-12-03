@@ -1308,9 +1308,9 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
 
         if ctld.slingLoad then
             _crate = {
-                ["category"] = "Cargo",
-                ["shape_name"] = "ab-212_cargo",
-                ["type"] = "Cargo1",
+                ["category"] = "Cargos", --now plurar
+                ["shape_name"] = "iso_container_small_cargo", --new slingloadable container
+                ["type"] = "iso_container_small", --new type
                 ["unitId"] = _unitId,
                 ["y"] = _point.z,
                 ["x"] = _point.x,
@@ -1323,7 +1323,51 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
                 --            ["cargoDisplayName"] = "cargo123",
                 --            ["CargoDisplayName"] = "cargo123",
             }
-        else
+        
+--[[ Placeholder for different type of cargo containers. Let's say pipes and trunks, fuel for FOB building
+                        ["shape_name"] = "ab-212_cargo",
+			["type"] = "uh1h_cargo" --new type for the container previously used
+			
+			["shape_name"] = "ammo_box_cargo",
+                        ["type"] = "ammo_cargo",
+			
+			["shape_name"] = "barrels_cargo",
+                        ["type"] = "barrels_cargo",
+
+                        ["shape_name"] = "bw_container_cargo",
+                        ["type"] = "container_cargo",
+			
+                        ["shape_name"] = "f_bar_cargo",
+                        ["type"] = "f_bar_cargo",
+			
+			["shape_name"] = "fueltank_cargo",
+                        ["type"] = "fueltank_cargo",
+			
+			["shape_name"] = "iso_container_cargo",
+			["type"] = "iso_container",
+			
+			["shape_name"] = "iso_container_small_cargo",
+			["type"] = "iso_container_small",
+			
+			["shape_name"] = "oiltank_cargo",
+                        ["type"] = "oiltank_cargo",
+                        
+			["shape_name"] = "pipes_big_cargo",
+                        ["type"] = "pipes_big_cargo",			
+			
+			["shape_name"] = "pipes_small_cargo",
+			["type"] = "pipes_small_cargo",
+			
+			["shape_name"] = "tetrapod_cargo",
+			["type"] = "tetrapod_cargo",
+			
+			["shape_name"] = "trunks_long_cargo",
+			["type"] = "trunks_long_cargo",
+			
+			["shape_name"] = "trunks_small_cargo",
+			["type"] = "trunks_small_cargo",
+]]--
+	else	
             _crate = {
                 ["shape_name"] = "GeneratorF",
                 ["type"] = "GeneratorF",
