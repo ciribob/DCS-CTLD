@@ -12,11 +12,13 @@
 
 	Contributors:
 	    - Steggles - https://github.com/Bob7heBuilder
+	    - mvee - https://github.com/mvee
+	    - jmontleon - https://github.com/jmontleon
+	    - emilianomolina - https://github.com/emilianomolina
 
-    Version: 1.62 - 01/08/2016
-      - Changed staticBugWorkaround to false as the bug is fixed
-      - Sling load crates will now be destroyed when deployed - THIS IS GREAT! :D
-
+    Version: 1.63 - 07/12/2016
+      - Added new sling load crates
+      - Fixed bug where crates and / or groups would disappear 
  ]]
 
 ctld = {} -- DONT REMOVE!
