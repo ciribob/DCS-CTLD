@@ -474,6 +474,22 @@ ctld.jtacUnitTypes = {
     "SKP", "Hummer" -- there are some wierd encoding issues so if you write SKP-11 it wont match as the - sign is encoded differently...
 }
 
+
+ctld.nextUnitId = 1;
+ctld.getNextUnitId = function()
+    ctld.nextUnitId = ctld.nextUnitId + 1
+
+    return ctld.nextUnitId
+end
+
+ctld.nextGroupId = 1;
+
+ctld.getNextGroupId = function()
+    ctld.nextGroupId = ctld.nextGroupId + 1
+
+    return ctld.nextGroupId
+end
+
 -- ***************************************************************
 -- **************** Mission Editor Functions *********************
 -- ***************************************************************
@@ -1171,7 +1187,7 @@ function ctld.spawnCrateAtZone(_side, _weight,_zone)
     local _alt = land.getHeight(_pos2)
     local _point = { x = _pos2.x, y = _alt, z = _pos2.y }
 
-    local _unitId = mist.getNextUnitId()
+    local _unitId = ctld.getNextUnitId()
 
     local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
@@ -1206,7 +1222,7 @@ function ctld.spawnCrateAtPoint(_side, _weight,_point)
         _country = 2
     end
 
-    local _unitId = mist.getNextUnitId()
+    local _unitId = ctld.getNextUnitId()
 
     local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
@@ -1278,12 +1294,12 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
     local _spawnedCrate
 
     if ctld.staticBugWorkaround and ctld.slingLoad == false then
-        local _groupId = mist.getNextGroupId()
+        local _groupId = ctld.getNextGroupId()
         local _groupName = "Crate Group #".._groupId
 
         local _group = {
             ["visible"] = false,
-            ["groupId"] = _groupId,
+           -- ["groupId"] = _groupId,
             ["hidden"] = false,
             ["units"] = {},
             --        ["y"] = _positions[1].z,
@@ -1309,9 +1325,9 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
         if ctld.slingLoad then
             _crate = {
                 ["category"] = "Cargos", --now plurar
-                ["shape_name"] = "iso_container_small_cargo", --new slingloadable container
-                ["type"] = "iso_container_small", --new type
-                ["unitId"] = _unitId,
+                ["shape_name"] = "bw_container_cargo", --new slingloadable container
+                ["type"] = "container_cargo", --new type
+               -- ["unitId"] = _unitId,
                 ["y"] = _point.z,
                 ["x"] = _point.x,
                 ["mass"] = _weight,
@@ -1371,7 +1387,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
             _crate = {
                 ["shape_name"] = "GeneratorF",
                 ["type"] = "GeneratorF",
-                ["unitId"] = _unitId,
+             --   ["unitId"] = _unitId,
                 ["y"] = _point.z,
                 ["x"] = _point.x,
                 ["name"] = _name,
@@ -1405,7 +1421,7 @@ function ctld.spawnFOBCrateStatic(_country, _unitId, _point, _name)
         ["category"] = "Fortifications",
         ["shape_name"] = "konteiner_red1",
         ["type"] = "Container red 1",
-        ["unitId"] = _unitId,
+     --   ["unitId"] = _unitId,
         ["y"] = _point.z,
         ["x"] = _point.x,
         ["name"] = _name,
@@ -1429,7 +1445,7 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     local _crate = {
         ["category"] = "Fortifications",
         ["type"] = "outpost",
-        ["unitId"] = _unitId,
+      --  ["unitId"] = _unitId,
         ["y"] = _point.z,
         ["x"] = _point.x,
         ["name"] = _name,
@@ -1442,10 +1458,10 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     local _spawnedCrate = StaticObject.getByName(_crate["name"])
     --local _spawnedCrate = coalition.addStaticObject(_country, _crate)
 
-    local _id = mist.getNextUnitId()
+    local _id = ctld.getNextUnitId()
     local _tower = {
         ["type"] = "house2arm",
-        ["unitId"] = _id,
+     --   ["unitId"] = _id,
         ["rate"] = 100,
         ["y"] = _point.z + -36.57142857,
         ["x"] = _point.x + 14.85714286,
@@ -1515,7 +1531,7 @@ function ctld.spawnCrate(_arguments)
 
             local _point = ctld.getPointAt12Oclock(_heli, 30)
 
-            local _unitId = mist.getNextUnitId()
+            local _unitId = ctld.getNextUnitId()
 
             local _side = _heli:getCoalition()
 
@@ -1719,7 +1735,7 @@ end
 function ctld.insertIntoTroopsArray(_troopType,_count,_troopArray)
 
     for _i = 1, _count do
-        local _unitId = mist.getNextUnitId()
+        local _unitId = ctld.getNextUnitId()
         table.insert(_troopArray, { type = _troopType, unitId = _unitId, name = string.format("Dropped %s #%i", _troopType, _unitId) })
     end
 
@@ -1792,13 +1808,13 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
                 end
             end
 
-            local _unitId = mist.getNextUnitId()
+            local _unitId = ctld.getNextUnitId()
 
             _troops[_i] = { type = _unitType, unitId = _unitId, name = string.format("Dropped %s #%i", _unitType, _unitId) }
         end
     end
 
-    local _groupId = mist.getNextGroupId()
+    local _groupId = ctld.getNextGroupId()
     local _details = { units = _troops, groupId = _groupId, groupName = string.format("Dropped Group %i", _groupId), side = _side, country = _country }
 
     return _details
@@ -1892,13 +1908,13 @@ function ctld.generateVehiclesForTransport(_side, _country)
 
     for _i, _type in ipairs(_list) do
 
-        local _unitId = mist.getNextUnitId()
+        local _unitId = ctld.getNextUnitId()
 
         _vehicles[_i] = { type = _type, unitId = _unitId, name = string.format("Dropped %s #%i", _type, _unitId) }
     end
 
 
-    local _groupId = mist.getNextGroupId()
+    local _groupId = ctld.getNextGroupId()
     local _details = { units = _vehicles, groupId = _groupId, groupName = string.format("Dropped Group %i", _groupId), side = _side, country = _country }
 
     return _details
@@ -1938,11 +1954,11 @@ function ctld.loadUnloadFOBCrate(_args)
 
         local _side = _heli:getCoalition()
 
-        local _unitId = mist.getNextUnitId()
+        local _unitId = ctld.getNextUnitId()
 
         local _name = string.format("FOB Crate #%i", _unitId)
 
-        local _spawnedCrate = ctld.spawnFOBCrateStatic(_heli:getCountry(), mist.getNextUnitId(), { x = _point.x + _xOffset, z = _point.z + _yOffset }, _name)
+        local _spawnedCrate = ctld.spawnFOBCrateStatic(_heli:getCountry(), ctld.getNextUnitId(), { x = _point.x + _xOffset, z = _point.z + _yOffset }, _name)
 
         if _side == 1 then
             ctld.droppedFOBCratesRED[_name] = _name
@@ -2823,7 +2839,7 @@ function ctld.unpackCrates(_arguments)
                     local _cratePoint = _crate.crateUnit:getPoint()
                     local _crateName = _crate.crateUnit:getName()
 
-                    -- ctld.spawnCrateStatic( _heli:getCoalition(),mist.getNextUnitId(),{x=100,z=100},_crateName,100)
+                    -- ctld.spawnCrateStatic( _heli:getCoalition(),ctld.getNextUnitId(),{x=100,z=100},_crateName,100)
 
                     --remove crate
                   --  if ctld.slingLoad == false then
@@ -2941,7 +2957,7 @@ function ctld.unpackFOBCrates(_crates, _heli)
 
         timer.scheduleFunction(function(_args)
 
-            local _unitId = mist.getNextUnitId()
+            local _unitId = ctld.getNextUnitId()
             local _name = "Deployed FOB #" .. _unitId
 
             local _fob = ctld.spawnFOB(_args[2], _unitId, _args[1], _name)
@@ -3001,7 +3017,7 @@ function ctld.dropSlingCrate(_args)
 
         local _point = _heli:getPoint()
 
-        local _unitId = mist.getNextUnitId()
+        local _unitId = ctld.getNextUnitId()
 
         local _side = _heli:getCoalition()
 
@@ -3150,20 +3166,20 @@ end
 
 function ctld.spawnRadioBeaconUnit(_point, _country, _type)
 
-    local _groupId = mist.getNextGroupId()
+    local _groupId = ctld.getNextGroupId()
 
-    local _unitId = mist.getNextUnitId()
+    local _unitId = ctld.getNextUnitId()
 
     local _radioGroup = {
         ["visible"] = false,
-        ["groupId"] = _groupId,
+       -- ["groupId"] = _groupId,
         ["hidden"] = false,
         ["units"] = {
             [1] = {
                 ["y"] = _point.z,
                 ["type"] = "2B11 mortar",
                 ["name"] = _type .. " Radio Beacon Unit #" .. _unitId,
-                ["unitId"] = _unitId,
+             --   ["unitId"] = _unitId,
                 ["heading"] = 0,
                 ["playerCanDrive"] = true,
                 ["skill"] = "Excellent",
@@ -3797,7 +3813,7 @@ end
 
 function ctld.spawnCrateGroup(_heli, _positions, _types)
 
-    local _id = mist.getNextGroupId()
+    local _id = ctld.getNextGroupId()
 
     local _groupName = _types[1] .. "  #" .. _id
 
@@ -3805,7 +3821,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
 
     local _group = {
         ["visible"] = false,
-        ["groupId"] = _id,
+       -- ["groupId"] = _id,
         ["hidden"] = false,
         ["units"] = {},
         --        ["y"] = _positions[1].z,
@@ -3816,7 +3832,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
 
     if #_positions == 1 then
 
-        local _unitId = mist.getNextUnitId()
+        local _unitId = ctld.getNextUnitId()
         local _details = { type = _types[1], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[1], _unitId) }
 
         _group.units[1] = ctld.createUnit(_positions[1].x + 5, _positions[1].z + 5, 120, _details)
@@ -3825,7 +3841,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
 
         for _i, _pos in ipairs(_positions) do
 
-            local _unitId = mist.getNextUnitId()
+            local _unitId = ctld.getNextUnitId()
             local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
 
             _group.units[_i] = ctld.createUnit(_pos.x + 5, _pos.z + 5, 120, _details)
@@ -3859,7 +3875,7 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
 
     local _group = {
         ["visible"] = false,
-        ["groupId"] = _details.groupId,
+      --  ["groupId"] = _details.groupId,
         ["hidden"] = false,
         ["units"] = {},
         --        ["y"] = _positions[1].z,
@@ -4056,7 +4072,7 @@ function ctld.createUnit(_x, _y, _angle, _details)
         ["y"] = _y,
         ["type"] = _details.type,
         ["name"] = _details.name,
-        ["unitId"] = _details.unitId,
+      --  ["unitId"] = _details.unitId,
         ["heading"] = _angle,
         ["playerCanDrive"] = true,
         ["skill"] = "Excellent",
@@ -4574,8 +4590,10 @@ function ctld.addF10MenuOptions()
 
                         if ctld.enabledFOBBuilding or ctld.enableCrates then
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
-                            if ctld.hoverPickup == false or ctld.slingLoad == true then
-                                missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
+                            if ctld.hoverPickup == false then
+                                if  ctld.slingLoad == false then
+                                    missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
+                                end
                             end
 
                             missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
@@ -5827,7 +5845,7 @@ for _coalitionName, _coalitionData in pairs(env.mission.coalition) do
                             for _groupId, _group in pairs(_objectTypeData.group) do
                                 if _group and _group.units and type(_group.units) == 'table' then
                                     for _unitNum, _unit in pairs(_group.units) do
-                                        if _unit.type == "Cargo1" and _unit.canCargo == true then
+                                        if _unit.canCargo == true then
                                             ctld.missionEditorCargoCrates[_unit.name] = _unit.name
                                             env.info("Crate Found: " .. _unit.name)
                                         end
