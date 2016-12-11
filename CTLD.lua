@@ -16,9 +16,11 @@
 	    - jmontleon - https://github.com/jmontleon
 	    - emilianomolina - https://github.com/emilianomolina
 
-    Version: 1.63 - 07/12/2016
+    Version: 1.64 - 10/12/2016
       - Added new sling load crates
-      - Fixed bug where crates and / or groups would disappear 
+      - Fixed bug where crates and / or groups would disappear
+      - Fixed bug where count in zone wouldn't work for mission crates
+      - Delayed config of F10 menu and other scheduled functions so they can be overwritten by mission if a user wants
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -5787,18 +5789,22 @@ if ctld.allowRandomAiTeamPickups == true then
 end
 
 
--- Scheduled functions (run cyclically)
+-- Scheduled functions (run cyclically) -- but hold execution for a second so we can override parts
 
-timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
-timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
 timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 1)
 timer.scheduleFunction(ctld.checkTransportStatus, nil, timer.getTime() + 5)
-timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
 
-if ctld.enableCrates == true and ctld.slingLoad == false and ctld.hoverPickup == true then
-    timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
-end
+timer.scheduleFunction(function()
 
+    timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
+    timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
+    timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
+
+    if ctld.enableCrates == true and ctld.slingLoad == false and ctld.hoverPickup == true then
+        timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
+    end
+
+end,nil, timer.getTime()+1 )
 
 --event handler for deaths
 --world.addEventHandler(ctld.eventHandler)
@@ -5848,8 +5854,9 @@ for _coalitionName, _coalitionData in pairs(env.mission.coalition) do
                                 if _group and _group.units and type(_group.units) == 'table' then
                                     for _unitNum, _unit in pairs(_group.units) do
                                         if _unit.canCargo == true then
-                                            ctld.missionEditorCargoCrates[_unit.name] = _unit.name
-                                            env.info("Crate Found: " .. _unit.name)
+                                            local _cargoName = env.getValueDictByKey(_unit.name)
+                                            ctld.missionEditorCargoCrates[_cargoName] = _cargoName
+                                            env.info("Crate Found: " .. _unit.name.." - Unit: ".._cargoName)
                                         end
                                     end
                                 end
