@@ -48,7 +48,8 @@ ctld.maximumDistanceLogistic = 200 -- max distance from vehicle to logistics to 
 ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
 ctld.maximumMoveDistance = 2000 -- max distance for troops to move from drop point if no enemy is nearby
 
-ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
+ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130 
+							-- also works as maximum size of group that'll fit into a helicopter unless overridden
 ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
 ctld.fastRopeMaximumHeight = 18.28 -- in meters which is 60 ft max fast rope (not rappell) safe height
 
@@ -387,6 +388,25 @@ ctld.logisticUnits = {
 ctld.vehicleTransportEnabled = {
     "76MD", -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
     "C-130",
+}
+
+
+-- ************** Maximum Units SETUP for UNITS ******************
+
+-- Put the name of the Unit you want to limit group sizes too
+-- i.e
+-- ["UH-1H"] = 10,
+--
+-- Will limit UH1 to only transport groups with a size 10 or less
+-- Make sure the unit name is exactly right or it wont work
+
+ctld.unitLoadLimits = {
+
+    -- Remove the -- below to turn on options
+    -- ["SA342Mistral"] = 4,
+    -- ["SA342L"] = 4,
+    -- ["SA342M"] = 4,
+
 }
 
 -- ************** INFANTRY GROUPS FOR PICKUP ******************
@@ -2179,7 +2199,20 @@ function ctld.extractTroops(_args)
             _extractTroops = ctld.findNearestGroup(_heli, ctld.droppedTroopsBLUE)
         end
 
+
         if _extractTroops ~= nil then
+
+            local _limit = ctld.getTransportLimit(_heli:getTypeName())
+
+            local _size =  #_extractTroops.group:getUnits()
+
+            if _limit <= #_extractTroops.group:getUnits() then
+
+                ctld.displayMessageToGroup(_heli, "Sorry - The group of ".._size.." is too large to fit. \n\nLimit is ".._limit.." for ".._heli:getTypeName(), 20)
+
+                return
+            end
+
 
             _onboard.troops = _extractTroops.details
 
@@ -4511,6 +4544,16 @@ function ctld.checkAIStatus()
 
 end
 
+function ctld.getTransportLimit(_unitType)
+
+    if ctld.unitLoadLimits[_unitType] then
+
+        return ctld.unitLoadLimits[_unitType]
+    end
+
+    return ctld.numberOfTroops
+
+end
 
 -- Adds menuitem to all heli units that are active
 function ctld.addF10MenuOptions()
@@ -4543,7 +4586,11 @@ function ctld.addF10MenuOptions()
                         -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
                         for _,_loadGroup in pairs(ctld.loadableGroups) do
                             if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
-                                missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _troopCommandsPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
+
+                                -- check size & unit
+                                if ctld.getTransportLimit(_unit:getTypeName()) >= _loadGroup.total then
+                                    missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _troopCommandsPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
+                                end
                             end
                         end
 
@@ -5786,6 +5833,34 @@ if ctld.allowRandomAiTeamPickups == true then
             table.insert(ctld.blueTeams, _)
         end
     end
+end
+
+-- add total count
+
+for _,_loadGroup in pairs(ctld.loadableGroups) do
+
+    _loadGroup.total = 0
+    if _loadGroup.aa then
+        _loadGroup.total = _loadGroup.aa + _loadGroup.total
+    end
+
+    if _loadGroup.inf then
+        _loadGroup.total = _loadGroup.inf + _loadGroup.total
+    end
+
+
+    if _loadGroup.mg then
+        _loadGroup.total = _loadGroup.mg + _loadGroup.total
+    end
+
+    if _loadGroup.at then
+        _loadGroup.total = _loadGroup.at + _loadGroup.total
+    end
+
+    if _loadGroup.mortar then
+        _loadGroup.total = _loadGroup.mortar + _loadGroup.total
+    end
+
 end
 
 
