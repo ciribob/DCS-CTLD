@@ -16,7 +16,8 @@
 	    - jmontleon - https://github.com/jmontleon
 	    - emilianomolina - https://github.com/emilianomolina
 
-    Version: 1.64 - 10/12/2016
+    Version: 1.70 - 25/06/2017
+      - Added ability to set maximum group size that can be carried
       - Added new sling load crates
       - Fixed bug where crates and / or groups would disappear
       - Fixed bug where count in zone wouldn't work for mission crates
