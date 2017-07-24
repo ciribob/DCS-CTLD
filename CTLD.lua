@@ -76,6 +76,10 @@ ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a creat
 
 ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 
+ctld.crateWaitTime = 120 -- time in seconds to wait before you can spawn another crate
+
+ctld.forceCrateToBeMoved = true -- a crate must be picked up at least once and moved before it can be unpacked. Helps to reduce crate spam
+
 ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
 ctld.radioSoundFC3 = "beaconsilent.ogg" -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
 
@@ -407,6 +411,30 @@ ctld.unitLoadLimits = {
     -- ["SA342Mistral"] = 4,
     -- ["SA342L"] = 4,
     -- ["SA342M"] = 4,
+
+}
+
+
+-- ************** Allowable actions for UNIT TYPES ******************
+
+-- Put the name of the Unit you want to limit actions for
+-- NOTE - the unit must've been listed in the transportPilotNames list above
+-- This can be used in conjunction with the options above for group sizes
+-- By default you can load both crates and troops unless overriden below
+-- i.e
+-- ["UH-1H"] = {crates=true, troops=false},
+--
+-- Will limit UH1 to only transport CRATES but NOT TROOPS
+--
+-- ["SA342Mistral"] = {crates=fales, troops=true},
+-- Will allow Mistral Gazelle to only transport crates, not troops
+
+ctld.unitActions = {
+
+    -- Remove the -- below to turn on options
+    -- ["SA342Mistral"] = {crates=true, troops=true},
+    -- ["SA342L"] = {crates=false, troops=true},
+    -- ["SA342M"] = {crates=false, troops=true},
 
 }
 
@@ -1296,6 +1324,9 @@ ctld.AASystemTemplate = {
 }
 
 
+ctld.crateWait = {}
+ctld.crateMove = {}
+
 ---------------- INTERNAL FUNCTIONS ----------------
 function ctld.getTransportUnit(_unitName)
 
@@ -1549,8 +1580,17 @@ function ctld.spawnCrate(_arguments)
 
             local _position = _heli:getPosition()
 
+            -- check crate spam
+            if _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] < timer.getTime() then
 
-            --   trigger.action.outText("Spawn Crate".._args[1].." ".._args[2],10)
+                ctld.displayMessageToGroup(_heli,"Sorry you must wait "..(ctld.crateWait[_heli:getPlayerName()]  - timer.getTime()).. " seconds before you can get another crate", 20)
+                return
+            end
+
+            if _heli:getPlayerName() ~= nil then
+                ctld.crateWait[_heli:getPlayerName()] = timer.getTime() + ctld.crateWaitTime
+            end
+                --   trigger.action.outText("Spawn Crate".._args[1].." ".._args[2],10)
 
             local _heli = ctld.getTransportUnit(_args[1])
 
@@ -1563,6 +1603,9 @@ function ctld.spawnCrate(_arguments)
             local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
             local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight,_side)
+
+            -- add to move table
+            ctld.crateMove[_name] = _name
 
             ctld.displayMessageToGroup(_heli, string.format("A %s crate weighing %s kg has been brought out and is at your 12 o'clock ", _crateType.desc, _crateType.weight), 20)
 
@@ -2207,7 +2250,7 @@ function ctld.extractTroops(_args)
 
             local _size =  #_extractTroops.group:getUnits()
 
-            if _limit <= #_extractTroops.group:getUnits() then
+            if _limit < #_extractTroops.group:getUnits() then
 
                 ctld.displayMessageToGroup(_heli, "Sorry - The group of ".._size.." is too large to fit. \n\nLimit is ".._limit.." for ".._heli:getTypeName(), 20)
 
@@ -2391,6 +2434,9 @@ function ctld.checkHoverStatus()
                                 ctld.hoverStatus[_transUnit:getName()] = nil
                                 ctld.displayMessageToGroup(_transUnit, "Loaded  " .. _crate.details.desc .. " crate!", 10,true)
 
+                                --crates been moved once!
+                                ctld.crateMove[_crate.crateUnit:getName()] = nil
+
                                 if _transUnit:getCoalition() == 1 then
                                     ctld.spawnedCratesRED[_crate.crateUnit:getName()] = nil
                                 else
@@ -2450,6 +2496,8 @@ function ctld.loadNearbyCrate(_name)
                     else
                         ctld.spawnedCratesBLUE[_crate.crateUnit:getName()] = nil
                     end
+
+                    ctld.crateMove[_crate.crateUnit:getName()] = nil
 
                     _crate.crateUnit:destroy()
 
@@ -2852,6 +2900,12 @@ function ctld.unpackCrates(_arguments)
 
                     return
                 end
+
+                if ctld.forceCrateToBeMoved and ctld.crateMove[_crate.crateUnit:getName()] then
+                    ctld.displayMessageToGroup(_heli,"Sorry you must move this crate before you unpack it!", 20)
+                    return
+                end
+
 
                 local _aaTemplate = ctld.getAATemplate(_crate.details.unit)
 
@@ -4556,6 +4610,16 @@ function ctld.getTransportLimit(_unitType)
 
 end
 
+function ctld.getUnitActions(_unitType)
+
+    if ctld.unitActions[_unitType] then
+        return ctld.unitActions[_unitType]
+    end
+
+    return {crates=true,troops=true}
+
+end
+
 -- Adds menuitem to all heli units that are active
 function ctld.addF10MenuOptions()
     -- Loop through all Heli units
@@ -4578,39 +4642,46 @@ function ctld.addF10MenuOptions()
 
                         local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
 
-                        local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport", _rootPath)
+                        local _unitActions = ctld.getUnitActions(_unit:getTypeName())
 
-                        missionCommands.addCommandForGroup(_groupId, "Unload / Extract Troops", _troopCommandsPath, ctld.unloadExtractTroops, { _unitName })
 
-                        missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
+                        if _unitActions.troops then
 
-                        -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
-                        for _,_loadGroup in pairs(ctld.loadableGroups) do
-                            if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
+                            local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport", _rootPath)
 
-                                -- check size & unit
-                                if ctld.getTransportLimit(_unit:getTypeName()) >= _loadGroup.total then
-                                    missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _troopCommandsPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
+                            missionCommands.addCommandForGroup(_groupId, "Unload / Extract Troops", _troopCommandsPath, ctld.unloadExtractTroops, { _unitName })
+
+                            missionCommands.addCommandForGroup(_groupId, "Check Cargo", _troopCommandsPath, ctld.checkTroopStatus, { _unitName })
+
+                            -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
+                            for _,_loadGroup in pairs(ctld.loadableGroups) do
+                                if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
+
+                                    -- check size & unit
+                                    if ctld.getTransportLimit(_unit:getTypeName()) >= _loadGroup.total then
+                                        missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _troopCommandsPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
+                                    end
                                 end
                             end
-                        end
 
-                        if ctld.unitCanCarryVehicles(_unit) then
+                            if ctld.unitCanCarryVehicles(_unit) then
 
-                            local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Transport", _rootPath)
+                                local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Transport", _rootPath)
 
-                            missionCommands.addCommandForGroup(_groupId, "Unload Vehicles", _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
-                            missionCommands.addCommandForGroup(_groupId, "Load / Extract Vehicles", _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
+                                missionCommands.addCommandForGroup(_groupId, "Unload Vehicles", _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
+                                missionCommands.addCommandForGroup(_groupId, "Load / Extract Vehicles", _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
 
-                            if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
+                                if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
 
-                                missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
+                                    missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
+                                end
+                                missionCommands.addCommandForGroup(_groupId, "Check Cargo", _vehicleCommandsPath, ctld.checkTroopStatus, { _unitName })
                             end
-                            missionCommands.addCommandForGroup(_groupId, "Check Cargo", _vehicleCommandsPath, ctld.checkTroopStatus, { _unitName })
+
                         end
 
 
-                        if ctld.enableCrates then
+                        if ctld.enableCrates and _unitActions.crates then
 
                             if ctld.unitCanCarryVehicles(_unit) == false then
 
@@ -4640,7 +4711,8 @@ function ctld.addF10MenuOptions()
                             end
                         end
 
-                        if ctld.enabledFOBBuilding or ctld.enableCrates then
+                        if (ctld.enabledFOBBuilding or ctld.enableCrates) and _unitActions.crates then
+
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
                             if ctld.hoverPickup == false then
                                 if  ctld.slingLoad == false then
