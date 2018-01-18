@@ -16,7 +16,9 @@
 	    - jmontleon - https://github.com/jmontleon
 	    - emilianomolina - https://github.com/emilianomolina
 
-    Version: 1.70 - 25/06/2017
+    Version: 1.71 - 18/01/2018
+      - Improved JTAC Performance - priority & targeting
+      - Added JTAC report for in view
       - Added ability to set maximum group size that can be carried
       - Added new sling load crates
       - Fixed bug where crates and / or groups would disappear
