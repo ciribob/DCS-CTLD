@@ -5213,144 +5213,153 @@ end
 -- Find nearest enemy to JTAC that isn't blocked by terrain
 function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType,_distance)
 
+    --local startTime = os.clock()
+
     local _maxDistance = _distance or ctld.JTAC_maxDistance
-    local _x = 1
-    local _i = 1
 
-    local _units = nil
-    local _groupName = nil
-
-    local _nearestUnit = nil
     local _nearestDistance = _maxDistance
 
-    local _enemyGroups
+    local _jtacPoint = _jtacUnit:getPoint()
+    local _coa =    _jtacUnit:getCoalition()
 
-    if _jtacUnit:getCoalition() == 1 then
-        _enemyGroups = coalition.getGroups(2, Group.Category.GROUND)
-    else
-        _enemyGroups = coalition.getGroups(1, Group.Category.GROUND)
+    local _offsetJTACPos = { x = _jtacPoint.x, y = _jtacPoint.y + 2.0, z = _jtacPoint.z }
+
+    local _volume = {
+        id = world.VolumeType.SPHERE,
+        params = {
+            point = _offsetJTACPos,
+            radius = _maxDistance
+        }
+    }
+
+    local _unitList = {}
+
+
+    local _search = function(_unit, _coa)
+        pcall(function()
+
+            if _unit ~= nil
+                    and _unit:getLife() > 0
+                    and _unit:isActive()
+                    and _unit:getCoalition() ~= _coa
+                    and not _unit:inAir()
+                    and not ctld.alreadyTarget(_jtacUnit,_unit) then
+
+                local _tempPoint = _unit:getPoint()
+                local _offsetEnemyPos = { x = _tempPoint.x, y = _tempPoint.y + 2.0, z = _tempPoint.z }
+
+                if land.isVisible(_offsetJTACPos,_offsetEnemyPos ) then
+
+                    local _dist = ctld.getDistance(_offsetJTACPos, _offsetEnemyPos)
+
+                    if _dist < _maxDistance then
+                        table.insert(_unitList,{unit=_unit, dist=_dist})
+
+                    end
+                end
+            end
+        end)
+
+        return true
     end
+
+    world.searchObjects(Object.Category.UNIT, _volume, _search, _coa)
+
+    --log.info(string.format("JTAC Search elapsed time: %.4f\n", os.clock() - startTime))
+
+    -- generate list order by distance & visible
+
+    -- first check
+    -- hpriority
+    -- priority
+    -- vehicle
+    -- unit
+
+    local _sort = function( a,b ) return a.dist < b.dist end
+    table.sort(_unitList,_sort)
+    -- sort list
+
+    -- check for hpriority
+    for _, _enemyUnit in ipairs(_unitList) do
+        local _enemyName = _enemyUnit.unit:getName()
+
+        if string.match(_enemyName, "hpriority") then
+            return _enemyUnit.unit
+        end
+    end
+
+    for _, _enemyUnit in ipairs(_unitList) do
+        local _enemyName = _enemyUnit.unit:getName()
+
+        if string.match(_enemyName, "priority") then
+            return _enemyUnit.unit
+        end
+    end
+
+    for _, _enemyUnit in ipairs(_unitList) do
+        local _enemyName = _enemyUnit.unit:getName()
+
+        if (_targetType == "vehicle" and ctld.isVehicle(_enemyUnit.unit)) or _targetType == "all" then
+            return _enemyUnit.unit
+
+        elseif (_targetType == "troop" and ctld.isInfantry(_enemyUnit.unit)) or _targetType == "all" then
+            return _enemyUnit.unit
+        end
+    end
+
+    return nil
+
+end
+
+
+function ctld.listNearbyEnemies(_jtacUnit)
+
+    local _maxDistance =  ctld.JTAC_maxDistance
 
     local _jtacPoint = _jtacUnit:getPoint()
-    local _jtacPosition = _jtacUnit:getPosition()
+    local _coa =    _jtacUnit:getCoalition()
 
-    local _tempPoint = nil
-    local _tempPosition = nil
+    local _offsetJTACPos = { x = _jtacPoint.x, y = _jtacPoint.y + 2.0, z = _jtacPoint.z }
 
-    local _tempDist = nil
+    local _volume = {
+        id = world.VolumeType.SPHERE,
+        params = {
+            point = _offsetJTACPos,
+            radius = _maxDistance
+        }
+    }
+    local _enemies = nil
 
-    -- finish this function
-    local _vhpriority = false
-    local _vpriority = false
-    local _thpriority = false
-    local _tpriority = false
-    for _i = 1, #_enemyGroups do
-        if _enemyGroups[_i] ~= nil then
-            _groupName = _enemyGroups[_i]:getName()
-            _units = ctld.getGroup(_groupName)
-            if #_units > 0 then
-                for _y = 1, #_units do
-                    local _targeted = false
-                    if not _distance then
-                        _targeted = ctld.alreadyTarget(_jtacUnit, _units[_x])
+    local _search = function(_unit, _coa)
+        pcall(function()
+
+            if _unit ~= nil
+                    and _unit:getLife() > 0
+                    and _unit:isActive()
+                    and _unit:getCoalition() ~= _coa
+                    and not _unit:inAir() then
+
+                local _tempPoint = _unit:getPoint()
+                local _offsetEnemyPos = { x = _tempPoint.x, y = _tempPoint.y + 2.0, z = _tempPoint.z }
+
+                if land.isVisible(_offsetJTACPos,_offsetEnemyPos ) then
+
+                    if not _enemies then
+                        _enemies = {}
                     end
 
-                    -- calc distance
-                    _tempPoint = _units[_y]:getPoint()
-                    _tempDist = ctld.getDistance(_tempPoint, _jtacPoint)
+                    _enemies[_unit:getTypeName()] = _unit:getTypeName()
 
-                    if _tempDist < _maxDistance and _tempDist < _nearestDistance then
-
-                        local _offsetEnemyPos = { x = _tempPoint.x, y = _tempPoint.y + 2.0, z = _tempPoint.z }
-                        local _offsetJTACPos = { x = _jtacPoint.x, y = _jtacPoint.y + 2.0, z = _jtacPoint.z }
-                        -- calc visible
-
-                        if land.isVisible(_offsetEnemyPos, _offsetJTACPos) and _targeted == false then
-                            if (string.match(_units[_y]:getName(), "hpriority") ~= nil) and ctld.isVehicle(_units[_y]) then
-                                _vhpriority = true
-                            elseif (string.match(_units[_y]:getName(), "priority") ~= nil) and ctld.isVehicle(_units[_y]) then
-                                _vpriority = true
-                            elseif (string.match(_units[_y]:getName(), "hpriority") ~= nil) and ctld.isInfantry(_units[_y]) then
-                                _thpriority = true
-                            elseif (string.match(_units[_y]:getName(), "priority") ~= nil) and ctld.isInfantry(_units[_y]) then
-                                _tpriority = true
-                            end
-                        end
-                    end
                 end
             end
-        end
+        end)
+
+        return true
     end
 
-    for _i = 1, #_enemyGroups do
-        if _enemyGroups[_i] ~= nil then
-            _groupName = _enemyGroups[_i]:getName()
-            _units = ctld.getGroup(_groupName)
-            if #_units > 0 then
+    world.searchObjects(Object.Category.UNIT, _volume, _search, _coa)
 
-                for _x = 1, #_units do
-
-                    --check to see if a JTAC has already targeted this unit only if a distance
-                    --wasnt passed in
-                    local _targeted = false
-                    if not _distance then
-                        _targeted = ctld.alreadyTarget(_jtacUnit, _units[_x])
-                    end
-
-
-                    local _allowedTarget = true
-
-                    if _targetType == "vehicle" and _vhpriority == true then
-                        _allowedTarget = (string.match(_units[_x]:getName(), "hpriority") ~= nil) and ctld.isVehicle(_units[_x])
-                    elseif _targetType == "vehicle" and _vpriority == true then
-                        _allowedTarget = (string.match(_units[_x]:getName(), "priority") ~= nil) and ctld.isVehicle(_units[_x])
-                    elseif _targetType == "vehicle" then
-                        _allowedTarget = ctld.isVehicle(_units[_x])
-                    elseif _targetType == "troop" and _thpriority == true then
-                        _allowedTarget = (string.match(_units[_x]:getName(), "hpriority") ~= nil) and ctld.isInfantry(_units[_x])
-                    elseif _targetType == "troop" and _tpriority == true then
-                        _allowedTarget = (string.match(_units[_x]:getName(), "priority") ~= nil) and ctld.isInfantry(_units[_x])
-                    elseif _targetType == "troop" then
-                        _allowedTarget = ctld.isInfantry(_units[_x])
-                    elseif _vhpriority == true or _thpriority == true then
-                        _allowedTarget = (string.match(_units[_x]:getName(), "hpriority") ~= nil)
-                    elseif _vpriority == true or _tpriority == true then
-                        _allowedTarget = (string.match(_units[_x]:getName(), "priority") ~= nil)
-                    else
-                        _allowedTarget = true
-                    end
-
-                    if _units[_x]:isActive() == true and _targeted == false and _allowedTarget == true then
-
-                        -- calc distance
-                        _tempPoint = _units[_x]:getPoint()
-                        _tempDist = ctld.getDistance(_tempPoint, _jtacPoint)
-
-                        if _tempDist < _maxDistance and _tempDist < _nearestDistance then
-
-                            local _offsetEnemyPos = { x = _tempPoint.x, y = _tempPoint.y + 2.0, z = _tempPoint.z }
-                            local _offsetJTACPos = { x = _jtacPoint.x, y = _jtacPoint.y + 2.0, z = _jtacPoint.z }
-
-
-                            -- calc visible
-                            if land.isVisible(_offsetEnemyPos, _offsetJTACPos) then
-
-                                _nearestDistance = _tempDist
-                                _nearestUnit = _units[_x]
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    if _nearestUnit == nil then
-        return nil
-    end
-
-
-    return _nearestUnit
+    return _enemies
 end
 
 -- tests whether the unit is targeted by another JTAC
@@ -5439,6 +5448,18 @@ function ctld.getJTACStatus(_args)
 
             if _enemyUnit ~= nil and _enemyUnit:getLife() > 0 and _enemyUnit:isActive() == true then
                 _message = _message .. "" .. _jtacGroupName .. " targeting " .. _enemyUnit:getTypeName() .. " CODE: " .. _laserCode .. ctld.getPositionString(_enemyUnit) .. "\n"
+
+                local _list = ctld.listNearbyEnemies(_jtacUnit)
+
+                if _list then
+                    _message = _message.."Visual On: "
+
+                    for _,_type in pairs(_list) do
+                        _message = _message.._type.." "
+                    end
+                    _message = _message.."\n"
+                end
+
             else
                 _message = _message .. "" .. _jtacGroupName .. " searching for targets" .. ctld.getPositionString(_jtacUnit) .. "\n"
             end
