@@ -114,6 +114,9 @@ ctld.AASystemLimitBLUE = 20 -- Blue side limit
 --END AA SYSTEM CONFIG --
 
 -- ***************** JTAC CONFIGURATION *****************
+ctld.laser_codes = { 1113, 1688, 1322} -- Put here the available laser codes. The first value is the default for RED and the second for BLUE
+ctld.deployedJTACs = {} --Store deployed JTAC units here
+ctld.JTACCommandMenuPath = {}
 
 ctld.JTAC_LIMIT_RED = 10 -- max number of JTAC Crates for the RED Side
 ctld.JTAC_LIMIT_BLUE = 10 -- max number of JTAC Crates for the BLUE Side
@@ -127,6 +130,7 @@ ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE f
 
 ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+ctld.JTAC_smokeColous = {"Green", "Red", "White", "Orange", "Blue", "No smoke"}
 
 ctld.JTAC_jtacStatusF10 = true -- enables F10 JTAC Status menu
 
@@ -1583,7 +1587,7 @@ function ctld.spawnCrate(_arguments)
             local _position = _heli:getPosition()
 
             -- check crate spam
-            if _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] < timer.getTime() then
+            if _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] > timer.getTime() then
 
                 ctld.displayMessageToGroup(_heli,"Sorry you must wait "..(ctld.crateWait[_heli:getPlayerName()]  - timer.getTime()).. " seconds before you can get another crate", 20)
                 return
@@ -2961,11 +2965,10 @@ function ctld.unpackCrates(_arguments)
 
                     if ctld.isJTACUnitType(_crate.details.unit) and ctld.JTAC_dropEnabled then
 
-                        local _code = table.remove(ctld.jtacGeneratedLaserCodes, 1)
-                        --put to the end
-                        table.insert(ctld.jtacGeneratedLaserCodes, _code)
+                        local _side = _heli:getCoalition()
+                        local _code = ctld.jtacGetLaserCodeBySide(_side)					
 
-                        ctld.JTACAutoLase(_spawnedGroups:getName(), _code) --(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
+						ctld.CreateJTAC(_spawnedGroups:getName(), _code)	
                     end
                 end
 
@@ -4881,7 +4884,120 @@ ctld.jtacCurrentTargets = {}
 ctld.jtacRadioAdded = {} --keeps track of who's had the radio command added
 ctld.jtacGeneratedLaserCodes = {} -- keeps track of generated codes, cycles when they run out
 ctld.jtacLaserPointCodes = {}
+ctld.jtacColor = {}
 
+function ctld.CreateJTAC(group, code)
+	local _side = ctld.getGroup(group)[1]:getCoalition()
+	
+	ctld.jtacLaserPointCodes[group] = code
+	
+	if _side == 1 then
+		ctld.jtacColor[group] = ctld.JTAC_smokeColour_RED
+	else
+		ctld.jtacColor[group] = ctld.JTAC_smokeColour_BLUE
+	end
+	
+	ctld.JTACAutoLase(group, code)
+						
+	if ctld.deployedJTACs[_side] == nil then
+		ctld.deployedJTACs[_side] = {}
+	end
+	table.insert(ctld.deployedJTACs[_side], group)
+	
+	ctld.refreshJTACMenu(_side)	
+end
+
+function ctld.changeLaserCode(_args)
+	local _SelectedLazingCode = tonumber(_args[2])
+	if tonumber(ctld.jtacLaserPointCodes[_args[1]]) ~= _SelectedLazingCode then
+		--TODO: check unit's life
+		ctld.JTACAutoLaseStop(_args[1])
+		local _smoke
+		if _args[3] == 1 then
+			_smoke = ctld.JTAC_smokeOn_RED
+		else
+			_smoke = ctld.JTAC_smokeOn_BLUE
+		end
+		
+		timer.scheduleFunction(ctld.timerJTACAutoLase, { _args[1], _SelectedLazingCode, _smoke, ctld.JTAC_lock, ctld.jtacColor[_args[1]]}, timer.getTime() + 5) --TODO: check interval
+		
+		ctld.notifyCoalition(_args[1]..": Changing laser code to ".. _SelectedLazingCode, 10, _args[3])
+		
+		ctld.jtacLaserPointCodes[_args[1]] = _SelectedLazingCode
+	else
+		ctld.notifyCoalition(_args[1]..": I'm already lazing with code ".. _SelectedLazingCode, 10, _args[3])
+	end
+end
+
+function ctld.changeJTACColor(_args)
+	if ctld.GetColorName(ctld.jtacColor[_args[1]]) ~= _args[2] then
+		ctld.JTACAutoLaseStop(_args[1])
+		
+		local _smoke
+		if _args[3] == 1 then
+			_smoke = ctld.JTAC_smokeOn_RED
+		else
+			_smoke = ctld.JTAC_smokeOn_BLUE
+		end
+		
+		local _Color = -1  -- no smoke?
+		if _args[2] == "Green" then
+			_Color = 0
+		elseif _args[2] == "Red" then
+			_Color = 1
+		elseif _args[2] == "White" then
+			_Color = 2
+		elseif _args[2] == "Orange" then
+			_Color = 3
+		elseif _args[2] == "Blue" then
+			_Color = 4
+		end
+		
+		timer.scheduleFunction(ctld.timerJTACAutoLase, { _args[1], ctld.jtacLaserPointCodes[_args[1]], _smoke, ctld.JTAC_lock, _Color }, timer.getTime() + 5) --TODO: check interval
+			
+		ctld.notifyCoalition(_args[1]..": Changing color to ".._args[2], 10, _args[3])
+		
+		ctld.jtacColor[_args[1]] = _Color
+	else
+		ctld.notifyCoalition(_args[1]..": Smoke color is already ".._args[2]..".", 10, _args[3])
+	end
+end
+
+function ctld.refreshJTACMenu(_side)
+	if ctld.JTACCommandMenuPath[tostring(_side)] ~= nil then
+	  missionCommands.removeItemForCoalition(_side, ctld.JTACCommandMenuPath[tostring(_side)])
+	end
+	local _JTACMenu
+	if next(ctld.deployedJTACs[_side]) ~= nil then
+		_JTACMenu = missionCommands.addSubMenuForCoalition(_side, "JTAC Command", nil)
+	else 
+		return
+	end
+	
+	ctld.JTACCommandMenuPath[tostring(_side)] = _JTACMenu
+	local itemNo = 0
+	--Add one menu item foreach deployed JTAC unit?
+	local _JTACMenuItem = {}
+	local _JTACMenuItemLaser = {}
+	local _JTACMenuItemColor = {}
+	for _, _JTACGroup in pairs(ctld.deployedJTACs[_side]) do
+		
+		_JTACMenuItem[itemNo] = missionCommands.addSubMenuForCoalition(_side, _JTACGroup, _JTACMenu)
+			
+		--Add laser code submenus
+		_JTACMenuItemLaser[itemNo] = missionCommands.addSubMenuForCoalition(_side, "Change laser code", _JTACMenuItem[itemNo])
+		for _, _laseCode in pairs(ctld.laser_codes) do
+			missionCommands.addCommandForCoalition(_side, "to ".._laseCode, _JTACMenuItemLaser[itemNo], ctld.changeLaserCode, { _JTACGroup, _laseCode, _side})
+		end
+		
+		--Add color change submenus
+		_JTACMenuItemColor[itemNo] = missionCommands.addSubMenuForCoalition(_side, "Change smoke color", _JTACMenuItem[itemNo])
+		for _, _smokeColor in pairs(ctld.JTAC_smokeColous) do
+			missionCommands.addCommandForCoalition(_side, "to ".._smokeColor, _JTACMenuItemColor[itemNo], ctld.changeJTACColor, { _JTACGroup, _smokeColor, _side})
+		end
+		itemNo = itemNo + 1
+	end
+end
 
 function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
 
@@ -4896,8 +5012,6 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
         _lock = ctld.JTAC_lock
     end
 
-
-    ctld.jtacLaserPointCodes[_jtacGroupName] = _laserCode
 
     local _jtacGroup = ctld.getGroup(_jtacGroupName)
     local _jtacUnit
@@ -4930,8 +5044,18 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
 
 
         if ctld.jtacUnits[_jtacGroupName] ~= nil then
-            ctld.notifyCoalition("JTAC Group " .. _jtacGroupName .. " KIA!", 10, ctld.jtacUnits[_jtacGroupName].side)
-        end
+            local _side = ctld.jtacUnits[_jtacGroupName].side
+            ctld.notifyCoalition("JTAC Group " .. _jtacGroupName .. " KIA!", 10, _side)
+			
+			ctld.deployedJTACs[_side] = {}
+			for _jtacGroupName, _jtacDetails in pairs(ctld.jtacUnits) do
+				_jtacUnit = Unit.getByName(_jtacDetails.name)
+				if _jtacUnit ~= nil and _jtacUnit:getLife() > 0 and _jtacUnit:getCoalition() == _side then
+					table.insert(ctld.deployedJTACs[_side], _jtacGroupName)
+				end
+			end
+			ctld.refreshJTACMenu(ctld.jtacUnits[_jtacGroupName].side)
+		end
 
         --remove from list
         ctld.jtacUnits[_jtacGroupName] = nil
@@ -5014,7 +5138,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
             -- store current target for easy lookup
             ctld.jtacCurrentTargets[_jtacGroupName] = { name = _enemyUnit:getName(), unitType = _enemyUnit:getTypeName(), unitId = _enemyUnit:getID() }
 
-            ctld.notifyCoalition(_jtacGroupName .. " lasing new target " .. _enemyUnit:getTypeName() .. '. CODE: ' .. _laserCode .. ctld.getPositionString(_enemyUnit), 10, _jtacUnit:getCoalition())
+            ctld.notifyCoalition(_jtacGroupName .. " lasing new target " .. _enemyUnit:getTypeName() .. '. CODE: ' .. _laserCode .. ctld.getPositionString(_enemyUnit) .. ". Smoke: " .. ctld.GetColorName(_colour), 10, _jtacUnit:getCoalition())
 
             -- create smoke
             if _smoke == true then
@@ -5441,6 +5565,8 @@ function ctld.getJTACStatus(_args)
         if _jtacUnit ~= nil and _jtacUnit:getLife() > 0 and _jtacUnit:isActive() == true and _jtacUnit:getCoalition() == _side then
 
             local _enemyUnit = ctld.getCurrentUnit(_jtacUnit, _jtacGroupName)
+			
+			local _jtacColor = ctld.jtacColor[_jtacGroupName]
 
             local _laserCode = ctld.jtacLaserPointCodes[_jtacGroupName]
 
@@ -5449,7 +5575,7 @@ function ctld.getJTACStatus(_args)
             end
 
             if _enemyUnit ~= nil and _enemyUnit:getLife() > 0 and _enemyUnit:isActive() == true then
-                _message = _message .. "" .. _jtacGroupName .. " targeting " .. _enemyUnit:getTypeName() .. " CODE: " .. _laserCode .. ctld.getPositionString(_enemyUnit) .. "\n"
+                _message = _message .. "" .. _jtacGroupName .. " targeting " .. _enemyUnit:getTypeName() .. " CODE: " .. _laserCode .. ctld.getPositionString(_enemyUnit) ..". Visual indication: " .. ctld.GetColorName(_jtacColor).. " smoke." .. "\n"
 
                 local _list = ctld.listNearbyEnemies(_jtacUnit)
 
@@ -5476,7 +5602,21 @@ function ctld.getJTACStatus(_args)
     ctld.notifyCoalition(_message, 10, _side)
 end
 
-
+function ctld.GetColorName(_Color)
+	local _ColorName = "No"
+	if _Color == 0 then
+		_ColorName = "Green"
+	elseif _Color == 1 then
+		_ColorName = "Red"
+	elseif _Color == 2 then
+		_ColorName = "White"
+	elseif _Color == 3 then
+		_ColorName = "Orange"
+	elseif _Color == 4 then
+		_ColorName = "Blue"
+	end
+	return _ColorName
+end
 
 function ctld.isInfantry(_unit)
 
@@ -5538,6 +5678,10 @@ function ctld.generateLaserCode()
         end
         _count = _count + 1
     end
+end
+
+function ctld.jtacGetLaserCodeBySide(_side)
+	return ctld.laser_codes[_side]
 end
 
 function ctld.containsDigit(_number, _numberToFind)
