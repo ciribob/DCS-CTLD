@@ -16,7 +16,8 @@
 	    - jmontleon - https://github.com/jmontleon
 	    - emilianomolina - https://github.com/emilianomolina
 
-    Version: 1.71 - 18/01/2018
+    Version: 1.72 - 18/02/2018
+      - Bug fix for crate spam
       - Improved JTAC Performance - priority & targeting
       - Added JTAC report for in view
       - Added ability to set maximum group size that can be carried
@@ -1583,7 +1584,7 @@ function ctld.spawnCrate(_arguments)
             local _position = _heli:getPosition()
 
             -- check crate spam
-            if _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] < timer.getTime() then
+            if _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] > timer.getTime() then
 
                 ctld.displayMessageToGroup(_heli,"Sorry you must wait "..(ctld.crateWait[_heli:getPlayerName()]  - timer.getTime()).. " seconds before you can get another crate", 20)
                 return
