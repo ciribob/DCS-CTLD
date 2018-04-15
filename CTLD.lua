@@ -16,15 +16,8 @@
 	    - jmontleon - https://github.com/jmontleon
 	    - emilianomolina - https://github.com/emilianomolina
 
-    Version: 1.72 - 18/02/2018
-      - Bug fix for crate spam
-      - Improved JTAC Performance - priority & targeting
-      - Added JTAC report for in view
-      - Added ability to set maximum group size that can be carried
-      - Added new sling load crates
-      - Fixed bug where crates and / or groups would disappear
-      - Fixed bug where count in zone wouldn't work for mission crates
-      - Delayed config of F10 menu and other scheduled functions so they can be overwritten by mission if a user wants
+    Version: 1.73 - 15/04/2018
+      - Allow minimum distance from friendly logistics to be set
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -51,6 +44,8 @@ ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a 
 ctld.maximumDistanceLogistic = 200 -- max distance from vehicle to logistics to allow a loading or spawning operation
 ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
 ctld.maximumMoveDistance = 2000 -- max distance for troops to move from drop point if no enemy is nearby
+
+ctld.minimumDeployDistance = 1000 -- minimum distance from a friendly pickup zone where you can deploy a crate
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130 
 							-- also works as maximum size of group that'll fit into a helicopter unless overridden
@@ -2888,6 +2883,16 @@ function ctld.unpackCrates(_arguments)
             local _crates = ctld.getCratesAndDistance(_heli)
             local _crate = ctld.getClosestCrate(_heli, _crates)
 
+
+            if ctld.inLogisticsZone(_heli) == true  or  ctld.farEnoughFromLogisticZone(_heli) == true then
+
+                ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
+
+                return
+            end
+
+
+
             if _crate ~= nil and _crate.dist < 750
                     and (_crate.details.unit == "FOB" or _crate.details.unit == "FOB-SMALL") then
 
@@ -2896,13 +2901,6 @@ function ctld.unpackCrates(_arguments)
                 return
 
             elseif _crate ~= nil and _crate.dist < 200 then
-
-                if ctld.inLogisticsZone(_heli) == true then
-
-                    ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
-
-                    return
-                end
 
                 if ctld.forceCrateToBeMoved and ctld.crateMove[_crate.crateUnit:getName()] then
                     ctld.displayMessageToGroup(_heli,"Sorry you must move this crate before you unpack it!", 20)
@@ -4383,6 +4381,36 @@ function ctld.inLogisticsZone(_heli)
     end
 
     return false
+end
+
+
+-- are far enough from a friendly logistics zone
+function ctld.farEnoughFromLogisticZone(_heli)
+
+    if ctld.inAir(_heli) then
+        return false
+    end
+
+    local _heliPoint = _heli:getPoint()
+
+    local _farEnough = true
+
+    for _, _name in pairs(ctld.logisticUnits) do
+
+        local _logistic = StaticObject.getByName(_name)
+
+        if _logistic ~= nil and _logistic:getCoalition() == _heli:getCoalition() then
+
+            --get distance
+            local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
+
+            if _dist <= ctld.minimumDeployDistance then
+                _farEnough = false
+            end
+        end
+    end
+
+    return _farEnough
 end
 
 function ctld.refreshSmoke()
