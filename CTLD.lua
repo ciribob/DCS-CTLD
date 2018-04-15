@@ -16,15 +16,8 @@
 	    - jmontleon - https://github.com/jmontleon
 	    - emilianomolina - https://github.com/emilianomolina
 
-    Version: 1.72 - 18/02/2018
-      - Bug fix for crate spam
-      - Improved JTAC Performance - priority & targeting
-      - Added JTAC report for in view
-      - Added ability to set maximum group size that can be carried
-      - Added new sling load crates
-      - Fixed bug where crates and / or groups would disappear
-      - Fixed bug where count in zone wouldn't work for mission crates
-      - Delayed config of F10 menu and other scheduled functions so they can be overwritten by mission if a user wants
+    Version: 1.73 - 15/04/2018
+      - Allow minimum distance from friendly logistics to be set
  ]]
 
 ctld = {} -- DONT REMOVE!
