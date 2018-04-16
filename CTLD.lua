@@ -2884,7 +2884,7 @@ function ctld.unpackCrates(_arguments)
             local _crate = ctld.getClosestCrate(_heli, _crates)
 
 
-            if ctld.inLogisticsZone(_heli) == true  or  ctld.farEnoughFromLogisticZone(_heli) == true then
+            if ctld.inLogisticsZone(_heli) == true  or  ctld.farEnoughFromLogisticZone(_heli) == false then
 
                 ctld.displayMessageToGroup(_heli, "You can't unpack that here! Take it to where it's needed!", 20)
 
@@ -4403,8 +4403,9 @@ function ctld.farEnoughFromLogisticZone(_heli)
 
             --get distance
             local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
-
+            -- env.info("DIST ".._dist)
             if _dist <= ctld.minimumDeployDistance then
+                -- env.info("TOO CLOSE ".._dist)
                 _farEnough = false
             end
         end
