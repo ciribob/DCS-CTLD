@@ -47,6 +47,8 @@ ctld.maximumMoveDistance = 2000 -- max distance for troops to move from drop poi
 
 ctld.minimumDeployDistance = 1000 -- minimum distance from a friendly pickup zone where you can deploy a crate
 
+ctld.despawnTroopsTimer = -1 -- if this value is a positive number, any deployed troops will despawn after that amount of seconds have elapsed
+
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130 
 							-- also works as maximum size of group that'll fit into a helicopter unless overridden
 ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
@@ -129,6 +131,8 @@ ctld.JTAC_jtacStatusF10 = true -- enables F10 JTAC Status menu
 ctld.JTAC_location = true -- shows location of target in JTAC message
 
 ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
+
+ctld.JTAC_despawnTimer = -1 -- if this value is a positive number, any deployed JTACS will despawn after that amount of seconds have elapsed
 
 -- ***************** Pickup, dropoff and waypoint zones *****************
 
@@ -1655,6 +1659,32 @@ function ctld.troopsOnboard(_heli, _troops)
     end
 end
 
+-- tracks the troops dropped or JTACS
+-- stores group name and expiry time -- reset on redrop
+ctld.droppedTroopsTracker = {}
+
+function ctld.despawnTimer(groupName,despawnTimer)
+
+    if despawnTimer > 0 then
+
+        -- resets timer if time reused
+        ctld.droppedTroopsTracker[groupName] = (timer.getTime() +despawnTimer) - 1
+
+        timer.scheduleFunction(function()
+
+            -- checks timer hasnt been reset
+            if  ctld.droppedTroopsTracker[groupName] < timer.getTime() then
+                local group = Group.getByName(groupName)
+
+                if group then
+                    group:destroy()
+                end
+            end
+
+        end, nil, timer.getTime() + ctld.despawnTroopsTimer)
+    end
+end
+
 -- if its dropped by AI then there is no player name so return the type of unit
 function ctld.getPlayerNameOrType(_heli)
 
@@ -1751,6 +1781,9 @@ function ctld.deployTroops(_heli, _troops)
 
                     ctld.processCallback({unit = _heli, unloaded = _droppedTroops, action = "dropped_troops"})
 
+                    -- create timer
+                    ctld.despawnTimer(_droppedTroops:getName(),ctld.despawnTroopsTimer)
+
 
                 else
                     --extract zone!
@@ -1792,11 +1825,17 @@ function ctld.deployTroops(_heli, _troops)
 
                 ctld.processCallback({unit = _heli, unloaded = _droppedVehicles, action = "dropped_vehicles"})
 
+                -- create timer
+                ctld.despawnTimer(_droppedVehicles:getName(),ctld.despawnTroopsTimer)
+
+
                 trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " dropped vehicles from " .. _heli:getTypeName() .. " into combat", 10)
             end
         end
     end
 end
+
+
 
 function ctld.insertIntoTroopsArray(_troopType,_count,_troopArray)
 
@@ -2963,6 +3002,9 @@ function ctld.unpackCrates(_arguments)
                         local _code = table.remove(ctld.jtacGeneratedLaserCodes, 1)
                         --put to the end
                         table.insert(ctld.jtacGeneratedLaserCodes, _code)
+
+                        -- create timer
+                        ctld.despawnTimer(_spawnedGroups:getName(),ctld.JTAC_despawnTimer)
 
                         ctld.JTACAutoLase(_spawnedGroups:getName(), _code) --(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
                     end
