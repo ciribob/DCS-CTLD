@@ -130,6 +130,8 @@ ctld.JTAC_location = true -- shows location of target in JTAC message
 
 ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
 
+ctld.JTAC_msg_time = 60
+
 -- ***************** Pickup, dropoff and waypoint zones *****************
 
 -- Available colors (anything else like "none" disables smoke): "green", "red", "white", "orange", "blue", "none",
@@ -5044,7 +5046,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
             -- store current target for easy lookup
             ctld.jtacCurrentTargets[_jtacGroupName] = { name = _enemyUnit:getName(), unitType = _enemyUnit:getTypeName(), unitId = _enemyUnit:getID() }
 
-            ctld.notifyCoalition(_jtacGroupName .. " lasing new target " .. _enemyUnit:getTypeName() .. '. CODE: ' .. _laserCode .. ctld.getPositionString(_enemyUnit), 10, _jtacUnit:getCoalition())
+            ctld.notifyCoalition(_jtacGroupName .. " lasing new target " .. _enemyUnit:getTypeName() .. '. CODE: ' .. _laserCode .. ctld.getPositionString(_enemyUnit), ctld.JTAC_msg_time, _jtacUnit:getCoalition())
 
             -- create smoke
             if _smoke == true then
@@ -5503,7 +5505,7 @@ function ctld.getJTACStatus(_args)
     end
 
 
-    ctld.notifyCoalition(_message, 10, _side)
+    ctld.notifyCoalition(_message, ctld.JTAC_msg_time, _side)
 end
 
 
@@ -5755,10 +5757,14 @@ function ctld.getPositionString(_unit)
     local _lat, _lon = coord.LOtoLL(_unit:getPosition().p)
 
     local _latLngStr = mist.tostringLL(_lat, _lon, 3, false)
+	
+	local _latLngStrDMS = mist.tostringLL(_lat, _lon, 3, true)
 
     local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
+	
+	local _altitude = mist.utils.round(mist.utils.metersToFeet(land.getHeight({ x = _unit:getPoint().x, y = _unit:getPoint().z })), 0)
 
-    return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString
+    return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString .. " - ALT " .. _altitude .. " Ft - F-18C Special " .. _latLngStrDMS
 end
 
 
