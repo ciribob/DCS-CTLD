@@ -127,6 +127,7 @@ ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1,
 ctld.JTAC_jtacStatusF10 = true -- enables F10 JTAC Status menu
 
 ctld.JTAC_location = true -- shows location of target in JTAC message
+ctld.location_DMS = false -- shows coordinates as Degrees Minutes Seconds instead of Degrees Decimal minutes
 
 ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
 
@@ -2702,7 +2703,7 @@ function ctld.getFOBPositionString(_fob)
 
     local _lat, _lon = coord.LOtoLL(_fob:getPosition().p)
 
-    local _latLngStr = mist.tostringLL(_lat, _lon, 3, false)
+    local _latLngStr = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
 
     --   local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
 
@@ -3181,7 +3182,7 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
 
     local _lat, _lon = coord.LOtoLL(_point)
 
-    local _latLngStr = mist.tostringLL(_lat, _lon, 3, false)
+    local _latLngStr = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
 
     --local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
 
@@ -5754,7 +5755,7 @@ function ctld.getPositionString(_unit)
 
     local _lat, _lon = coord.LOtoLL(_unit:getPosition().p)
 
-    local _latLngStr = mist.tostringLL(_lat, _lon, 3, false)
+    local _latLngStr = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
 
     local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
 
