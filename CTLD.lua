@@ -489,7 +489,7 @@ ctld.spawnableCrates = {
         { weight = 800, desc = "FOB Crate - Small", unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
     },
     ["AA Crates"] = {
-        { weight = 50, desc = "Stinger", unit = "Stinger manpad", side = 2 },
+        { weight = 50, desc = "Stinger", unit = "Soldier stinger", side = 2 },
         { weight = 55, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
         -- HAWK System
@@ -1819,7 +1819,7 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
 
         if _countOrTemplate.aa then
             if _side == 2 then
-                _troops = ctld.insertIntoTroopsArray("Stinger manpad",_countOrTemplate.aa,_troops)
+                _troops = ctld.insertIntoTroopsArray("Soldier stinger",_countOrTemplate.aa,_troops)
             else
                 _troops = ctld.insertIntoTroopsArray("SA-18 Igla manpad",_countOrTemplate.aa,_troops)
             end
@@ -1854,7 +1854,7 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
                 _unitType = "Soldier M4"
 
                 if _i <= 5 and ctld.spawnStinger then
-                    _unitType = "Stinger manpad"
+                    _unitType = "Soldier stinger"
                 end
                 if _i <= 4 and ctld.spawnRPGWithCoalition then
                     _unitType = "Paratrooper RPG-16"
