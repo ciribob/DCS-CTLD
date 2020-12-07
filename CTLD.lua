@@ -391,7 +391,7 @@ ctld.logisticUnits = {
 -- in the contained mission file
 ctld.vehicleTransportEnabled = {
     "76MD", -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
-    "C-130",
+    "Hercules",
 }
 
 
