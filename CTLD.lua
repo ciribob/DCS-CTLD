@@ -488,16 +488,21 @@ ctld.spawnableCrates = {
 
         { weight = 800, desc = "FOB Crate - Small", unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
     },
-    ["AA Crates"] = {
+    ["AA short range"] = {
         { weight = 50, desc = "Stinger", unit = "Soldier stinger", side = 2 },
         { weight = 55, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
+        { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
+        { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
+    },
+    ["AA mid range"] = {
         -- HAWK System
         { weight = 540, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
         { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
-        { weight = 550, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
-        { weight = 551, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 }, -- Remove this if on 1.2
-        { weight = 552, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+        { weight = 546, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+        { weight = 547, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 }, -- Remove this if on 1.2
+        { weight = 548, desc = "HAWK CWAR (optional)", unit = "Hawk cwar", side = 2},
+        { weight = 549, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
         -- KUB SYSTEM
@@ -512,12 +517,19 @@ ctld.spawnableCrates = {
         --        { weight = 585, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
         --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
         -- END of BUK
+    },
+    ["AA long range"] = {
+        -- Patriot System
+        { weight = 555, desc = "Patriot Launcher", unit = "Patriot ln", side = 2 },
+        { weight = 556, desc = "Patriot Radar", unit = "Patriot str" , side = 2 },
+        { weight = 557, desc = "Patriot ECS", unit = "Patriot ECS", side = 2 },
+        -- { weight = 553, desc = "Patriot ICC", unit = "Patriot cp", side = 2 },
+        -- { weight = 554, desc = "Patriot EPP", unit = "Patriot EPP", side = 2 },
+        { weight = 558, desc = "Patriot AMG (optional)", unit = "Patriot AMG" , side = 2 },
+        { weight = 559, desc = "Patriot Repair", unit = "Patriot Repair" , side = 2 },
+        -- End of Patriot
 
         { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR", side = 1 }, -- cant be used by BLUE coalition
-
-        { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
-        { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
-
     },
 }
 
@@ -1302,6 +1314,16 @@ ctld.AASystemTemplate = {
         repair = "HAWK Repair",
     },
     {
+        name = "Patriot AA System",
+        count = 4,
+        parts = {
+            {name = "Patriot ln", desc = "Patriot Launcher", launcher = true},
+            {name = "Patriot ECS", desc = "Patriot Control Unit"},
+            {name = "Patriot str", desc = "Patriot Search and Track Radar"},
+        },
+        repair = "Patriot Repair",
+    },
+	{
         name = "BUK AA System",
         count = 3,
         parts = {
