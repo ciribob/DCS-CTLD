@@ -439,7 +439,7 @@ ctld.unitActions = {
 
 -- ************** WEIGHT CALCULATIONS FOR INFANTRY GROUPS ******************
 
--- Infantry groups weight is calculated based on the soldiers' roles, and the weight of their KIT_WEIGHT
+-- Infantry groups weight is calculated based on the soldiers' roles, and the weight of their kit
 -- Every soldier weights between 90% and 120% of ctld.SOLDIER_WEIGHT, and they all carry a backpack and their helmet (ctld.KIT_WEIGHT)
 -- Standard grunts have a rifle and ammo (ctld.RIFLE_WEIGHT)
 -- AA soldiers have a MANPAD tube (ctld.MANPAD_WEIGHT)
