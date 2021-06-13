@@ -438,6 +438,16 @@ ctld.unitActions = {
 }
 
 -- ************** WEIGHT CALCULATIONS FOR INFANTRY GROUPS ******************
+
+-- Infantry groups weight is calculated based on the soldiers' roles, and the weight of their KIT_WEIGHT
+-- Every soldier weights between 90% and 120% of ctld.SOLDIER_WEIGHT, and they all carry a backpack and their helmet (ctld.KIT_WEIGHT)
+-- Standard grunts have a rifle and ammo (ctld.RIFLE_WEIGHT)
+-- AA soldiers have a MANPAD tube (ctld.MANPAD_WEIGHT)
+-- Anti-tank soldiers have a RPG and a rocket (ctld.RPG_WEIGHT)
+-- Machine gunners have the squad MG and 200 bullets (ctld.MG_WEIGHT)
+-- JTAC have the laser sight, radio and binoculars (ctld.JTAC_WEIGHT)
+-- Mortar servants carry their tube and a few rounds (ctld.MORTAR_WEIGHT)
+
 ctld.SOLDIER_WEIGHT = 80 -- kg, will be randomized between 90% and 120%
 ctld.KIT_WEIGHT = 20 -- kg
 ctld.RIFLE_WEIGHT = 5 -- kg
@@ -446,6 +456,7 @@ ctld.RPG_WEIGHT = 7.6 -- kg
 ctld.MG_WEIGHT = 10 -- kg
 ctld.MORTAR_WEIGHT = 26 -- kg
 ctld.JTAC_WEIGHT = 15 -- kg
+
 -- ************** INFANTRY GROUPS FOR PICKUP ******************
 -- Unit Types
 -- inf is normal infantry
@@ -453,6 +464,7 @@ ctld.JTAC_WEIGHT = 15 -- kg
 -- at is RPG-16
 -- aa is Stinger or Igla
 -- mortar is a 2B11 mortar unit
+-- jtac is a JTAC soldier, which will use JTACAutoLase
 -- You must add a name to the group for it to work
 -- You can also add an optional coalition side to limit the group to one side
 -- for the side - 2 is BLUE and 1 is RED
