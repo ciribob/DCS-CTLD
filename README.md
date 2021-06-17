@@ -740,6 +740,18 @@ the mission but there can be a delay of up to 30 seconds after activation for th
 
 You can also change the **name of a unit*** (unit, not group) to include "**hpriority**" to make it high priority for the JTAC, or "**priority**" to set it to be medium priority. JTAC's will prioritize targets within view by first marking hpriority targets, then priority targets, and finally all others. This works seemlessly with the all/vehicle/troop functionality as well. In this way you can have them lase SAMS, then AAA, then armor, or any other order you decide is preferable.
 
+If the `DCS-SimpleTextToSpeech.lua` script is loaded, and configures (i.e. the `STTS.DIRECTORY`, `STTS.SRS_PORT` and optionaly the `STTS.GOOGLE_CREDENTIALS` variables are set), the JTAC can talk over SRS.
+
+To do this, you can specify the _radio parameter when calling ctld.JTACAutoLase like in this example :
+
+```lua
+ctld.JTACAutoLase('JTAC1', 1688, true,"all", 4, { freq = "251.50", mod = "AM", name = "JTAC one" }) 
+```
+If you don't use the _radio parameter, CTLD will compute a FM frequency based on the laser designator code : 30Mhz + [second figure of the code] + [last two figures of the code] * 0.05.
+For example, if the laser code is *1688*, the frequency will be *40.40Mhz*.
+
+JTAC frequency is available through the "JTAC Status" radio menu
+
 # In Game
 ## Troop Loading and Unloading
 
