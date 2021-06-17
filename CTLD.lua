@@ -26,76 +26,18 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "2021.06.15.01"
+ctld.Version = "20210617.01"
 
 -- debug level, specific to this module
 ctld.Debug = true
 -- trace level, specific to this module
 ctld.Trace = true
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Utility methods
--------------------------------------------------------------------------------------------------------------------------------------------------------------
-
---- print an object for a debugging log
-function ctld.p(o, level)
-    local MAX_LEVEL = 20
-    if level == nil then level = 0 end
-    if level > MAX_LEVEL then 
-        veaf.mainLogError("max depth reached in veaf.p : "..tostring(MAX_LEVEL))
-        return ""
-    end
-    local text = ""
-    if (type(o) == "table") then
-        text = "\n"
-        for key,value in pairs(o) do
-            for i=0, level do
-                text = text .. " "
-            end
-            text = text .. ".".. key.."="..ctld.p(value, level+1) .. "\n"
-        end
-    elseif (type(o) == "function") then
-        text = "[function]"
-    elseif (type(o) == "boolean") then
-        if o == true then 
-            text = "[true]"
-        else
-            text = "[false]"
-        end
-    else
-        if o == nil then
-            text = "[nil]"   
-        else
-            text = tostring(o)
-        end
-    end
-    return text
-end
-
-function ctld.logError(message)
-    env.info(" E - " .. ctld.Id .. message)
-end
-
-function ctld.logInfo(message)
-    env.info(" I - " .. ctld.Id .. message)
-end    
-
-function ctld.logDebug(message)
-    if message and ctld.Debug then
-        env.info(" D - " .. ctld.Id .. message)
-    end
-end    
-
-function ctld.logTrace(message)
-    if message and ctld.Trace then
-        env.info(" T - " .. ctld.Id .. message)
-    end
-end    
+ctld.alreadyInitialized = false -- if true, ctld.initialize() will not run
 
 -- ************************************************************************
 -- *********************  USER CONFIGURATION ******************************
 -- ************************************************************************
-
 ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics would cause a crash. If this happens again, set this to TRUE
 
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
@@ -620,11 +562,127 @@ ctld.spawnableCrates = {
     },
 }
 
+--- 3D model that will be used to represent a loadable crate ; by default, a generator
+ctld.spawnableCratesModel_load = {
+    ["category"] = "Fortifications",
+    ["shape_name"] = "GeneratorF",
+    ["type"] = "GeneratorF"
+}
+
+--- 3D model that will be used to represent a slingable crate ; by default, a crate
+ctld.spawnableCratesModel_sling = {
+    ["category"] = "Cargos",
+    ["shape_name"] = "bw_container_cargo",
+    ["type"] = "container_cargo"
+}
+
+--[[ Placeholder for different type of cargo containers. Let's say pipes and trunks, fuel for FOB building
+    ["shape_name"] = "ab-212_cargo",
+    ["type"] = "uh1h_cargo" --new type for the container previously used
+    
+    ["shape_name"] = "ammo_box_cargo",
+    ["type"] = "ammo_cargo",
+    
+    ["shape_name"] = "barrels_cargo",
+    ["type"] = "barrels_cargo",
+
+    ["shape_name"] = "bw_container_cargo",
+    ["type"] = "container_cargo",
+    
+    ["shape_name"] = "f_bar_cargo",
+    ["type"] = "f_bar_cargo",
+    
+    ["shape_name"] = "fueltank_cargo",
+    ["type"] = "fueltank_cargo",
+    
+    ["shape_name"] = "iso_container_cargo",
+    ["type"] = "iso_container",
+    
+    ["shape_name"] = "iso_container_small_cargo",
+    ["type"] = "iso_container_small",
+    
+    ["shape_name"] = "oiltank_cargo",
+    ["type"] = "oiltank_cargo",
+                
+    ["shape_name"] = "pipes_big_cargo",
+    ["type"] = "pipes_big_cargo",			
+    
+    ["shape_name"] = "pipes_small_cargo",
+    ["type"] = "pipes_small_cargo",
+    
+    ["shape_name"] = "tetrapod_cargo",
+    ["type"] = "tetrapod_cargo",
+    
+    ["shape_name"] = "trunks_long_cargo",
+    ["type"] = "trunks_long_cargo",
+    
+    ["shape_name"] = "trunks_small_cargo",
+    ["type"] = "trunks_small_cargo",
+]]--
+
 -- if the unit is on this list, it will be made into a JTAC when deployed
 ctld.jtacUnitTypes = {
     "SKP", "Hummer" -- there are some wierd encoding issues so if you write SKP-11 it wont match as the - sign is encoded differently...
 }
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Utility methods
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- print an object for a debugging log
+function ctld.p(o, level)
+    local MAX_LEVEL = 20
+    if level == nil then level = 0 end
+    if level > MAX_LEVEL then 
+        ctld.logError("max depth reached in ctld.p : "..tostring(MAX_LEVEL))
+        return ""
+    end
+    local text = ""
+    if (type(o) == "table") then
+        text = "\n"
+        for key,value in pairs(o) do
+            for i=0, level do
+                text = text .. " "
+            end
+            text = text .. ".".. key.."="..ctld.p(value, level+1) .. "\n"
+        end
+    elseif (type(o) == "function") then
+        text = "[function]"
+    elseif (type(o) == "boolean") then
+        if o == true then 
+            text = "[true]"
+        else
+            text = "[false]"
+        end
+    else
+        if o == nil then
+            text = "[nil]"   
+        else
+            text = tostring(o)
+        end
+    end
+    return text
+end
+
+function ctld.logError(message)
+    env.info(" E - " .. ctld.Id .. message)
+end
+
+function ctld.logInfo(message)
+    env.info(" I - " .. ctld.Id .. message)
+end    
+
+function ctld.logDebug(message)
+    if message and ctld.Debug then
+        env.info(" D - " .. ctld.Id .. message)
+    end
+end    
+
+function ctld.logTrace(message)
+    if message and ctld.Trace then
+        env.info(" T - " .. ctld.Id .. message)
+    end
+end    
 
 ctld.nextUnitId = 1;
 ctld.getNextUnitId = function()
@@ -1031,6 +1089,8 @@ end
 -- EG: ctld.activatePickupZone("pickzone3")
 -- This is enable pickzone3 to be used as a pickup zone for the team set
 function ctld.activatePickupZone(_zoneName)
+    ctld.logDebug(string.format("ctld.activatePickupZone(_zoneName=%s)", ctld.p(_zoneName)))
+
     local _triggerZone = trigger.misc.getZone(_zoneName) -- trigger to use as reference position
 
     if _triggerZone == nil then
@@ -1046,7 +1106,6 @@ function ctld.activatePickupZone(_zoneName)
 
     if _triggerZone == nil  then
         trigger.action.outText("CTLD.lua ERROR: Cant find zone or ship called " .. _zoneName, 10)
-
     end
 
     for _, _zoneDetails in pairs(ctld.pickupZones) do
@@ -1477,81 +1536,21 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
     else
 
         if ctld.slingLoad then
-            _crate = {
-                ["category"] = "Cargos", --now plurar
-                ["shape_name"] = "bw_container_cargo", --new slingloadable container
-                ["type"] = "container_cargo", --new type
-               -- ["unitId"] = _unitId,
-                ["y"] = _point.z,
-                ["x"] = _point.x,
-                ["mass"] = _weight,
-                ["name"] = _name,
-                ["canCargo"] = true,
-                ["heading"] = 0,
-                --            ["displayName"] = "name 2", -- getCargoDisplayName function exists but no way to set the variable
-                --            ["DisplayName"] = "name 2",
-                --            ["cargoDisplayName"] = "cargo123",
-                --            ["CargoDisplayName"] = "cargo123",
-            }
-        
---[[ Placeholder for different type of cargo containers. Let's say pipes and trunks, fuel for FOB building
-                        ["shape_name"] = "ab-212_cargo",
-			["type"] = "uh1h_cargo" --new type for the container previously used
-			
-			["shape_name"] = "ammo_box_cargo",
-                        ["type"] = "ammo_cargo",
-			
-			["shape_name"] = "barrels_cargo",
-                        ["type"] = "barrels_cargo",
-
-                        ["shape_name"] = "bw_container_cargo",
-                        ["type"] = "container_cargo",
-			
-                        ["shape_name"] = "f_bar_cargo",
-                        ["type"] = "f_bar_cargo",
-			
-			["shape_name"] = "fueltank_cargo",
-                        ["type"] = "fueltank_cargo",
-			
-			["shape_name"] = "iso_container_cargo",
-			["type"] = "iso_container",
-			
-			["shape_name"] = "iso_container_small_cargo",
-			["type"] = "iso_container_small",
-			
-			["shape_name"] = "oiltank_cargo",
-                        ["type"] = "oiltank_cargo",
-                        
-			["shape_name"] = "pipes_big_cargo",
-                        ["type"] = "pipes_big_cargo",			
-			
-			["shape_name"] = "pipes_small_cargo",
-			["type"] = "pipes_small_cargo",
-			
-			["shape_name"] = "tetrapod_cargo",
-			["type"] = "tetrapod_cargo",
-			
-			["shape_name"] = "trunks_long_cargo",
-			["type"] = "trunks_long_cargo",
-			
-			["shape_name"] = "trunks_small_cargo",
-			["type"] = "trunks_small_cargo",
-]]--
-	else	
-            _crate = {
-                ["shape_name"] = "GeneratorF",
-                ["type"] = "GeneratorF",
-             --   ["unitId"] = _unitId,
-                ["y"] = _point.z,
-                ["x"] = _point.x,
-                ["name"] = _name,
-                ["category"] = "Fortifications",
-                ["canCargo"] = false,
-                ["heading"] = 0,
-            }
+            _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_sling)
+            _crate["canCargo"] = true
+    	else	
+            _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_load)
+            _crate["canCargo"] = false
         end
 
+        _crate["y"] = _point.z
+        _crate["x"] = _point.x
+        _crate["mass"] = _weight
+        _crate["name"] = _name
+        _crate["heading"] = 0
         _crate["country"] = _country
+
+        ctld.logTrace(string.format("_crate=%s", ctld.p(_crate)))
         mist.dynAddStatic(_crate)
 
         _spawnedCrate = StaticObject.getByName(_crate["name"])
@@ -1833,7 +1832,7 @@ function ctld.deployTroops(_heli, _troops)
 
                     local _droppedTroops = ctld.spawnDroppedGroup(_heli:getPoint(), _onboard.troops, false)
                     ctld.logTrace(string.format("_onboard.troops=%s", ctld.p(_onboard.troops)))
-                    if _onboard.troops.jtac then
+                    if _onboard.troops.jtac or _droppedTroops:getName():lower():find("jtac") then
                         local _code = table.remove(ctld.jtacGeneratedLaserCodes, 1)
                         ctld.logTrace(string.format("_code=%s", ctld.p(_code)))
                         table.insert(ctld.jtacGeneratedLaserCodes, _code)
@@ -2429,9 +2428,12 @@ function ctld.extractTroops(_args)
                 return
             end
 
-
             _onboard.troops = _extractTroops.details
             _onboard.troops.weight = #_extractTroops.group:getUnits() * 130 -- default to 130kg per soldier
+            
+            if _extractTroops.group:getName():lower():find("jtac") then
+                _onboard.troops.jtac = true
+            end
 
             trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.getPlayerNameOrType(_heli) .. " extracted troops in " .. _heli:getTypeName() .. " from combat", 10)
 
@@ -4428,6 +4430,7 @@ end
 
 -- are we in pickup zone
 function ctld.inPickupZone(_heli)
+    ctld.logDebug(string.format("ctld.inPickupZone(_heli=%s)", ctld.p(_heli)))
 
     if ctld.inAir(_heli) then
         return { inZone = false, limit = -1, index = -1 }
@@ -4436,6 +4439,7 @@ function ctld.inPickupZone(_heli)
     local _heliPoint = _heli:getPoint()
 
     for _i, _zoneDetails in pairs(ctld.pickupZones) do
+        ctld.logTrace(string.format("_zoneDetails=%s", ctld.p(_zoneDetails)))
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
@@ -4456,7 +4460,7 @@ function ctld.inPickupZone(_heli)
             --get distance to center
 
             local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
-
+            ctld.logTrace(string.format("_dist=%s", ctld.p(_dist)))
             if _dist <= _triggerZone.radius then
                 local _heliCoalition = _heli:getCoalition()
                 if _zoneDetails[4] == 1 and (_zoneDetails[5] == _heliCoalition or _zoneDetails[5] == 0) then
@@ -5274,7 +5278,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
         ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
 
         --   env.info('Timer timerSparkleLase '..jtacGroupName.." "..laserCode.." "..enemyUnit:getName())
-        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 1)
+        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 15)
 
 
         if _smoke == true then
@@ -5983,8 +5987,16 @@ end
 
 
 -- ***************** SETUP SCRIPT ****************
-function ctld.initialize()
+function ctld.initialize(force)
+    ctld.logInfo(string.format("Initializing version %s", ctld.Version))
+    ctld.logTrace(string.format("ctld.alreadyInitialized=%s", ctld.p(ctld.alreadyInitialized)))
+    ctld.logTrace(string.format("force=%s", ctld.p(force)))
 
+    if ctld.alreadyInitialized and not force then
+        ctld.logInfo(string.format("Bypassing initialization because ctld.alreadyInitialized = true"))
+        return
+    end
+    
     assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
 
     ctld.addedTo = {}
@@ -6294,7 +6306,10 @@ function ctld.initialize()
         end
     end
     env.info("END search for crates")
-
+    
+    -- don't initialize more than once
+    ctld.alreadyInitialized = true
+    
     env.info("CTLD READY")
 end
 
@@ -6305,8 +6320,9 @@ math.random(); math.random(); math.random()
 --- Enable/Disable error boxes displayed on screen.
 env.setErrorMessageBoxEnabled(false)
 
-ctld.logInfo(string.format("Loading version %s", ctld.Version))
-ctld.initialize()
+-- initialize CTLD in 2 seconds, so other scripts have a chance to modify the configuration before initialization
+ctld.logInfo(string.format("Loading version %s in 2 seconds", ctld.Version))
+timer.scheduleFunction(ctld.initialize, nil, timer.getTime() + 2)
 
 --DEBUG FUNCTION
 --        for key, value in pairs(getmetatable(_spawnedCrate)) do
