@@ -15,8 +15,8 @@
 	    - mvee - https://github.com/mvee
 	    - jmontleon - https://github.com/jmontleon
 	    - emilianomolina - https://github.com/emilianomolina
+	    - davidp57 - https://github.com/davidp57
 
-    Version: 1.73 - 15/04/2018
       - Allow minimum distance from friendly logistics to be set
  ]]
 
@@ -625,79 +625,6 @@ ctld.jtacUnitTypes = {
     "SKP", "Hummer" -- there are some wierd encoding issues so if you write SKP-11 it wont match as the - sign is encoded differently...
 }
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Utility methods
--------------------------------------------------------------------------------------------------------------------------------------------------------------
-
---- print an object for a debugging log
-function ctld.p(o, level)
-    local MAX_LEVEL = 20
-    if level == nil then level = 0 end
-    if level > MAX_LEVEL then 
-        ctld.logError("max depth reached in ctld.p : "..tostring(MAX_LEVEL))
-        return ""
-    end
-    local text = ""
-    if (type(o) == "table") then
-        text = "\n"
-        for key,value in pairs(o) do
-            for i=0, level do
-                text = text .. " "
-            end
-            text = text .. ".".. key.."="..ctld.p(value, level+1) .. "\n"
-        end
-    elseif (type(o) == "function") then
-        text = "[function]"
-    elseif (type(o) == "boolean") then
-        if o == true then 
-            text = "[true]"
-        else
-            text = "[false]"
-        end
-    else
-        if o == nil then
-            text = "[nil]"   
-        else
-            text = tostring(o)
-        end
-    end
-    return text
-end
-
-function ctld.logError(message)
-    env.info(" E - " .. ctld.Id .. message)
-end
-
-function ctld.logInfo(message)
-    env.info(" I - " .. ctld.Id .. message)
-end    
-
-function ctld.logDebug(message)
-    if message and ctld.Debug then
-        env.info(" D - " .. ctld.Id .. message)
-    end
-end    
-
-function ctld.logTrace(message)
-    if message and ctld.Trace then
-        env.info(" T - " .. ctld.Id .. message)
-    end
-end    
-
-ctld.nextUnitId = 1;
-ctld.getNextUnitId = function()
-    ctld.nextUnitId = ctld.nextUnitId + 1
-
-    return ctld.nextUnitId
-end
-
-ctld.nextGroupId = 1;
-
-ctld.getNextGroupId = function()
-    ctld.nextGroupId = ctld.nextGroupId + 1
-
-    return ctld.nextGroupId
-end
 
 -- ***************************************************************
 -- **************** Mission Editor Functions *********************
@@ -1485,6 +1412,82 @@ ctld.crateWait = {}
 ctld.crateMove = {}
 
 ---------------- INTERNAL FUNCTIONS ----------------
+---
+---
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Utility methods
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- print an object for a debugging log
+function ctld.p(o, level)
+    local MAX_LEVEL = 20
+    if level == nil then level = 0 end
+    if level > MAX_LEVEL then
+        ctld.logError("max depth reached in ctld.p : "..tostring(MAX_LEVEL))
+        return ""
+    end
+    local text = ""
+    if (type(o) == "table") then
+        text = "\n"
+        for key,value in pairs(o) do
+            for i=0, level do
+                text = text .. " "
+            end
+            text = text .. ".".. key.."="..ctld.p(value, level+1) .. "\n"
+        end
+    elseif (type(o) == "function") then
+        text = "[function]"
+    elseif (type(o) == "boolean") then
+        if o == true then
+            text = "[true]"
+        else
+            text = "[false]"
+        end
+    else
+        if o == nil then
+            text = "[nil]"
+        else
+            text = tostring(o)
+        end
+    end
+    return text
+end
+
+function ctld.logError(message)
+    env.info(" E - " .. ctld.Id .. message)
+end
+
+function ctld.logInfo(message)
+    env.info(" I - " .. ctld.Id .. message)
+end
+
+function ctld.logDebug(message)
+    if message and ctld.Debug then
+        env.info(" D - " .. ctld.Id .. message)
+    end
+end
+
+function ctld.logTrace(message)
+    if message and ctld.Trace then
+        env.info(" T - " .. ctld.Id .. message)
+    end
+end
+
+ctld.nextUnitId = 1;
+ctld.getNextUnitId = function()
+    ctld.nextUnitId = ctld.nextUnitId + 1
+
+    return ctld.nextUnitId
+end
+
+ctld.nextGroupId = 1;
+
+ctld.getNextGroupId = function()
+    ctld.nextGroupId = ctld.nextGroupId + 1
+
+    return ctld.nextGroupId
+end
+
 function ctld.getTransportUnit(_unitName)
 
     if _unitName == nil then
@@ -6225,9 +6228,7 @@ function ctld.initialize(force)
 
     -- Scheduled functions (run cyclically) -- but hold execution for a second so we can override parts
 
-    if ctld.allowAiTeamPickups then 
-        timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 1)
-    end
+    timer.scheduleFunction(ctld.checkAIStatus, nil, timer.getTime() + 1)
     timer.scheduleFunction(ctld.checkTransportStatus, nil, timer.getTime() + 5)
 
     timer.scheduleFunction(function()
