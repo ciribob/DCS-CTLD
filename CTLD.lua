@@ -409,7 +409,7 @@ ctld.logisticUnits = {
 -- in the contained mission file
 ctld.vehicleTransportEnabled = {
     "76MD", -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
-    "C-130",
+    "Hercules",
 }
 
 
@@ -529,16 +529,20 @@ ctld.spawnableCrates = {
 
         { weight = 800, desc = "FOB Crate - Small", unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
     },
-    ["AA Crates"] = {
+    ["AA short range"] = {
         { weight = 50, desc = "Stinger", unit = "Soldier stinger", side = 2 },
         { weight = 55, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
+        { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
+        { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
+    },
+    ["AA mid range"] = {
         -- HAWK System
         { weight = 540, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
         { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
-        { weight = 550, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
-        { weight = 551, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 }, -- Remove this if on 1.2
-        { weight = 552, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+        { weight = 546, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+        { weight = 547, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 }, -- Remove this if on 1.2
+        { weight = 549, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
         -- KUB SYSTEM
@@ -553,12 +557,19 @@ ctld.spawnableCrates = {
         --        { weight = 585, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
         --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
         -- END of BUK
+    },
+    ["AA long range"] = {
+        -- Patriot System
+        { weight = 555, desc = "Patriot Launcher", unit = "Patriot ln", side = 2 },
+        { weight = 556, desc = "Patriot Radar", unit = "Patriot str" , side = 2 },
+        { weight = 557, desc = "Patriot ECS", unit = "Patriot ECS", side = 2 },
+        -- { weight = 553, desc = "Patriot ICC", unit = "Patriot cp", side = 2 },
+        -- { weight = 554, desc = "Patriot EPP", unit = "Patriot EPP", side = 2 },
+        { weight = 558, desc = "Patriot AMG (optional)", unit = "Patriot AMG" , side = 2 },
+        { weight = 559, desc = "Patriot Repair", unit = "Patriot Repair" , side = 2 },
+        -- End of Patriot
 
         { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR", side = 1 }, -- cant be used by BLUE coalition
-
-        { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
-        { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
-
     },
 }
 
@@ -579,43 +590,43 @@ ctld.spawnableCratesModel_sling = {
 --[[ Placeholder for different type of cargo containers. Let's say pipes and trunks, fuel for FOB building
     ["shape_name"] = "ab-212_cargo",
     ["type"] = "uh1h_cargo" --new type for the container previously used
-    
+
     ["shape_name"] = "ammo_box_cargo",
     ["type"] = "ammo_cargo",
-    
+
     ["shape_name"] = "barrels_cargo",
     ["type"] = "barrels_cargo",
 
     ["shape_name"] = "bw_container_cargo",
     ["type"] = "container_cargo",
-    
+
     ["shape_name"] = "f_bar_cargo",
     ["type"] = "f_bar_cargo",
-    
+
     ["shape_name"] = "fueltank_cargo",
     ["type"] = "fueltank_cargo",
-    
+
     ["shape_name"] = "iso_container_cargo",
     ["type"] = "iso_container",
-    
+
     ["shape_name"] = "iso_container_small_cargo",
     ["type"] = "iso_container_small",
-    
+
     ["shape_name"] = "oiltank_cargo",
     ["type"] = "oiltank_cargo",
-                
+
     ["shape_name"] = "pipes_big_cargo",
-    ["type"] = "pipes_big_cargo",			
-    
+    ["type"] = "pipes_big_cargo",
+
     ["shape_name"] = "pipes_small_cargo",
     ["type"] = "pipes_small_cargo",
-    
+
     ["shape_name"] = "tetrapod_cargo",
     ["type"] = "tetrapod_cargo",
-    
+
     ["shape_name"] = "trunks_long_cargo",
     ["type"] = "trunks_long_cargo",
-    
+
     ["shape_name"] = "trunks_small_cargo",
     ["type"] = "trunks_small_cargo",
 ]]--
@@ -1387,6 +1398,16 @@ ctld.AASystemTemplate = {
         repair = "HAWK Repair",
     },
     {
+        name = "Patriot AA System",
+        count = 4,
+        parts = {
+            {name = "Patriot ln", desc = "Patriot Launcher", launcher = true},
+            {name = "Patriot ECS", desc = "Patriot Control Unit"},
+            {name = "Patriot str", desc = "Patriot Search and Track Radar"},
+        },
+        repair = "Patriot Repair",
+    },
+	{
         name = "BUK AA System",
         count = 3,
         parts = {
@@ -1541,7 +1562,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
         if ctld.slingLoad then
             _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_sling)
             _crate["canCargo"] = true
-    	else	
+    	else
             _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_load)
             _crate["canCargo"] = false
         end
@@ -2433,7 +2454,7 @@ function ctld.extractTroops(_args)
 
             _onboard.troops = _extractTroops.details
             _onboard.troops.weight = #_extractTroops.group:getUnits() * 130 -- default to 130kg per soldier
-            
+
             if _extractTroops.group:getName():lower():find("jtac") then
                 _onboard.troops.jtac = true
             end
@@ -2536,13 +2557,13 @@ function ctld.checkTransportStatus()
 end
 
 function ctld.adaptWeightToCargo(unitName)
-    local _weight = ctld.getWeightOfCargo(unitName) 
+    local _weight = ctld.getWeightOfCargo(unitName)
     trigger.action.setUnitInternalCargo(unitName, _weight)
 end
 
 function ctld.getWeightOfCargo(unitName)
     ctld.logDebug(string.format("ctld.getWeightOfCargo(%s)", ctld.p(unitName)))
-    
+
     local FOB_CRATE_WEIGHT = 800
     local _weight = 0
     local _description = ""
@@ -2570,15 +2591,15 @@ function ctld.getWeightOfCargo(unitName)
         end
     end
     ctld.logTrace(string.format("with troops and vehicles : weight = %s", tostring(_weight)))
-    
+
     -- add FOB crates weight
-    if ctld.inTransitFOBCrates[unitName] then        
+    if ctld.inTransitFOBCrates[unitName] then
         ctld.logTrace("ctld.inTransitFOBCrates = true")
         _weight = _weight + FOB_CRATE_WEIGHT
         _description = _description .. string.format("1 FOB Crate oboard (%s kg)\n", FOB_CRATE_WEIGHT)
     end
     ctld.logTrace(string.format("with FOB crates : weight = %s", tostring(_weight)))
-    
+
     -- add simulated slingload crates weight
     local _crate = ctld.inTransitSlingLoadCrates[unitName]
     if _crate then
@@ -2596,7 +2617,7 @@ function ctld.getWeightOfCargo(unitName)
         _description = "No cargo."
     end
     ctld.logTrace(string.format("_description = %s", tostring(_description)))
-    
+
     return _weight, _description
 end
 
@@ -5142,7 +5163,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
     if _jtacGroup == nil or #_jtacGroup == 0 then
 
         --check not in a heli
-        if ctld.inTransitTroops then 
+        if ctld.inTransitTroops then
             for _, _onboard in pairs(ctld.inTransitTroops) do
                 if _onboard ~= nil then
                     if _onboard.troops ~= nil and _onboard.troops.groupName ~= nil and _onboard.troops.groupName == _jtacGroupName then
@@ -5262,7 +5283,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
                 action = ", target destroyed " .. action
                 targetDestroyed = false
             end
-        
+
             local message = _jtacGroupName .. action .. _enemyUnit:getTypeName()
             local fullMessage = message .. '. CODE: ' .. _laserCode .. ". POSITION: " .. ctld.getPositionString(_enemyUnit)
             ctld.notifyCoalition(fullMessage, 10, _jtacUnit:getCoalition())
@@ -5999,7 +6020,7 @@ function ctld.initialize(force)
         ctld.logInfo(string.format("Bypassing initialization because ctld.alreadyInitialized = true"))
         return
     end
-    
+
     assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
 
     ctld.addedTo = {}
@@ -6307,10 +6328,10 @@ function ctld.initialize(force)
         end
     end
     env.info("END search for crates")
-    
+
     -- don't initialize more than once
     ctld.alreadyInitialized = true
-    
+
     env.info("CTLD READY")
 end
 
