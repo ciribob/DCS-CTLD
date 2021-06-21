@@ -15,7 +15,7 @@
 	    - mvee - https://github.com/mvee
 	    - jmontleon - https://github.com/jmontleon
 	    - emilianomolina - https://github.com/emilianomolina
-	    - davidp57 - https://github.com/davidp57
+	    - davidp57 - https://github.com/veaf
 
       - Allow minimum distance from friendly logistics to be set
  ]]
