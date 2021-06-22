@@ -740,7 +740,7 @@ the mission but there can be a delay of up to 30 seconds after activation for th
 
 You can also change the **name of a unit*** (unit, not group) to include "**hpriority**" to make it high priority for the JTAC, or "**priority**" to set it to be medium priority. JTAC's will prioritize targets within view by first marking hpriority targets, then priority targets, and finally all others. This works seemlessly with the all/vehicle/troop functionality as well. In this way you can have them lase SAMS, then AAA, then armor, or any other order you decide is preferable.
 
-If the `DCS-SimpleTextToSpeech.lua` script is loaded, and configures (i.e. the `STTS.DIRECTORY`, `STTS.SRS_PORT` and optionaly the `STTS.GOOGLE_CREDENTIALS` variables are set), the JTAC can talk over SRS.
+If the `DCS-SimpleTextToSpeech.lua` script is loaded (you'll find it [here](https://github.com/ciribob/DCS-SimpleTextToSpeech)), and configured (i.e. the `STTS.DIRECTORY`, `STTS.SRS_PORT` and optionaly the `STTS.GOOGLE_CREDENTIALS` variables are set), the JTAC can talk over SRS.
 
 To do this, you can specify the _radio parameter when calling ctld.JTACAutoLase like in this example :
 
