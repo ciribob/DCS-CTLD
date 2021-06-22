@@ -15,7 +15,7 @@
 	    - mvee - https://github.com/mvee
 	    - jmontleon - https://github.com/jmontleon
 	    - emilianomolina - https://github.com/emilianomolina
-	    - davidp57 - https://github.com/davidp57
+	    - davidp57 - https://github.com/veaf
 
       - Allow minimum distance from friendly logistics to be set
  ]]
@@ -26,7 +26,7 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "20210617.01"
+ctld.Version = "20210617.02"
 
 -- debug level, specific to this module
 ctld.Debug = true
@@ -2365,7 +2365,7 @@ function ctld.unloadTroops(_args)
     else
 
         -- troops must be onboard to get here
-        if _zone.inZone == true  then
+        if _zone.inZone == true then
 
             if _troops then
                 ctld.displayMessageToGroup(_heli, "Dropped troops back to base", 20)
@@ -5139,9 +5139,32 @@ ctld.jtacCurrentTargets = {}
 ctld.jtacRadioAdded = {} --keeps track of who's had the radio command added
 ctld.jtacGeneratedLaserCodes = {} -- keeps track of generated codes, cycles when they run out
 ctld.jtacLaserPointCodes = {}
+ctld.jtacRadioData = {}
 
+function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio)
+    ctld.logDebug(string.format("ctld.JTACAutoLase(_jtacGroupName=%s, _laserCode=%s", ctld.p(_jtacGroupName), ctld.p(_laserCode)))
 
-function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
+    local _radio = _radio
+    if not _radio then
+        _radio = {}
+        if _laserCode then
+            local _laserCode = tonumber(_laserCode)
+            if _laserCode and _laserCode >= 1111 and _laserCode <= 1688 then
+                local _laserB = math.floor((_laserCode - 1000)/100)
+                local _laserCD = _laserCode - 1000 - _laserB*100
+                local _frequency = tostring(30+_laserB+_laserCD*0.05)
+                ctld.logTrace(string.format("_laserB=%s", ctld.p(_laserB)))
+                ctld.logTrace(string.format("_laserCD=%s", ctld.p(_laserCD)))
+                ctld.logTrace(string.format("_frequency=%s", ctld.p(_frequency)))
+                _radio.freq = _frequency
+                _radio.mod = "fm"
+            end        
+        end
+    end
+
+    if _radio and not _radio.name then
+        _radio.name = _jtacGroupName
+    end
 
     if ctld.jtacStop[_jtacGroupName] == true then
         ctld.jtacStop[_jtacGroupName] = nil -- allow it to be started again
@@ -5156,6 +5179,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
 
 
     ctld.jtacLaserPointCodes[_jtacGroupName] = _laserCode
+    ctld.jtacRadioData[_jtacGroupName] = _radio
 
     local _jtacGroup = ctld.getGroup(_jtacGroupName)
     local _jtacUnit
@@ -5172,7 +5196,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
                         ctld.cleanupJTAC(_jtacGroupName)
 
                         env.info(_jtacGroupName .. ' in Transport - Waiting 10 seconds')
-                   	timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 10)
+                        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio }, timer.getTime() + 10)
                         return
                     end
 
@@ -5181,7 +5205,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
                         ctld.cleanupJTAC(_jtacGroupName)
 
                         env.info(_jtacGroupName .. ' in Transport - Waiting 10 seconds')
-                    	timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 10)
+                        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio }, timer.getTime() + 10)
                         return
                     end
                 end
@@ -5190,7 +5214,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
 
 
         if ctld.jtacUnits[_jtacGroupName] ~= nil then
-            ctld.notifyCoalition("JTAC Group " .. _jtacGroupName .. " KIA!", 10, ctld.jtacUnits[_jtacGroupName].side)
+            ctld.notifyCoalition("JTAC Group " .. _jtacGroupName .. " KIA!", 10, ctld.jtacUnits[_jtacGroupName].side, _radio)
         end
 
         --remove from list
@@ -5203,7 +5227,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
 
         _jtacUnit = _jtacGroup[1]
         --add to list
-        ctld.jtacUnits[_jtacGroupName] = { name = _jtacUnit:getName(), side = _jtacUnit:getCoalition() }
+        ctld.jtacUnits[_jtacGroupName] = { name = _jtacUnit:getName(), side = _jtacUnit:getCoalition(), radio = _radio }
 
         -- work out smoke colour
         if _colour == nil then
@@ -5234,7 +5258,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
         ctld.cleanupJTAC(_jtacGroupName)
 
         env.info(_jtacGroupName .. ' Not Active - Waiting 30 seconds')
-        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 30)
+        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio }, timer.getTime() + 30)
 
         return
     end
@@ -5286,7 +5310,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
 
             local message = _jtacGroupName .. action .. _enemyUnit:getTypeName()
             local fullMessage = message .. '. CODE: ' .. _laserCode .. ". POSITION: " .. ctld.getPositionString(_enemyUnit)
-            ctld.notifyCoalition(fullMessage, 10, _jtacUnit:getCoalition())
+            ctld.notifyCoalition(fullMessage, 10, _jtacUnit:getCoalition(), _radio, message)
 
             -- create smoke
             if _smoke == true then
@@ -5302,7 +5326,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
         ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
 
         --   env.info('Timer timerSparkleLase '..jtacGroupName.." "..laserCode.." "..enemyUnit:getName())
-        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 15)
+        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio }, timer.getTime() + 15)
 
 
         if _smoke == true then
@@ -5322,13 +5346,13 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
         ctld.cancelLase(_jtacGroupName)
         --  env.info('Timer Slow timerSparkleLase '..jtacGroupName.." "..laserCode.." "..enemyUnit:getName())
 
-        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour }, timer.getTime() + 5)
+        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio }, timer.getTime() + 5)
     end
 
     if targetLost then
-        ctld.notifyCoalition(_jtacGroupName .. ", target lost.", 10, _jtacUnit:getCoalition())
+        ctld.notifyCoalition(_jtacGroupName .. ", target lost.", 10, _jtacUnit:getCoalition(), _radio)
     elseif targetDestroyed then
-        ctld.notifyCoalition(_jtacGroupName .. ", target destroyed.", 10, _jtacUnit:getCoalition())
+        ctld.notifyCoalition(_jtacGroupName .. ", target destroyed.", 10, _jtacUnit:getCoalition(), _radio)
     end
 end
 
@@ -5339,7 +5363,7 @@ end
 -- used by the timer function
 function ctld.timerJTACAutoLase(_args)
 
-    ctld.JTACAutoLase(_args[1], _args[2], _args[3], _args[4], _args[5])
+    ctld.JTACAutoLase(_args[1], _args[2], _args[3], _args[4], _args[5], _args[6])
 end
 
 function ctld.cleanupJTAC(_jtacGroupName)
@@ -5350,11 +5374,42 @@ function ctld.cleanupJTAC(_jtacGroupName)
     ctld.jtacUnits[_jtacGroupName] = nil
 
     ctld.jtacCurrentTargets[_jtacGroupName] = nil
+
+    ctld.jtacRadioData[_jtacGroupName] = nil
 end
 
 
-function ctld.notifyCoalition(_message, _displayFor, _side)
+--- send a message to the coalition
+--- if _radio is set, the message will be read out loud via SRS
+function ctld.notifyCoalition(_message, _displayFor, _side, _radio, _shortMessage)
+    ctld.logDebug(string.format("ctld.notifyCoalition(_message=%s)", ctld.p(_message)))
+    ctld.logTrace(string.format("_radio=%s", ctld.p(_radio)))
 
+    local _shortMessage = _shortMessage
+    if _shortMessage == nil then 
+        _shortMessage = _message
+    end
+    
+    if STTS and STTS.TextToSpeech and _radio and _radio.freq then
+        local _freq = _radio.freq
+        local _modulation = _radio.mod or "FM"
+        local _volume = _radio.volume or "1.0"
+        local _name = _radio.name or "JTAC"
+        local _gender = _radio.gender or "male"
+        local _culture = _radio.culture or "en-US"
+        local _voice = _radio.voice
+        local _googleTTS = _radio.googleTTS or false
+        ctld.logTrace(string.format("calling STTS.TextToSpeech(%s)", ctld.p(_shortMessage)))
+        ctld.logTrace(string.format("_freq=%s", ctld.p(_freq)))
+        ctld.logTrace(string.format("_modulation=%s", ctld.p(_modulation)))
+        ctld.logTrace(string.format("_volume=%s", ctld.p(_volume)))
+        ctld.logTrace(string.format("_name=%s", ctld.p(_name)))
+        ctld.logTrace(string.format("_gender=%s", ctld.p(_gender)))
+        ctld.logTrace(string.format("_culture=%s", ctld.p(_culture)))
+        ctld.logTrace(string.format("_voice=%s", ctld.p(_voice)))
+        ctld.logTrace(string.format("_googleTTS=%s", ctld.p(_googleTTS)))
+        STTS.TextToSpeech(_shortMessage, _freq, _modulation, _volume, _name, _side, nil, 1, _gender, _culture, _voice, _googleTTS)
+    end
 
     trigger.action.outTextForCoalition(_side, _message, _displayFor)
     trigger.action.outSoundForCoalition(_side, "radiobeep.ogg")
@@ -5576,18 +5631,33 @@ function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType,_distance)
         end
     end
 
+    local result = nil
     for _, _enemyUnit in ipairs(_unitList) do
         local _enemyName = _enemyUnit.unit:getName()
+        --log.info(string.format("CTLD - checking _enemyName=%s", _enemyName))
+
+        -- check for air defenses
+        --log.info(string.format("CTLD - _enemyUnit.unit:getDesc()[attributes]=%s", ctld.p(_enemyUnit.unit:getDesc()["attributes"])))
+        local airdefense = (_enemyUnit.unit:getDesc()["attributes"]["Air Defence"] ~= nil)
+        --log.info(string.format("CTLD - airdefense=%s", tostring(airdefense)))
 
         if (_targetType == "vehicle" and ctld.isVehicle(_enemyUnit.unit)) or _targetType == "all" then
-            return _enemyUnit.unit
+            if airdefense then
+                return _enemyUnit.unit
+            else
+                result = _enemyUnit.unit
+            end
 
         elseif (_targetType == "troop" and ctld.isInfantry(_enemyUnit.unit)) or _targetType == "all" then
-            return _enemyUnit.unit
+            if airdefense then
+                return _enemyUnit.unit
+            else
+                result = _enemyUnit.unit
+            end
         end
     end
 
-    return nil
+    return result
 
 end
 
@@ -5722,12 +5792,17 @@ function ctld.getJTACStatus(_args)
 
             local _laserCode = ctld.jtacLaserPointCodes[_jtacGroupName]
 
+            local _start = _jtacGroupName
+            if (_jtacDetails.radio) then
+                _start = _start .. ", available on ".._jtacDetails.radio.freq.." ".._jtacDetails.radio.mod ..","
+            end
+
             if _laserCode == nil then
                 _laserCode = "UNKNOWN"
             end
 
             if _enemyUnit ~= nil and _enemyUnit:getLife() > 0 and _enemyUnit:isActive() == true then
-                _message = _message .. "" .. _jtacGroupName .. " targeting " .. _enemyUnit:getTypeName() .. " CODE: " .. _laserCode .. ctld.getPositionString(_enemyUnit) .. "\n"
+                _message = _message .. "" .. _start .. " targeting " .. _enemyUnit:getTypeName() .. " CODE: " .. _laserCode .. ctld.getPositionString(_enemyUnit) .. "\n"
 
                 local _list = ctld.listNearbyEnemies(_jtacUnit)
 
@@ -5741,7 +5816,7 @@ function ctld.getJTACStatus(_args)
                 end
 
             else
-                _message = _message .. "" .. _jtacGroupName .. " searching for targets" .. ctld.getPositionString(_jtacUnit) .. "\n"
+                _message = _message .. "" .. _start .. " searching for targets" .. ctld.getPositionString(_jtacUnit) .. "\n"
             end
         end
     end
