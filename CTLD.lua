@@ -5284,6 +5284,9 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
         --remove from smoke list
         ctld.jtacSmokeMarks[_tempUnitInfo.name] = nil
 
+    	-- JTAC Unit: resume his route ------------
+	    trigger.action.groupContinueMoving(Group.getByName(_jtacGroupName)) 	
+
         -- remove from target list
         ctld.jtacCurrentTargets[_jtacGroupName] = nil
 
@@ -5312,6 +5315,9 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
             local fullMessage = message .. '. CODE: ' .. _laserCode .. ". POSITION: " .. ctld.getPositionString(_enemyUnit)
             ctld.notifyCoalition(fullMessage, 10, _jtacUnit:getCoalition(), _radio, message)
 
+	        -- JTAC Unit stop his route -----------------
+	        trigger.action.groupStopMoving(Group.getByName(_jtacGroupName)) -- stop JTAC
+            
             -- create smoke
             if _smoke == true then
 
