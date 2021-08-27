@@ -26,7 +26,7 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "20210617.02"
+ctld.Version = "20210827.01"
 
 -- debug level, specific to this module
 ctld.Debug = true
@@ -542,6 +542,7 @@ ctld.spawnableCrates = {
         { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
         { weight = 546, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
         { weight = 547, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 }, -- Remove this if on 1.2
+	{ weight = 548, desc = "HAWK CWAR", unit = "Hawk cwar" , side = 2 }, -- Remove this if on 2.5	
         { weight = 549, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
@@ -1394,6 +1395,7 @@ ctld.AASystemTemplate = {
             {name = "Hawk tr", desc = "HAWK Track Radar"},
             {name = "Hawk sr", desc = "HAWK Search Radar"},
             {name = "Hawk pcp", desc = "HAWK PCP"},
+	    {name = "Hawk cwar", desc = "HAWK CWAR"},
         },
         repair = "HAWK Repair",
     },
