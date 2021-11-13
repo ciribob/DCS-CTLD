@@ -74,7 +74,7 @@ ctld.vehiclesWeight = {
 }
 
 ctld.aaLaunchers = 3 -- controls how many launchers to add to the kub/buk when its spawned.
-ctld.hawkLaunchers = 5 -- controls how many launchers to add to the hawk when its spawned.
+ctld.hawkLaunchers = 8 -- controls how many launchers to add to the hawk when its spawned.
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 ctld.spawnStinger = false -- spawns a stinger / igla soldier with a group of 6 or more soldiers!
@@ -542,7 +542,7 @@ ctld.spawnableCrates = {
         { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
         { weight = 546, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
         { weight = 547, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 }, -- Remove this if on 1.2
-	{ weight = 548, desc = "HAWK CWAR", unit = "Hawk cwar" , side = 2 }, -- Remove this if on 2.5	
+	    { weight = 548, desc = "HAWK CWAR", unit = "Hawk cwar" , side = 2 }, -- Remove this if on 2.5	
         { weight = 549, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
@@ -4171,28 +4171,6 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
     _group.country = _heli:getCountry()
 
     local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
-
-    --local _spawnedGroup = coalition.addGroup(_heli:getCountry(), Group.Category.GROUND, _group)
-
-    --activate by moving and so we can set ROE and Alarm state
-
-    local _dest = _spawnedGroup:getUnit(1):getPoint()
-    _dest = { x = _dest.x + 0.5, _y = _dest.y + 0.5, z = _dest.z + 0.5 }
-
-    --ctld.orderGroupToMoveToPoint(_spawnedGroup:getUnit(1), _dest)
-
-
-    -- delayed 2 second to work around bug
-    timer.scheduleFunction(function(_arg)
-        local _grp = ctld.getAliveGroup(_arg[1])
-
-        if _grp ~= nil then
-            local _controller = _grp:getController();
-            Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
-            Controller.setOption(_controller, AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.OPEN_FIRE)
-        end
-    end
-        , {_groupName}, timer.getTime() + 2)
 
     return _spawnedGroup
 end
