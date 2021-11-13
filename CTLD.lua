@@ -4179,7 +4179,20 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
     local _dest = _spawnedGroup:getUnit(1):getPoint()
     _dest = { x = _dest.x + 0.5, _y = _dest.y + 0.5, z = _dest.z + 0.5 }
 
-    ctld.orderGroupToMoveToPoint(_spawnedGroup:getUnit(1), _dest)
+    --ctld.orderGroupToMoveToPoint(_spawnedGroup:getUnit(1), _dest)
+
+
+    -- delayed 2 second to work around bug
+    timer.scheduleFunction(function(_arg)
+        local _grp = ctld.getAliveGroup(_arg[1])
+
+        if _grp ~= nil then
+            local _controller = _grp:getController();
+            Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
+            Controller.setOption(_controller, AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.OPEN_FIRE)
+        end
+    end
+        , {_groupName}, timer.getTime() + 2)
 
     return _spawnedGroup
 end
