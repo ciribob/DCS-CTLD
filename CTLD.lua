@@ -2121,7 +2121,7 @@ function ctld.loadTroops(_heli, _troops, _numberOrTemplate)
 
     --number doesnt apply to vehicles
     if _numberOrTemplate == nil  or (type(_numberOrTemplate) ~= "table" and type(_numberOrTemplate) ~= "number")  then
-        _numberOrTemplate = ctld.numberOfTroops
+        _numberOrTemplate = ctld.getTransportLimit(_heli:getTypeName())
     end
 
     if _onboard == nil then
