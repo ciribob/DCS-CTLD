@@ -5868,7 +5868,7 @@ function ctld.generateLaserCode()
     ctld.jtacGeneratedLaserCodes = {}
 
     -- generate list of laser codes
-    local _code = 1111
+    local _code = 1511
 
     local _count = 1
 
