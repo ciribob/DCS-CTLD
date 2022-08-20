@@ -5095,7 +5095,11 @@ function ctld.addJTACRadioCommand(_side)
                 end
 
                 --depending on the multiplier, this part of the radio menu will be refreshed less often or as often as the static JTAC status command, this is for better reliability for the user when navigating through the menus
-                if ctld.jtacRadioRefreshCount == ctld.jtacRadioRefreshMultiplier then
+                if ctld.jtacRadioRefreshCount == ctld.jtacRadioRefreshMultiplier or ctld.newJtac then
+
+                    if ctld.newJtac then
+                        ctld.newJtac = false
+                    end
 
                     --build the path to the CTLD JTAC menu
                     local jtacCurrentPagePath = {[1]=ctld.jtacMenuName}
@@ -5224,6 +5228,7 @@ ctld.jtacRadioAdded = {} --keeps track of who's had the radio command added
 ctld.jtacGroupSubMenuPath = {} --keeps track of which submenu contains each JTAC's target selection menu
 ctld.jtacRadioRefreshMultiplier = 6 --determines how often the dynamic parts of the jtac radio menu (target lists) will be refreshed compared to how often the ctld.addJTACRadioCommand method is called (lets say it was called every 10 seconds and this variable is set to 2, then the dynamic part is rebuilt every 20 seconds).
 ctld.jtacRadioRefreshCount = 0 --counts the number of times the ctld.addJTACRadioCommand method has been called for both coalition
+ctld.newJtac = false --indicator to know when a new JTAC is added in order to rebuild the target lists
 ctld.jtacGeneratedLaserCodes = {} -- keeps track of generated codes, cycles when they run out
 ctld.jtacLaserPointCodes = {}
 ctld.jtacRadioData = {}
@@ -5314,6 +5319,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
         --Targets list and Selected target initialization
         if not ctld.jtacTargetsList[_jtacGroupName] then
             ctld.jtacTargetsList[_jtacGroupName] = {}
+            ctld.newJtac = true
         end
 
         if not ctld.jtacSelectedTarget[_jtacGroupName] then
@@ -5515,7 +5521,7 @@ function ctld.cleanupJTAC(_jtacGroupName)
     -- Cleanup
     ctld.jtacCurrentTargets[_jtacGroupName] = nil
 
-    ctld.jtacTargetsList[_jtacGroupName] = {}
+    ctld.jtacTargetsList[_jtacGroupName] = nil
 
     ctld.jtacSelectedTarget[_jtacGroupName] = nil
 
