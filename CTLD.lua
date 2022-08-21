@@ -5098,7 +5098,7 @@ function ctld.addJTACRadioCommand(_side)
                 local time = timer.getTime()
 
                 --depending on the delay, this part of the radio menu will be refreshed less often or as often as the static JTAC status command, this is for better reliability for the user when navigating through the menus. New groups will get the lists regardless and if a new JTAC is added all lists will be refreshed regardless of the delay.
-                if ctld.jtacLastRadioRefresh + ctld.jtacRadioRefreshDelay <= time or ctld.newJtac or newGroup then
+                if ctld.jtacLastRadioRefresh + ctld.jtacRadioRefreshDelay <= time or ctld.newJtac[_side] or newGroup then
 
                     ctld.jtacLastRadioRefresh = time
 
@@ -5186,9 +5186,9 @@ function ctld.addJTACRadioCommand(_side)
                 end
             end
         end
-        
-        if ctld.newJtac then
-            ctld.newJtac = false
+
+        if ctld.newJtac[_side] then
+            ctld.newJtac[_side] = false
         end
     end
 end
@@ -5233,7 +5233,7 @@ ctld.jtacRadioAdded = {} --keeps track of who's had the radio command added
 ctld.jtacGroupSubMenuPath = {} --keeps track of which submenu contains each JTAC's target selection menu
 ctld.jtacRadioRefreshDelay = 60 --determines how often in seconds the dynamic parts of the jtac radio menu (target lists) will be refreshed
 ctld.jtacLastRadioRefresh = 0 -- time at which the target lists were refreshed for everyone at least
-ctld.newJtac = false --indicator to know when a new JTAC is added in order to rebuild the target lists
+ctld.newJtac = {} --indicator to know when a new JTAC is added to a coalition in order to rebuild the corresponding target lists
 ctld.jtacGeneratedLaserCodes = {} -- keeps track of generated codes, cycles when they run out
 ctld.jtacLaserPointCodes = {}
 ctld.jtacRadioData = {}
@@ -5318,13 +5318,14 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
     else
 
         _jtacUnit = _jtacGroup[1]
+        local _jtacCoalition = _jtacUnit:getCoalition()
         --add to list
-        ctld.jtacUnits[_jtacGroupName] = { name = _jtacUnit:getName(), side = _jtacUnit:getCoalition(), radio = _radio }
+        ctld.jtacUnits[_jtacGroupName] = { name = _jtacUnit:getName(), side = _jtacCoalition, radio = _radio }
         
         --Targets list and Selected target initialization
         if not ctld.jtacTargetsList[_jtacGroupName] then
             ctld.jtacTargetsList[_jtacGroupName] = {}
-            ctld.newJtac = true
+            if _jtacCoalition then ctld.newJtac[_jtacCoalition] = true end
         end
 
         if not ctld.jtacSelectedTarget[_jtacGroupName] then
