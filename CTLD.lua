@@ -5033,9 +5033,6 @@ function ctld.addF10MenuOptions()
 
         if ctld.JTAC_jtacStatusF10 then
 
-            --count the number of times the JTAC radio menu has been refreshed based on how often you want the dynamic parts of the menu to refresh compared to the (static) JTAC Status command
-            ctld.jtacRadioRefreshCount = (ctld.jtacRadioRefreshCount)%(ctld.jtacRadioRefreshMultiplier) + 1
-
             -- get all BLUE players
             ctld.addJTACRadioCommand(2)
 
@@ -5094,12 +5091,13 @@ function ctld.addJTACRadioCommand(_side)
                     -- env.info("Added command for " .. index)
                 end
 
-                --depending on the multiplier, this part of the radio menu will be refreshed less often or as often as the static JTAC status command, this is for better reliability for the user when navigating through the menus
-                if ctld.jtacRadioRefreshCount == ctld.jtacRadioRefreshMultiplier or ctld.newJtac then
+                --fetch the time to check for a regular refresh
+                local time = timer.getTime()
 
-                    if ctld.newJtac then
-                        ctld.newJtac = false
-                    end
+                --depending on the multiplier, this part of the radio menu will be refreshed less often or as often as the static JTAC status command, this is for better reliability for the user when navigating through the menus. New groups will get the lists regardless and if a new JTAC is added all lists will be refreshed regardless of the multiplier.
+                if ctld.jtacLastRadioRefresh + ctld.jtacRadioRefreshDelay <= time or ctld.newJtac or ctld.jtacRadioAdded[tostring(_groupId)] == nil then
+
+                    ctld.jtacLastRadioRefresh = time
 
                     --build the path to the CTLD JTAC menu
                     local jtacCurrentPagePath = {[1]=ctld.jtacMenuName}
@@ -5117,65 +5115,65 @@ function ctld.addJTACRadioCommand(_side)
                         local jtacCoalition = ctld.jtacUnits[_jtacGroupName].side
                         --if the JTAC is on the same team as the group being considered
                         if jtacCoalition and jtacCoalition == _side then
-                        --only bother removing the submenus on the first page of the CTLD JTAC menu as the other pages were deleted entirely above
-                        if ctld.jtacGroupSubMenuPath[_jtacGroupName] and #ctld.jtacGroupSubMenuPath[_jtacGroupName]==2 then
-                            missionCommands.removeItemForGroup(_groupId, ctld.jtacGroupSubMenuPath[_jtacGroupName])
-                        end
-
-                        ctld.logTrace(string.format("jtacTargetsList for %s is : %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacTargetsList[_jtacGroupName])))
-
-                        if #ctld.jtacTargetsList[_jtacGroupName] > 1 then
-
-                            local jtacGroupSubMenuName = string.format(_jtacGroupName .. " TGT Selection")
-
-                            jtacCounter = jtacCounter + 1
-                            --F2 through F10 makes 9 entries possible per page, with one being the NextMenu submenu
-                            if jtacCounter%9 == 0 then
-                                --recover the path to the current page with space available for JTAC group submenus
-                                jtacCurrentPagePath = missionCommands.addSubMenuForGroup(_groupId, NextPageText, jtacCurrentPagePath)
+                            --only bother removing the submenus on the first page of the CTLD JTAC menu as the other pages were deleted entirely above
+                            if ctld.jtacGroupSubMenuPath[_jtacGroupName] and #ctld.jtacGroupSubMenuPath[_jtacGroupName]==2 then
+                                missionCommands.removeItemForGroup(_groupId, ctld.jtacGroupSubMenuPath[_jtacGroupName])
                             end
-                            --add the JTAC group submenu to the current page
-                            ctld.jtacGroupSubMenuPath[_jtacGroupName] = missionCommands.addSubMenuForGroup(_groupId, jtacGroupSubMenuName, jtacCurrentPagePath)
 
-                            ctld.logTrace(string.format("jtacGroupSubMenuPath for %s is : %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacGroupSubMenuPath[_jtacGroupName])))
+                            ctld.logTrace(string.format("jtacTargetsList for %s is : %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacTargetsList[_jtacGroupName])))
 
-                            --make a copy of the JTAC group submenu's path to insert the target's list on as many pages as required. The JTAC's group submenu path only leads to the first page
-                            local jtacTargetPagePath = mist.utils.deepCopy(ctld.jtacGroupSubMenuPath[_jtacGroupName])
-                            --add a reset targeting option to revert to automatic JTAC unit targeting
+                            if #ctld.jtacTargetsList[_jtacGroupName] > 1 then
+
+                                local jtacGroupSubMenuName = string.format(_jtacGroupName .. " TGT Selection")
+
+                                jtacCounter = jtacCounter + 1
+                                --F2 through F10 makes 9 entries possible per page, with one being the NextMenu submenu
+                                if jtacCounter%9 == 0 then
+                                    --recover the path to the current page with space available for JTAC group submenus
+                                    jtacCurrentPagePath = missionCommands.addSubMenuForGroup(_groupId, NextPageText, jtacCurrentPagePath)
+                                end
+                                --add the JTAC group submenu to the current page
+                                ctld.jtacGroupSubMenuPath[_jtacGroupName] = missionCommands.addSubMenuForGroup(_groupId, jtacGroupSubMenuName, jtacCurrentPagePath)
+
+                                ctld.logTrace(string.format("jtacGroupSubMenuPath for %s is : %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacGroupSubMenuPath[_jtacGroupName])))
+
+                                --make a copy of the JTAC group submenu's path to insert the target's list on as many pages as required. The JTAC's group submenu path only leads to the first page
+                                local jtacTargetPagePath = mist.utils.deepCopy(ctld.jtacGroupSubMenuPath[_jtacGroupName])
+                                --add a reset targeting option to revert to automatic JTAC unit targeting
                                 missionCommands.addCommandForGroup(_groupId, "Reset TGT Selection", jtacTargetPagePath, ctld.setJTACTarget, {jtacGroupName = _jtacGroupName, targetName = nil})
-                            
-                            --counter to know when to add the next page submenu to fit all of the targets in the JTAC's group submenu
-                            local itemCounter = 0
+                                
+                                --counter to know when to add the next page submenu to fit all of the targets in the JTAC's group submenu
+                                local itemCounter = 0
 
                                 --indicator table to know which unitType was already added to the radio submenu
                                 local typeNameList = {}
-                            for _,target in pairs(ctld.jtacTargetsList[_jtacGroupName]) do
+                                for _,target in pairs(ctld.jtacTargetsList[_jtacGroupName]) do
                                     local targetName = target.unit:getName()
-                                --check if the jtac has a current target before filtering it out if possible
+                                    --check if the jtac has a current target before filtering it out if possible
                                     if (ctld.jtacCurrentTargets[_jtacGroupName] and targetName ~= ctld.jtacCurrentTargets[_jtacGroupName].name) then
-                                    local targetType_name = target.unit:getTypeName()
+                                        local targetType_name = target.unit:getTypeName()
 
-                                    if targetType_name then
-                                            if typeNameList[targetType_name] then
-                                                typeNameList[targetType_name].amount = typeNameList[targetType_name].amount + 1
-                                        else
-                                                typeNameList[targetType_name] = {}
-                                                typeNameList[targetType_name].targetName = targetName --store the first targetName
-                                                typeNameList[targetType_name].amount = 1
+                                        if targetType_name then
+                                                if typeNameList[targetType_name] then
+                                                    typeNameList[targetType_name].amount = typeNameList[targetType_name].amount + 1
+                                            else
+                                                    typeNameList[targetType_name] = {}
+                                                    typeNameList[targetType_name].targetName = targetName --store the first targetName
+                                                    typeNameList[targetType_name].amount = 1
+                                            end
                                         end
                                     end
                                 end
-                            end
 
                                 for typeName,info in pairs(typeNameList) do
                                     local amount = info.amount
                                     local targetName = info.targetName
-                                        itemCounter = itemCounter + 1
+                                    itemCounter = itemCounter + 1
 
-                                        --F2 through F10 makes 9 entries possible per page, with one being the NextMenu submenu. Pages other than the first would have 10 entires but worse case scenario is considered
-                                        if itemCounter%9 == 0 then
-                                            jtacTargetPagePath = missionCommands.addSubMenuForGroup(_groupId, NextPageText, jtacTargetPagePath)
-                                        end
+                                    --F2 through F10 makes 9 entries possible per page, with one being the NextMenu submenu. Pages other than the first would have 10 entires but worse case scenario is considered
+                                    if itemCounter%9 == 0 then
+                                        jtacTargetPagePath = missionCommands.addSubMenuForGroup(_groupId, NextPageText, jtacTargetPagePath)
+                                    end
 
                                     missionCommands.addCommandForGroup(_groupId, string.format(typeName .. "(" .. amount .. ")"), jtacTargetPagePath, ctld.setJTACTarget, {jtacGroupName = _jtacGroupName, targetName = targetName})
                                 end
@@ -5184,6 +5182,10 @@ function ctld.addJTACRadioCommand(_side)
                     end
                 end
             end
+        end
+
+        if ctld.newJtac then
+            ctld.newJtac = false
         end
     end
 end
@@ -5226,8 +5228,8 @@ ctld.jtacTargetsList = {} --current available targets to each JTAC for lasing (t
 ctld.jtacSelectedTarget = {} --currently user selected target if it contains a unit's name, otherwise contains 1 or nil (if not initialized)
 ctld.jtacRadioAdded = {} --keeps track of who's had the radio command added
 ctld.jtacGroupSubMenuPath = {} --keeps track of which submenu contains each JTAC's target selection menu
-ctld.jtacRadioRefreshMultiplier = 6 --determines how often the dynamic parts of the jtac radio menu (target lists) will be refreshed compared to how often the ctld.addJTACRadioCommand method is called (lets say it was called every 10 seconds and this variable is set to 2, then the dynamic part is rebuilt every 20 seconds).
-ctld.jtacRadioRefreshCount = 0 --counts the number of times the ctld.addJTACRadioCommand method has been called for both coalition
+ctld.jtacRadioRefreshDelay = 60 --determines how often in seconds the dynamic parts of the jtac radio menu (target lists) will be refreshed
+ctld.jtacLastRadioRefresh = 0 -- time at which the target lists were refreshed for everyone at least
 ctld.newJtac = false --indicator to know when a new JTAC is added in order to rebuild the target lists
 ctld.jtacGeneratedLaserCodes = {} -- keeps track of generated codes, cycles when they run out
 ctld.jtacLaserPointCodes = {}
