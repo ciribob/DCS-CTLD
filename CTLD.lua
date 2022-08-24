@@ -149,6 +149,8 @@ ctld.location_DMS = false -- shows coordinates as Degrees Minutes Seconds instea
 
 ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
 
+ctld.JTAC_laseSpotCorrections = false -- if true, the JTAC will attempt to lead the target, taking into account current wind conditions and the speed of the target (particularily useful against moving heavy armor)
+
 -- ***************** Pickup, dropoff and waypoint zones *****************
 
 -- Available colors (anything else like "none" disables smoke): "green", "red", "white", "orange", "blue", "none",
@@ -5486,32 +5488,34 @@ function ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
         local _enemyVector = _enemyUnit:getPoint()
         local _enemyVectorUpdated = { x = _enemyVector.x, y = _enemyVector.y + 2.0, z = _enemyVector.z }
 
-        local _enemySpeedVector = _enemyUnit:getVelocity()
-        ctld.logTrace(string.format("_enemySpeedVector=%s", ctld.p(_enemySpeedVector)))
+        if ctld.JTAC_laseSpotCorrections then
+            local _enemySpeedVector = _enemyUnit:getVelocity()
+            ctld.logTrace(string.format("_enemySpeedVector=%s", ctld.p(_enemySpeedVector)))
 
-        local _WindSpeedVector = atmosphere.getWind(_enemyVectorUpdated)
-        ctld.logTrace(string.format("_WindSpeedVector=%s", ctld.p(_WindSpeedVector)))
-        
-        --if target speed is greater than 0, calculated using absolute value norm
-        if math.abs(_enemySpeedVector.x) + math.abs(_enemySpeedVector.y) + math.abs(_enemySpeedVector.z) > 0 then
-            local CorrectionFactor = 1 --correction factor in seconds applied to the target speed components to determine the lasing spot for a direct hit on a moving vehicle
+            local _WindSpeedVector = atmosphere.getWind(_enemyVectorUpdated)
+            ctld.logTrace(string.format("_WindSpeedVector=%s", ctld.p(_WindSpeedVector)))
+            
+            --if target speed is greater than 0, calculated using absolute value norm
+            if math.abs(_enemySpeedVector.x) + math.abs(_enemySpeedVector.y) + math.abs(_enemySpeedVector.z) > 0 then
+                local CorrectionFactor = 1 --correction factor in seconds applied to the target speed components to determine the lasing spot for a direct hit on a moving vehicle
 
-            --correct in the direction of the movement
-            _enemyVectorUpdated.x = _enemyVectorUpdated.x + _enemySpeedVector.x * CorrectionFactor
-            _enemyVectorUpdated.y = _enemyVectorUpdated.y + _enemySpeedVector.y * CorrectionFactor
-            _enemyVectorUpdated.z = _enemyVectorUpdated.z + _enemySpeedVector.z * CorrectionFactor
+                --correct in the direction of the movement
+                _enemyVectorUpdated.x = _enemyVectorUpdated.x + _enemySpeedVector.x * CorrectionFactor
+                _enemyVectorUpdated.y = _enemyVectorUpdated.y + _enemySpeedVector.y * CorrectionFactor
+                _enemyVectorUpdated.z = _enemyVectorUpdated.z + _enemySpeedVector.z * CorrectionFactor
+            end
+
+            --if wind speed is greater than 0, calculated using absolute value norm
+            if math.abs(_WindSpeedVector.x) + math.abs(_WindSpeedVector.y) + math.abs(_WindSpeedVector.z) > 0 then
+                local CorrectionFactor = 1.05 --correction factor in seconds applied to the wind speed components to determine the lasing spot for a direct hit in adverse conditions
+
+                --correct to the opposite of the wind direction
+                _enemyVectorUpdated.x = _enemyVectorUpdated.x - _WindSpeedVector.x * CorrectionFactor
+                _enemyVectorUpdated.y = _enemyVectorUpdated.y - _WindSpeedVector.y * CorrectionFactor --not sure about correcting altitude but that component is always 0 in testing
+                _enemyVectorUpdated.z = _enemyVectorUpdated.z - _WindSpeedVector.z * CorrectionFactor
+            end
+            --combination of both should result in near perfect accuracy if the bomb doesn't stall itself following fast vehicles or correcting for heavy winds, correction factors can be adjusted but should work up to 40kn of wind for vehicles moving at 90kph (beware to drop the bomb in a way to not stall it, facing which ever is larger, target speed or wind)
         end
-
-        --if wind speed is greater than 0, calculated using absolute value norm
-        if math.abs(_WindSpeedVector.x) + math.abs(_WindSpeedVector.y) + math.abs(_WindSpeedVector.z) > 0 then
-            local CorrectionFactor = 1.05 --correction factor in seconds applied to the wind speed components to determine the lasing spot for a direct hit in adverse conditions
-
-            --correct to the opposite of the wind direction
-            _enemyVectorUpdated.x = _enemyVectorUpdated.x - _WindSpeedVector.x * CorrectionFactor
-            _enemyVectorUpdated.y = _enemyVectorUpdated.y - _WindSpeedVector.y * CorrectionFactor --not sure about correcting altitude but that component is always 0 in testing
-            _enemyVectorUpdated.z = _enemyVectorUpdated.z - _WindSpeedVector.z * CorrectionFactor
-        end
-        --combination of both should result in near perfect accuracy if the bomb doesn't stall itself following fast vehicles or correcting for heavy winds, correction factors can be adjusted but should work up to 40kn of wind for vehicles moving at 90kph (beware to drop the bomb in a way to not stall it, facing which ever is larger, target speed or wind)
 
         local _oldLase = ctld.jtacLaserPoints[_jtacGroupName]
         local _oldIR = ctld.jtacIRPoints[_jtacGroupName]
