@@ -149,6 +149,8 @@ ctld.location_DMS = false -- shows coordinates as Degrees Minutes Seconds instea
 
 ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
 
+ctld.JTAC_laseSpotCorrections = false -- if true, the JTAC will attempt to lead the target, taking into account current wind conditions and the speed of the target (particularily useful against moving heavy armor)
+
 -- ***************** Pickup, dropoff and waypoint zones *****************
 
 -- Available colors (anything else like "none" disables smoke): "green", "red", "white", "orange", "blue", "none",
@@ -5322,11 +5324,29 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
 
     if _enemyUnit ~= nil then
 
+        local refreshDelay = 15 --delay in between JTACAutoLase scheduled calls when a target is tracked
+        local targetSpeedVec = _enemyUnit:getVelocity()
+        local targetSpeed = math.sqrt(targetSpeedVec.x^2+targetSpeedVec.y^2+targetSpeedVec.z^2)
+        local maxUpdateDist = 5 --maximum distance the unit will be allowed to travel before the lase spot is updated again
+        ctld.logDebug(string.format("targetSpeed=%s", ctld.p(targetSpeed)))
+
         ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
 
-        --   env.info('Timer timerSparkleLase '..jtacGroupName.." "..laserCode.." "..enemyUnit:getName())
-        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio }, timer.getTime() + 15)
+        --if the target is going sufficiently fast for it to wander off futher than the maxUpdateDist, schedule laseUnit calls to update the lase spot only (we consider that the unit lives and drives on between JTACAutoLase calls)
+        if targetSpeed >= maxUpdateDist/refreshDelay then
+            local updateTimeStep = maxUpdateDist/targetSpeed --calculate the time step so that the target is never more than maxUpdateDist from it's last lased position
+            ctld.logDebug(string.format("updateTimeStep=%s", ctld.p(updateTimeStep)))
 
+            local i = 1
+            while i*updateTimeStep <= refreshDelay - updateTimeStep do --while the scheduled time for the laseUnit call isn't greater than the time between two JTACAutoLase() calls minus one time step (because at the next time step JTACAutoLase() should have been called and this in term also calls laseUnit())
+                ctld.logTrace("ctld.laseUnit scheduled " .. i)
+                timer.scheduleFunction(ctld.timerLaseUnit,{_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode}, timer.getTime()+i*updateTimeStep)
+                i = i + 1
+            end
+        end
+
+        --   env.info('Timer timerSparkleLase '..jtacGroupName.." "..laserCode.." "..enemyUnit:getName())
+        timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio }, timer.getTime() + refreshDelay)
 
         if _smoke == true then
             local _nextSmokeTime = ctld.jtacSmokeMarks[_enemyUnit:getName()]
@@ -5451,55 +5471,93 @@ function ctld.cancelLase(_jtacGroupName)
     end
 end
 
+-- used by the timer function
+function ctld.timerLaseUnit(_args)
+
+    ctld.laseUnit(_args[1], _args[2], _args[3], _args[4])
+end
+
 function ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
 
     --cancelLase(jtacGroupName)
+    ctld.logTrace("ctld.laseUnit()")
 
     local _spots = {}
 
-    local _enemyVector = _enemyUnit:getPoint()
-    local _enemyVectorUpdated = { x = _enemyVector.x, y = _enemyVector.y + 2.0, z = _enemyVector.z }
+    if _enemyUnit:isExist() then
+        local _enemyVector = _enemyUnit:getPoint()
+        local _enemyVectorUpdated = { x = _enemyVector.x, y = _enemyVector.y + 2.0, z = _enemyVector.z }
 
-    local _oldLase = ctld.jtacLaserPoints[_jtacGroupName]
-    local _oldIR = ctld.jtacIRPoints[_jtacGroupName]
+        if ctld.JTAC_laseSpotCorrections then
+            local _enemySpeedVector = _enemyUnit:getVelocity()
+            ctld.logTrace(string.format("_enemySpeedVector=%s", ctld.p(_enemySpeedVector)))
 
-    if _oldLase == nil or _oldIR == nil then
+            local _WindSpeedVector = atmosphere.getWind(_enemyVectorUpdated)
+            ctld.logTrace(string.format("_WindSpeedVector=%s", ctld.p(_WindSpeedVector)))
+            
+            --if target speed is greater than 0, calculated using absolute value norm
+            if math.abs(_enemySpeedVector.x) + math.abs(_enemySpeedVector.y) + math.abs(_enemySpeedVector.z) > 0 then
+                local CorrectionFactor = 1 --correction factor in seconds applied to the target speed components to determine the lasing spot for a direct hit on a moving vehicle
 
-        -- create lase
+                --correct in the direction of the movement
+                _enemyVectorUpdated.x = _enemyVectorUpdated.x + _enemySpeedVector.x * CorrectionFactor
+                _enemyVectorUpdated.y = _enemyVectorUpdated.y + _enemySpeedVector.y * CorrectionFactor
+                _enemyVectorUpdated.z = _enemyVectorUpdated.z + _enemySpeedVector.z * CorrectionFactor
+            end
 
-        local _status, _result = pcall(function()
-            _spots['irPoint'] = Spot.createInfraRed(_jtacUnit, { x = 0, y = 2.0, z = 0 }, _enemyVectorUpdated)
-            _spots['laserPoint'] = Spot.createLaser(_jtacUnit, { x = 0, y = 2.0, z = 0 }, _enemyVectorUpdated, _laserCode)
-            return _spots
-        end)
+            --if wind speed is greater than 0, calculated using absolute value norm
+            if math.abs(_WindSpeedVector.x) + math.abs(_WindSpeedVector.y) + math.abs(_WindSpeedVector.z) > 0 then
+                local CorrectionFactor = 1.05 --correction factor in seconds applied to the wind speed components to determine the lasing spot for a direct hit in adverse conditions
 
-        if not _status then
-            env.error('ERROR: ' .. _result, false)
+                --correct to the opposite of the wind direction
+                _enemyVectorUpdated.x = _enemyVectorUpdated.x - _WindSpeedVector.x * CorrectionFactor
+                _enemyVectorUpdated.y = _enemyVectorUpdated.y - _WindSpeedVector.y * CorrectionFactor --not sure about correcting altitude but that component is always 0 in testing
+                _enemyVectorUpdated.z = _enemyVectorUpdated.z - _WindSpeedVector.z * CorrectionFactor
+            end
+            --combination of both should result in near perfect accuracy if the bomb doesn't stall itself following fast vehicles or correcting for heavy winds, correction factors can be adjusted but should work up to 40kn of wind for vehicles moving at 90kph (beware to drop the bomb in a way to not stall it, facing which ever is larger, target speed or wind)
+        end
+
+        local _oldLase = ctld.jtacLaserPoints[_jtacGroupName]
+        local _oldIR = ctld.jtacIRPoints[_jtacGroupName]
+
+        if _oldLase == nil or _oldIR == nil then
+
+            -- create lase
+
+            local _status, _result = pcall(function()
+                _spots['irPoint'] = Spot.createInfraRed(_jtacUnit, { x = 0, y = 2.0, z = 0 }, _enemyVectorUpdated)
+                _spots['laserPoint'] = Spot.createLaser(_jtacUnit, { x = 0, y = 2.0, z = 0 }, _enemyVectorUpdated, _laserCode)
+                return _spots
+            end)
+
+            if not _status then
+                env.error('ERROR: ' .. _result, false)
+            else
+                if _result.irPoint then
+
+                    --    env.info(jtacUnit:getName() .. ' placed IR Pointer on '..enemyUnit:getName())
+
+                    ctld.jtacIRPoints[_jtacGroupName] = _result.irPoint --store so we can remove after
+                end
+                if _result.laserPoint then
+
+                    --  env.info(jtacUnit:getName() .. ' is Lasing '..enemyUnit:getName()..'. CODE:'..laserCode)
+
+                    ctld.jtacLaserPoints[_jtacGroupName] = _result.laserPoint
+                end
+            end
+
         else
-            if _result.irPoint then
 
-                --    env.info(jtacUnit:getName() .. ' placed IR Pointer on '..enemyUnit:getName())
+            -- update lase
 
-                ctld.jtacIRPoints[_jtacGroupName] = _result.irPoint --store so we can remove after
+            if _oldLase ~= nil then
+                _oldLase:setPoint(_enemyVectorUpdated)
             end
-            if _result.laserPoint then
 
-                --  env.info(jtacUnit:getName() .. ' is Lasing '..enemyUnit:getName()..'. CODE:'..laserCode)
-
-                ctld.jtacLaserPoints[_jtacGroupName] = _result.laserPoint
+            if _oldIR ~= nil then
+                _oldIR:setPoint(_enemyVectorUpdated)
             end
-        end
-
-    else
-
-        -- update lase
-
-        if _oldLase ~= nil then
-            _oldLase:setPoint(_enemyVectorUpdated)
-        end
-
-        if _oldIR ~= nil then
-            _oldIR:setPoint(_enemyVectorUpdated)
         end
     end
 end
