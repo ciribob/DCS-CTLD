@@ -5467,7 +5467,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
             if _smoke == true then
 
                 --create first smoke
-                ctld.createSmokeMarker(_enemyUnit, _colour)
+                ctld.createSmokeMarker(_defaultEnemyUnit, _colour)
             end
         end
     end
