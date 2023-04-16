@@ -149,7 +149,7 @@ ctld.location_DMS = false -- shows coordinates as Degrees Minutes Seconds instea
 
 ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
 
-ctld.JTAC_laseSpotCorrections = false -- if true, each JTAC will have a special option (toggle on/off) available in it's menu to attempt to lead the target, taking into account current wind conditions and the speed of the target (particularily useful against moving heavy armor)
+ctld.JTAC_laseSpotCorrections = true -- if true, each JTAC will have a special option (toggle on/off) available in it's menu to attempt to lead the target, taking into account current wind conditions and the speed of the target (particularily useful against moving heavy armor)
 
 -- ***************** Pickup, dropoff and waypoint zones *****************
 
@@ -5127,10 +5127,8 @@ function ctld.addJTACRadioCommand(_side)
 
                             ctld.logTrace(string.format("jtacTargetsList for %s is : %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacTargetsList[_jtacGroupName])))
 
-                            local jtacTargetCount = #ctld.jtacTargetsList[_jtacGroupName]
-
                             --if JTAC has at least one target in sight (if it has only one, it'll already be designated, this menu is then simply to access special options for the JTAC like wind/target speed compensation)
-                            if jtacTargetCount >= 1 then
+                            if ctld.jtacCurrentTargets[_jtacGroupName] then
 
                                 local jtacGroupSubMenuName = string.format(_jtacGroupName .. " TGT Select")
 
@@ -5154,13 +5152,15 @@ function ctld.addJTACRadioCommand(_side)
                                 --special options
                                 --add a way to allow the JTAC to perform wind/target speed corrections
                                 if ctld.JTAC_laseSpotCorrections then 
-                                    local jtacLaseCompMenu = missionCommands.addSubMenuForGroup(_groupId, "Wind and TGT Speed Compensation...", jtacTargetPagePath)
                                     itemCounter = itemCounter + 1 --one item is added to the first JTAC target page
-                                    missionCommands.addCommandForGroup(_groupId, "ENABLE", jtacLaseCompMenu, ctld.setLaseCompensation, {jtacGroupName = _jtacGroupName, value = true})
-                                    missionCommands.addCommandForGroup(_groupId, "DISABLE", jtacLaseCompMenu, ctld.setLaseCompensation, {jtacGroupName = _jtacGroupName, value = false})
+                                    if ctld.jtacSpecialOptions.laseSpotCorrections[_jtacGroupName] then
+                                        missionCommands.addCommandForGroup(_groupId, "DISABLE Speed Correction", jtacTargetPagePath, ctld.setLaseCompensation, {jtacGroupName = _jtacGroupName, value = false})
+                                    else
+                                        missionCommands.addCommandForGroup(_groupId, "ENABLE Speed Correction", jtacTargetPagePath, ctld.setLaseCompensation, {jtacGroupName = _jtacGroupName, value = true})
+                                    end
                                 end
 
-                                if jtacTargetCount > 1 then
+                                if #ctld.jtacTargetsList[_jtacGroupName] > 1 then
                                     
                                     --add a reset targeting option to revert to automatic JTAC unit targeting
                                     missionCommands.addCommandForGroup(_groupId, "Reset TGT Selection", jtacTargetPagePath, ctld.setJTACTarget, {jtacGroupName = _jtacGroupName, targetName = nil})
@@ -5195,6 +5195,7 @@ function ctld.addJTACRadioCommand(_side)
                                         --F1 through F10 makes 10 entries possible per page, with one being the NextMenu submenu.
                                         if itemCounter%10 == 0 then
                                             jtacTargetPagePath = missionCommands.addSubMenuForGroup(_groupId, NextPageText, jtacTargetPagePath)
+                                            itemCounter = itemCounter + 1 --added the next page item
                                         end
 
                                         missionCommands.addCommandForGroup(_groupId, string.format(typeName .. "(" .. amount .. ")"), jtacTargetPagePath, ctld.setJTACTarget, {jtacGroupName = _jtacGroupName, targetName = targetName})
@@ -5577,7 +5578,7 @@ function ctld.cleanupJTAC(_jtacGroupName)
 
     ctld.jtacSelectedTarget[_jtacGroupName] = nil
 
-    for _,jtacsList in pairs(cltd.jtacSpecialOptions) do --delete all special options for that JTAC
+    for _,jtacsList in pairs(ctld.jtacSpecialOptions) do --delete all special options for that JTAC
         jtacsList[_jtacGroupName] = nil
     end
 
@@ -6152,6 +6153,13 @@ function ctld.setLaseCompensation(_args)
         local _value = _args.value --expected boolean
 
         if _jtacGroupName then
+
+            local message_end = " disabled."
+            if _value then
+                message_end = " enabled."
+            end
+            ctld.notifyCoalition(_jtacGroupName .. ", Wind and Target speed Laser Spot compensations" .. message_end, 10, ctld.jtacUnits[_jtacGroupName].side, ctld.jtacRadioData[_jtacGroupName])
+
             ctld.jtacSpecialOptions.laseSpotCorrections[_jtacGroupName] = _value
         end
     end
