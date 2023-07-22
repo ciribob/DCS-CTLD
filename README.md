@@ -667,6 +667,10 @@ ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE f
 ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 
+ctld.JTAC_smokeOffset_x = 0.0 -- distance in the X direction from target to spawn smoke marker (default 0.0)
+ctld.JTAC_smokeOffset_y = 2.0 -- distance in the Y direction from target to spawn smoke marker (default 2.0)
+ctld.JTAC_smokeOffset_z = 0.0 -- distance in the z direction from target to spawn smoke marker (default 0.0)
+
 ctld.JTAC_jtacStatusF10 = false -- enables F10 JTAC Status menu
 
 ctld.JTAC_location = false -- shows location of target in JTAC message
