@@ -3693,12 +3693,18 @@ function ctld.removeRadioBeacon(_args)
             local _fmGroup = Group.getByName(_closetBeacon.fmGroup)
 
             if _vhfGroup ~= nil then
+                ctld.logTrace(string.format("stopping transmission of %s", ctld.p(_vhfGroup:getName())))
+                trigger.action.stopRadioTransmission(_vhfGroup:getName())
                 _vhfGroup:destroy()
             end
             if _uhfGroup ~= nil then
+                ctld.logTrace(string.format("stopping transmission of %s", ctld.p(_uhfGroup:getName())))
+                trigger.action.stopRadioTransmission(_uhfGroup:getName())
                 _uhfGroup:destroy()
             end
             if _fmGroup ~= nil then
+                ctld.logTrace(string.format("stopping transmission of %s", ctld.p(_fmGroup:getName())))
+                trigger.action.stopRadioTransmission(_fmGroup:getName())
                 _fmGroup:destroy()
             end
 
