@@ -504,7 +504,7 @@ ctld.loadableGroups = {
 --
 ctld.spawnableCrates = {
     -- name of the sub menu on F10 for spawning crates
-    ["Ground Forces"] = {
+    ["Crates - Ground Forces"] = {
         --crates you can spawn
         -- weight in KG
         -- Desc is the description on the F10 MENU
@@ -531,14 +531,14 @@ ctld.spawnableCrates = {
 
         { weight = 800, desc = "FOB Crate - Small", unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
     },
-    ["AA short range"] = {
+    ["Crates - AA short range"] = {
         { weight = 50, desc = "Stinger", unit = "Soldier stinger", side = 2 },
         { weight = 55, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
 
         { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
         { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
     },
-    ["AA mid range"] = {
+    ["Crates - AA mid range"] = {
         -- HAWK System
         { weight = 540, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
         { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
@@ -561,7 +561,7 @@ ctld.spawnableCrates = {
         --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
         -- END of BUK
     },
-    ["AA long range"] = {
+    ["Crates - AA long range"] = {
         -- Patriot System
         { weight = 555, desc = "Patriot Launcher", unit = "Patriot ln", side = 2 },
         { weight = 556, desc = "Patriot Radar", unit = "Patriot str" , side = 2 },
@@ -4969,7 +4969,7 @@ function ctld.addF10MenuOptions()
 
                         if (ctld.enabledFOBBuilding or ctld.enableCrates) and _unitActions.crates then
 
-                            local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
+                            local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "Crates - Actions", _rootPath)
                             if ctld.hoverPickup == false then
                                 if  ctld.slingLoad == false then
                                     missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
