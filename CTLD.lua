@@ -64,13 +64,23 @@ ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli
 ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
 ctld.fastRopeMaximumHeight = 18.28 -- in meters which is 60 ft max fast rope (not rappell) safe height
 
-ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
-ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
+ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 
+--> Alternatives {"Strela-1 9P31","BMP-1"}
+--> Modern { "BTR_D", "Ural-375 ZU-23 Insurgent" }
+--> COLD WAR { "BMP-2", "Ural-375 ZU-23 Insurgent" }
+ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 
+--> Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
+--> Modern { "M-2 Bradley", "Ural-375 ZU-23 Insurgent" }
+--> COLD WAR { "M-113", "Ural-375 ZU-23 Insurgent" }
 ctld.vehiclesWeight = {
     ["BRDM-2"] = 7000,
     ["BTR_D"] = 8000,
     ["M1045 HMMWV TOW"] = 3220,
-    ["M1043 HMMWV Armament"] = 2500
+    ["M1043 HMMWV Armament"] = 2500,
+    ["Ural-375 ZU-23 Insurgent"] = 9000,
+    ["M-2 Bradley"] = 15000,
+    ["BMP-2"] = 7000,
+    ["M-113"] = 7000,
 }
 
 ctld.aaLaunchers = 3 -- controls how many launchers to add to the kub/buk when its spawned.
