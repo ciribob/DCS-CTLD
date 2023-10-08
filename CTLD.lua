@@ -4222,7 +4222,7 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
 
 
         for _i, _detail in ipairs(_details.units) do
-            _group.units[_i] = ctld.createUnit(_pos.x + (_xOffset + 10 * _i), _pos.z + (_yOffset + 10 * _i), _angle, _detail)
+            _group.units[_i] = ctld.createUnit(_pos.x + (_xOffset + 30 * _i), _pos.z + (_yOffset + 30 * _i), _angle, _detail)
         end
     end
 
