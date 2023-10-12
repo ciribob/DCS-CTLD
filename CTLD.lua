@@ -18,8 +18,6 @@
         - davidp57 - https://github.com/veaf
         - Queton1-1 - https://github.com/Queton1-1
         - Proxy404 - https://github.com/Proxy404
-
-      - Allow minimum distance from friendly logistics to be set
  ]]
 
 ctld = {} -- DONT REMOVE!
