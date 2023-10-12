@@ -43,6 +43,7 @@ ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics woul
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
+ctld.loadCrateFromMenu = true -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
@@ -4993,7 +4994,7 @@ function ctld.addF10MenuOptions()
                         if (ctld.enabledFOBBuilding or ctld.enableCrates) and _unitActions.crates then
 
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
-                            if ctld.hoverPickup == false then
+                            if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
                                 if  ctld.slingLoad == false then
                                     missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
