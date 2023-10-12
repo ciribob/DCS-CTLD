@@ -3400,10 +3400,6 @@ end
 function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTime, _isFOB)
     ctld.logDebug(string.format("ctld.createRadioBeacon(_name=%s)", ctld.p(_name)))
 
-    local _uhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, _name .. "-UHF")
-    local _vhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, _name .. "-VHF")
-    local _fmGroup = ctld.spawnRadioBeaconUnit(_point, _country, _name .. "-FM")
-
     local _freq = ctld.generateADFFrequencies()
 
     --create timeout
@@ -3421,25 +3417,24 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
 
     --local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
 
-    local _message = _name
+    local _freqsText = _name
 
     if _isFOB then
         --  _message = "FOB " .. _message
         _battery = -1 --never run out of power!
     end
 
-    _message = _message .. " - " .. _latLngStr
+    _freqsText = _freqsText .. " - " .. _latLngStr
 
-    --  env.info("GEN UHF: ".. _freq.uhf)
-    --  env.info("GEN VHF: ".. _freq.vhf)
+    ctld.logTrace(string.format("GEN UHF: %s", ctld.p(_freq.uhf)))
+    ctld.logTrace(string.format("GEN HF: %s", ctld.p(_freq.vhf)))
+    ctld.logTrace(string.format("GEN FM: %s", ctld.p(_freq.fm)))
 
-    _message = string.format("%s - %.2f KHz", _message, _freq.vhf / 1000)
+    _freqsText = string.format("%.2f kHz - %.2f / %.2f MHz", _freq.vhf / 1000, _freq.uhf / 1000000, _freq.fm / 1000000)
 
-    _message = string.format("%s - %.2f MHz", _message, _freq.uhf / 1000000)
-
-    _message = string.format("%s - %.2f MHz ", _message, _freq.fm / 1000000)
-
-
+    local _uhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
+    local _vhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
+    local _fmGroup = ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
 
     local _beaconDetails = {
         vhf = _freq.vhf,
@@ -3448,7 +3443,7 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
         uhfGroup = _uhfGroup:getName(),
         fm = _freq.fm,
         fmGroup = _fmGroup:getName(),
-        text = _message,
+        text = _freqsText,
         battery = _battery,
         coalition = _coalition,
     }
@@ -3495,7 +3490,7 @@ end
 
 
 
-function ctld.spawnRadioBeaconUnit(_point, _country, _name)
+function ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
     ctld.logDebug(string.format("ctld.spawnRadioBeaconUnit(_name=%s)", ctld.p(_name)))
 
     local _groupId = ctld.getNextGroupId()
@@ -3510,7 +3505,7 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _name)
             [1] = {
                 ["y"] = _point.z,
                 ["type"] = "TACAN_beacon",
-                ["name"] = _name .. " - Unit #" .. _unitId,
+                ["name"] = "Unit #" .. _unitId .. " - " .. _name .. " [" .. _freqsText .. "]",
              --   ["unitId"] = _unitId,
                 ["heading"] = 0,
                 ["playerCanDrive"] = true,
@@ -3520,7 +3515,7 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _name)
         },
         --        ["y"] = _positions[1].z,
         --        ["x"] = _positions[1].x,
-        ["name"] = _name .. " - Group #" .. _groupId,
+        ["name"] =  "Group #" .. _groupId .. " - " .. _name,
         ["task"] = {},
         --added two fields below for MIST
         ["category"] = Group.Category.GROUND,
@@ -6397,7 +6392,6 @@ function ctld.getPositionString(_unit)
 
     return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString
 end
-
 
 -- ***************** SETUP SCRIPT ****************
 function ctld.initialize(force)
