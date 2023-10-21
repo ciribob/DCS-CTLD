@@ -10,14 +10,14 @@
 
     See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
-	Contributors:
-	    - Steggles - https://github.com/Bob7heBuilder
-	    - mvee - https://github.com/mvee
-	    - jmontleon - https://github.com/jmontleon
-	    - emilianomolina - https://github.com/emilianomolina
-	    - davidp57 - https://github.com/veaf
-
-      - Allow minimum distance from friendly logistics to be set
+    Contributors:
+        - Steggles - https://github.com/Bob7heBuilder
+        - mvee - https://github.com/mvee
+        - jmontleon - https://github.com/jmontleon
+        - emilianomolina - https://github.com/emilianomolina
+        - davidp57 - https://github.com/veaf
+        - Queton1-1 - https://github.com/Queton1-1
+        - Proxy404 - https://github.com/Proxy404
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -26,12 +26,11 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "20230414.01"
+ctld.Version = "202310.01"
 
--- debug level, specific to this module
-ctld.Debug = true
--- trace level, specific to this module
-ctld.Trace = true
+-- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
+ctld.Debug = false
+ctld.Trace = false
 
 ctld.alreadyInitialized = false -- if true, ctld.initialize() will not run
 
@@ -43,6 +42,7 @@ ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics woul
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
+ctld.loadCrateFromMenu = false -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
@@ -60,7 +60,7 @@ ctld.maximumMoveDistance = 2000 -- max distance for troops to move from drop poi
 ctld.minimumDeployDistance = 1000 -- minimum distance from a friendly pickup zone where you can deploy a crate
 
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130 
-							-- also works as maximum size of group that'll fit into a helicopter unless overridden
+                         -- also works as maximum size of group that'll fit into a helicopter unless overridden
 ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
 ctld.fastRopeMaximumHeight = 18.28 -- in meters which is 60 ft max fast rope (not rappell) safe height
 
@@ -141,6 +141,10 @@ ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE f
 
 ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+
+ctld.JTAC_smokeOffset_x = 0.0 -- distance in the X direction from target to smoke (meters)
+ctld.JTAC_smokeOffset_y = 2.0 -- distance in the Y direction from target to smoke (meters)
+ctld.JTAC_smokeOffset_z = 0.0 -- distance in the z direction from target to smoke (meters)
 
 ctld.JTAC_jtacStatusF10 = true -- enables F10 JTAC Status menu
 
@@ -544,7 +548,7 @@ ctld.spawnableCrates = {
         { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
         { weight = 546, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
         { weight = 547, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 }, -- Remove this if on 1.2
-	    { weight = 548, desc = "HAWK CWAR", unit = "Hawk cwar" , side = 2 }, -- Remove this if on 2.5	
+        { weight = 548, desc = "HAWK CWAR", unit = "Hawk cwar" , side = 2 }, -- Remove this if on 2.5    
         { weight = 549, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
 
@@ -1397,7 +1401,7 @@ ctld.AASystemTemplate = {
             {name = "Hawk tr", desc = "HAWK Track Radar"},
             {name = "Hawk sr", desc = "HAWK Search Radar"},
             {name = "Hawk pcp", desc = "HAWK PCP"},
-	        {name = "Hawk cwar", desc = "HAWK CWAR"},
+            {name = "Hawk cwar", desc = "HAWK CWAR"},
         },
         repair = "HAWK Repair",
     },
@@ -1411,7 +1415,7 @@ ctld.AASystemTemplate = {
         },
         repair = "Patriot Repair",
     },
-	{
+    {
         name = "BUK AA System",
         count = 3,
         parts = {
@@ -1566,7 +1570,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
         if ctld.slingLoad then
             _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_sling)
             _crate["canCargo"] = true
-    	else
+        else
             _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_load)
             _crate["canCargo"] = false
         end
@@ -2764,10 +2768,12 @@ function ctld.loadNearbyCrate(_name)
 
 end
 
---recreates beacons to make sure they work!
+--check each minute if the beacons' batteries have failed, and stop them accordingly
+--there's no more need to actually refresh the beacons, since we set "loop" to true.
 function ctld.refreshRadioBeacons()
+    ctld.logDebug("ctld.refreshRadioBeacons()")
 
-    timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 30)
+    timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 60)
 
 
     for _index, _beaconDetails in ipairs(ctld.deployedRadioBeacons) do
@@ -3390,10 +3396,7 @@ end
 -- one for VHF and one for UHF
 -- The units are set to to NOT engage
 function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTime, _isFOB)
-
-    local _uhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "UHF")
-    local _vhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, "VHF")
-    local _fmGroup = ctld.spawnRadioBeaconUnit(_point, _country, "FM")
+    ctld.logDebug(string.format("ctld.createRadioBeacon(_name=%s)", ctld.p(_name)))
 
     local _freq = ctld.generateADFFrequencies()
 
@@ -3412,25 +3415,24 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
 
     --local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
 
-    local _message = _name
+    local _freqsText = _name
 
     if _isFOB then
         --  _message = "FOB " .. _message
         _battery = -1 --never run out of power!
     end
 
-    _message = _message .. " - " .. _latLngStr
+    _freqsText = _freqsText .. " - " .. _latLngStr
 
-    --  env.info("GEN UHF: ".. _freq.uhf)
-    --  env.info("GEN VHF: ".. _freq.vhf)
+    ctld.logTrace(string.format("GEN UHF: %s", ctld.p(_freq.uhf)))
+    ctld.logTrace(string.format("GEN HF: %s", ctld.p(_freq.vhf)))
+    ctld.logTrace(string.format("GEN FM: %s", ctld.p(_freq.fm)))
 
-    _message = string.format("%s - %.2f KHz", _message, _freq.vhf / 1000)
+    _freqsText = string.format("%.2f kHz - %.2f / %.2f MHz", _freq.vhf / 1000, _freq.uhf / 1000000, _freq.fm / 1000000)
 
-    _message = string.format("%s - %.2f MHz", _message, _freq.uhf / 1000000)
-
-    _message = string.format("%s - %.2f MHz ", _message, _freq.fm / 1000000)
-
-
+    local _uhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
+    local _vhfGroup = ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
+    local _fmGroup = ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
 
     local _beaconDetails = {
         vhf = _freq.vhf,
@@ -3439,10 +3441,12 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
         uhfGroup = _uhfGroup:getName(),
         fm = _freq.fm,
         fmGroup = _fmGroup:getName(),
-        text = _message,
+        text = _freqsText,
         battery = _battery,
         coalition = _coalition,
     }
+    
+    ctld.logDebug(string.format("calling ctld.updateRadioBeacon for beacon %s", ctld.p(_name)))
     ctld.updateRadioBeacon(_beaconDetails)
 
     table.insert(ctld.deployedRadioBeacons, _beaconDetails)
@@ -3484,7 +3488,8 @@ end
 
 
 
-function ctld.spawnRadioBeaconUnit(_point, _country, _type)
+function ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
+    ctld.logDebug(string.format("ctld.spawnRadioBeaconUnit(_name=%s)", ctld.p(_name)))
 
     local _groupId = ctld.getNextGroupId()
 
@@ -3498,7 +3503,7 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _type)
             [1] = {
                 ["y"] = _point.z,
                 ["type"] = "TACAN_beacon",
-                ["name"] = _type .. " Radio Beacon Unit #" .. _unitId,
+                ["name"] = "Unit #" .. _unitId .. " - " .. _name .. " [" .. _freqsText .. "]",
              --   ["unitId"] = _unitId,
                 ["heading"] = 0,
                 ["playerCanDrive"] = true,
@@ -3508,7 +3513,7 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _type)
         },
         --        ["y"] = _positions[1].z,
         --        ["x"] = _positions[1].x,
-        ["name"] = _type .. " Radio Beacon Group #" .. _groupId,
+        ["name"] =  "Group #" .. _groupId .. " - " .. _name,
         ["task"] = {},
         --added two fields below for MIST
         ["category"] = Group.Category.GROUND,
@@ -3520,6 +3525,8 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _type)
 end
 
 function ctld.updateRadioBeacon(_beaconDetails)
+    ctld.logDebug("ctld.updateRadioBeacon()")
+    ctld.logTrace(string.format("_beaconDetails=%s", ctld.p(_beaconDetails)))
 
     local _vhfGroup = Group.getByName(_beaconDetails.vhfGroup)
 
@@ -3530,14 +3537,17 @@ function ctld.updateRadioBeacon(_beaconDetails)
     local _radioLoop = {}
 
     if _vhfGroup ~= nil and _vhfGroup:getUnits() ~= nil and #_vhfGroup:getUnits() == 1 then
+        ctld.logTrace(string.format("_vhfGroup=%s", ctld.p(_vhfGroup)))
         table.insert(_radioLoop, { group = _vhfGroup, freq = _beaconDetails.vhf, silent = false, mode = 0 })
     end
 
     if _uhfGroup ~= nil and _uhfGroup:getUnits() ~= nil and #_uhfGroup:getUnits() == 1 then
+        ctld.logTrace(string.format("_uhfGroup=%s", ctld.p(_uhfGroup)))
         table.insert(_radioLoop, { group = _uhfGroup, freq = _beaconDetails.uhf, silent = true, mode = 0 })
     end
 
     if _fmGroup ~= nil and _fmGroup:getUnits() ~= nil and #_fmGroup:getUnits() == 1 then
+        ctld.logTrace(string.format("_fmGroup=%s", ctld.p(_fmGroup)))
         table.insert(_radioLoop, { group = _fmGroup, freq = _beaconDetails.fm, silent = false, mode = 1 })
     end
 
@@ -3545,14 +3555,20 @@ function ctld.updateRadioBeacon(_beaconDetails)
 
     if (_batLife <= 0 and _beaconDetails.battery ~= -1) or #_radioLoop ~= 3 then
         -- ran out of batteries
-
+        ctld.logDebug("ran out of batteries")
         if _vhfGroup ~= nil then
+            ctld.logTrace(string.format("stopping transmission of %s", ctld.p(_vhfGroup:getName())))
+            trigger.action.stopRadioTransmission(_vhfGroup:getName())
             _vhfGroup:destroy()
         end
         if _uhfGroup ~= nil then
+            ctld.logTrace(string.format("stopping transmission of %s", ctld.p(_uhfGroup:getName())))
+            trigger.action.stopRadioTransmission(_uhfGroup:getName())
             _uhfGroup:destroy()
         end
         if _fmGroup ~= nil then
+            ctld.logTrace(string.format("stopping transmission of %s", ctld.p(_fmGroup:getName())))
+            trigger.action.stopRadioTransmission(_fmGroup:getName())
             _fmGroup:destroy()
         end
 
@@ -3577,17 +3593,17 @@ function ctld.updateRadioBeacon(_beaconDetails)
 
         _groupController:setOption(AI.Option.Ground.id.ROE, AI.Option.Ground.val.ROE.WEAPON_HOLD)
 
-        trigger.action.radioTransmission(_sound, _radio.group:getUnit(1):getPoint(), _radio.mode, false, _radio.freq, 1000)
-        --This function doesnt actually stop transmitting when then sound is false. My hope is it will stop if a new beacon is created on the same
-        -- frequency... OR they fix the bug where it wont stop.
-        --        end
+        ctld.logTrace(string.format("stopping and restarting transmission of %s", ctld.p(_radio.group:getName())))
+        
+        -- stop the transmission at each call to the ctld.updateRadioBeacon method (default each minute)
+        trigger.action.stopRadioTransmission(_radio.group:getName())
 
-        --
+        -- restart it as the battery is still up
+        -- the transmission is set to loop and has the name of the transmitting DCS group (that includes the type - i.e. FM, UHF, VHF)
+        trigger.action.radioTransmission(_sound, _radio.group:getUnit(1):getPoint(), _radio.mode, true, _radio.freq, 1000, _radio.group:getName())
     end
 
     return true
-
-    --  trigger.action.radioTransmission(ctld.radioSound, _point, 1, true, _frequency, 1000)
 end
 
 function ctld.listRadioBeacons(_args)
@@ -3676,12 +3692,18 @@ function ctld.removeRadioBeacon(_args)
             local _fmGroup = Group.getByName(_closetBeacon.fmGroup)
 
             if _vhfGroup ~= nil then
+                ctld.logTrace(string.format("stopping transmission of %s", ctld.p(_vhfGroup:getName())))
+                trigger.action.stopRadioTransmission(_vhfGroup:getName())
                 _vhfGroup:destroy()
             end
             if _uhfGroup ~= nil then
+                ctld.logTrace(string.format("stopping transmission of %s", ctld.p(_uhfGroup:getName())))
+                trigger.action.stopRadioTransmission(_uhfGroup:getName())
                 _uhfGroup:destroy()
             end
             if _fmGroup ~= nil then
+                ctld.logTrace(string.format("stopping transmission of %s", ctld.p(_fmGroup:getName())))
+                trigger.action.stopRadioTransmission(_fmGroup:getName())
                 _fmGroup:destroy()
             end
 
@@ -4970,7 +4992,7 @@ function ctld.addF10MenuOptions()
                         if (ctld.enabledFOBBuilding or ctld.enableCrates) and _unitActions.crates then
 
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
-                            if ctld.hoverPickup == false then
+                            if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
                                 if  ctld.slingLoad == false then
                                     missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
@@ -5146,7 +5168,7 @@ function ctld.addJTACRadioCommand(_side)
                                 local jtacTargetPagePath = mist.utils.deepCopy(ctld.jtacGroupSubMenuPath[_jtacGroupName])
                                 --add a reset targeting option to revert to automatic JTAC unit targeting
                                 missionCommands.addCommandForGroup(_groupId, "Reset TGT Selection", jtacTargetPagePath, ctld.setJTACTarget, {jtacGroupName = _jtacGroupName, targetName = nil})
-                                
+
                                 --counter to know when to add the next page submenu to fit all of the targets in the JTAC's group submenu
                                 local itemCounter = 0
 
@@ -5192,6 +5214,7 @@ function ctld.addJTACRadioCommand(_side)
         if ctld.newJtac[_side] then
             ctld.newJtac[_side] = false
         end
+
     end
 end
 
@@ -5326,7 +5349,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
         
         --Targets list and Selected target initialization
         if not ctld.jtacTargetsList[_jtacGroupName] then
-            ctld.jtacTargetsList[_jtacGroupName] = {}
+                        ctld.jtacTargetsList[_jtacGroupName] = {}
             if _jtacCoalition then ctld.newJtac[_jtacCoalition] = true end
         end
 
@@ -5416,8 +5439,8 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
         --remove from smoke list
         ctld.jtacSmokeMarks[_tempUnitInfo.name] = nil
 
-    	-- JTAC Unit: resume his route ------------
-	    trigger.action.groupContinueMoving(Group.getByName(_jtacGroupName)) 	
+        -- JTAC Unit: resume his route ------------
+        trigger.action.groupContinueMoving(Group.getByName(_jtacGroupName))
 
         -- remove from target list
         ctld.jtacCurrentTargets[_jtacGroupName] = nil
@@ -5460,8 +5483,8 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
             local fullMessage = message .. '. CODE: ' .. _laserCode .. ". POSITION: " .. ctld.getPositionString(_defaultEnemyUnit)
             ctld.notifyCoalition(fullMessage, 10, _jtacUnit:getCoalition(), _radio, message)
 
-	        -- JTAC Unit stop his route -----------------
-	        trigger.action.groupStopMoving(Group.getByName(_jtacGroupName)) -- stop JTAC
+            -- JTAC Unit stop his route -----------------
+            trigger.action.groupStopMoving(Group.getByName(_jtacGroupName)) -- stop JTAC
             
             -- create smoke
             if _smoke == true then
@@ -5619,7 +5642,7 @@ function ctld.createSmokeMarker(_enemyUnit, _colour)
 
     -- move smoke 2 meters above target for ease
     local _enemyPoint = _enemyUnit:getPoint()
-    trigger.action.smoke({ x = _enemyPoint.x, y = _enemyPoint.y + 2.0, z = _enemyPoint.z }, _colour)
+    trigger.action.smoke({ x = _enemyPoint.x + ctld.JTAC_smokeOffset_x, y = _enemyPoint.y + ctld.JTAC_smokeOffset_y, z = _enemyPoint.z + ctld.JTAC_smokeOffset_z }, _colour)
 end
 
 function ctld.cancelLase(_jtacGroupName)
@@ -6108,7 +6131,7 @@ function ctld.setJTACTarget(_args)
         elseif not targetName and ctld.jtacSelectedTarget[_jtacGroupName] ~= 1 then
             ctld.jtacSelectedTarget[_jtacGroupName] = 1
             ctld.jtacCurrentTargets[_jtacGroupName] = nil
-
+            
             local message = _jtacGroupName .. ", target selection reset."
             ctld.notifyCoalition(message, 10, ctld.jtacUnits[_jtacGroupName].side, ctld.jtacRadioData[_jtacGroupName])
         end
@@ -6367,7 +6390,6 @@ function ctld.getPositionString(_unit)
 
     return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString
 end
-
 
 -- ***************** SETUP SCRIPT ****************
 function ctld.initialize(force)

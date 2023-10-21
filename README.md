@@ -130,9 +130,11 @@ To use the real cargo sling behaviour, set the ```ctld.slingLoad``` option to ``
 -- ************************************************************************
 ctld.staticBugFix = true --  When statics are destroyed, DCS Crashes. Set this to FALSE when this bug is fixed or if you want to use REAL sling loads :)
 
-ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
+ctld.disableAllSmoke = false -- if true, all smoke is disabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering...!
+
+ctld.loadCrateFromMenu = false -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
@@ -667,6 +669,10 @@ ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE f
 ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 
+ctld.JTAC_smokeOffset_x = 0.0 -- distance in the X direction from target to spawn smoke marker (default 0 meters)
+ctld.JTAC_smokeOffset_y = 2.0 -- distance in the Y direction from target to spawn smoke marker (default 2 meters)
+ctld.JTAC_smokeOffset_z = 0.0 -- distance in the z direction from target to spawn smoke marker (default 0 meters)
+
 ctld.JTAC_jtacStatusF10 = false -- enables F10 JTAC Status menu
 
 ctld.JTAC_location = false -- shows location of target in JTAC message
@@ -686,6 +692,8 @@ The JTACs can be configured globally to target only vehicles or troops or all gr
 *** NOTE: LOS doesn't include buildings or tree's... Sorry! ***
 
 The script can also be useful in daylight by enabling the JTAC to mark enemy positions with Smoke. The JTAC will only move the smoke to the target every 5 minutes (to stop a huge trail of smoke markers) unless the target is destroyed, in which case the new target will be marked straight away with smoke. There is also an F10 menu option for units allowing the JTAC(s) to report their current status but if a JTAC is down it won't report in.
+
+The smoke will be offset from the target by the distances declared in the `ctld.JTAC_smokeOffset_*` constants.
 
 To add JTACS to the mission using the editor place a JTAC unit on the map putting each JTAC in it's own group containing only itself and no
 other units. Name the group something easy to remember e.g. JTAC1 and make sure the JTAC units have a unique name which must
@@ -839,7 +847,7 @@ Once you've loaded the crate, fly to where you want to drop it and drop using th
 
 Once on the ground unpack as normal using the CTLD Commands Menu - CTLD->CTLD Commands->Unpack Crate
 
-**Note: You can also set ```ctld.hoverPickup = false``` so you can load crates using the F10 menu instead of Hovering. **
+**Note: You can also set ```ctld.hoverPickup = false``` so you can load crates using the F10 menu instead of Hovering; or keep ```ctld.hoverPickup = true``` and set ```ctld.loadCrateFromMenu = true``` so you can load the crates by hovering OR from the F10 menu**
  
 ### Real Sling Loading
 
