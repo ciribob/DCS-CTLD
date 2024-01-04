@@ -101,6 +101,20 @@ You can also edit the CTLD.lua file to change some configuration options. Make s
 
 ## Setup in Mission Editor
 
+### Test mission
+
+You can use the `test-mission.miz` mission as a demonstration on how to use the CTLD script in a DCS mission.
+
+This mission includes the CTLD script, a proper configuration, demonstration for some of the main features (including the "JTAC talk over the radio via SRS" functionality).
+
+**Note to developers**: it's quite easy to set the loading of the CTLD script to dynamic, so you can make changes to the script, save it and simply reload the mission (left-shift + R) in the game to test the edits you made.
+
+To do this, simply change the "Define loading mode" trigger (1) so that the condition reads "FLAG IS FALSE" (2), and edit the "DO SCRIPT" action (3) to replace the path with the path to the `CTLD.lua` file on your PC.
+
+Optionaly, you can disable the STTS (text to speech over SRS) feature (4).
+
+![dynamic_loading]
+
 ### Script Setup
 **This script requires MIST version 4.0.57 or above: https://github.com/mrSkortch/MissionScriptingTools**
 
@@ -661,23 +675,29 @@ ctld.JTAC_LIMIT_BLUE = 10 -- max number of JTAC Crates for the BLUE Side
 
 ctld.JTAC_dropEnabled = true -- allow JTAC Crate spawn from F10 menu
 
-ctld.JTAC_maxDistance = 4000 -- How far a JTAC can "see" in meters (with Line of Sight)
+ctld.JTAC_maxDistance = 10000 -- How far a JTAC can "see" in meters (with Line of Sight)
 
-ctld.JTAC_smokeOn_RED = true -- enables marking of target with smoke for RED forces
-ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE forces
+ctld.JTAC_smokeOn_RED = true -- enables automatic marking of target with smoke for RED forces
+ctld.JTAC_smokeOn_BLUE = true -- enables automatic marking of target with smoke for BLUE forces
 
 ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 
-ctld.JTAC_smokeOffset_x = 0.0 -- distance in the X direction from target to spawn smoke marker (default 0 meters)
-ctld.JTAC_smokeOffset_y = 2.0 -- distance in the Y direction from target to spawn smoke marker (default 2 meters)
-ctld.JTAC_smokeOffset_z = 0.0 -- distance in the z direction from target to spawn smoke marker (default 0 meters)
+ctld.JTAC_smokeOffset_x = 0.0 -- distance in the X direction from target to smoke (meters)
+ctld.JTAC_smokeOffset_y = 2.0 -- distance in the Y direction from target to smoke (meters)
+ctld.JTAC_smokeOffset_z = 0.0 -- distance in the z direction from target to smoke (meters)
 
-ctld.JTAC_jtacStatusF10 = false -- enables F10 JTAC Status menu
+ctld.JTAC_jtacStatusF10 = true -- enables F10 JTAC Status menu
 
-ctld.JTAC_location = false -- shows location of target in JTAC message
+ctld.JTAC_location = true -- shows location of target in JTAC message
+ctld.location_DMS = false -- shows coordinates as Degrees Minutes Seconds instead of Degrees Decimal minutes
 
-ctld.JTAC_lock =  "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
+ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
+
+ctld.JTAC_allowStandbyMode = true -- Allow players to toggle lasing on/off
+ctld.JTAC_laseSpotCorrections = true -- Allow players to toggle on/off the JTAC leading it's target, taking into account current wind conditions and the speed of the target (particularily useful against moving heavy armor)
+ctld.JTAC_allowSmokeRequest = true -- Allow players to request a smoke on target (temporary)
+ctld.JTAC_allow9Line = true -- Allow players to ask for a 9Line (individual) for a specific JTAC's target
 
 ```
 
@@ -685,21 +705,39 @@ To make a unit deployed from a crate into a JTAC unit, add the type to the ```ct
 
 The script allows a JTAC to mark and hold an IR and Laser point on a target allowing TGP's to lock onto the lase and ease of target location using NV Goggles.
 
-The JTAC will automatically switch targets when a target is destroyed or goes out of Line of Sight.
+The JTAC will automatically switch targets when a target is destroyed or goes out of Line of Sight. Alternatively, a target list is available to chose from for each JTAC.
 
 The JTACs can be configured globally to target only vehicles or troops or all ground targets.
 
+JTACs can also be asked to put smoke on target, give out 9-Lines, to toggle lasing on/off and compensate the laser spot position for target movement and local wind.
+
 *** NOTE: LOS doesn't include buildings or tree's... Sorry! ***
 
-The script can also be useful in daylight by enabling the JTAC to mark enemy positions with Smoke. The JTAC will only move the smoke to the target every 5 minutes (to stop a huge trail of smoke markers) unless the target is destroyed, in which case the new target will be marked straight away with smoke. There is also an F10 menu option for units allowing the JTAC(s) to report their current status but if a JTAC is down it won't report in.
+The script can also be useful in daylight by enabling the JTAC to automatically mark enemy positions with Smoke. The JTAC will only move the smoke to the target every 5 minutes (to stop a huge trail of smoke markers) unless the target is destroyed, in which case the new target will be marked straight away with smoke. There is also an F10 menu to get the status of all JTACs, access the target lists and options for each JTAC (such as toggling lasing on/off or requesting a smoke manually). Do note that if a JTAC is down it won't report in or have it's own menu for targets and options. JTACs also do not overlap each other so the target lists do not include already lased targets.
 
-The smoke will be offset from the target by the distances declared in the `ctld.JTAC_smokeOffset_*` constants.
+The automatic smokes will be offset from the target by the distances declared in the `ctld.JTAC_smokeOffset_*` constants. Requested smokes will be put close but not on target.
 
-To add JTACS to the mission using the editor place a JTAC unit on the map putting each JTAC in it's own group containing only itself and no
+In practice, this is what the F10 radio menu for JTACs looks like :
+
+![alt text](https://imgur.com/pfVldQ1.png "JTAC F10 Radio Menu")
+
+You can see the "JTAC Status" command and the Selection Lists for each JTAC. Those look like :
+
+![alt text](https://imgur.com/oDtajwv.png "Selection List for a JTAC")
+
+Each target type within LOS of the JTAC and not already being lased (by any JTAC) is listed. Quantity is indicated. There is also the Action menu which looks like :
+
+![alt text](https://imgur.com/nYWODLj.png "Action List for a JTAC")
+
+This will allow you to act on the behavior of the JTAC or make requests. These items get updated every minute or so to reflect current configuration, same for the target list.
+
+*** NOTE: Please be patient with the JTAC menu, wait at least 10 seconds between commands. If a spurious command is triggered, wait the same 10 seconds and try again. Sorry for this inconvenience. ***
+
+To add JTACs or AFACs to the mission using the editor place a JTAC/AFAC unit on the map putting each JTAC/AFAC in it's own group containing only itself and no
 other units. Name the group something easy to remember e.g. JTAC1 and make sure the JTAC units have a unique name which must
 not be the same as the group name. The editor should do this for you but be careful if you copy and paste.
 
-Run the code below as a DO SCRIPT at the start of the mission, or after a delay if you prefer to activate a mission JTAC. 
+Run the code below as a DO SCRIPT at the start of the mission, or after a delay if you prefer to activate a mission JTAC or AFAC. 
 
 **JTAC units deployed by unpacking a crate will automatically activate and begin searching for targets immediately.**
 
@@ -1022,3 +1060,5 @@ Below is a complete list of all the "actions" plus the data that is sent through
 * ```{unit = "Unit that did the action",crate = "Crate Details", spawnedGroup = "Group rearmed by crate", action = "rearm"}```
 * ```{unit = "Unit that did the action",crate = "Crate Details", spawnedGroup = "Group spawned by crate", action = "unpack"}```
 * ```{unit = "Unit that did the action",crate = "Crate Details", spawnedGroup = "Group repaired by crate", action = "repair"}```
+
+[dynamic_loading]: trigger-dynamic-loading.png
