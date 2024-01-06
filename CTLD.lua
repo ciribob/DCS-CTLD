@@ -789,44 +789,43 @@ ctld.jtacUnitTypes = {
 -- **************** Mission Editor Functions *********************
 -- ***************************************************************
 
-function AddPlayerAircraftByType()
-    _bluePlayers = coalition.getPlayers(2)
-    _redPlayers = coalition.getPlayers(1)
+function ctld.AddPlayerAircraftByType()
 
-    --> Blue Players
-    for i = 1, #_bluePlayers do
-        for i_2 = 1, #ctld.aircraftTypeTable do
-            if ctld.aircraftTypeTable[i_2] == Unit.getTypeName(_bluePlayers[i]) then
-                _match = 0
-                for i_3 = 1, #ctld.transportPilotNames do
+    ctld.logTrace("ctld.AddPlayerAircraftByType()")
 
-                    if ctld.transportPilotNames[i_3] == Unit.getName(_bluePlayers[i]) then
-                        _match = match + 1
+    local coalitions = {
+        ["red"] = coalition.getPlayers(1),
+        ["blue"] = coalition.getPlayers(2)
+    }
+
+    ctld.logTrace("Got following players in coalitions :" .. ctld.p(coalitions))
+
+    for _, _players in pairs(coalitions) do
+        for _,_player in pairs(_players) do
+            local playerTypeName = _player:getTypeName()
+            local playerUnitName = _player:getName()
+
+            ctld.logTrace("Player : " .. ctld.p(_player) .. " has unit name : " .. playerUnitName .. " and type : " .. playerTypeName)
+
+            if _player ~= nil then
+                local notFound = true
+
+                for _,transportPilotName in pairs(ctld.transportPilotNames) do
+                    if transportPilotName == playerUnitName then
+
+                        ctld.logTrace("Player is already a transport pilot, skipping...")
+                        notFound = false
+                        break
                     end
                 end
-                if _match == 0 then 
-                    ctld.transportPilotNames[#ctld.transportPilotNames+1] = Unit.getName(_bluePlayers[i])
-                end
 
-            end
-        end
-    end
-
-    --> Red Players
-    for i = 1, #_redPlayers do
-        for i_2 = 1, #ctld.aircraftTypeTable do
-            if ctld.aircraftTypeTable[i_2] == Unit.getTypeName(_redPlayers[i]) then
-                _match = 0
-                for i_3 = 1, #ctld.transportPilotNames do
-
-                    if ctld.transportPilotNames[i_3] == Unit.getName(_redPlayers[i]) then
-                        _match = match + 1
+                if notFound then
+                    for _,aircraftType in pairs(ctld.aircraftTypeTable) do
+                        if aircraftType == playerTypeName then
+                            table.insert(ctld.transportPilotNames, playerUnitName)
+                        end
                     end
                 end
-                if _match == 0 then 
-                    ctld.transportPilotNames[#ctld.transportPilotNames+1] = Unit.getName(_redPlayers[i])
-                end
-
             end
         end
     end
@@ -4635,7 +4634,6 @@ end
 
 -- are we in pickup zone
 function ctld.inPickupZone(_heli)
-    ctld.logDebug(string.format("ctld.inPickupZone(_heli=%s)", ctld.p(_heli)))
 
     if ctld.inAir(_heli) then
         return { inZone = false, limit = -1, index = -1 }
@@ -4644,7 +4642,6 @@ function ctld.inPickupZone(_heli)
     local _heliPoint = _heli:getPoint()
 
     for _i, _zoneDetails in pairs(ctld.pickupZones) do
-        ctld.logTrace(string.format("_zoneDetails=%s", ctld.p(_zoneDetails)))
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
@@ -4665,7 +4662,6 @@ function ctld.inPickupZone(_heli)
             --get distance to center
 
             local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
-            ctld.logTrace(string.format("_dist=%s", ctld.p(_dist)))
             if _dist <= _triggerZone.radius then
                 local _heliCoalition = _heli:getCoalition()
                 if _zoneDetails[4] == 1 and (_zoneDetails[5] == _heliCoalition or _zoneDetails[5] == 0) then
@@ -5065,7 +5061,7 @@ function ctld.addF10MenuOptions()
     timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 10)
 
     if ctld.addPlayerAircraftByType == true then 
-        AddPlayerAircraftByType() 
+        ctld.AddPlayerAircraftByType()
     end
 
     for _, _unitName in pairs(ctld.transportPilotNames) do
