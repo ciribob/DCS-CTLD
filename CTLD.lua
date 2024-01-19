@@ -793,27 +793,33 @@ function ctld.AddPlayerAircraftByType()
 
     ctld.logTrace("ctld.AddPlayerAircraftByType()")
 
-    local coalitions = {
-        ["red"] = coalition.getPlayers(1),
-        ["blue"] = coalition.getPlayers(2)
-    }
+    for _, _countries in pairs(mist.DBs.units) do
+        for _, _categories in pairs(_countries) do
+            for _category, _groups in pairs(_categories) do
 
-    ctld.logTrace("Got following players in coalitions :" .. ctld.p(coalitions))
+                if type(_groups) == "table" and _category ~= nil and (_category == "helicopter" or _category == "plane") then
 
-    for _, _players in pairs(coalitions) do
-        for _,_player in pairs(_players) do
-            local playerTypeName = _player:getTypeName()
-            local playerUnitName = _player:getName()
+                    if _groups ~= nil then
 
-            ctld.logTrace("Player : " .. ctld.p(_player) .. " has unit name : " .. playerUnitName .. " and type : " .. playerTypeName)
+                        for _,_group in pairs(_groups) do
 
-            if _player ~= nil then
+                            if _group ~= nil and _group.units ~= nil then
+
+                                for _,_unit in pairs(_group.units) do
+
+                                    if _unit ~= nil then
+                                        local playerTypeName = _unit.type
+                                        local playerUnitName = _unit.unitName
+
+                                        ctld.logTrace("Unit : " .. ctld.p(_unit))
+                                        ctld.logDebug("Has name : " .. playerUnitName .. " and type : " .. playerTypeName)
+
                 local notFound = true
 
                 for _,transportPilotName in pairs(ctld.transportPilotNames) do
                     if transportPilotName == playerUnitName then
 
-                        ctld.logTrace("Player is already a transport pilot, skipping...")
+                                                ctld.logDebug("Unit is already a transport pilot, skipping...")
                         notFound = false
                         break
                     end
@@ -822,7 +828,14 @@ function ctld.AddPlayerAircraftByType()
                 if notFound then
                     for _,aircraftType in pairs(ctld.aircraftTypeTable) do
                         if aircraftType == playerTypeName then
+                                                    ctld.logDebug("Adding unit as transport pilot...")
                             table.insert(ctld.transportPilotNames, playerUnitName)
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
                         end
                     end
                 end
@@ -5060,10 +5073,6 @@ function ctld.addF10MenuOptions()
 
     timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 10)
 
-    if ctld.addPlayerAircraftByType == true then 
-        ctld.AddPlayerAircraftByType()
-    end
-
     for _, _unitName in pairs(ctld.transportPilotNames) do
 
         local status, error = pcall(function()
@@ -6567,6 +6576,10 @@ function ctld.initialize(force)
     end
 
     assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
+
+    if ctld.addPlayerAircraftByType == true then 
+        ctld.AddPlayerAircraftByType()
+    end
 
     ctld.addedTo = {}
     ctld.spawnedCratesRED = {} -- use to store crates that have been spawned
