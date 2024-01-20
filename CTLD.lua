@@ -789,44 +789,56 @@ ctld.jtacUnitTypes = {
 -- **************** Mission Editor Functions *********************
 -- ***************************************************************
 
-function AddPlayerAircraftByType()
-    _bluePlayers = coalition.getPlayers(2)
-    _redPlayers = coalition.getPlayers(1)
+function ctld.AddPlayerAircraftByType()
 
-    --> Blue Players
-    for i = 1, #_bluePlayers do
-        for i_2 = 1, #ctld.aircraftTypeTable do
-            if ctld.aircraftTypeTable[i_2] == Unit.getTypeName(_bluePlayers[i]) then
-                _match = 0
-                for i_3 = 1, #ctld.transportPilotNames do
+    ctld.logTrace("ctld.AddPlayerAircraftByType()")
 
-                    if ctld.transportPilotNames[i_3] == Unit.getName(_bluePlayers[i]) then
-                        _match = match + 1
+    for _, _countries in pairs(mist.DBs.units) do
+        for _, _categories in pairs(_countries) do
+            for _category, _groups in pairs(_categories) do
+
+                if type(_groups) == "table" and _category ~= nil and (_category == "helicopter" or _category == "plane") then
+
+                    if _groups ~= nil then
+
+                        for _,_group in pairs(_groups) do
+
+                            if _group ~= nil and _group.units ~= nil then
+
+                                for _,_unit in pairs(_group.units) do
+
+                                    if _unit ~= nil then
+                                        local playerTypeName = _unit.type
+                                        local playerUnitName = _unit.unitName
+
+                                        ctld.logTrace("Unit : " .. ctld.p(_unit))
+                                        ctld.logDebug("Has name : " .. playerUnitName .. " and type : " .. playerTypeName)
+
+                local notFound = true
+
+                for _,transportPilotName in pairs(ctld.transportPilotNames) do
+                    if transportPilotName == playerUnitName then
+
+                                                ctld.logDebug("Unit is already a transport pilot, skipping...")
+                        notFound = false
+                        break
                     end
                 end
-                if _match == 0 then 
-                    ctld.transportPilotNames[#ctld.transportPilotNames+1] = Unit.getName(_bluePlayers[i])
-                end
 
-            end
-        end
-    end
-
-    --> Red Players
-    for i = 1, #_redPlayers do
-        for i_2 = 1, #ctld.aircraftTypeTable do
-            if ctld.aircraftTypeTable[i_2] == Unit.getTypeName(_redPlayers[i]) then
-                _match = 0
-                for i_3 = 1, #ctld.transportPilotNames do
-
-                    if ctld.transportPilotNames[i_3] == Unit.getName(_redPlayers[i]) then
-                        _match = match + 1
+                if notFound then
+                    for _,aircraftType in pairs(ctld.aircraftTypeTable) do
+                        if aircraftType == playerTypeName then
+                                                    ctld.logDebug("Adding unit as transport pilot...")
+                            table.insert(ctld.transportPilotNames, playerUnitName)
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
                     end
                 end
-                if _match == 0 then 
-                    ctld.transportPilotNames[#ctld.transportPilotNames+1] = Unit.getName(_redPlayers[i])
-                end
-
             end
         end
     end
@@ -4635,7 +4647,6 @@ end
 
 -- are we in pickup zone
 function ctld.inPickupZone(_heli)
-    ctld.logDebug(string.format("ctld.inPickupZone(_heli=%s)", ctld.p(_heli)))
 
     if ctld.inAir(_heli) then
         return { inZone = false, limit = -1, index = -1 }
@@ -4644,7 +4655,6 @@ function ctld.inPickupZone(_heli)
     local _heliPoint = _heli:getPoint()
 
     for _i, _zoneDetails in pairs(ctld.pickupZones) do
-        ctld.logTrace(string.format("_zoneDetails=%s", ctld.p(_zoneDetails)))
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
@@ -4665,7 +4675,6 @@ function ctld.inPickupZone(_heli)
             --get distance to center
 
             local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
-            ctld.logTrace(string.format("_dist=%s", ctld.p(_dist)))
             if _dist <= _triggerZone.radius then
                 local _heliCoalition = _heli:getCoalition()
                 if _zoneDetails[4] == 1 and (_zoneDetails[5] == _heliCoalition or _zoneDetails[5] == 0) then
@@ -5063,10 +5072,6 @@ function ctld.addF10MenuOptions()
     -- Loop through all Heli units
 
     timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 10)
-
-    if ctld.addPlayerAircraftByType == true then 
-        AddPlayerAircraftByType() 
-    end
 
     for _, _unitName in pairs(ctld.transportPilotNames) do
 
@@ -6571,6 +6576,10 @@ function ctld.initialize(force)
     end
 
     assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
+
+    if ctld.addPlayerAircraftByType == true then 
+        ctld.AddPlayerAircraftByType()
+    end
 
     ctld.addedTo = {}
     ctld.spawnedCratesRED = {} -- use to store crates that have been spawned
