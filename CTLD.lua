@@ -6534,7 +6534,29 @@ function ctld.getPositionString(_unit)
 
     return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString
 end
-
+------------------------------------------------------------------------------------------
+function ctld.updateCTLDHeliTransportNames(params, t)		-- Update table ctld.transportPilotNames with helo dynamic slots spwaned
+                                                            -- to allow dynamic slots to access CTLD functions
+    local table1 = coalition.getGroups(1,1)					-- helos red coa
+    local table2 = coalition.getGroups(2,1)					-- helos blue coa
+    table.move(table2, 1, #table2, #table1 + 1, table1)		-- merge tables
+    
+    for k,v in pairs(table1) do
+        local memo = false
+        for k2,v2 in pairs(ctld.transportPilotNames) do
+            if v2 == v:getUnit(1):getName() then		--if unit allready in table => do nothing
+                memo = true
+                break
+            end
+        end
+        if memo == false then            
+            ctld.transportPilotNames[#ctld.transportPilotNames+1] = v:getUnit(1):getName()
+        end
+    end 
+    timer.scheduleFunction(ctld.updateCTLDHeliTransportNames, nil, t + 5)	-- relancer pour détecter toutes les prises de slot client
+end
+ctld.updateCTLDHeliTransportNames(nil, timer.getTime())		-- Run UpdateAuto table CTLD liste noms hélicos pour transport	
+------------------------------------------------------------------------------------------
 
 -- ***************** SETUP SCRIPT ****************
 function ctld.initialize(force)
