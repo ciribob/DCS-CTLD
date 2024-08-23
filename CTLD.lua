@@ -439,6 +439,10 @@ ctld.unitLoadLimits = {
     -- ["SA342M"] = 4,
 
 }
+ctld.internalCargoLimits = {
+  ["Mi-8MT"] = 2,
+  ["CH-47Fbl1"] = 4,
+}
 
 
 -- ************** Allowable actions for UNIT TYPES ******************
@@ -2531,7 +2535,7 @@ function ctld.checkTransportStatus()
             --env.info("CTLD Transport Unit Dead event")
             ctld.inTransitTroops[_name] = nil
             ctld.inTransitFOBCrates[_name] = nil
-            ctld.inTransitSlingLoadCrates[_name] = nil
+            ctld.inTransitSlingLoadCrates[_name] = {} -- Tupper Multiple crates
         end
     end
 end
@@ -2539,6 +2543,7 @@ end
 function ctld.adaptWeightToCargo(unitName)
     local _weight = ctld.getWeightOfCargo(unitName)
     trigger.action.setUnitInternalCargo(unitName, _weight)
+    
 end
 
 function ctld.getWeightOfCargo(unitName)
@@ -2571,15 +2576,40 @@ function ctld.getWeightOfCargo(unitName)
         _weight = _weight + FOB_CRATE_WEIGHT
         _description = _description .. string.format("1 FOB Crate oboard (%s kg)\n", FOB_CRATE_WEIGHT)
     end
-
-    -- add simulated slingload crates weight
-    local _crate = ctld.inTransitSlingLoadCrates[unitName]
-    if _crate then
-        if _crate.simulatedSlingload then
-            _weight = _weight + _crate.weight
-            _description = _description .. string.format("1 %s crate onboard (%s kg)\n", _crate.desc, _crate.weight)
-        end
+    
+    -- TUPPER mutiple internal crates
+    local _heli = ctld.getTransportUnit(unitName)
+    local _cargoCapacity = 1
+    if ctld.inTransitSlingLoadCrates[_heli:getName()] == nil then
+        ctld.inTransitSlingLoadCrates[_heli:getName()] = {}
     end
+    
+    if ctld.internalCargoLimits[_heli:getTypeName()] then
+      _cargoCapacity = ctld.internalCargoLimits[_heli:getTypeName()]
+    end
+    
+    -- add simulated slingload crates weight
+    -- replaced by tupper
+--    local _crate = ctld.inTransitSlingLoadCrates[unitName]
+--    if _crate then
+--        if _crate.simulatedSlingload then
+--            _weight = _weight + _crate.weight
+--            _description = _description .. string.format("1 %s crate onboard (%s kg)\n", _crate.desc, _crate.weight)
+--        end
+--    end
+
+     for i = 1, _cargoCapacity, 1 do 
+        if ctld.inTransitSlingLoadCrates[_heli:getName()][i] ~= nil then
+          _weight = _weight + ctld.inTransitSlingLoadCrates[_heli:getName()][i].weight
+          if i == 1 then
+            _description = _description .. string.format("%s crates onboard (%s kg)", ctld.inTransitSlingLoadCrates[_heli:getName()][i].desc, ctld.inTransitSlingLoadCrates[_heli:getName()][i].weight)
+          else
+            _description = _description  .. "\n" ..  string.format("%s crate onboard (%s kg)", ctld.inTransitSlingLoadCrates[_heli:getName()][i].desc, ctld.inTransitSlingLoadCrates[_heli:getName()][i].weight)
+          end
+          
+        end
+      end
+    
     if _description ~= "" then
         _description = _description .. string.format("Total weight of cargo : %s kg\n", _weight)
     else
@@ -2598,9 +2628,19 @@ function ctld.checkHoverStatus()
 
             local _reset = true
             local _transUnit = ctld.getTransportUnit(_name)
+             -- TUPPER mutiple internal crates
+            local _cargoCapacity = 1
+            if ctld.inTransitSlingLoadCrates[_transUnit:getName()] == nil then
+              ctld.inTransitSlingLoadCrates[_transUnit:getName()] = {}
+            end
+            if ctld.internalCargoLimits[_transUnit:getTypeName()] then
+              _cargoCapacity = ctld.internalCargoLimits[_transUnit:getTypeName()]
+            end
 
             --only check transports that are hovering and not planes
-            if _transUnit ~= nil and ctld.inTransitSlingLoadCrates[_name] == nil and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false then
+          -- tupper multiple crate
+          --  if _transUnit ~= nil and ctld.inTransitSlingLoadCrates[_name] == nil and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false then
+           if _transUnit ~= nil and #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity == nil and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false then
 
 
                 local _crates = ctld.getCratesAndDistance(_transUnit)
@@ -2645,7 +2685,9 @@ function ctld.checkHoverStatus()
 
                                 local _copiedCrate = mist.utils.deepCopy(_crate.details)
                                 _copiedCrate.simulatedSlingload = true
-                                ctld.inTransitSlingLoadCrates[_name] = _copiedCrate
+                                -- tupper multiple crates
+                                --ctld.inTransitSlingLoadCrates[_name] = _copiedCrate
+                                table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                                 ctld.adaptWeightToCargo(_name)
                             end
 
@@ -2678,13 +2720,20 @@ function ctld.loadNearbyCrate(_name)
     local _transUnit = ctld.getTransportUnit(_name)
 
     if _transUnit ~= nil  then
-
-        if ctld.inAir(_transUnit) then
-            ctld.displayMessageToGroup(_transUnit, "You must land before you can load a crate!", 10,true)
-            return
+      local _crateCapacity = 1
+      if ctld.internalCargoLimits[_transUnit:getTypeName()] then
+        _crateCapacity = ctld.internalCargoLimits[_transUnit:getTypeName()]
+      end      
+      
+      if ctld.inAir(_transUnit) then
+          ctld.displayMessageToGroup(_transUnit, "You must land before you can load a crate!", 10,true)
+          return
+      end
+        if ctld.inTransitSlingLoadCrates[_transUnit:getName()] == nil then
+          ctld.inTransitSlingLoadCrates[_transUnit:getName()] = {}
         end
 
-        if ctld.inTransitSlingLoadCrates[_name] == nil then
+        if #ctld.inTransitSlingLoadCrates[_name] < _crateCapacity then  -- TUPPER multiple cargo --ctld.inTransitSlingLoadCrates[_name] == nil then
             local _crates = ctld.getCratesAndDistance(_transUnit)
 
             for _, _crate in pairs(_crates) do
@@ -2704,7 +2753,9 @@ function ctld.loadNearbyCrate(_name)
 
                     local _copiedCrate = mist.utils.deepCopy(_crate.details)
                     _copiedCrate.simulatedSlingload = true
-                    ctld.inTransitSlingLoadCrates[_name] = _copiedCrate
+                    --tupper multiple cargo
+                    -- ctld.inTransitSlingLoadCrates[_name] = _copiedCrate
+                    table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                     ctld.adaptWeightToCargo(_name)
                     return
                 end
@@ -2714,7 +2765,20 @@ function ctld.loadNearbyCrate(_name)
 
         else
             -- crate onboard
-            ctld.displayMessageToGroup(_transUnit, "You already have a "..ctld.inTransitSlingLoadCrates[_name].desc.." crate onboard!", 10,true)
+          --tupper multiple crates
+          --    ctld.displayMessageToGroup(_transUnit, "You already have a "..ctld.inTransitSlingLoadCrates[_name].desc.." crate onboard!", 10,true)
+          local _currentCrate = ""
+          for i = 1, _crateCapacity, 1 do
+            if ctld.inTransitSlingLoadCrates[_name][i] ~= nil then
+             if i == 1 then 
+                _currentCrate = ctld.inTransitSlingLoadCrates[_name][i].desc 
+              else
+                _currentCrate = _currentCrate .. "\n" .. ctld.inTransitSlingLoadCrates[_name][i].desc 
+              end
+            end
+          end
+          ctld.displayMessageToGroup(_transUnit, "You already have this cargo onboard\n".._currentCrate, 10,true)
+          
         end
     end
 
@@ -3297,8 +3361,13 @@ function ctld.dropSlingCrate(_args)
     if _heli == nil then
         return -- no heli!
     end
-
-    local _currentCrate = ctld.inTransitSlingLoadCrates[_heli:getName()]
+  -- tupper multiple crate
+  --  local _currentCrate = ctld.inTransitSlingLoadCrates[_heli:getName()]
+      if ctld.inTransitSlingLoadCrates[_heli:getName()] == nil then
+        ctld.inTransitSlingLoadCrates[_heli:getName()] = {}
+      end
+      local _currentCrate = table.remove(ctld.inTransitSlingLoadCrates[_heli:getName()],#ctld.inTransitSlingLoadCrates[_heli:getName()])
+  
 
     if _currentCrate == nil then
         if ctld.hoverPickup then
@@ -3331,14 +3400,14 @@ function ctld.dropSlingCrate(_args)
         elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
             ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely dropped below you", 10)
         else -- _heightDiff > 40.0
-            ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
+           -- ctld.inTransitSlingLoadCrates[_heli:getName()] = nil TUPPER MULTIPLE CRATE
             ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
             return
         end
 
 
         --remove crate from cargo
-        ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
+       -- ctld.inTransitSlingLoadCrates[_heli:getName()] = nil -- TUPPER MULTIPLE CRATES
         ctld.adaptWeightToCargo(_heli:getName())
         local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight,_side)
     end
