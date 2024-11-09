@@ -43,7 +43,7 @@ ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics woul
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 --> Allow units to CTLD by aircraft type and not by pilot name
-ctld.addPlayerAircraftByType = true
+ctld.addPlayerAircraftByType = false
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
 
@@ -234,36 +234,37 @@ ctld.wpZones = {
 -- If ctld.addPlayerAircraftByType = True, comment or uncomment lines to allow aircraft's type carry CTLD
 ctld.aircraftTypeTable = {
     --%%%%% MODS %%%%%
-        "Bronco-OV-10A",
-        "Hercules",
+        --"Bronco-OV-10A",
+        --"Hercules",
         --"SK-60",
-        "UH-60L",
+        --"UH-60L",
         --"T-45",
     
     --%%%%% CHOPPERS %%%%%
-        "Ka-50",
-        "Ka-50_3",
+        --"Ka-50",
+        --"Ka-50_3",
         "Mi-8MT",
         "Mi-24P",
-        "SA342L",
-        "SA342M",
-        "SA342Mistral",
-        "SA342Minigun",
+        --"SA342L",
+        --"SA342M",
+        --"SA342Mistral",
+        --"SA342Minigun",
         "UH-1H",
+        "CH-47Fbl1",
     
     --%%%%% AIRCRAFTS %%%%%
-        "C-101EB",
-        "C-101CC",
+        --"C-101EB",
+        --"C-101CC",
         --"Christen Eagle II",
-        "L-39C",
-        "L-39ZA",
-        "MB-339A",
-        "MB-339APAN",
-        "Mirage-F1B",
-        "Mirage-F1BD",
-        "Mirage-F1BE",
-        "Mirage-F1BQ",
-        "Mirage-F1DDA",
+        --"L-39C",
+        --"L-39ZA",
+        --"MB-339A",
+        --"MB-339APAN",
+        --"Mirage-F1B",
+        --"Mirage-F1BD",
+        --"Mirage-F1BE",
+        --"Mirage-F1BQ",
+        --"Mirage-F1DDA",
         --"Su-25T",
         --"Yak-52",
 
@@ -272,14 +273,14 @@ ctld.aircraftTypeTable = {
         --"Fw 190A8",
         --"FW-190D9",
         --"I-16",
-        "MosquitoFBMkVI",
+        --"MosquitoFBMkVI",
         --"P-47D-30",
         --"P-47D-40",
         --"P-51D",
         --"P-51D-30-NA",
         --"SpitfireLFMkIX",
         --"SpitfireLFMkIXCW",
-        "TF-51D",
+        --"TF-51D",
 }
 
 -- Use any of the predefined names or set your own ones
@@ -485,50 +486,51 @@ ctld.unitLoadLimits = {
     -- ["SA342M"] = 4,
 
     --%%%%% MODS %%%%%
-        ["Bronco-OV-10A"] = 4,
+        --["Bronco-OV-10A"] = 4,
         ["Hercules"] = 30,
-        ["SK-60"] = 1,
+        --["SK-60"] = 1,
         ["UH-60L"] = 12,
-        ["T-45"] = 1,
+        --["T-45"] = 1,
 
     --%%%%% CHOPPERS %%%%%
         ["Mi-8MT"] = 16,
         ["Mi-24P"] = 10,
-        ["SA342L"] = 4,
-        ["SA342M"] = 4,
-        ["SA342Mistral"] = 4,
-        ["SA342Minigun"] = 3,
+        --["SA342L"] = 4,
+        --["SA342M"] = 4,
+        --["SA342Mistral"] = 4,
+        --["SA342Minigun"] = 3,
         ["UH-1H"] = 8,
+        ["CH-47Fbl1"] = 33,
 
     --%%%%% AIRCRAFTS %%%%%
-        ["C-101EB"] = 1,
-        ["C-101CC"] = 1,
-        ["Christen Eagle II"] = 1,
-        ["L-39C"] = 1,
-        ["L-39ZA"] = 1,
-        ["MB-339A"] = 1,
-        ["MB-339APAN"] = 1,
-        ["Mirage-F1B"] = 1,
-        ["Mirage-F1BD"] = 1,
-        ["Mirage-F1BE"] = 1,
-        ["Mirage-F1BQ"] = 1,
-        ["Mirage-F1DDA"] = 1,
-        ["Su-25T"] = 1,
-        ["Yak-52"] = 1,
+        --["C-101EB"] = 1,
+        --["C-101CC"] = 1,
+        --["Christen Eagle II"] = 1,
+        --["L-39C"] = 1,
+        --["L-39ZA"] = 1,
+        --["MB-339A"] = 1,
+        --["MB-339APAN"] = 1,
+        --["Mirage-F1B"] = 1,
+        --["Mirage-F1BD"] = 1,
+        --["Mirage-F1BE"] = 1,
+        --["Mirage-F1BQ"] = 1,
+        --["Mirage-F1DDA"] = 1,
+        --["Su-25T"] = 1,
+        --["Yak-52"] = 1,
 
     --%%%%% WARBIRDS %%%%%
-        ["Bf-109K-4"] = 1,
-        ["Fw 190A8"] = 1,
-        ["FW-190D9"] = 1,
-        ["I-16"] = 1,
-        ["MosquitoFBMkVI"] = 1,
-        ["P-47D-30"] = 1,
-        ["P-47D-40"] = 1,
-        ["P-51D"] = 1,
-        ["P-51D-30-NA"] = 1,
-        ["SpitfireLFMkIX"] = 1,
-        ["SpitfireLFMkIXCW"] = 1,
-        ["TF-51D"] = 1,
+        --["Bf-109K-4"] = 1,
+        --["Fw 190A8"] = 1,
+        --["FW-190D9"] = 1,
+        --["I-16"] = 1,
+        --["MosquitoFBMkVI"] = 1,
+        --["P-47D-30"] = 1,
+        --["P-47D-40"] = 1,
+        --["P-51D"] = 1,
+        --["P-51D-30-NA"] = 1,
+        --["SpitfireLFMkIX"] = 1,
+        --["SpitfireLFMkIXCW"] = 1,
+        --["TF-51D"] = 1,
 }
 
 
@@ -554,52 +556,53 @@ ctld.unitActions = {
     -- ["SA342M"] = {crates=false, troops=true},
 
     --%%%%% MODS %%%%%
-        ["Bronco-OV-10A"] = {crates=true, troops=true},
+        --["Bronco-OV-10A"] = {crates=true, troops=true},
         ["Hercules"] = {crates=true, troops=true},
         ["SK-60"] = {crates=true, troops=true},
         ["UH-60L"] = {crates=true, troops=true},
-        ["T-45"] = {crates=true, troops=true},
+        --["T-45"] = {crates=true, troops=true},
 
     --%%%%% CHOPPERS %%%%%
-        ["Ka-50"] = {crates=true, troops=false},
-        ["Ka-50_3"] = {crates=true, troops=false},
+        --["Ka-50"] = {crates=true, troops=false},
+        --["Ka-50_3"] = {crates=true, troops=false},
         ["Mi-8MT"] = {crates=true, troops=true},
         ["Mi-24P"] = {crates=true, troops=true},
-        ["SA342L"] = {crates=false, troops=true},
-        ["SA342M"] = {crates=false, troops=true},
-        ["SA342Mistral"] = {crates=false, troops=true},
-        ["SA342Minigun"] = {crates=false, troops=true},
+        --["SA342L"] = {crates=false, troops=true},
+        --["SA342M"] = {crates=false, troops=true},
+        --["SA342Mistral"] = {crates=false, troops=true},
+        --["SA342Minigun"] = {crates=false, troops=true},
         ["UH-1H"] = {crates=true, troops=true},
+        ["CH-47Fbl1"] = {crates=true, troops=true},
 
     --%%%%% AIRCRAFTS %%%%%
-        ["C-101EB"] = {crates=true, troops=true},
-        ["C-101CC"] = {crates=true, troops=true},
-        ["Christen Eagle II"] = {crates=true, troops=true},
-        ["L-39C"] = {crates=true, troops=true},
-        ["L-39ZA"] = {crates=true, troops=true},
-        ["MB-339A"] = {crates=true, troops=true},
-        ["MB-339APAN"] = {crates=true, troops=true},
-        ["Mirage-F1B"] = {crates=true, troops=true},
-        ["Mirage-F1BD"] = {crates=true, troops=true},
-        ["Mirage-F1BE"] = {crates=true, troops=true},
-        ["Mirage-F1BQ"] = {crates=true, troops=true},
-        ["Mirage-F1DDA"] = {crates=true, troops=true},
-        ["Su-25T"]= {crates=true, troops=false},
-        ["Yak-52"] = {crates=true, troops=true},
+        --["C-101EB"] = {crates=true, troops=true},
+        --["C-101CC"] = {crates=true, troops=true},
+        --["Christen Eagle II"] = {crates=true, troops=true},
+        --["L-39C"] = {crates=true, troops=true},
+        --["L-39ZA"] = {crates=true, troops=true},
+        --["MB-339A"] = {crates=true, troops=true},
+        --["MB-339APAN"] = {crates=true, troops=true},
+        --["Mirage-F1B"] = {crates=true, troops=true},
+        --["Mirage-F1BD"] = {crates=true, troops=true},
+        --["Mirage-F1BE"] = {crates=true, troops=true},
+        --["Mirage-F1BQ"] = {crates=true, troops=true},
+        --["Mirage-F1DDA"] = {crates=true, troops=true},
+        --["Su-25T"]= {crates=true, troops=false},
+        --["Yak-52"] = {crates=true, troops=true},
 
     --%%%%% WARBIRDS %%%%%
-        ["Bf-109K-4"] = {crates=true, troops=false},
-        ["Fw 190A8"] = {crates=true, troops=false},
-        ["FW-190D9"] = {crates=true, troops=false},
-        ["I-16"] = {crates=true, troops=false},
-        ["MosquitoFBMkVI"] = {crates=true, troops=true},
-        ["P-47D-30"] = {crates=true, troops=false},
-        ["P-47D-40"] = {crates=true, troops=false},
-        ["P-51D"] = {crates=true, troops=false},
-        ["P-51D-30-NA"] = {crates=true, troops=false},
-        ["SpitfireLFMkIX"] = {crates=true, troops=false},
-        ["SpitfireLFMkIXCW"] = {crates=true, troops=false},
-        ["TF-51D"] = {crates=true, troops=true},
+        --["Bf-109K-4"] = {crates=true, troops=false},
+        --["Fw 190A8"] = {crates=true, troops=false},
+        --["FW-190D9"] = {crates=true, troops=false},
+        --["I-16"] = {crates=true, troops=false},
+        --["MosquitoFBMkVI"] = {crates=true, troops=true},
+        --["P-47D-30"] = {crates=true, troops=false},
+        --["P-47D-40"] = {crates=true, troops=false},
+        --["P-51D"] = {crates=true, troops=false},
+        --["P-51D-30-NA"] = {crates=true, troops=false},
+        --["SpitfireLFMkIX"] = {crates=true, troops=false},
+        --["SpitfireLFMkIXCW"] = {crates=true, troops=false},
+        --["TF-51D"] = {crates=true, troops=true},
 }
 
 -- ************** WEIGHT CALCULATIONS FOR INFANTRY GROUPS ******************
@@ -4647,6 +4650,7 @@ end
 
 -- are we in pickup zone
 function ctld.inPickupZone(_heli)
+    ctld.logDebug(string.format("ctld.inPickupZone(_heli=%s)", ctld.p(_heli)))
 
     if ctld.inAir(_heli) then
         return { inZone = false, limit = -1, index = -1 }
@@ -4655,6 +4659,7 @@ function ctld.inPickupZone(_heli)
     local _heliPoint = _heli:getPoint()
 
     for _i, _zoneDetails in pairs(ctld.pickupZones) do
+        ctld.logTrace(string.format("_zoneDetails=%s", ctld.p(_zoneDetails)))
 
         local _triggerZone = trigger.misc.getZone(_zoneDetails[1])
 
@@ -4675,6 +4680,7 @@ function ctld.inPickupZone(_heli)
             --get distance to center
 
             local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
+            ctld.logTrace(string.format("_dist=%s", ctld.p(_dist)))
             if _dist <= _triggerZone.radius then
                 local _heliCoalition = _heli:getCoalition()
                 if _zoneDetails[4] == 1 and (_zoneDetails[5] == _heliCoalition or _zoneDetails[5] == 0) then
@@ -6577,7 +6583,7 @@ function ctld.initialize(force)
 
     assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
 
-    if ctld.addPlayerAircraftByType == true then 
+    if ctld.addPlayerAircraftByType == true then
         ctld.AddPlayerAircraftByType()
     end
 
