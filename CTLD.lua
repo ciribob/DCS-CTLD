@@ -1360,7 +1360,7 @@ end
 -- e.g. ctld.spawnCrateAtZone("blue", 505,{x=1,y=2,z=3}) -- spawn a tow humvee at triggerzone1 for blue side at a specified point
 --
 --
-function ctld.spawnCrateAtPoint(_side, _weight,_point)
+function ctld.spawnCrateAtPoint(_side, _weight, _point,_hdg)
 
 
     local _crateType = ctld.crateLookupTable[tostring(_weight)]
@@ -1383,7 +1383,7 @@ function ctld.spawnCrateAtPoint(_side, _weight,_point)
 
     local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-    local _spawnedCrate = ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight,_side)
+    local _spawnedCrate = ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight, _side,_hdg)
 
 end
 
@@ -1535,10 +1535,12 @@ function ctld.getTransportUnit(_unitName)
     return nil
 end
 
-function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
+function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,_hdg)
 
     local _crate
     local _spawnedCrate
+
+    local hdg = _hdg or 0
 
     if ctld.staticBugWorkaround and ctld.slingLoad == false then
         local _groupId = ctld.getNextGroupId()
@@ -1555,7 +1557,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
             ["task"] = {},
         }
 
-        _group.units[1] = ctld.createUnit(_point.x , _point.z , 0, {type="UAZ-469",name=_name,unitId=_unitId})
+        _group.units[1] = ctld.createUnit(_point.x , _point.z , hdg, {type="UAZ-469",name=_name,unitId=_unitId})
 
         --switch to MIST
         _group.category = Group.Category.GROUND;
@@ -1581,7 +1583,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
         _crate["x"] = _point.x
         _crate["mass"] = _weight
         _crate["name"] = _name
-        _crate["heading"] = 0
+        _crate["heading"] = hdg
         _crate["country"] = _country
 
         mist.dynAddStatic(_crate)
@@ -3133,6 +3135,7 @@ function ctld.unpackCrates(_arguments)
                     -- single crate
                     local _cratePoint = _crate.crateUnit:getPoint()
                     local _crateName = _crate.crateUnit:getName()
+                    local _crateHdg = mist.getHeading(_crate.crateUnit, true)
 
                     -- ctld.spawnCrateStatic( _heli:getCoalition(),ctld.getNextUnitId(),{x=100,z=100},_crateName,100)
 
@@ -3141,7 +3144,7 @@ function ctld.unpackCrates(_arguments)
                         _crate.crateUnit:destroy()
                    -- end
 
-                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
+                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit }, { _crateHdg })
 
                     if _heli:getCoalition() == 1 then
                         ctld.spawnedCratesRED[_crateName] = nil
@@ -3318,6 +3321,7 @@ function ctld.dropSlingCrate(_args)
 
         local _name = string.format("%s #%i", _currentCrate.desc, _unitId)
 
+        local _hdg = mist.getHeading(_heli, true)
 
         local _heightDiff = ctld.heightDiff(_heli)
 
@@ -3340,7 +3344,7 @@ function ctld.dropSlingCrate(_args)
         --remove crate from cargo
         ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
         ctld.adaptWeightToCargo(_heli:getName())
-        local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight,_side)
+        local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight, _side,_hdg)
     end
 end
 
@@ -3713,6 +3717,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
             local _uniqueTypes = {} -- stores each unique part of system
             local _types = {}
             local _points = {}
+            local _hdgs = {}
 
             local _units = _nearestSystem.group:getUnits()
 
@@ -3726,6 +3731,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
 
                         table.insert(_points, _units[x]:getPoint())
                         table.insert(_types, _units[x]:getTypeName())
+                        table.insert(_hdgs, mist.getHeading(_units[x], true))
                     end
                 end
             end
@@ -3739,7 +3745,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
 
                 _nearestSystem.group:destroy()
 
-                local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
+                local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types, _hdgs)
 
                 ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup, _aaSystemTemplate)
 
@@ -3773,7 +3779,7 @@ function ctld.getAASystemDetails(_hawkGroup,_aaSystemTemplate)
     local _hawkDetails = {}
 
     for _, _unit in pairs(_units) do
-        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName(), system =_aaSystemTemplate})
+        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName(), system =_aaSystemTemplate, hdg = mist.getHeading(_unit, true) })
     end
 
     return _hawkDetails
@@ -3827,11 +3833,12 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
         end
     end
 
-    local _count = 0
+    local spawnDistance = 20 -- radius to spawn launchers in a circle relative to the crate location
     local _txt = ""
 
     local _posArray = {}
     local _typeArray = {}
+    local _hdgArray = {}
     for _name, _systemPart in pairs(_systemParts) do
 
         if _systemPart.found == false then
@@ -3839,6 +3846,8 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
         else
 
             local _launcherPart = ctld.getLauncherUnitFromAATemplate(_aaSystemTemplate)
+            local _point = _systemPart.crate.crateUnit:getPoint()
+            local _hdg = mist.getHeading(_systemPart.crate.crateUnit, true)
 
             --handle multiple launchers from one crate
             if (_name == "Hawk ln" and ctld.hawkLaunchers > 1)
@@ -3855,19 +3864,19 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
 
                     -- spawn in a circle around the crate
                     local _angle = math.pi * 2 * (_i - 1) / _launchers
-                    local _xOffset = math.cos(_angle) * 12
-                    local _yOffset = math.sin(_angle) * 12
+                    local _xOffset = math.cos(_angle) * spawnDistance
+                    local _yOffset = math.sin(_angle) * spawnDistance
 
-                    local _point = _systemPart.crate.crateUnit:getPoint()
+                    local lnPoint = { x = _point.x + _xOffset, y = _point.y, z = _point.z + _yOffset }
 
-                    _point = { x = _point.x + _xOffset, y = _point.y, z = _point.z + _yOffset }
-
-                    table.insert(_posArray, _point)
+                    table.insert(_posArray, lnPoint)
                     table.insert(_typeArray, _name)
+                    table.insert(_hdgArray, _hdg)
                 end
             else
-                table.insert(_posArray, _systemPart.crate.crateUnit:getPoint())
+                table.insert(_posArray, _point)
                 table.insert(_typeArray, _name)
+                table.insert(_hdgArray, _hdg)
             end
         end
     end
@@ -3904,7 +3913,7 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
         end
 
         -- HAWK / BUK READY!
-        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _posArray, _typeArray)
+        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _posArray, _typeArray, _hdgArray)
 
         ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_aaSystemTemplate)
 
@@ -3990,17 +3999,19 @@ function ctld.repairAASystem(_heli, _nearestCrate,_aaSystem)
 
         local _types = {}
         local _points = {}
+        local _hdgs = {}
 
         for _, _part in pairs(_oldHawk) do
             table.insert(_points, _part.point)
             table.insert(_types, _part.unit)
+            table.insert(_hdgs, _part.hdg)
         end
 
         --remove old system
         ctld.completeAASystems[_nearestHawk.group:getName()] = nil
         _nearestHawk.group:destroy()
 
-        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
+        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types, _hdgs)
 
         ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_aaSystem)
 
@@ -4048,6 +4059,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
     if #_nearbyMultiCrates == _nearestCrate.details.cratesRequired then
 
         local _point = _nearestCrate.crateUnit:getPoint()
+        local _crateHdg = mist.getHeading(_nearestCrate.crateUnit, true)
 
         -- destroy crates
         for _, _crate in pairs(_nearbyMultiCrates) do
@@ -4069,7 +4081,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
         end
 
 
-        local _spawnedGroup = ctld.spawnCrateGroup(_heli, { _point }, { _nearestCrate.details.unit })
+        local _spawnedGroup = ctld.spawnCrateGroup(_heli, { _point }, { _nearestCrate.details.unit }, { _crateHdg })
 
         ctld.processCallback({unit = _heli, crate =  _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})
 
@@ -4086,7 +4098,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 end
 
 
-function ctld.spawnCrateGroup(_heli, _positions, _types)
+function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
 
     local _id = ctld.getNextGroupId()
 
@@ -4105,22 +4117,15 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
         ["task"] = {},
     }
 
-    if #_positions == 1 then
+    local defaultHdg = 120 * math.pi / 180 -- radians = 120 degrees
+    for _i, _pos in ipairs(_positions) do
 
         local _unitId = ctld.getNextUnitId()
-        local _details = { type = _types[1], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[1], _unitId) }
-
-        _group.units[1] = ctld.createUnit(_positions[1].x + 5, _positions[1].z + 5, 120, _details)
-
-    else
-
-        for _i, _pos in ipairs(_positions) do
-
-            local _unitId = ctld.getNextUnitId()
-            local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
-
-            _group.units[_i] = ctld.createUnit(_pos.x + 5, _pos.z + 5, 120, _details)
+        local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
+        if _hdgs and _hdgs[_i] then
+            defaultHdg = _hdgs[_i]
         end
+        _group.units[_i] = ctld.createUnit(_pos.x + 5, _pos.z + 5, defaultHdg, _details)
     end
 
     --mist function
