@@ -5081,6 +5081,7 @@ function ctld.addF10MenuOptions()
         local status, error = pcall(function()
 
             local _unit = ctld.getTransportUnit(_unitName)
+            local _unitTypename = _unit:getTypeName()
 
             if _unit ~= nil then
 
@@ -5092,7 +5093,7 @@ function ctld.addF10MenuOptions()
 
                         local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
 
-                        local _unitActions = ctld.getUnitActions(_unit:getTypeName())
+                        local _unitActions = ctld.getUnitActions(_unitTypename)
 
                         missionCommands.addCommandForGroup(_groupId, "Check Cargo", _rootPath, ctld.checkTroopStatus, { _unitName })
 
@@ -5104,13 +5105,24 @@ function ctld.addF10MenuOptions()
 
 
                             -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
-                            local _transportLimit = ctld.getTransportLimit(_unit:getTypeName())
+                            local _transportLimit = ctld.getTransportLimit(_unitTypename)
+                            local itemNb = 0
+                            local menuPath = _troopCommandsPath
                             for _,_loadGroup in pairs(ctld.loadableGroups) do
                                 if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
-
+                                    
                                     -- check size & unit
                                     if _transportLimit >= _loadGroup.total then
-                                        missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _troopCommandsPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
+                                        -- add the menu item
+                                        itemNb = itemNb + 1
+                                        ctld.logTrace(string.format("itemNb=[%s] name=[%s]", ctld.p(itemNb), ctld.p(_loadGroup.name)))
+                                        if itemNb > 8 then -- page limit reached (first item is "unload")
+                                            ctld.logTrace(string.format("itemNb=[%s] page limit reached", ctld.p(itemNb)))
+                                            menuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", menuPath)
+                                            itemNb = 1
+                                        end
+                                        ctld.logTrace(string.format("menuPath=[%s]", ctld.p(menuPath)))
+                                        missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, menuPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
                                     end
                                 end
                             end
