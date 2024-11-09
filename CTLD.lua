@@ -18,6 +18,8 @@
         - davidp57 - https://github.com/veaf
         - Queton1-1 - https://github.com/Queton1-1
         - Proxy404 - https://github.com/Proxy404
+        - atcz - https://github.com/atcz
+        - marcos2221- https://github.com/marcos2221
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -26,7 +28,7 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "202401.01"
+ctld.Version = "202411.01"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -41,7 +43,7 @@ ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics woul
 
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
---> Allow units to CTLD by aircraft type and not by pilot name
+-- Allow units to CTLD by aircraft type and not by pilot name
 ctld.addPlayerAircraftByType = false
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
@@ -2828,6 +2830,7 @@ function ctld.checkHoverStatus()
 
             local _reset = true
             local _transUnit = ctld.getTransportUnit(_name)
+            if _transUnit then
             local _transUnitName = _transUnit:getName()
             local _transUnitTypename = _transUnit:getTypeName()
 
@@ -2904,6 +2907,7 @@ function ctld.checkHoverStatus()
                 ctld.hoverStatus[_name] = nil
             end
         end
+        end
     end)
 
     if (not _status) then
@@ -2968,7 +2972,7 @@ function ctld.loadNearbyCrate(_name)
               end
             end
           end
-          ctld.displayMessageToGroup(_transUnit, "You already have this cargo onboard\n".._currentCrate, 10,true)
+          ctld.displayMessageToGroup(_transUnit, "Hold is full! You already have this cargo onboard\n".._currentCrate, 10,true)
           
         end
     end
@@ -5184,10 +5188,8 @@ function ctld.addF10MenuOptions()
         local status, error = pcall(function()
 
             local _unit = ctld.getTransportUnit(_unitName)
+            if _unit then
             local _unitTypename = _unit:getTypeName()
-
-            if _unit ~= nil then
-
                 local _groupId = ctld.getGroupId(_unit)
 
                 if _groupId then
@@ -5321,13 +5323,11 @@ function ctld.addF10MenuOptions()
                         ctld.addedTo[tostring(_groupId)] = true
                     end
                 end
-            else
-                -- env.info(string.format("unit nil %s",_unitName))
             end
         end)
 
         if (not status) then
-            env.error(string.format("Error adding f10 to transport: %s", error), false)
+            ctld.logError(string.format("Error adding f10 to transport: %s", error))
         end
     end
 
