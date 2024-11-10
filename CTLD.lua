@@ -4463,9 +4463,9 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
     }
 
     local _hdg = 120 * math.pi / 180 -- radians = 120 degrees
-    local _spreadMin = 2
+    local _spreadMin = 5
     local _spreadMax = 5
-    local _spreadMult = 2
+    local _spreadMult = 1
     for _i, _pos in ipairs(_positions) do
 
         local _unitId = ctld.getNextUnitId()
