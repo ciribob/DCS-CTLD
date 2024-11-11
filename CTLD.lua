@@ -2857,12 +2857,12 @@ function ctld.checkHoverStatus()
                                 ctld.displayMessageToGroup(_transUnit, "Loaded  " .. _crate.details.desc .. " crate!", 10,true)
 
                                 --crates been moved once!
-                                ctld.crateMove[_crate] = nil
+                                ctld.crateMove[_crateUnitName] = nil
 
                                 if _transUnit:getCoalition() == 1 then
-                                    ctld.spawnedCratesRED[_crate] = nil
+                                    ctld.spawnedCratesRED[_crateUnitName] = nil
                                 else
-                                    ctld.spawnedCratesBLUE[_crate] = nil
+                                    ctld.spawnedCratesBLUE[_crateUnitName] = nil
                                 end
 
                                 _crate.crateUnit:destroy()
