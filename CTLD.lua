@@ -546,9 +546,14 @@ ctld.unitLoadLimits = {
         --["SpitfireLFMkIXCW"] = 1,
         --["TF-51D"] = 1,
 }
+
+-- Put the name of the Unit you want to enable loading multiple crates
+
 ctld.internalCargoLimits = {
-  ["Mi-8MT"] = 2,
-  ["CH-47Fbl1"] = 4,
+
+    -- Remove the -- below to turn on options
+    --["Mi-8MT"] = 2,
+    --["CH-47Fbl1"] = 4,
 }
 
 
@@ -2748,7 +2753,7 @@ function ctld.checkTransportStatus()
             --env.info("CTLD Transport Unit Dead event")
             ctld.inTransitTroops[_name] = nil
             ctld.inTransitFOBCrates[_name] = nil
-            ctld.inTransitSlingLoadCrates[_name] = {}
+            ctld.inTransitSlingLoadCrates[_name] = nil
         end
     end
 end
@@ -2763,6 +2768,8 @@ function ctld.getWeightOfCargo(unitName)
     local FOB_CRATE_WEIGHT = 800
     local _weight = 0
     local _description = ""
+
+    ctld.inTransitSlingLoadCrates[unitName] = ctld.inTransitSlingLoadCrates[unitName] or {}
 
     -- add troops weight
     if ctld.inTransitTroops[unitName] then
@@ -2789,31 +2796,16 @@ function ctld.getWeightOfCargo(unitName)
         _description = _description .. string.format("1 FOB Crate oboard (%s kg)\n", FOB_CRATE_WEIGHT)
     end
 
-    local _heli = ctld.getTransportUnit(unitName)
-    local _heliType = _heli:getTypeName()
-    local _cargoCapacity = 1
-    if ctld.inTransitSlingLoadCrates[unitName] == nil then
-        ctld.inTransitSlingLoadCrates[unitName] = {}
-    end
-    
-    if ctld.internalCargoLimits[_heliType] then
-      _cargoCapacity = ctld.internalCargoLimits[_heliType]
-    end
-    
     -- add simulated slingload crates weight
-     for i = 1, _cargoCapacity, 1 do
+    for i = 1, #ctld.inTransitSlingLoadCrates[unitName] do
         local _crate = ctld.inTransitSlingLoadCrates[unitName][i]
-        if _crate ~= nil and _crate.simulatedSlingload then
-          _weight = _weight + _crate.weight
-          if i > 1 then
-            _description = _description  .. "\n"
-          end
-          _description = _description .. string.format("%s crate onboard (%s kg)", _crate.desc, _crate.weight)
+        if _crate and _crate.simulatedSlingload then
+            _weight = _weight + _crate.weight
+            _description = _description .. string.format("%s crate onboard (%s kg)\n", _crate.desc, _crate.weight)
         end
-      end
-
+    end
     if _description ~= "" then
-        _description = _description .. string.format("\nTotal weight of cargo : %s kg\n", _weight)
+        _description = _description .. string.format("Total weight of cargo : %s kg\n", _weight)
     else
         _description = "No cargo."
     end
@@ -2830,20 +2822,12 @@ function ctld.checkHoverStatus()
 
             local _reset = true
             local _transUnit = ctld.getTransportUnit(_name)
-            if _transUnit then
-            local _transUnitName = _transUnit:getName()
-            local _transUnitTypename = _transUnit:getTypeName()
-
-            if ctld.inTransitSlingLoadCrates[_transUnitName] == nil then
-                ctld.inTransitSlingLoadCrates[_transUnitName] = {}
-            end
-            local _cargoCapacity = 1
-            if ctld.internalCargoLimits[_transUnitTypename] then
-              _cargoCapacity = ctld.internalCargoLimits[_transUnitTypename]
-            end
+            local _transUnitTypeName = _transUnit and _transUnit:getTypeName()
+            local _cargoCapacity = ctld.internalCargoLimits[_transUnitTypeName] or 1
+            ctld.inTransitSlingLoadCrates[_name] = ctld.inTransitSlingLoadCrates[_name] or {}
 
             --only check transports that are hovering and not planes
-           if _transUnit ~= nil and #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity == nil and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false then
+            if _transUnit ~= nil and #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false then
 
 
                 local _crates = ctld.getCratesAndDistance(_transUnit)
@@ -2856,29 +2840,29 @@ function ctld.checkHoverStatus()
                         local _height = _transUnit:getPoint().y - _crate.crateUnit:getPoint().y
                         if _height > ctld.minimumHoverHeight and _height <= ctld.maximumHoverHeight then
 
-                            local _time = ctld.hoverStatus[_transUnitName]
+                            local _time = ctld.hoverStatus[_name]
 
                             if _time == nil then
-                                ctld.hoverStatus[_transUnitName] = ctld.hoverTime
+                                ctld.hoverStatus[_name] = ctld.hoverTime
                                 _time = ctld.hoverTime
                             else
-                                _time = ctld.hoverStatus[_transUnitName] - 1
-                                ctld.hoverStatus[_transUnitName] = _time
+                                _time = ctld.hoverStatus[_name] - 1
+                                ctld.hoverStatus[_name] = _time
                             end
 
                             if _time > 0 then
                                 ctld.displayMessageToGroup(_transUnit, "Hovering above " .. _crate.details.desc .. " crate. \n\nHold hover for " .. _time .. " seconds! \n\nIf the countdown stops you're too far away!", 10,true)
                             else
-                                ctld.hoverStatus[_transUnitName] = nil
+                                ctld.hoverStatus[_name] = nil
                                 ctld.displayMessageToGroup(_transUnit, "Loaded  " .. _crate.details.desc .. " crate!", 10,true)
 
                                 --crates been moved once!
-                                ctld.crateMove[_crateUnitName] = nil
+                                ctld.crateMove[_crate] = nil
 
                                 if _transUnit:getCoalition() == 1 then
-                                    ctld.spawnedCratesRED[_crateUnitName] = nil
+                                    ctld.spawnedCratesRED[_crate] = nil
                                 else
-                                    ctld.spawnedCratesBLUE[_crateUnitName] = nil
+                                    ctld.spawnedCratesBLUE[_crate] = nil
                                 end
 
                                 _crate.crateUnit:destroy()
@@ -2907,7 +2891,6 @@ function ctld.checkHoverStatus()
                 ctld.hoverStatus[_name] = nil
             end
         end
-        end
     end)
 
     if (not _status) then
@@ -2919,20 +2902,16 @@ function ctld.loadNearbyCrate(_name)
     local _transUnit = ctld.getTransportUnit(_name)
 
     if _transUnit ~= nil  then
-      local _crateCapacity = 1
-      if ctld.internalCargoLimits[_transUnit:getTypeName()] then
-        _crateCapacity = ctld.internalCargoLimits[_transUnit:getTypeName()]
-      end      
-      
-      if ctld.inAir(_transUnit) then
-          ctld.displayMessageToGroup(_transUnit, "You must land before you can load a crate!", 10,true)
-          return
-      end
-        if ctld.inTransitSlingLoadCrates[_transUnit:getName()] == nil then
-          ctld.inTransitSlingLoadCrates[_transUnit:getName()] = {}
+
+        local _cargoCapacity = ctld.internalCargoLimits[_transUnit:getTypeName()] or 1
+        ctld.inTransitSlingLoadCrates[_name] = ctld.inTransitSlingLoadCrates[_name] or {}
+
+        if ctld.inAir(_transUnit) then
+            ctld.displayMessageToGroup(_transUnit, "You must land before you can load a crate!", 10,true)
+            return
         end
 
-        if #ctld.inTransitSlingLoadCrates[_name] < _crateCapacity then
+        if #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity then
             local _crates = ctld.getCratesAndDistance(_transUnit)
 
             for _, _crate in pairs(_crates) do
@@ -2961,19 +2940,12 @@ function ctld.loadNearbyCrate(_name)
             ctld.displayMessageToGroup(_transUnit, "No Crates within 50m to load!", 10,true)
 
         else
-            -- crate onboard
-          local _currentCrate = ""
-          for i = 1, _crateCapacity, 1 do
-            if ctld.inTransitSlingLoadCrates[_name][i] ~= nil then
-             if i == 1 then 
-                _currentCrate = ctld.inTransitSlingLoadCrates[_name][i].desc
-              else
-                _currentCrate = _currentCrate .. "\n" .. ctld.inTransitSlingLoadCrates[_name][i].desc
-              end
+            -- Max crates onboard
+            local outputMsg = "Maximum number of crates are on board!"
+            for i = 1, _cargoCapacity do
+                outputMsg = outputMsg .. "\n" .. ctld.inTransitSlingLoadCrates[_name][i].desc
             end
-          end
-          ctld.displayMessageToGroup(_transUnit, "Hold is full! You already have this cargo onboard\n".._currentCrate, 10,true)
-          
+            ctld.displayMessageToGroup(_transUnit, outputMsg, 10,true)
         end
     end
 
@@ -3552,18 +3524,15 @@ end
 
 --unloads the sling crate when the helicopter is on the ground or between 4.5 - 10 meters
 function ctld.dropSlingCrate(_args)
-    local _unitname = _args[1]
-    local _heli = ctld.getTransportUnit(_unitname)
+    local _unitName = _args[1]
+    local _heli = ctld.getTransportUnit(_unitName)
+    ctld.inTransitSlingLoadCrates[_unitName] = ctld.inTransitSlingLoadCrates[_unitName] or {}
 
     if _heli == nil then
         return -- no heli!
     end
 
-    if ctld.inTransitSlingLoadCrates[_unitname] == nil then
-        ctld.inTransitSlingLoadCrates[_unitname] = {}
-    end
-
-    local _currentCrate = ctld.inTransitSlingLoadCrates[_unitname][#ctld.inTransitSlingLoadCrates[_unitname]]
+    local _currentCrate = ctld.inTransitSlingLoadCrates[_unitName][#ctld.inTransitSlingLoadCrates[_unitName]]
 
     if _currentCrate == nil then
         if ctld.hoverPickup and ctld.loadCrateFromMenu then
@@ -3589,14 +3558,16 @@ function ctld.dropSlingCrate(_args)
             _point = ctld.getPointAt12Oclock(_heli, 30)
         elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
             ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely dropped below you", 10)
-        else -- _heightDiff > 40.0
+        else -- _heightDiff > 40.0, destroy crate
+            table.remove(ctld.inTransitSlingLoadCrates[_unitName],#ctld.inTransitSlingLoadCrates[_unitName])                                                                
+            ctld.adaptWeightToCargo(_unitName)
             ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
             return
         end
 
         --remove crate from cargo
-        table.remove(ctld.inTransitSlingLoadCrates[_unitname],#ctld.inTransitSlingLoadCrates[_unitname])
-        ctld.adaptWeightToCargo(_heli:getName())
+        table.remove(ctld.inTransitSlingLoadCrates[_unitName],#ctld.inTransitSlingLoadCrates[_unitName])
+        ctld.adaptWeightToCargo(_unitName)
         local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight, _side,_hdg)
     end
 end
