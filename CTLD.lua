@@ -1634,6 +1634,8 @@ ctld.AASystemTemplate = {
             {name = "Patriot ECS", desc = "Patriot Control Unit"},
             {name = "Patriot str", desc = "Patriot Search and Track Radar", amount = 2},
             {name = "Patriot AMG", desc = "Patriot AMG DL relay", NoCrate = true},
+            --{name = "Patriot cp", desc = "Patriot ICC", NoCrate = true},
+            --{name = "Patriot EPP", desc = "Patriot EPP", NoCrate = true},
         },
         repair = "Patriot Repair",
     },
@@ -4085,7 +4087,7 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
                 local crateUnit = _nearbyCrate.crateUnit
                 table.insert(_systemParts[_name].crates, _nearbyCrate)
                 table.insert(_cratePositions[_name], crateUnit:getPoint())
-                table.insert(_crateHdg[_name], mist.getHeading(crateUnit))
+                table.insert(_crateHdg[_name], mist.getHeading(crateUnit, true))
             end
         end
     end
