@@ -152,6 +152,8 @@ ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE f
 ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 
+ctld.JTAC_smokeMarginOfError = 50 -- error that the JTAC is allowed to make when popping a smoke (in meters)
+
 ctld.JTAC_smokeOffset_x = 0.0 -- distance in the X direction from target to smoke (meters)
 ctld.JTAC_smokeOffset_y = 2.0 -- distance in the Y direction from target to smoke (meters)
 ctld.JTAC_smokeOffset_z = 0.0 -- distance in the z direction from target to smoke (meters)
@@ -5991,9 +5993,8 @@ function ctld.createSmokeMarker(_enemyUnit, _colour)
     --recreate in 5 mins
     ctld.jtacSmokeMarks[_enemyUnit:getName()] = timer.getTime() + 300.0
 
-    -- move smoke 2 meters above target for ease
     local _enemyPoint = _enemyUnit:getPoint()
-    trigger.action.smoke({ x = _enemyPoint.x + ctld.JTAC_smokeOffset_x, y = _enemyPoint.y + ctld.JTAC_smokeOffset_y, z = _enemyPoint.z + ctld.JTAC_smokeOffset_z }, _colour)
+    trigger.action.smoke({ x = _enemyPoint.x + math.random(0, ctld.JTAC_smokeMarginOfError) + ctld.JTAC_smokeOffset_x, y = _enemyPoint.y + ctld.JTAC_smokeOffset_y, z = _enemyPoint.z + math.random(0, ctld.JTAC_smokeMarginOfError) + ctld.JTAC_smokeOffset_z }, _colour)
 end
 
 function ctld.cancelLase(_jtacGroupName)
