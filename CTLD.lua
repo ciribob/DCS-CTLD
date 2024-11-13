@@ -1793,12 +1793,11 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
 
         if ctld.slingLoad then
             _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_sling)
-            _crate["canCargo"] = true
         else
             _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_load)
-            _crate["canCargo"] = false
         end
-
+        
+        _crate["canCargo"] = true
         _crate["y"] = _point.z
         _crate["x"] = _point.x
         _crate["mass"] = _weight
@@ -1930,8 +1929,6 @@ function ctld.spawnCrate(_arguments)
                 end
             end
 
-            local _position = _heli:getPosition()
-
             -- check crate spam
             if _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] > timer.getTime() then
 
@@ -1954,7 +1951,7 @@ function ctld.spawnCrate(_arguments)
 
             local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-            local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight,_side)
+            ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight,_side)
 
             -- add to move table
             ctld.crateMove[_name] = _name
@@ -5254,14 +5251,14 @@ function ctld.addF10MenuOptions()
 
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
                             if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
-                                if  ctld.slingLoad == false then
+                                if  ctld.loadCrateFromMenu then
                                     missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
                             end
 
                             missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
 
-                            if ctld.slingLoad == false then
+                            if ctld.loadCrateFromMenu or ctld.hoverPickup then
                                 missionCommands.addCommandForGroup(_groupId, "Drop Crate", _crateCommands, ctld.dropSlingCrate, { _unitName })
                             end
 
@@ -7120,7 +7117,7 @@ function ctld.initialize(force)
         timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
         timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
 
-        if ctld.enableCrates == true and ctld.slingLoad == false and ctld.hoverPickup == true then
+        if ctld.enableCrates == true and ctld.hoverPickup == true then
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
 
