@@ -5224,11 +5224,11 @@ function ctld.addF10MenuOptions()
 
                             if ctld.unitCanCarryVehicles(_unit) == false then
 
-                                -- local _cratePath = missionCommands.addSubMenuForGroup(_groupId, "Spawn Crate", _rootPath)
+                                local _cratePath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Crates", _rootPath)
                                 -- add menu for spawning crates
                                 for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
 
-                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _rootPath)
+                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratePath)
                                     for _, _crate in pairs(_crates) do
 
                                         if ctld.isJTACUnitType(_crate.unit) == false
