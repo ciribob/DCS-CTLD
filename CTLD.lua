@@ -817,60 +817,6 @@ ctld.jtacUnitTypes = {
 -- **************** Mission Editor Functions *********************
 -- ***************************************************************
 
-function ctld.AddPlayerAircraftByType()
-
-    ctld.logTrace("ctld.AddPlayerAircraftByType()")
-
-    for _, _countries in pairs(mist.DBs.units) do
-        for _, _categories in pairs(_countries) do
-            for _category, _groups in pairs(_categories) do
-
-                if type(_groups) == "table" and _category ~= nil and (_category == "helicopter" or _category == "plane") then
-
-                    if _groups ~= nil then
-
-                        for _,_group in pairs(_groups) do
-
-                            if _group ~= nil and _group.units ~= nil then
-
-                                for _,_unit in pairs(_group.units) do
-
-                                    if _unit ~= nil then
-                                        local playerTypeName = _unit.type
-                                        local playerUnitName = _unit.unitName
-
-                                        ctld.logTrace("Unit : " .. ctld.p(_unit))
-                                        ctld.logDebug("Has name : " .. playerUnitName .. " and type : " .. playerTypeName)
-
-                local notFound = true
-
-                for _,transportPilotName in pairs(ctld.transportPilotNames) do
-                    if transportPilotName == playerUnitName then
-
-                                                ctld.logDebug("Unit is already a transport pilot, skipping...")
-                        notFound = false
-                        break
-                    end
-                end
-
-                if notFound then
-                    for _,aircraftType in pairs(ctld.aircraftTypeTable) do
-                        if aircraftType == playerTypeName then
-                                                    ctld.logDebug("Adding unit as transport pilot...")
-                            table.insert(ctld.transportPilotNames, playerUnitName)
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
 -----------------------------------------------------------------
 -- Spawn group at a trigger and set them as extractable. Usage:
 -- ctld.spawnGroupAtTrigger("groupside", number, "triggerName", radius)
@@ -1706,22 +1652,58 @@ function ctld.p(o, level)
     return text
 end
 
-function ctld.logError(message)
+function ctld.formatText(text, ...)
+    if not text then
+        return ""
+    end
+    if type(text) ~= 'string' then
+        text = ctld.p(text)
+    else
+        local args = ...
+        if args and args.n and args.n > 0 then
+            local pArgs = {}
+            for i=1,args.n do
+                pArgs[i] = ctld.p(args[i])
+            end
+                text = text:format(unpack(pArgs))
+            end
+        end
+    local fName = nil
+    local cLine = nil
+    if debug and debug.getinfo then
+        local dInfo = debug.getinfo(3)
+        fName = dInfo.name
+        cLine = dInfo.currentline
+    end
+    if fName and cLine then
+        return fName .. '|' .. cLine .. ': ' .. text
+    elseif cLine then
+        return cLine .. ': ' .. text
+    else
+        return ' ' .. text
+    end
+end
+
+function ctld.logError(message, ...)
+    message = ctld.formatText(message, arg)
     env.info(" E - " .. ctld.Id .. message)
 end
 
-function ctld.logInfo(message)
+function ctld.logInfo(message, ...)
+    message = ctld.formatText(message, arg)
     env.info(" I - " .. ctld.Id .. message)
 end
 
-function ctld.logDebug(message)
+function ctld.logDebug(message, ...)
     if message and ctld.Debug then
+        message = ctld.formatText(message, arg)
         env.info(" D - " .. ctld.Id .. message)
     end
 end
 
-function ctld.logTrace(message)
+function ctld.logTrace(message, ...)
     if message and ctld.Trace then
+        message = ctld.formatText(message, arg)
         env.info(" T - " .. ctld.Id .. message)
     end
 end
@@ -5145,18 +5127,14 @@ function ctld.getUnitActions(_unitType)
 
 end
 
--- Adds menuitem to all heli units that are active
-function ctld.addF10MenuOptions()
-    -- Loop through all Heli units
+-- Adds menuitem to a human unit
+function ctld.addTransportF10MenuOptions(_unitName)
+    ctld.logDebug("ctld.addTransportF10MenuOptions(_unitName=[%s])", ctld.p(_unitName))
 
-    timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 10)
+    local status, error = pcall(function()
 
-    for _, _unitName in pairs(ctld.transportPilotNames) do
-
-        local status, error = pcall(function()
-
-            local _unit = ctld.getTransportUnit(_unitName)
-            if _unit then
+        local _unit = ctld.getTransportUnit(_unitName)
+        if _unit then
             local _unitTypename = _unit:getTypeName()
                 local _groupId = ctld.getGroupId(_unit)
 
@@ -5182,25 +5160,22 @@ function ctld.addF10MenuOptions()
                             local itemNb = 0
                             local menuPath = _troopCommandsPath
                             for _,_loadGroup in pairs(ctld.loadableGroups) do
-                                if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
-                                    
-                                    -- check size & unit
-                                    if _transportLimit >= _loadGroup.total then
-                                        -- add the menu item
-                                        itemNb = itemNb + 1
-                                        ctld.logTrace(string.format("itemNb=[%s] name=[%s]", ctld.p(itemNb), ctld.p(_loadGroup.name)))
-                                        if itemNb > 8 then -- page limit reached (first item is "unload")
-                                            ctld.logTrace(string.format("itemNb=[%s] page limit reached", ctld.p(itemNb)))
-                                            menuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", menuPath)
-                                            itemNb = 1
-                                        end
-                                        ctld.logTrace(string.format("menuPath=[%s]", ctld.p(menuPath)))
-                                        missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, menuPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
+                            if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
+                                
+                                -- check size & unit
+                                if _transportLimit >= _loadGroup.total then
+                                    -- add the menu item
+                                    itemNb = itemNb + 1
+                                    if itemNb > 8 then -- page limit reached (first item is "unload")
+                                        menuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", menuPath)
+                                        itemNb = 1
                                     end
+                                    missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, menuPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
                                 end
                             end
+                        end
 
-                            if ctld.unitCanCarryVehicles(_unit) then
+                        if ctld.unitCanCarryVehicles(_unit) then
 
                                 local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Transport", _rootPath)
 
@@ -5294,11 +5269,17 @@ function ctld.addF10MenuOptions()
             end
         end)
 
-        if (not status) then
-            ctld.logError(string.format("Error adding f10 to transport: %s", error))
-        end
+    if (not status) then
+        ctld.logError(string.format("Error adding f10 to transport: %s", error))
     end
+end
 
+function ctld.addOtherF10MenuOptions()
+    ctld.logDebug("ctld.addOtherF10MenuOptions")
+    
+    -- reschedule every 10 seconds
+    timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 10)
+    
     local status, error = pcall(function()
 
         -- now do any player controlled aircraft that ARENT transport units
@@ -5365,6 +5346,7 @@ function ctld.addJTACRadioCommand(_side)
                 
                 local newGroup = false
                 if ctld.jtacRadioAdded[tostring(_groupId)] == nil then
+                    ctld.logDebug("ctld.addJTACRadioCommand - adding JTAC radio menu for unit [%s]", ctld.p(_playerUnit:getName()))
                     newGroup = true
                     local JTACpath = missionCommands.addSubMenuForGroup(_groupId, ctld.jtacMenuName)
                     missionCommands.addCommandForGroup(_groupId, "JTAC Status", JTACpath, ctld.getJTACStatus, { _playerUnit:getName() })
@@ -6877,10 +6859,6 @@ function ctld.initialize(force)
 
     assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
 
-    if ctld.addPlayerAircraftByType == true then
-        ctld.AddPlayerAircraftByType()
-    end
-
     ctld.addedTo = {}
     ctld.spawnedCratesRED = {} -- use to store crates that have been spawned
     ctld.spawnedCratesBLUE = {} -- use to store crates that have been spawned
@@ -7114,7 +7092,7 @@ function ctld.initialize(force)
 
         timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
         timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
-        timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
+        timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 5)
 
         if ctld.enableCrates == true and ctld.hoverPickup == true then
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
@@ -7187,12 +7165,88 @@ function ctld.initialize(force)
     end
     env.info("END search for crates")
 
+    -- register event handler
+    ctld.logInfo("registering event handler")
+    world.addEventHandler(ctld.eventHandler)
+
+
     -- don't initialize more than once
     ctld.alreadyInitialized = true
 
     env.info("CTLD READY")
 end
 
+--- Handle world events.
+ctld.eventHandler = {}
+function ctld.eventHandler:onEvent(event)
+    if event == nil then
+        ctld.logError("Event handler was called with a nil event!")
+        return
+    end
+
+    -- check that we know the event
+    if not (
+        event.id == 15 -- S_EVENT_BIRTH"
+        or event.id == 20 -- S_EVENT_PLAYER_ENTER_UNIT
+        ) then
+        return
+    end
+
+    -- find the originator unit
+    local unitName = nil
+    if event.initiator ~= nil and event.initiator.getName then
+        unitName = event.initiator:getName()
+    end
+    if not unitName then 
+        ctld.logWarning("no unitname found in event %s", ctld.p(event))
+        return
+    end
+
+    if mist.DBs.humansByName[unitName] then -- it's a human unit
+        ctld.logDebug("caught event BIRTH for human unit [%s]", ctld.p(unitName))
+        local _unit = Unit.getByName(unitName)
+        if _unit ~= nil then
+            -- assign transport pilot
+            ctld.logTrace("_unit = %s", ctld.p(_unit))
+
+            local playerTypeName = _unit:getTypeName()
+            ctld.logTrace("playerTypeName = %s", ctld.p(playerTypeName))
+
+            local notFound = true
+
+            for _,transportPilotName in pairs(ctld.transportPilotNames) do
+                if transportPilotName == unitName then
+                    ctld.logDebug("Unit is already a transport pilot, skipping...")
+                    notFound = false
+                    break
+                end
+            end
+
+            if notFound then
+                -- Allow units to CTLD by aircraft type and not by pilot name
+                if ctld.addPlayerAircraftByType then
+                    for _,aircraftType in pairs(ctld.aircraftTypeTable) do
+                        if aircraftType == playerTypeName then
+                            -- add transport unit to the list
+                            table.insert(ctld.transportPilotNames, unitName)
+                            -- add transport radio menu
+                            ctld.addTransportF10MenuOptions(unitName)
+                            break
+                        end
+                    end
+                else
+                    for _, _unitName in pairs(ctld.transportPilotNames) do
+                        if _unitName == unitName then
+                            -- add transport radio menu
+                            ctld.addTransportF10MenuOptions(unitName)
+                            break
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
 
 -- initialize the random number generator to make it almost random
 math.random(); math.random(); math.random()
