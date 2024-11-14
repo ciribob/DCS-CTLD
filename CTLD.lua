@@ -7212,35 +7212,23 @@ function ctld.eventHandler:onEvent(event)
             local playerTypeName = _unit:getTypeName()
             ctld.logTrace("playerTypeName = %s", ctld.p(playerTypeName))
 
-            local notFound = true
-
-            for _,transportPilotName in pairs(ctld.transportPilotNames) do
-                if transportPilotName == unitName then
-                    ctld.logDebug("Unit is already a transport pilot, skipping...")
-                    notFound = false
-                    break
-                end
-            end
-
-            if notFound then
-                -- Allow units to CTLD by aircraft type and not by pilot name
-                if ctld.addPlayerAircraftByType then
-                    for _,aircraftType in pairs(ctld.aircraftTypeTable) do
-                        if aircraftType == playerTypeName then
-                            -- add transport unit to the list
-                            table.insert(ctld.transportPilotNames, unitName)
-                            -- add transport radio menu
-                            ctld.addTransportF10MenuOptions(unitName)
-                            break
-                        end
+            -- Allow units to CTLD by aircraft type and not by pilot name
+            if ctld.addPlayerAircraftByType then
+                for _,aircraftType in pairs(ctld.aircraftTypeTable) do
+                    if aircraftType == playerTypeName then
+                        -- add transport unit to the list
+                        table.insert(ctld.transportPilotNames, unitName)
+                        -- add transport radio menu
+                        ctld.addTransportF10MenuOptions(unitName)
+                        break
                     end
-                else
-                    for _, _unitName in pairs(ctld.transportPilotNames) do
-                        if _unitName == unitName then
-                            -- add transport radio menu
-                            ctld.addTransportF10MenuOptions(unitName)
-                            break
-                        end
+                end
+            else
+                for _, _unitName in pairs(ctld.transportPilotNames) do
+                    if _unitName == unitName then
+                        -- add transport radio menu
+                        ctld.addTransportF10MenuOptions(unitName)
+                        break
                     end
                 end
             end
