@@ -774,8 +774,7 @@ ctld.loadableGroups = {
  ctld.spawnableCratesModels = {
      ["load"] = {
          ["category"] = "Fortifications",
-         ["shape_name"] = "GeneratorF",
-         ["type"] = "GeneratorF",
+         ["type"] = "Cargo04",
          ["canCargo"] = false,
      },
      ["sling"] = {
@@ -785,9 +784,8 @@ ctld.loadableGroups = {
          ["canCargo"] = true
      },
      ["dynamic"] = {
-         ["category"] = "Cargos",
-         ["shape_name"] = "m117_cargo",
-		 ["type"] = "m117_cargo",
+        ["category"] = "Cargos",
+        ["type"] = "ammo_cargo",
          ["canCargo"] = true
      }
  }
@@ -1543,7 +1541,7 @@ function ctld.spawnCrateAtZone(_side, _weight,_zone)
 
     local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-    local _spawnedCrate = ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight,_side)
+    ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight, _side)
 
 end
 
@@ -1578,7 +1576,7 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point,_hdg)
 
     local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-    local _spawnedCrate = ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight, _side,_hdg)
+    ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight, _side, _hdg)
 
 end
 
@@ -1958,7 +1956,16 @@ function ctld.spawnCrate(_arguments)
 
             local _heli = ctld.getTransportUnit(_args[1])
 
+            local _model_type = nil
+
             local _point = ctld.getPointAt12Oclock(_heli, 30)
+            local _position = "12"
+            
+            if ctld.unitDynamicCargoCapable(_heli) then
+                _model_type = "dynamic"
+                _point = ctld.getPointAt6Oclock(_heli, 15)
+                _position = "6"
+            end
 
             local _unitId = ctld.getNextUnitId()
 
@@ -1966,18 +1973,12 @@ function ctld.spawnCrate(_arguments)
 
             local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-             local _model_type = nil
-
-             if ctld.unitDynamicCargoCapable(_heli) then
-                 _model_type = "dynamic"
-             end
- 
-             ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight, _side, _model_type)
+            ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight, _side, 0, _model_type)
 
             -- add to move table
             ctld.crateMove[_name] = _name
 
-            ctld.displayMessageToGroup(_heli, string.format("A %s crate weighing %s kg has been brought out and is at your 12 o'clock ", _crateType.desc, _crateType.weight), 20)
+            ctld.displayMessageToGroup(_heli, string.format("A %s crate weighing %s kg has been brought out and is at your %s o'clock ", _crateType.desc, _crateType.weight, _position), 20)
 
         else
             env.info("Couldn't find crate item to spawn")
@@ -1993,6 +1994,17 @@ function ctld.getPointAt12Oclock(_unit, _offset)
 
     local _position = _unit:getPosition()
     local _angle = math.atan2(_position.x.z, _position.x.x)
+    local _xOffset = math.cos(_angle) * _offset
+    local _yOffset = math.sin(_angle) * _offset
+
+    local _point = _unit:getPoint()
+    return { x = _point.x + _xOffset, z = _point.z + _yOffset, y = _point.y }
+end
+
+function ctld.getPointAt6Oclock(_unit, _offset)
+
+    local _position = _unit:getPosition()
+    local _angle = math.atan2(_position.x.z, _position.x.x) + math.pi
     local _xOffset = math.cos(_angle) * _offset
     local _yOffset = math.sin(_angle) * _offset
 
@@ -3253,7 +3265,7 @@ function ctld.getClosestCrate(_heli, _crates, _type)
     local _closetCrate = nil
     local _shortestDistance = -1
     local _distance = 0
-     local _minimumDistance = 5  -- prevents dynamic cargo crates from unpacking while in cargo hold
+    local _minimumDistance = 5  -- prevents dynamic cargo crates from unpacking while in cargo hold
 
     for _, _crate in pairs(_crates) do
 
@@ -3384,8 +3396,6 @@ function ctld.unpackCrates(_arguments)
                     local _cratePoint = _crate.crateUnit:getPoint()
                     local _crateName = _crate.crateUnit:getName()
                     local _crateHdg = mist.getHeading(_crate.crateUnit, true)
-
-                    -- ctld.spawnCrateStatic( _heli:getCoalition(),ctld.getNextUnitId(),{x=100,z=100},_crateName,100)
 
                     --remove crate
                   --  if ctld.slingLoad == false then
@@ -3587,7 +3597,7 @@ function ctld.dropSlingCrate(_args)
         --remove crate from cargo
         table.remove(ctld.inTransitSlingLoadCrates[_unitName],#ctld.inTransitSlingLoadCrates[_unitName])
         ctld.adaptWeightToCargo(_unitName)
-        local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight, _side,_hdg)
+        ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight, _side, _hdg)
     end
 end
 
@@ -5037,17 +5047,23 @@ function ctld.unitCanCarryVehicles(_unit)
 end
 
  function ctld.unitDynamicCargoCapable(_unit)
-
-     local _type = string.lower(_unit:getTypeName())
-
-     for _, _name in ipairs(ctld.dynamicCargoUnits) do
-         local _nameLower = string.lower(_name)
-         if string.find(_type, _nameLower, 1, true) then   --string.match does not work with patterns containing '-' as it is a magic character
-             return true
-         end
-     end
-
-     return false
+    local cache = {}
+    local _type = string.lower(_unit:getTypeName())
+    local result = cache[_type]
+    if result == nil then
+        result = false
+        ctld.logDebug("ctld.unitDynamicCargoCapable(_type=[%s])", ctld.p(_type))
+        for _, _name in ipairs(ctld.dynamicCargoUnits) do
+            local _nameLower = string.lower(_name)
+            if string.find(_type, _nameLower, 1, true) then   --string.match does not work with patterns containing '-' as it is a magic character
+                result = true
+                break
+            end
+        end
+        cache[_type] = result
+        ctld.logDebug("result=[%s]", ctld.p(result))
+    end
+    return result
  end
  
 function ctld.isJTACUnitType(_type)
@@ -6028,7 +6044,7 @@ function ctld.createSmokeMarker(_enemyUnit, _colour)
     ctld.jtacSmokeMarks[_enemyUnit:getName()] = timer.getTime() + 300.0
 
     local _enemyPoint = _enemyUnit:getPoint()
-    trigger.action.smoke({ x = _enemyPoint.x + math.random(0, ctld.JTAC_smokeMarginOfError) + ctld.JTAC_smokeOffset_x, y = _enemyPoint.y + ctld.JTAC_smokeOffset_y, z = _enemyPoint.z + math.random(0, ctld.JTAC_smokeMarginOfError) + ctld.JTAC_smokeOffset_z }, _colour)
+    trigger.action.smoke({ x = _enemyPoint.x + math.random(-ctld.JTAC_smokeMarginOfError, ctld.JTAC_smokeMarginOfError) + ctld.JTAC_smokeOffset_x, y = _enemyPoint.y + ctld.JTAC_smokeOffset_y, z = _enemyPoint.z + math.random(-ctld.JTAC_smokeMarginOfError, ctld.JTAC_smokeMarginOfError) + ctld.JTAC_smokeOffset_z }, _colour)
 end
 
 function ctld.cancelLase(_jtacGroupName)
