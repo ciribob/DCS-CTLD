@@ -94,7 +94,7 @@ ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a creat
 
 ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 
-ctld.crateWaitTime = 120 -- time in seconds to wait before you can spawn another crate
+ ctld.crateWaitTime = 40 -- time in seconds to wait before you can spawn another crate
 
 ctld.forceCrateToBeMoved = true -- a crate must be picked up at least once and moved before it can be unpacked. Helps to reduce crate spam
 
@@ -484,7 +484,15 @@ ctld.vehicleTransportEnabled = {
     "Hercules",
 }
 
-
+ -- ************** Units able to use DCS dynamic cargo system ******************
+ -- DCS (version) added the ability to load and unload cargo from aircraft.
+ -- Units listed here will spawn a cargo static that can be loaded with the standard DCS cargo system
+ -- We will also use this to make modifications to the menu and other checks and messages
+ ctld.dynamicCargoUnits = {
+     "CH-47Fbl1",
+ }
+ 
+ 
 -- ************** Maximum Units SETUP for UNITS ******************
 
 -- Put the name of the Unit you want to limit group sizes too
@@ -675,93 +683,115 @@ ctld.loadableGroups = {
 -- Weights must be unique as we use the weight to change the cargo to the correct unit
 -- when we unpack
 --
-ctld.spawnableCrates = {
-    -- name of the sub menu on F10 for spawning crates
-    ["Ground Forces"] = {
-        --crates you can spawn
-        -- weight in KG
-        -- Desc is the description on the F10 MENU
-        -- unit is the model name of the unit to spawn
-        -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
-        -- side is optional but 2 is BLUE and 1 is RED
-        -- dont use that option with the HAWK Crates
-        { weight = 500, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW", side = 2 },
-        { weight = 505, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
+ ctld.spawnableCrates = {
+     -- name of the sub menu on F10 for spawning crates
+     ["Combat Vehicles"] = {
+         --crates you can spawn
+         -- weight in KG
+         -- Desc is the description on the F10 MENU
+         -- unit is the model name of the unit to spawn
+         -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
+         -- side is optional but 2 is BLUE and 1 is RED
 
-        { weight = 510, desc = "BTR-D", unit = "BTR_D", side = 1 },
-        { weight = 515, desc = "BRDM-2", unit = "BRDM-2", side = 1 },
+         -- Some descriptions are filtered to determine if JTAC or not!
 
-        { weight = 520, desc = "HMMWV - JTAC", unit = "Hummer", side = 2, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
-        { weight = 525, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+         --- BLUE
+         { weight = 1000, desc = "Humvee - MG", unit = "M1043 HMMWV Armament", side = 2 },  --careful with the names as the script matches the desc to JTAC types
+         { weight = 1001, desc = "Humvee - TOW", unit = "M1045 HMMWV TOW", side = 2, cratesRequired = 2 },
+         { weight = 1002, desc = "Light Tank - MRAP", unit="MaxxPro_MRAP", side = 2, cratesRequired = 2 },
+         { weight = 1003, desc = "Med Tank - LAV-25", unit="LAV-25", side = 2, cratesRequired = 3 },
+         { weight = 1004, desc = "Heavy Tank - Abrams", unit="M1A2C_SEP_V3", side = 2, cratesRequired = 4 },
 
-        { weight = 100, desc = "2B11 Mortar", unit = "2B11 mortar" },
+         --- RED
+         { weight = 1005, desc = "BTR-D", unit = "BTR_D", side = 1 },
+         { weight = 1006, desc = "BRDM-2", unit = "BRDM-2", side = 1 },
+         -- need more redfor!
+     },
+     ["Support"] = {
+         --- BLUE
+         { weight = 1007, desc = "Hummer - JTAC", unit = "Hummer", side = 2, cratesRequired = 2 }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+         { weight = 1008, desc = "M-818 Ammo Truck", unit = "M 818", side = 2, cratesRequired = 2 },
 
-        { weight = 250, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
-        { weight = 255, desc = "M-109", unit = "M-109", side = 2, cratesRequired = 3 },
+         --- RED
+         { weight = 1009, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1 }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+         { weight = 1010, desc = "Ural-375 Ammo Truck", unit = "Ural-375", side = 1, cratesRequired = 2 },
 
-        { weight = 252, desc = "Ural-375 Ammo Truck", unit = "Ural-375", side = 1, cratesRequired = 2 },
-        { weight = 253, desc = "M-818 Ammo Truck", unit = "M 818", side = 2, cratesRequired = 2 },
+         --- Both
+         { weight = 1011, desc = "EWR Radar", unit="FPS-117", cratesRequired = 3 },
+         { weight = 1012, desc = "FOB Crate - Small", unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
 
-        { weight = 800, desc = "FOB Crate - Small", unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
-    },
-    ["AA short range"] = {
-        { weight = 50, desc = "Stinger", unit = "Soldier stinger", side = 2 },
-        { weight = 55, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
+     },
+     ["Artillery"] = {
+         --- BLUE
+         { weight = 1013, desc = "MLRS", unit = "MLRS", side=2, cratesRequired = 3 },
+         { weight = 1014, desc = "SpGH DANA", unit = "SpGH_Dana", side=2, cratesRequired = 3 },
+         { weight = 1015, desc = "T155 Firtina", unit = "T155_Firtina", side=2, cratesRequired = 3 },
+         { weight = 1016, desc = "Howitzer", unit = "M-109", side=2, cratesRequired = 3 },
 
-        { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
-        { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
-    },
-    ["AA mid range"] = {
-        -- HAWK System
-        { weight = 540, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
-        { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
-        { weight = 546, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
-        --{ weight = 547, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 }, -- Remove this if on 1.2
-        --{ weight = 548, desc = "HAWK CWAR", unit = "Hawk cwar" , side = 2 }, -- Remove this if on 2.5    
-        { weight = 549, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
-        -- End of HAWK
+         --- RED
+         { weight = 1017, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
 
-        -- KUB SYSTEM
-        { weight = 560, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
-        { weight = 565, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
-        { weight = 570, desc = "KUB Repair", unit = "KUB Repair", side = 1},
-        -- End of KUB
+     },
+     ["SAM short range"] = {
+         --- BLUE
+         { weight = 1018, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
 
-        -- BUK System
-        --        { weight = 575, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
-        --        { weight = 580, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
-        --        { weight = 585, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
-        --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
-        -- END of BUK
-    },
-    ["AA long range"] = {
-        -- Patriot System
-        { weight = 555, desc = "Patriot Launcher", unit = "Patriot ln", side = 2, cratesRequired = 2},
-        { weight = 556, desc = "Patriot Radar", unit = "Patriot str" , side = 2 },
-        { weight = 557, desc = "Patriot ECS", unit = "Patriot ECS", side = 2 },
-        -- { weight = 553, desc = "Patriot ICC", unit = "Patriot cp", side = 2 },
-        -- { weight = 554, desc = "Patriot EPP", unit = "Patriot EPP", side = 2 },
-        --{ weight = 558, desc = "Patriot AMG (optional)", unit = "Patriot AMG" , side = 2 },
-        { weight = 559, desc = "Patriot Repair", unit = "Patriot Repair" , side = 2 },
-        -- End of Patriot
+         --- RED
+         { weight = 1019, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
 
-        { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR", side = 1 }, -- cant be used by BLUE coalition
-    },
-}
+     },
+     ["SAM mid range"] = {
+         --- BLUE
+         -- HAWK System
+         { weight = 1020, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
+         { weight = 1021, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
+         { weight = 1022, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+         { weight = 1023, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 },
+         { weight = 1024, desc = "HAWK CWAR", unit = "Hawk cwar" , side = 2 },
+         { weight = 1025, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+         -- End of HAWK
 
---- 3D model that will be used to represent a loadable crate ; by default, a generator
-ctld.spawnableCratesModel_load = {
-    ["category"] = "Fortifications",
-    ["shape_name"] = "GeneratorF",
-    ["type"] = "GeneratorF"
-}
+         --- RED
+         -- KUB SYSTEM
+         { weight = 1026, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
+         { weight = 1027, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
+         { weight = 1028, desc = "KUB Repair", unit = "KUB Repair", side = 1},
+         -- End of KUB
 
---- 3D model that will be used to represent a slingable crate ; by default, a crate
-ctld.spawnableCratesModel_sling = {
-    ["category"] = "Cargos",
-    ["shape_name"] = "bw_container_cargo",
-    ["type"] = "container_cargo"
-}
+     },
+     ["SAM long range"] = {
+         --- BLUE
+         -- Patriot System
+         { weight = 1029, desc = "Patriot Launcher", unit = "Patriot ln", side = 2 },
+         { weight = 1030, desc = "Patriot Radar", unit = "Patriot str" , side = 2 },
+         { weight = 1031, desc = "Patriot ECS", unit = "Patriot ECS", side = 2 },
+         { weight = 1032, desc = "Patriot AMG (optional)", unit = "Patriot AMG" , side = 2 },
+         { weight = 1033, desc = "Patriot Repair", unit = "Patriot Repair" , side = 2 },
+         -- End of Patriot
+     },
+ }
+
+ ctld.spawnableCratesModels = {
+     ["load"] = {
+         ["category"] = "Fortifications",
+         ["shape_name"] = "GeneratorF",
+         ["type"] = "GeneratorF",
+         ["canCargo"] = false,
+     },
+     ["sling"] = {
+         ["category"] = "Cargos",
+         ["shape_name"] = "bw_container_cargo",
+         ["type"] = "container_cargo",
+         ["canCargo"] = true
+     },
+     ["dynamic"] = {
+         ["category"] = "Cargos",
+         ["shape_name"] = "m117_cargo",
+		 ["type"] = "m117_cargo",
+         ["canCargo"] = true
+     }
+ }
+ 
 
 --[[ Placeholder for different type of cargo containers. Let's say pipes and trunks, fuel for FOB building
     ["shape_name"] = "ab-212_cargo",
@@ -1739,7 +1769,7 @@ function ctld.getTransportUnit(_unitName)
     return nil
 end
 
-function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,_hdg)
+ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,  _side,_hdg, _model_type)
 
     local _crate
     local _spawnedCrate
@@ -1775,13 +1805,14 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _spawnedCrate = Unit.getByName(_name)
     else
 
-        if ctld.slingLoad then
-            _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_sling)
-        else
-            _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_load)
-        end
-        
-        _crate["canCargo"] = true
+         if _model_type ~= nil then
+             _crate = mist.utils.deepCopy(ctld.spawnableCratesModels[_model_type])
+         elseif ctld.slingLoad then
+             _crate = mist.utils.deepCopy(ctld.spawnableCratesModels["sling"])
+         else
+             _crate = mist.utils.deepCopy(ctld.spawnableCratesModels["load"])
+         end
+
         _crate["y"] = _point.z
         _crate["x"] = _point.x
         _crate["mass"] = _weight
@@ -1935,7 +1966,13 @@ function ctld.spawnCrate(_arguments)
 
             local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-            ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight,_side)
+             local _model_type = nil
+
+             if ctld.unitDynamicCargoCapable(_heli) then
+                 _model_type = "dynamic"
+             end
+ 
+             ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight, _side, _model_type)
 
             -- add to move table
             ctld.crateMove[_name] = _name
@@ -2179,9 +2216,9 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
 
         if _countOrTemplate.inf then
             if _side == 2 then
-                _troops = ctld.insertIntoTroopsArray("Soldier M4",_countOrTemplate.inf,_troops)
+                 _troops = ctld.insertIntoTroopsArray("Soldier M4 GRG",_countOrTemplate.inf,_troops)
             else
-                _troops = ctld.insertIntoTroopsArray("Soldier AK",_countOrTemplate.inf,_troops)
+                 _troops = ctld.insertIntoTroopsArray("Infantry AK",_countOrTemplate.inf,_troops)
             end
             _weight = _weight + getSoldiersWeight(_countOrTemplate.inf, ctld.RIFLE_WEIGHT)
         end
@@ -2207,9 +2244,9 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
 
         if _countOrTemplate.jtac then
             if _side == 2 then
-                _troops = ctld.insertIntoTroopsArray("Soldier M4",_countOrTemplate.jtac,_troops, "JTAC")
+                 _troops = ctld.insertIntoTroopsArray("Soldier M4 GRG",_countOrTemplate.jtac,_troops, "JTAC")
             else
-                _troops = ctld.insertIntoTroopsArray("Soldier AK",_countOrTemplate.jtac,_troops, "JTAC")
+                 _troops = ctld.insertIntoTroopsArray("Infantry AK",_countOrTemplate.jtac,_troops, "JTAC")
             end
             _hasJTAC = true
             _weight = _weight + getSoldiersWeight(_countOrTemplate.jtac, ctld.JTAC_WEIGHT + ctld.RIFLE_WEIGHT)
@@ -2218,7 +2255,7 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
     else
         for _i = 1, _countOrTemplate do
 
-            local _unitType = "Soldier AK"
+             local _unitType = "Infantry AK"
 
             if _side == 2 then
                 if _i <=2 then
@@ -2231,7 +2268,7 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
                     _unitType = "Soldier stinger"
                     _weight = _weight + getSoldiersWeight(1, ctld.MANPAD_WEIGHT)
                 else
-                    _unitType = "Soldier M4"
+                     _unitType = "Soldier M4 GRG"
                     _weight = _weight + getSoldiersWeight(1, ctld.RIFLE_WEIGHT)
                 end
             else
@@ -2808,7 +2845,7 @@ function ctld.checkHoverStatus()
             ctld.inTransitSlingLoadCrates[_name] = ctld.inTransitSlingLoadCrates[_name] or {}
 
             --only check transports that are hovering and not planes
-            if _transUnit ~= nil and #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false then
+             if _transUnit ~= nil and #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false and not ctld.unitDynamicCargoCapable(_transUnit) then
 
 
                 local _crates = ctld.getCratesAndDistance(_transUnit)
@@ -3216,13 +3253,14 @@ function ctld.getClosestCrate(_heli, _crates, _type)
     local _closetCrate = nil
     local _shortestDistance = -1
     local _distance = 0
+     local _minimumDistance = 5  -- prevents dynamic cargo crates from unpacking while in cargo hold
 
     for _, _crate in pairs(_crates) do
 
         if (_crate.details.unit == _type or _type == nil) then
             _distance = _crate.dist
 
-            if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
+             if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) and _distance > _minimumDistance then
                 _shortestDistance = _distance
                 _closetCrate = _crate
             end
@@ -3316,7 +3354,7 @@ function ctld.unpackCrates(_arguments)
 
             elseif _crate ~= nil and _crate.dist < 200 then
 
-                if ctld.forceCrateToBeMoved and ctld.crateMove[_crate.crateUnit:getName()] then
+                 if ctld.forceCrateToBeMoved and ctld.crateMove[_crate.crateUnit:getName()] and not ctld.unitDynamicCargoCapable(_heli) then
                     ctld.displayMessageToGroup(_heli,"Sorry you must move this crate before you unpack it!", 20)
                     return
                 end
@@ -3385,7 +3423,7 @@ function ctld.unpackCrates(_arguments)
 
             else
 
-                ctld.displayMessageToGroup(_heli, "No friendly crates close enough to unpack", 20)
+                 ctld.displayMessageToGroup(_heli, "No friendly crates close enough to unpack, or crate too close to aircraft.", 20)
             end
         end
     end, _arguments)
@@ -4379,7 +4417,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 
 
         local _spawnedGroup = ctld.spawnCrateGroup(_heli, { _point }, { _nearestCrate.details.unit }, { _crateHdg })
-
+        ctld.setGrpROE(_spawnedGroup)
         ctld.processCallback({unit = _heli, crate =  _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})
 
         local _txt = string.format("%s successfully deployed %s to the field using %d crates", ctld.getPlayerNameOrType(_heli), _nearestCrate.details.desc, #_nearbyMultiCrates)
@@ -4990,7 +5028,7 @@ function ctld.unitCanCarryVehicles(_unit)
 
     for _, _name in ipairs(ctld.vehicleTransportEnabled) do
         local _nameLower = string.lower(_name)
-        if string.match(_type, _nameLower) then
+         if string.find(_type, _nameLower, 1, true) then
             return true
         end
     end
@@ -4998,6 +5036,20 @@ function ctld.unitCanCarryVehicles(_unit)
     return false
 end
 
+ function ctld.unitDynamicCargoCapable(_unit)
+
+     local _type = string.lower(_unit:getTypeName())
+
+     for _, _name in ipairs(ctld.dynamicCargoUnits) do
+         local _nameLower = string.lower(_name)
+         if string.find(_type, _nameLower, 1, true) then   --string.match does not work with patterns containing '-' as it is a magic character
+             return true
+         end
+     end
+
+     return false
+ end
+ 
 function ctld.isJTACUnitType(_type)
 
     _type = string.lower(_type)
@@ -6592,6 +6644,21 @@ function ctld.setJTAC9Line(_args)
 end
 ctld.jtacSpecialOptions._9Line.setter = ctld.setJTAC9Line
 
+ function ctld.setGrpROE(_grp, _ROE)
+     if _ROE == nil then
+         _ROE = AI.Option.Ground.val.ROE.OPEN_FIRE
+     end
+
+     _grp = ctld.getAliveGroup(_grp)
+
+    if _grp ~= nil then
+         local _controller = _grp:getController();
+         Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
+         Controller.setOption(_controller, AI.Option.Ground.id.ROE, _ROE)
+         _controller:setTask(_grp)
+     end
+ end
+ 
 function ctld.isInfantry(_unit)
 
     local _typeName = _unit:getTypeName()
