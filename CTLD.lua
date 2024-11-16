@@ -43,7 +43,7 @@ ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics woul
 
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
--- Allow units to CTLD by aircraft type and not by pilot name
+-- Allow units to CTLD by aircraft type and not by pilot name - this is done everytime a player enters a new unit
 ctld.addPlayerAircraftByType = false
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
@@ -676,6 +676,15 @@ ctld.loadableGroups = {
     {name = "Mortar Squad", mortar = 6 },
     {name = "JTAC Group", inf = 4, jtac = 1 }, -- will make a loadable group with 4 infantry and a JTAC soldier for both coalitions
     {name = "Single JTAC", jtac = 1 }, -- will make a loadable group witha single JTAC soldier for both coalitions
+    {name = "2x - Standard Groups", inf = 12, mg = 4, at = 4 },
+    {name = "2x - Anti Air", inf = 4, aa = 6  },
+    {name = "2x - Anti Tank", inf = 4, at = 12  },
+    {name = "2x - Standard Groups + 2x Mortar", inf = 12, mg = 4, at = 4, mortar = 12 },
+    {name = "3x - Standard Groups", inf = 18, mg = 6, at = 6 },
+    {name = "3x - Anti Air", inf = 6, aa = 9  },
+    {name = "3x - Anti Tank", inf = 6, at = 18  },
+    {name = "3x - Mortar Squad", mortar = 18},
+    {name = "5x - Mortar Squad", mortar = 30},
     -- {name = "Mortar Squad Red", inf = 2, mortar = 5, side =1 }, --would make a group loadable by RED only
 }
 
