@@ -778,7 +778,7 @@ ctld.loadableGroups = {
          { weight = 1033, desc = "Patriot Repair", unit = "Patriot Repair" , side = 2 },
          -- End of Patriot
      },
- }
+}
 
  ctld.spawnableCratesModels = {
      ["load"] = {
@@ -5272,26 +5272,45 @@ function ctld.addTransportF10MenuOptions(_unitName)
                         if ctld.enableCrates and _unitActions.crates then
 
                             if ctld.unitCanCarryVehicles(_unit) == false then
+                            -- sort the crate categories alphabetically
+                            local crateCategories = {}
+                            for category, _ in pairs(ctld.spawnableCrates) do
+                                table.insert(crateCategories, category)
+                            end
+                            table.sort(crateCategories)
+                            ctld.logTrace("crateCategories = [%s]", ctld.p(crateCategories))
 
-                                local _cratePath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Crates", _rootPath)
                                 -- add menu for spawning crates
-                                for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
+                                local itemNbMain = 0
+                                local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Crates", _rootPath)
+                            for i = 1, #crateCategories do
+                                local _subMenuName = crateCategories[i]
+                                local _crates = ctld.spawnableCrates[_subMenuName]
 
-                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratePath)
+                                    -- add the submenu item
+                                    itemNbMain = itemNbMain + 1
+                                    if itemNbMain > 9 then -- page limit reached
+                                        _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", _cratesMenuPath)
+                                        itemNbMain = 1
+                                    end
+                                    local itemNbSubmenu = 0
+                                    local _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratesMenuPath)
                                     for _, _crate in pairs(_crates) do
-
                                         if ctld.isJTACUnitType(_crate.unit) == false
                                                 or (ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled) then
                                             if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
-
                                                 local _crateRadioMsg = _crate.desc
-
                                                 --add in the number of crates required to build something
                                                 if _crate.cratesRequired ~= nil and _crate.cratesRequired > 1 then
                                                     _crateRadioMsg = _crateRadioMsg.." (".._crate.cratesRequired..")"
                                                 end
-
-                                                missionCommands.addCommandForGroup(_groupId,_crateRadioMsg, _cratePath, ctld.spawnCrate, { _unitName, _crate.weight })
+                                                -- add the submenu item
+                                                itemNbSubmenu = itemNbSubmenu + 1
+                                                if itemNbSubmenu > 9 then -- page limit reached
+                                                    _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", _subMenuPath)
+                                                    itemNbSubmenu = 1
+                                                end
+                                                missionCommands.addCommandForGroup(_groupId,_crateRadioMsg, _subMenuPath, ctld.spawnCrate, { _unitName, _crate.weight })
                                             end
                                         end
                                     end
