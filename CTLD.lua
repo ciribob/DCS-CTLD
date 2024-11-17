@@ -5237,22 +5237,22 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             local itemNb = 0
                             local menuPath = _troopCommandsPath
                             for _,_loadGroup in pairs(ctld.loadableGroups) do
-                            if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
+                                if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
                                 
-                                -- check size & unit
-                                if _transportLimit >= _loadGroup.total then
-                                    -- add the menu item
-                                    itemNb = itemNb + 1
-                                    if itemNb > 8 then -- page limit reached (first item is "unload")
-                                        menuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", menuPath)
-                                        itemNb = 1
+                                    -- check size & unit
+                                    if _transportLimit >= _loadGroup.total then
+                                        -- add the menu item
+                                        itemNb = itemNb + 1
+                                        if itemNb > 8 then -- page limit reached (first item is "unload")
+                                            menuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", menuPath)
+                                            itemNb = 1
+                                        end
+                                        missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, menuPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
                                     end
-                                    missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, menuPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
                                 end
                             end
-                        end
 
-                        if ctld.unitCanCarryVehicles(_unit) then
+                            if ctld.unitCanCarryVehicles(_unit) then
 
                                 local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Transport", _rootPath)
 
