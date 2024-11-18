@@ -5293,10 +5293,10 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     end
                                 end
                             end
-                            for _, _menu in ipairs(menuEntries) do
+                            for _i, _menu in ipairs(menuEntries) do
                                 -- add the menu item
                                 itemNb = itemNb + 1
-                                if itemNb > 8 and #menuEntries > 9 then -- page limit reached (first item is "unload")
+                                if itemNb == 9 and _i < #menuEntries then -- page limit reached (first item is "unload")
                                     menuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", menuPath)
                                     itemNb = 1
                                 end
@@ -5334,13 +5334,13 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 -- add menu for spawning crates
                                 local itemNbMain = 0
                                 local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Crates", _rootPath)
-                                for i = 1, #crateCategories do
-                                    local _subMenuName = crateCategories[i]
+                                for _i, _category in ipairs(crateCategories) do
+                                    local _subMenuName = _category
                                     local _crates = ctld.spawnableCrates[_subMenuName]
 
                                     -- add the submenu item
                                     itemNbMain = itemNbMain + 1
-                                    if itemNbMain > 9 then -- page limit reached
+                                    if itemNbMain == 10 and _i < #crateCategories then -- page limit reached
                                         _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", _cratesMenuPath)
                                         itemNbMain = 1
                                     end
@@ -5360,10 +5360,10 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                             end
                                         end
                                     end
-                                    for _, _menu in ipairs(menuEntries) do
+                                    for _i, _menu in ipairs(menuEntries) do
                                         -- add the submenu item
                                         itemNbSubmenu = itemNbSubmenu + 1
-                                        if itemNbSubmenu > 9 and #menuEntries > 10 then -- page limit reached
+                                        if itemNbSubmenu == 10 and _i < #menuEntries then -- page limit reached
                                             _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", _subMenuPath)
                                             itemNbSubmenu = 1
                                         end
