@@ -1658,6 +1658,16 @@ ctld.AASystemTemplate = {
         repair = "Patriot Repair",
     },
     {
+        name = "NASAMS AA System",
+        count = 3,
+        parts = {
+            {name = "NASAMS_LN_C", desc = "NASAMS Launcher 120C", launcher = true},
+            {name = "NASAMS_Radar_MPQ64F1", desc = "NASAMS Search/Track Radar"},
+            {name = "NASAMS_Command_Post", desc = "NASAMS Command Post"},
+        },
+        repair = "NASAMS Repair",
+    },
+	{
         name = "BUK AA System",
         count = 3,
         parts = {
