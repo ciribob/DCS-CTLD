@@ -20,6 +20,12 @@
         - Proxy404 - https://github.com/Proxy404
         - atcz - https://github.com/atcz
         - marcos2221- https://github.com/marcos2221
+
+    Add [issues](https://github.com/ciribob/DCS-CTLD/issues) to the GitHub repository if you want to report a bug or suggest a new feature.
+
+    Contact Zip [on Discord](https://discordapp.com/users/421317390807203850) or [on Github](https://github.com/davidp57) if you need help or want to have a friendly chat.
+
+    Send beers (or kind messages) to Ciribob [on Discord](https://discordapp.com/users/204712384747536384), he's the reason we have CTLD ^^
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -28,7 +34,7 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "202411.02"
+ctld.Version = "202412.01"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
