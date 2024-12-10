@@ -28,7 +28,7 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "202411.01"
+ctld.Version = "202411.02"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -4494,13 +4494,14 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 
 
         local _spawnedGroup = ctld.spawnCrateGroup(_heli, { _point }, { _nearestCrate.details.unit }, { _crateHdg })
-        --ctld.setGrpROE(_spawnedGroup)
-        ctld.processCallback({unit = _heli, crate =  _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})
-
-        local _txt = string.format("%s successfully deployed %s to the field using %d crates", ctld.getPlayerNameOrType(_heli), _nearestCrate.details.desc, #_nearbyMultiCrates)
-
-        trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
-
+        if _spawnedGroup == nil then
+            ctld.logError("ctld.unpackMultiCrate group was not spawned - skipping setGrpROE")
+        else
+            ctld.setGrpROE(_spawnedGroup)
+            ctld.processCallback({unit = _heli, crate =  _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})    
+            local _txt = string.format("%s successfully deployed %s to the field using %d crates", ctld.getPlayerNameOrType(_heli), _nearestCrate.details.desc, #_nearbyMultiCrates)
+            trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
+        end
     else
 
         local _txt = string.format("Cannot build %s!\n\nIt requires %d crates and there are %d \n\nOr the crates are not within 300m of each other", _nearestCrate.details.desc, _nearestCrate.details.cratesRequired, #_nearbyMultiCrates)
@@ -6754,6 +6755,11 @@ end
 ctld.jtacSpecialOptions._9Line.setter = ctld.setJTAC9Line
 
 function ctld.setGrpROE(_grp, _ROE)
+    if _grp == nil then
+        ctld.logError("ctld.setGrpROE called with a nil group")
+        return
+    end
+
     if _ROE == nil then
         _ROE = AI.Option.Ground.val.ROE.OPEN_FIRE
     end
