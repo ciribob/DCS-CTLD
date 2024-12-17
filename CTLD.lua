@@ -5276,12 +5276,13 @@ function ctld.addTransportF10MenuOptions(_unitName)
     local status, error = pcall(function()
 
         local _unit = ctld.getTransportUnit(_unitName)
+        ctld.logTrace("_unit = %s", ctld.p(_unit))
         if _unit then
             local _unitTypename = _unit:getTypeName()
                 local _groupId = ctld.getGroupId(_unit)
 
                 if _groupId then
-
+                    ctld.logTrace("_groupId = %s", ctld.p(_groupId))
                     if ctld.addedTo[tostring(_groupId)] == nil then
 
                         local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
@@ -7365,6 +7366,7 @@ end
 --- Handle world events.
 ctld.eventHandler = {}
 function ctld.eventHandler:onEvent(event)
+    ctld.logTrace("ctld.eventHandler:onEvent(), event = %s", ctld.p(event))
     if event == nil then
         ctld.logError("Event handler was called with a nil event!")
         return
@@ -7382,6 +7384,7 @@ function ctld.eventHandler:onEvent(event)
     local unitName = nil
     if event.initiator ~= nil and event.initiator.getName then
         unitName = event.initiator:getName()
+        ctld.logTrace("unitName = %s", ctld.p(unitName))
     end
     if not unitName then 
         ctld.logWarning("no unitname found in event %s", ctld.p(event))
@@ -7402,6 +7405,7 @@ function ctld.eventHandler:onEvent(event)
             if ctld.addPlayerAircraftByType then
                 for _,aircraftType in pairs(ctld.aircraftTypeTable) do
                     if aircraftType == playerTypeName then
+                        ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
                         -- add transport unit to the list
                         table.insert(ctld.transportPilotNames, unitName)
                         -- add transport radio menu
@@ -7412,6 +7416,7 @@ function ctld.eventHandler:onEvent(event)
             else
                 for _, _unitName in pairs(ctld.transportPilotNames) do
                     if _unitName == unitName then
+                        ctld.logTrace("adding by transportPilotNames, unitName = %s", ctld.p(unitName))
                         -- add transport radio menu
                         ctld.addTransportF10MenuOptions(unitName)
                         break
