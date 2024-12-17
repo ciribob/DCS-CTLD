@@ -18,6 +18,14 @@
         - davidp57 - https://github.com/veaf
         - Queton1-1 - https://github.com/Queton1-1
         - Proxy404 - https://github.com/Proxy404
+        - atcz - https://github.com/atcz
+        - marcos2221- https://github.com/marcos2221
+
+    Add [issues](https://github.com/ciribob/DCS-CTLD/issues) to the GitHub repository if you want to report a bug or suggest a new feature.
+
+    Contact Zip [on Discord](https://discordapp.com/users/421317390807203850) or [on Github](https://github.com/davidp57) if you need help or want to have a friendly chat.
+
+    Send beers (or kind messages) to Ciribob [on Discord](https://discordapp.com/users/204712384747536384), he's the reason we have CTLD ^^
  ]]
 
 ctld = {} -- DONT REMOVE!
@@ -26,7 +34,7 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "202401.01"
+ctld.Version = "202412.01"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -40,6 +48,9 @@ ctld.alreadyInitialized = false -- if true, ctld.initialize() will not run
 ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics would cause a crash. If this happens again, set this to TRUE
 
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
+
+-- Allow units to CTLD by aircraft type and not by pilot name - this is done everytime a player enters a new unit
+ctld.addPlayerAircraftByType = false
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
 ctld.loadCrateFromMenu = false -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
@@ -73,9 +84,6 @@ ctld.vehiclesWeight = {
     ["M1043 HMMWV Armament"] = 2500
 }
 
-ctld.aaLaunchers = 3 -- controls how many launchers to add to the kub/buk when its spawned.
-ctld.hawkLaunchers = 8 -- controls how many launchers to add to the hawk when its spawned.
-
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 ctld.spawnStinger = false -- spawns a stinger / igla soldier with a group of 6 or more soldiers!
 
@@ -92,7 +100,7 @@ ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a creat
 
 ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
 
-ctld.crateWaitTime = 120 -- time in seconds to wait before you can spawn another crate
+ctld.crateWaitTime = 40 -- time in seconds to wait before you can spawn another crate
 
 ctld.forceCrateToBeMoved = true -- a crate must be picked up at least once and moved before it can be unpacked. Helps to reduce crate spam
 
@@ -115,6 +123,9 @@ ctld.hoverTime = 10 -- Time to hold hover above a crate for loading in seconds
 -- end of Simulated Sling load configuration
 
 -- AA SYSTEM CONFIG --
+
+ctld.aaLaunchers = 3 -- controls how many launchers to add to the AA systems when its spawned if no amount is specified in the template.
+
 -- Sets a limit on the number of active AA systems that can be built for RED.
 -- A system is counted as Active if its fully functional and has all parts
 -- If a system is partially destroyed, it no longer counts towards the total
@@ -124,6 +135,11 @@ ctld.hoverTime = 10 -- Time to hold hover above a crate for loading in seconds
 ctld.AASystemLimitRED = 20 -- Red side limit
 
 ctld.AASystemLimitBLUE = 20 -- Blue side limit
+
+-- Allows players to create systems using as many crates as they like
+-- Example : an amount X of patriot launcher crates allows for Y launchers to be deployed, if a player brings 2*X+Z crates (Z being lower then X), then deploys the patriot site, 2*Y launchers will be in the group and Z launcher crate will be left over
+
+ctld.AASystemCrateStacking = false
 
 --END AA SYSTEM CONFIG --
 
@@ -141,6 +157,8 @@ ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE f
 
 ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+
+ctld.JTAC_smokeMarginOfError = 50 -- error that the JTAC is allowed to make when popping a smoke (in meters)
 
 ctld.JTAC_smokeOffset_x = 0.0 -- distance in the X direction from target to smoke (meters)
 ctld.JTAC_smokeOffset_y = 2.0 -- distance in the Y direction from target to smoke (meters)
@@ -235,6 +253,57 @@ ctld.wpZones = {
 
 
 -- ******************** Transports names **********************
+-- If ctld.addPlayerAircraftByType = True, comment or uncomment lines to allow aircraft's type carry CTLD
+ctld.aircraftTypeTable = {
+    --%%%%% MODS %%%%%
+        --"Bronco-OV-10A",
+        --"Hercules",
+        --"SK-60",
+        --"UH-60L",
+        --"T-45",
+    
+    --%%%%% CHOPPERS %%%%%
+        --"Ka-50",
+        --"Ka-50_3",
+        "Mi-8MT",
+        "Mi-24P",
+        --"SA342L",
+        --"SA342M",
+        --"SA342Mistral",
+        --"SA342Minigun",
+        "UH-1H",
+        "CH-47Fbl1",
+    
+    --%%%%% AIRCRAFTS %%%%%
+        --"C-101EB",
+        --"C-101CC",
+        --"Christen Eagle II",
+        --"L-39C",
+        --"L-39ZA",
+        --"MB-339A",
+        --"MB-339APAN",
+        --"Mirage-F1B",
+        --"Mirage-F1BD",
+        --"Mirage-F1BE",
+        --"Mirage-F1BQ",
+        --"Mirage-F1DDA",
+        --"Su-25T",
+        --"Yak-52",
+
+    --%%%%% WARBIRDS %%%%%
+        --"Bf-109K-4",
+        --"Fw 190A8",
+        --"FW-190D9",
+        --"I-16",
+        --"MosquitoFBMkVI",
+        --"P-47D-30",
+        --"P-47D-40",
+        --"P-51D",
+        --"P-51D-30-NA",
+        --"SpitfireLFMkIX",
+        --"SpitfireLFMkIXCW",
+        --"TF-51D",
+}
 
 -- Use any of the predefined names or set your own ones
 ctld.transportPilotNames = {
@@ -421,6 +490,14 @@ ctld.vehicleTransportEnabled = {
     "Hercules",
 }
 
+-- ************** Units able to use DCS dynamic cargo system ******************
+-- DCS (version) added the ability to load and unload cargo from aircraft.
+-- Units listed here will spawn a cargo static that can be loaded with the standard DCS cargo system
+-- We will also use this to make modifications to the menu and other checks and messages
+ctld.dynamicCargoUnits = {
+    "CH-47Fbl1",
+}
+
 
 -- ************** Maximum Units SETUP for UNITS ******************
 
@@ -438,6 +515,61 @@ ctld.unitLoadLimits = {
     -- ["SA342L"] = 4,
     -- ["SA342M"] = 4,
 
+    --%%%%% MODS %%%%%
+        --["Bronco-OV-10A"] = 4,
+        ["Hercules"] = 30,
+        --["SK-60"] = 1,
+        ["UH-60L"] = 12,
+        --["T-45"] = 1,
+
+    --%%%%% CHOPPERS %%%%%
+        ["Mi-8MT"] = 16,
+        ["Mi-24P"] = 10,
+        --["SA342L"] = 4,
+        --["SA342M"] = 4,
+        --["SA342Mistral"] = 4,
+        --["SA342Minigun"] = 3,
+        ["UH-1H"] = 8,
+        ["CH-47Fbl1"] = 33,
+
+    --%%%%% AIRCRAFTS %%%%%
+        --["C-101EB"] = 1,
+        --["C-101CC"] = 1,
+        --["Christen Eagle II"] = 1,
+        --["L-39C"] = 1,
+        --["L-39ZA"] = 1,
+        --["MB-339A"] = 1,
+        --["MB-339APAN"] = 1,
+        --["Mirage-F1B"] = 1,
+        --["Mirage-F1BD"] = 1,
+        --["Mirage-F1BE"] = 1,
+        --["Mirage-F1BQ"] = 1,
+        --["Mirage-F1DDA"] = 1,
+        --["Su-25T"] = 1,
+        --["Yak-52"] = 1,
+
+    --%%%%% WARBIRDS %%%%%
+        --["Bf-109K-4"] = 1,
+        --["Fw 190A8"] = 1,
+        --["FW-190D9"] = 1,
+        --["I-16"] = 1,
+        --["MosquitoFBMkVI"] = 1,
+        --["P-47D-30"] = 1,
+        --["P-47D-40"] = 1,
+        --["P-51D"] = 1,
+        --["P-51D-30-NA"] = 1,
+        --["SpitfireLFMkIX"] = 1,
+        --["SpitfireLFMkIXCW"] = 1,
+        --["TF-51D"] = 1,
+}
+
+-- Put the name of the Unit you want to enable loading multiple crates
+
+ctld.internalCargoLimits = {
+
+    -- Remove the -- below to turn on options
+    --["Mi-8MT"] = 2,
+    --["CH-47Fbl1"] = 4,
 }
 
 
@@ -462,6 +594,54 @@ ctld.unitActions = {
     -- ["SA342L"] = {crates=false, troops=true},
     -- ["SA342M"] = {crates=false, troops=true},
 
+    --%%%%% MODS %%%%%
+        --["Bronco-OV-10A"] = {crates=true, troops=true},
+        ["Hercules"] = {crates=true, troops=true},
+        ["SK-60"] = {crates=true, troops=true},
+        ["UH-60L"] = {crates=true, troops=true},
+        --["T-45"] = {crates=true, troops=true},
+
+    --%%%%% CHOPPERS %%%%%
+        --["Ka-50"] = {crates=true, troops=false},
+        --["Ka-50_3"] = {crates=true, troops=false},
+        ["Mi-8MT"] = {crates=true, troops=true},
+        ["Mi-24P"] = {crates=true, troops=true},
+        --["SA342L"] = {crates=false, troops=true},
+        --["SA342M"] = {crates=false, troops=true},
+        --["SA342Mistral"] = {crates=false, troops=true},
+        --["SA342Minigun"] = {crates=false, troops=true},
+        ["UH-1H"] = {crates=true, troops=true},
+        ["CH-47Fbl1"] = {crates=true, troops=true},
+
+    --%%%%% AIRCRAFTS %%%%%
+        --["C-101EB"] = {crates=true, troops=true},
+        --["C-101CC"] = {crates=true, troops=true},
+        --["Christen Eagle II"] = {crates=true, troops=true},
+        --["L-39C"] = {crates=true, troops=true},
+        --["L-39ZA"] = {crates=true, troops=true},
+        --["MB-339A"] = {crates=true, troops=true},
+        --["MB-339APAN"] = {crates=true, troops=true},
+        --["Mirage-F1B"] = {crates=true, troops=true},
+        --["Mirage-F1BD"] = {crates=true, troops=true},
+        --["Mirage-F1BE"] = {crates=true, troops=true},
+        --["Mirage-F1BQ"] = {crates=true, troops=true},
+        --["Mirage-F1DDA"] = {crates=true, troops=true},
+        --["Su-25T"]= {crates=true, troops=false},
+        --["Yak-52"] = {crates=true, troops=true},
+
+    --%%%%% WARBIRDS %%%%%
+        --["Bf-109K-4"] = {crates=true, troops=false},
+        --["Fw 190A8"] = {crates=true, troops=false},
+        --["FW-190D9"] = {crates=true, troops=false},
+        --["I-16"] = {crates=true, troops=false},
+        --["MosquitoFBMkVI"] = {crates=true, troops=true},
+        --["P-47D-30"] = {crates=true, troops=false},
+        --["P-47D-40"] = {crates=true, troops=false},
+        --["P-51D"] = {crates=true, troops=false},
+        --["P-51D-30-NA"] = {crates=true, troops=false},
+        --["SpitfireLFMkIX"] = {crates=true, troops=false},
+        --["SpitfireLFMkIXCW"] = {crates=true, troops=false},
+        --["TF-51D"] = {crates=true, troops=true},
 }
 
 -- ************** WEIGHT CALCULATIONS FOR INFANTRY GROUPS ******************
@@ -502,6 +682,15 @@ ctld.loadableGroups = {
     {name = "Mortar Squad", mortar = 6 },
     {name = "JTAC Group", inf = 4, jtac = 1 }, -- will make a loadable group with 4 infantry and a JTAC soldier for both coalitions
     {name = "Single JTAC", jtac = 1 }, -- will make a loadable group witha single JTAC soldier for both coalitions
+    {name = "2x - Standard Groups", inf = 12, mg = 4, at = 4 },
+    {name = "2x - Anti Air", inf = 4, aa = 6  },
+    {name = "2x - Anti Tank", inf = 4, at = 12  },
+    {name = "2x - Standard Groups + 2x Mortar", inf = 12, mg = 4, at = 4, mortar = 12 },
+    {name = "3x - Standard Groups", inf = 18, mg = 6, at = 6 },
+    {name = "3x - Anti Air", inf = 6, aa = 9  },
+    {name = "3x - Anti Tank", inf = 6, at = 18  },
+    {name = "3x - Mortar Squad", mortar = 18},
+    {name = "5x - Mortar Squad", mortar = 30},
     -- {name = "Mortar Squad Red", inf = 2, mortar = 5, side =1 }, --would make a group loadable by RED only
 }
 
@@ -511,91 +700,144 @@ ctld.loadableGroups = {
 --
 ctld.spawnableCrates = {
     -- name of the sub menu on F10 for spawning crates
-    ["Ground Forces"] = {
+    ["Combat Vehicles"] = {
         --crates you can spawn
         -- weight in KG
         -- Desc is the description on the F10 MENU
         -- unit is the model name of the unit to spawn
         -- cratesRequired - if set requires that many crates of the same type within 100m of each other in order build the unit
         -- side is optional but 2 is BLUE and 1 is RED
-        -- dont use that option with the HAWK Crates
-        { weight = 500, desc = "HMMWV - TOW", unit = "M1045 HMMWV TOW", side = 2 },
-        { weight = 505, desc = "HMMWV - MG", unit = "M1043 HMMWV Armament", side = 2 },
 
-        { weight = 510, desc = "BTR-D", unit = "BTR_D", side = 1 },
-        { weight = 515, desc = "BRDM-2", unit = "BRDM-2", side = 1 },
+        -- Some descriptions are filtered to determine if JTAC or not!
 
-        { weight = 520, desc = "HMMWV - JTAC", unit = "Hummer", side = 2, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
-        { weight = 525, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1, }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        --- BLUE
+        { weight = 1000.01, desc = "Humvee - MG", unit = "M1043 HMMWV Armament", side = 2 },  --careful with the names as the script matches the desc to JTAC types
+        { weight = 1000.02, desc = "Humvee - TOW", unit = "M1045 HMMWV TOW", side = 2, cratesRequired = 2 },
+        { weight = 1000.03, desc = "Light Tank - MRAP", unit="MaxxPro_MRAP", side = 2, cratesRequired = 2 },
+        { weight = 1000.04, desc = "Med Tank - LAV-25", unit="LAV-25", side = 2, cratesRequired = 3 },
+        { weight = 1000.05, desc = "Heavy Tank - Abrams", unit="M1A2C_SEP_V3", side = 2, cratesRequired = 4 },
 
-        { weight = 100, desc = "2B11 Mortar", unit = "2B11 mortar" },
-
-        { weight = 250, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
-        { weight = 255, desc = "M-109", unit = "M-109", side = 2, cratesRequired = 3 },
-
-        { weight = 252, desc = "Ural-375 Ammo Truck", unit = "Ural-375", side = 1, cratesRequired = 2 },
-        { weight = 253, desc = "M-818 Ammo Truck", unit = "M 818", side = 2, cratesRequired = 2 },
-
-        { weight = 800, desc = "FOB Crate - Small", unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
+        --- RED
+        { weight = 1000.11, desc = "BTR-D", unit = "BTR_D", side = 1 },
+        { weight = 1000.12, desc = "BRDM-2", unit = "BRDM-2", side = 1 },
+        -- need more redfor!
     },
-    ["AA short range"] = {
-        { weight = 50, desc = "Stinger", unit = "Soldier stinger", side = 2 },
-        { weight = 55, desc = "Igla", unit = "SA-18 Igla manpad", side = 1 },
+    ["Support"] = {
+        --- BLUE
+        { weight = 1001.01, desc = "Hummer - JTAC", unit = "Hummer", side = 2, cratesRequired = 2 }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 1001.02, desc = "M-818 Ammo Truck", unit = "M 818", side = 2, cratesRequired = 2 },
+        { weight = 1001.03, desc = "M-978 Tanker", unit = "M978 HEMTT Tanker", side = 2, cratesRequired = 2 },
 
-        { weight = 405, desc = "Strela-1 9P31", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
-        { weight = 400, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
+         --- RED
+        { weight = 1001.11, desc = "SKP-11 - JTAC", unit = "SKP-11", side = 1 }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { weight = 1001.12, desc = "Ural-375 Ammo Truck", unit = "Ural-375", side = 1, cratesRequired = 2 },
+        { weight = 1001.13, desc = "KAMAZ Ammo Truck", unit = "KAMAZ Truck", side = 1, cratesRequired = 2 },
+
+        --- Both
+        { weight = 1001.21, desc = "EWR Radar", unit="FPS-117", cratesRequired = 3 },
+        { weight = 1001.22, desc = "FOB Crate - Small", unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
+
     },
-    ["AA mid range"] = {
+    ["Artillery"] = {
+        --- BLUE
+        { weight = 1002.01, desc = "MLRS", unit = "MLRS", side=2, cratesRequired = 3 },
+        { weight = 1002.02, desc = "SpGH DANA", unit = "SpGH_Dana", side=2, cratesRequired = 3 },
+        { weight = 1002.03, desc = "T155 Firtina", unit = "T155_Firtina", side=2, cratesRequired = 3 },
+        { weight = 1002.04, desc = "Howitzer", unit = "M-109", side=2, cratesRequired = 3 },
+
+        --- RED
+        { weight = 1002.11, desc = "SPH 2S19 Msta", unit = "SAU Msta", side = 1, cratesRequired = 3 },
+
+    },
+    ["SAM short range"] = {
+        --- BLUE
+        { weight = 1003.01, desc = "M1097 Avenger", unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
+        { weight = 1003.02, desc = "M48 Chaparral", unit = "M48 Chaparral", side = 2, cratesRequired = 2 },
+        { weight = 1003.03, desc = "Roland ADS", unit = "Roland ADS", side = 2, cratesRequired = 3 },
+        { weight = 1003.04, desc = "Gepard AAA", unit = "Gepard", side = 2, cratesRequired = 3 },
+        { weight = 1003.05, desc = "LPWS C-RAM", unit = "HEMTT_C-RAM_Phalanx", side = 2, cratesRequired = 3 },
+
+        --- RED
+        { weight = 1003.11, desc = "9K33 Osa", unit = "Osa 9A33 ln", side = 1, cratesRequired = 3 },
+        { weight = 1003.12, desc = "9P31 Strela-1", unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
+        { weight = 1003.13, desc = "9K35M Strela-10", unit = "Strela-10M3", side = 1, cratesRequired = 3 },
+        { weight = 1003.14, desc = "9K331 Tor", unit = "Tor 9A331", side = 1, cratesRequired = 3 },
+        { weight = 1003.15, desc = "2K22 Tunguska", unit = "2S6 Tunguska", side = 1, cratesRequired = 3 },
+    },
+    ["SAM mid range"] = {
+        --- BLUE
         -- HAWK System
-        { weight = 540, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
-        { weight = 545, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
-        { weight = 546, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
-        { weight = 547, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 }, -- Remove this if on 1.2
-        { weight = 548, desc = "HAWK CWAR", unit = "Hawk cwar" , side = 2 }, -- Remove this if on 2.5    
-        { weight = 549, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
+        { weight = 1004.01, desc = "HAWK Launcher", unit = "Hawk ln", side = 2},
+        { weight = 1004.02, desc = "HAWK Search Radar", unit = "Hawk sr", side = 2 },
+        { weight = 1004.03, desc = "HAWK Track Radar", unit = "Hawk tr", side = 2 },
+        { weight = 1004.04, desc = "HAWK PCP", unit = "Hawk pcp" , side = 2 },
+        { weight = 1004.05, desc = "HAWK CWAR", unit = "Hawk cwar" , side = 2 },
+        { weight = 1004.06, desc = "HAWK Repair", unit = "HAWK Repair" , side = 2 },
         -- End of HAWK
+        
+        -- NASAMS Sysyem
+        { weight = 1004.11, desc = "NASAMS Launcher 120C", unit = "NASAMS_LN_C", side = 2},
+        { weight = 1004.12, desc = "NASAMS Search/Track Radar", unit = "NASAMS_Radar_MPQ64F1", side = 2 },
+        { weight = 1004.13, desc = "NASAMS Command Post", unit = "NASAMS_Command_Post", side = 2 },
+        { weight = 1004.14, desc = "NASAMS Repair", unit = "NASAMS Repair", side = 2 },
+        -- End of NASAMS
 
+        --- RED
         -- KUB SYSTEM
-        { weight = 560, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
-        { weight = 565, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
-        { weight = 570, desc = "KUB Repair", unit = "KUB Repair", side = 1},
+        { weight = 1004.21, desc = "KUB Launcher", unit = "Kub 2P25 ln", side = 1},
+        { weight = 1004.22, desc = "KUB Radar", unit = "Kub 1S91 str", side = 1 },
+        { weight = 1004.23, desc = "KUB Repair", unit = "KUB Repair", side = 1},
         -- End of KUB
 
         -- BUK System
-        --        { weight = 575, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1"},
-        --        { weight = 580, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1"},
-        --        { weight = 585, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1"},
-        --        { weight = 590, desc = "BUK Repair", unit = "BUK Repair"},
+        { weight = 1004.31, desc = "BUK Launcher", unit = "SA-11 Buk LN 9A310M1", side = 1},
+        { weight = 1004.32, desc = "BUK Search Radar", unit = "SA-11 Buk SR 9S18M1", side = 1},
+        { weight = 1004.33, desc = "BUK CC Radar", unit = "SA-11 Buk CC 9S470M1", side = 1},
+        { weight = 1004.34, desc = "BUK Repair", unit = "BUK Repair", side = 1},
         -- END of BUK
     },
-    ["AA long range"] = {
+    ["SAM long range"] = {
+        --- BLUE
         -- Patriot System
-        { weight = 555, desc = "Patriot Launcher", unit = "Patriot ln", side = 2 },
-        { weight = 556, desc = "Patriot Radar", unit = "Patriot str" , side = 2 },
-        { weight = 557, desc = "Patriot ECS", unit = "Patriot ECS", side = 2 },
-        -- { weight = 553, desc = "Patriot ICC", unit = "Patriot cp", side = 2 },
-        -- { weight = 554, desc = "Patriot EPP", unit = "Patriot EPP", side = 2 },
-        { weight = 558, desc = "Patriot AMG (optional)", unit = "Patriot AMG" , side = 2 },
-        { weight = 559, desc = "Patriot Repair", unit = "Patriot Repair" , side = 2 },
+        { weight = 1005.01, desc = "Patriot Launcher", unit = "Patriot ln", side = 2 },
+        { weight = 1005.02, desc = "Patriot Radar", unit = "Patriot str" , side = 2 },
+        { weight = 1005.03, desc = "Patriot ECS", unit = "Patriot ECS", side = 2 },
+        -- { weight = 1005.04, desc = "Patriot ICC", unit = "Patriot cp", side = 2 },
+        -- { weight = 1005.05, desc = "Patriot EPP", unit = "Patriot EPP", side = 2 },
+        { weight = 1005.06, desc = "Patriot AMG (optional)", unit = "Patriot AMG" , side = 2 },
+        { weight = 1005.07, desc = "Patriot Repair", unit = "Patriot Repair" , side = 2 },
         -- End of Patriot
 
-        { weight = 595, desc = "Early Warning Radar", unit = "1L13 EWR", side = 1 }, -- cant be used by BLUE coalition
+        -- S-300 SYSTEM
+        { weight = 1005.11, desc = "S-300 Grumble TEL C", unit = "S-300PS 5P85C ln", side = 1 },
+        { weight = 1005.12, desc = "S-300 Grumble Flap Lid-A TR", unit = "S-300PS 40B6M tr", side = 1 },
+        { weight = 1005.13, desc = "S-300 Grumble Clam Shell SR", unit = "S-300PS 40B6MD sr", side = 1 },
+        { weight = 1005.14, desc = "S-300 Grumble Big Bird SR", unit = "S-300PS 64H6E sr", side = 1 },
+        { weight = 1005.15, desc = "S-300 Grumble C2", unit = "S-300PS 54K6 cp", side = 1 },
+        { weight = 1005.16, desc = "S-300 Repair", unit = "S-300 Repair", side = 1 },
+        -- End of S-300
     },
 }
 
---- 3D model that will be used to represent a loadable crate ; by default, a generator
-ctld.spawnableCratesModel_load = {
-    ["category"] = "Fortifications",
-    ["shape_name"] = "GeneratorF",
-    ["type"] = "GeneratorF"
+ctld.spawnableCratesModels = {
+    ["load"] = {
+        ["category"] = "Fortifications",
+        ["type"] = "Cargo04",
+        ["canCargo"] = false,
+    },
+    ["sling"] = {
+        ["category"] = "Cargos",
+        ["shape_name"] = "bw_container_cargo",
+        ["type"] = "container_cargo",
+        ["canCargo"] = true
+    },
+    ["dynamic"] = {
+       ["category"] = "Cargos",
+       ["type"] = "ammo_cargo",
+        ["canCargo"] = true
+    }
 }
 
---- 3D model that will be used to represent a slingable crate ; by default, a crate
-ctld.spawnableCratesModel_sling = {
-    ["category"] = "Cargos",
-    ["shape_name"] = "bw_container_cargo",
-    ["type"] = "container_cargo"
-}
 
 --[[ Placeholder for different type of cargo containers. Let's say pipes and trunks, fuel for FOB building
     ["shape_name"] = "ab-212_cargo",
@@ -650,7 +892,6 @@ ctld.jtacUnitTypes = {
 -- ***************************************************************
 -- **************** Mission Editor Functions *********************
 -- ***************************************************************
-
 
 -----------------------------------------------------------------
 -- Spawn group at a trigger and set them as extractable. Usage:
@@ -1348,7 +1589,7 @@ function ctld.spawnCrateAtZone(_side, _weight,_zone)
 
     local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-    local _spawnedCrate = ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight,_side)
+    ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight, _side)
 
 end
 
@@ -1360,7 +1601,7 @@ end
 -- e.g. ctld.spawnCrateAtZone("blue", 505,{x=1,y=2,z=3}) -- spawn a tow humvee at triggerzone1 for blue side at a specified point
 --
 --
-function ctld.spawnCrateAtPoint(_side, _weight,_point)
+function ctld.spawnCrateAtPoint(_side, _weight, _point,_hdg)
 
 
     local _crateType = ctld.crateLookupTable[tostring(_weight)]
@@ -1383,7 +1624,7 @@ function ctld.spawnCrateAtPoint(_side, _weight,_point)
 
     local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-    local _spawnedCrate = ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight,_side)
+    ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight, _side, _hdg)
 
 end
 
@@ -1393,17 +1634,19 @@ end
 
 --- Tells CTLD What multipart AA Systems there are and what parts they need
 -- A New system added here also needs the launcher added
+-- The number of times that each part is spawned for each system is specified by the entry "amount", NOTE : they will be spawned in a circle with the corresponding headings, NOTE 2 : launchers will use the default ctld.aaLauncher amount if nothing is specified
+-- If a component does not require a crate, it can be specified via the entry "NoCrate" set to true
 ctld.AASystemTemplate = {
 
     {
         name = "HAWK AA System",
-        count = 4,
+        count = 5,
         parts = {
             {name = "Hawk ln", desc = "HAWK Launcher", launcher = true},
-            {name = "Hawk tr", desc = "HAWK Track Radar"},
-            {name = "Hawk sr", desc = "HAWK Search Radar"},
-            {name = "Hawk pcp", desc = "HAWK PCP"},
-            {name = "Hawk cwar", desc = "HAWK CWAR"},
+            {name = "Hawk tr", desc = "HAWK Track Radar", amount = 2},
+            {name = "Hawk sr", desc = "HAWK Search Radar", amount = 2},
+            {name = "Hawk pcp", desc = "HAWK PCP", NoCrate = true},
+            {name = "Hawk cwar", desc = "HAWK CWAR", amount = 2, NoCrate = true},
         },
         repair = "HAWK Repair",
     },
@@ -1411,13 +1654,26 @@ ctld.AASystemTemplate = {
         name = "Patriot AA System",
         count = 4,
         parts = {
-            {name = "Patriot ln", desc = "Patriot Launcher", launcher = true},
+            {name = "Patriot ln", desc = "Patriot Launcher", launcher = true, amount = 8},
             {name = "Patriot ECS", desc = "Patriot Control Unit"},
-            {name = "Patriot str", desc = "Patriot Search and Track Radar"},
+            {name = "Patriot str", desc = "Patriot Search and Track Radar", amount = 2},
+            --{name = "Patriot cp", desc = "Patriot ICC", NoCrate = true},
+            --{name = "Patriot EPP", desc = "Patriot EPP", NoCrate = true},
+            {name = "Patriot AMG", desc = "Patriot AMG DL relay", NoCrate = true},
         },
         repair = "Patriot Repair",
     },
     {
+        name = "NASAMS AA System",
+        count = 3,
+        parts = {
+            {name = "NASAMS_LN_C", desc = "NASAMS Launcher 120C", launcher = true},
+            {name = "NASAMS_Radar_MPQ64F1", desc = "NASAMS Search/Track Radar"},
+            {name = "NASAMS_Command_Post", desc = "NASAMS Command Post"},
+        },
+        repair = "NASAMS Repair",
+    },
+	{
         name = "BUK AA System",
         count = 3,
         parts = {
@@ -1435,6 +1691,19 @@ ctld.AASystemTemplate = {
             {name = "Kub 1S91 str", desc = "KUB Radar"},
         },
         repair = "KUB Repair",
+    },
+    {
+        name = "S-300 AA System",
+        count = 6,
+        parts = {
+            { desc = "S-300 Grumble TEL C", name = "S-300PS 5P85C ln", launcher = true, amount = 1 },
+            { desc = "S-300 Grumble TEL D", name = "S-300PS 5P85D ln", NoCrate = true, amount = 2 },
+            { desc = "S-300 Grumble Flap Lid-A TR", name = "S-300PS 40B6M tr"},
+            { desc = "S-300 Grumble Clam Shell SR", name = "S-300PS 40B6MD sr"},
+            { desc = "S-300 Grumble Big Bird SR", name = "S-300PS 64H6E sr"},
+            { desc = "S-300 Grumble C2", name = "S-300PS 54K6 cp"},
+        },
+        repair = "S-300 Repair",
     },
 }
 
@@ -1484,22 +1753,58 @@ function ctld.p(o, level)
     return text
 end
 
-function ctld.logError(message)
+function ctld.formatText(text, ...)
+    if not text then
+        return ""
+    end
+    if type(text) ~= 'string' then
+        text = ctld.p(text)
+    else
+        local args = ...
+        if args and args.n and args.n > 0 then
+            local pArgs = {}
+            for i=1,args.n do
+                pArgs[i] = ctld.p(args[i])
+            end
+                text = text:format(unpack(pArgs))
+            end
+        end
+    local fName = nil
+    local cLine = nil
+    if debug and debug.getinfo then
+        local dInfo = debug.getinfo(3)
+        fName = dInfo.name
+        cLine = dInfo.currentline
+    end
+    if fName and cLine then
+        return fName .. '|' .. cLine .. ': ' .. text
+    elseif cLine then
+        return cLine .. ': ' .. text
+    else
+        return ' ' .. text
+    end
+end
+
+function ctld.logError(message, ...)
+    message = ctld.formatText(message, arg)
     env.info(" E - " .. ctld.Id .. message)
 end
 
-function ctld.logInfo(message)
+function ctld.logInfo(message, ...)
+    message = ctld.formatText(message, arg)
     env.info(" I - " .. ctld.Id .. message)
 end
 
-function ctld.logDebug(message)
+function ctld.logDebug(message, ...)
     if message and ctld.Debug then
+        message = ctld.formatText(message, arg)
         env.info(" D - " .. ctld.Id .. message)
     end
 end
 
-function ctld.logTrace(message)
+function ctld.logTrace(message, ...)
     if message and ctld.Trace then
+        message = ctld.formatText(message, arg)
         env.info(" T - " .. ctld.Id .. message)
     end
 end
@@ -1535,10 +1840,12 @@ function ctld.getTransportUnit(_unitName)
     return nil
 end
 
-function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
+function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side, _hdg,_model_type)
 
     local _crate
     local _spawnedCrate
+
+    local hdg = _hdg or 0
 
     if ctld.staticBugWorkaround and ctld.slingLoad == false then
         local _groupId = ctld.getNextGroupId()
@@ -1555,7 +1862,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
             ["task"] = {},
         }
 
-        _group.units[1] = ctld.createUnit(_point.x , _point.z , 0, {type="UAZ-469",name=_name,unitId=_unitId})
+        _group.units[1] = ctld.createUnit(_point.x , _point.z , hdg, {type="UAZ-469",name=_name,unitId=_unitId})
 
         --switch to MIST
         _group.category = Group.Category.GROUND;
@@ -1569,19 +1876,19 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight,_side)
         _spawnedCrate = Unit.getByName(_name)
     else
 
-        if ctld.slingLoad then
-            _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_sling)
-            _crate["canCargo"] = true
+        if _model_type ~= nil then
+            _crate = mist.utils.deepCopy(ctld.spawnableCratesModels[_model_type])
+        elseif ctld.slingLoad then
+            _crate = mist.utils.deepCopy(ctld.spawnableCratesModels["sling"])
         else
-            _crate = mist.utils.deepCopy(ctld.spawnableCratesModel_load)
-            _crate["canCargo"] = false
+            _crate = mist.utils.deepCopy(ctld.spawnableCratesModels["load"])
         end
 
         _crate["y"] = _point.z
         _crate["x"] = _point.x
         _crate["mass"] = _weight
         _crate["name"] = _name
-        _crate["heading"] = 0
+        _crate["heading"] = hdg
         _crate["country"] = _country
 
         mist.dynAddStatic(_crate)
@@ -1708,8 +2015,6 @@ function ctld.spawnCrate(_arguments)
                 end
             end
 
-            local _position = _heli:getPosition()
-
             -- check crate spam
             if _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] > timer.getTime() then
 
@@ -1724,7 +2029,16 @@ function ctld.spawnCrate(_arguments)
 
             local _heli = ctld.getTransportUnit(_args[1])
 
+            local _model_type = nil
+
             local _point = ctld.getPointAt12Oclock(_heli, 30)
+            local _position = "12"
+            
+            if ctld.unitDynamicCargoCapable(_heli) then
+                _model_type = "dynamic"
+                _point = ctld.getPointAt6Oclock(_heli, 15)
+                _position = "6"
+            end
 
             local _unitId = ctld.getNextUnitId()
 
@@ -1732,12 +2046,12 @@ function ctld.spawnCrate(_arguments)
 
             local _name = string.format("%s #%i", _crateType.desc, _unitId)
 
-            local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight,_side)
+            ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight, _side, 0, _model_type)
 
             -- add to move table
             ctld.crateMove[_name] = _name
 
-            ctld.displayMessageToGroup(_heli, string.format("A %s crate weighing %s kg has been brought out and is at your 12 o'clock ", _crateType.desc, _crateType.weight), 20)
+            ctld.displayMessageToGroup(_heli, string.format("A %s crate weighing %.0f kg has been brought out and is at your %s o'clock ", _crateType.desc, _crateType.weight, _position), 20)
 
         else
             env.info("Couldn't find crate item to spawn")
@@ -1753,6 +2067,17 @@ function ctld.getPointAt12Oclock(_unit, _offset)
 
     local _position = _unit:getPosition()
     local _angle = math.atan2(_position.x.z, _position.x.x)
+    local _xOffset = math.cos(_angle) * _offset
+    local _yOffset = math.sin(_angle) * _offset
+
+    local _point = _unit:getPoint()
+    return { x = _point.x + _xOffset, z = _point.z + _yOffset, y = _point.y }
+end
+
+function ctld.getPointAt6Oclock(_unit, _offset)
+
+    local _position = _unit:getPosition()
+    local _angle = math.atan2(_position.x.z, _position.x.x) + math.pi
     local _xOffset = math.cos(_angle) * _offset
     local _yOffset = math.sin(_angle) * _offset
 
@@ -1976,9 +2301,9 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
 
         if _countOrTemplate.inf then
             if _side == 2 then
-                _troops = ctld.insertIntoTroopsArray("Soldier M4",_countOrTemplate.inf,_troops)
+                _troops = ctld.insertIntoTroopsArray("Soldier M4 GRG",_countOrTemplate.inf,_troops)
             else
-                _troops = ctld.insertIntoTroopsArray("Soldier AK",_countOrTemplate.inf,_troops)
+                _troops = ctld.insertIntoTroopsArray("Infantry AK",_countOrTemplate.inf,_troops)
             end
             _weight = _weight + getSoldiersWeight(_countOrTemplate.inf, ctld.RIFLE_WEIGHT)
         end
@@ -2004,9 +2329,9 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
 
         if _countOrTemplate.jtac then
             if _side == 2 then
-                _troops = ctld.insertIntoTroopsArray("Soldier M4",_countOrTemplate.jtac,_troops, "JTAC")
+                _troops = ctld.insertIntoTroopsArray("Soldier M4 GRG",_countOrTemplate.jtac,_troops, "JTAC")
             else
-                _troops = ctld.insertIntoTroopsArray("Soldier AK",_countOrTemplate.jtac,_troops, "JTAC")
+                _troops = ctld.insertIntoTroopsArray("Infantry AK",_countOrTemplate.jtac,_troops, "JTAC")
             end
             _hasJTAC = true
             _weight = _weight + getSoldiersWeight(_countOrTemplate.jtac, ctld.JTAC_WEIGHT + ctld.RIFLE_WEIGHT)
@@ -2015,7 +2340,7 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
     else
         for _i = 1, _countOrTemplate do
 
-            local _unitType = "Soldier AK"
+            local _unitType = "Infantry AK"
 
             if _side == 2 then
                 if _i <=2 then
@@ -2028,7 +2353,7 @@ function ctld.generateTroopTypes(_side, _countOrTemplate, _country)
                     _unitType = "Soldier stinger"
                     _weight = _weight + getSoldiersWeight(1, ctld.MANPAD_WEIGHT)
                 else
-                    _unitType = "Soldier M4"
+                    _unitType = "Soldier M4 GRG"
                     _weight = _weight + getSoldiersWeight(1, ctld.RIFLE_WEIGHT)
                 end
             else
@@ -2547,13 +2872,15 @@ function ctld.getWeightOfCargo(unitName)
     local _weight = 0
     local _description = ""
 
+    ctld.inTransitSlingLoadCrates[unitName] = ctld.inTransitSlingLoadCrates[unitName] or {}
+
     -- add troops weight
     if ctld.inTransitTroops[unitName] then
         local _inTransit = ctld.inTransitTroops[unitName]
         if _inTransit then
             local _troops = _inTransit.troops
             if _troops and _troops.units then
-                _description = _description .. string.format("%s troops onboard (%s kg)\n", #_troops.units, _troops.weight)
+                _description = _description .. string.format("%s troops onboard (%.0f kg)\n", #_troops.units, _troops.weight)
                 _weight = _weight + _troops.weight
             end
             local _vehicles = _inTransit.vehicles
@@ -2561,7 +2888,7 @@ function ctld.getWeightOfCargo(unitName)
                 for _, _unit in pairs(_vehicles.units) do
                     _weight = _weight + _unit.weight
                 end
-                _description = _description .. string.format("%s vehicles onboard (%s kg)\n", #_vehicles.units, _weight)
+                _description = _description .. string.format("%s vehicles onboard (%.0f kg)\n", #_vehicles.units, _weight)
             end
         end
     end
@@ -2569,19 +2896,19 @@ function ctld.getWeightOfCargo(unitName)
     -- add FOB crates weight
     if ctld.inTransitFOBCrates[unitName] then
         _weight = _weight + FOB_CRATE_WEIGHT
-        _description = _description .. string.format("1 FOB Crate oboard (%s kg)\n", FOB_CRATE_WEIGHT)
+        _description = _description .. string.format("1 FOB Crate oboard (%.0f kg)\n", FOB_CRATE_WEIGHT)
     end
 
     -- add simulated slingload crates weight
-    local _crate = ctld.inTransitSlingLoadCrates[unitName]
-    if _crate then
-        if _crate.simulatedSlingload then
+    for i = 1, #ctld.inTransitSlingLoadCrates[unitName] do
+        local _crate = ctld.inTransitSlingLoadCrates[unitName][i]
+        if _crate and _crate.simulatedSlingload then
             _weight = _weight + _crate.weight
-            _description = _description .. string.format("1 %s crate onboard (%s kg)\n", _crate.desc, _crate.weight)
+            _description = _description .. string.format("%s crate onboard (%.0f kg)\n", _crate.desc, _crate.weight)
         end
     end
     if _description ~= "" then
-        _description = _description .. string.format("Total weight of cargo : %s kg\n", _weight)
+        _description = _description .. string.format("Total weight of cargo : %.0f kg\n", _weight)
     else
         _description = "No cargo."
     end
@@ -2598,54 +2925,54 @@ function ctld.checkHoverStatus()
 
             local _reset = true
             local _transUnit = ctld.getTransportUnit(_name)
+            local _transUnitTypeName = _transUnit and _transUnit:getTypeName()
+            local _cargoCapacity = ctld.internalCargoLimits[_transUnitTypeName] or 1
+            ctld.inTransitSlingLoadCrates[_name] = ctld.inTransitSlingLoadCrates[_name] or {}
 
             --only check transports that are hovering and not planes
-            if _transUnit ~= nil and ctld.inTransitSlingLoadCrates[_name] == nil and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false then
+            if _transUnit ~= nil and #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity and ctld.inAir(_transUnit) and ctld.unitCanCarryVehicles(_transUnit) == false and not ctld.unitDynamicCargoCapable(_transUnit) then
 
 
                 local _crates = ctld.getCratesAndDistance(_transUnit)
 
                 for _, _crate in pairs(_crates) do
+                    local _crateUnitName = _crate.crateUnit:getName()
                     if _crate.dist < ctld.maxDistanceFromCrate and _crate.details.unit ~= "FOB" then
 
                         --check height!
                         local _height = _transUnit:getPoint().y - _crate.crateUnit:getPoint().y
-                        --env.info("HEIGHT " .. _name .. " " .. _height .. " " .. _transUnit:getPoint().y .. " " .. _crate.crateUnit:getPoint().y)
-                        --  ctld.heightDiff(_transUnit)
-                        --env.info("HEIGHT ABOVE GROUD ".._name.." ".._height.." ".._transUnit:getPoint().y.." ".._crate.crateUnit:getPoint().y)
-
                         if _height > ctld.minimumHoverHeight and _height <= ctld.maximumHoverHeight then
 
-                            local _time = ctld.hoverStatus[_transUnit:getName()]
+                            local _time = ctld.hoverStatus[_name]
 
                             if _time == nil then
-                                ctld.hoverStatus[_transUnit:getName()] = ctld.hoverTime
+                                ctld.hoverStatus[_name] = ctld.hoverTime
                                 _time = ctld.hoverTime
                             else
-                                _time = ctld.hoverStatus[_transUnit:getName()] - 1
-                                ctld.hoverStatus[_transUnit:getName()] = _time
+                                _time = ctld.hoverStatus[_name] - 1
+                                ctld.hoverStatus[_name] = _time
                             end
 
                             if _time > 0 then
                                 ctld.displayMessageToGroup(_transUnit, "Hovering above " .. _crate.details.desc .. " crate. \n\nHold hover for " .. _time .. " seconds! \n\nIf the countdown stops you're too far away!", 10,true)
                             else
-                                ctld.hoverStatus[_transUnit:getName()] = nil
+                                ctld.hoverStatus[_name] = nil
                                 ctld.displayMessageToGroup(_transUnit, "Loaded  " .. _crate.details.desc .. " crate!", 10,true)
 
                                 --crates been moved once!
-                                ctld.crateMove[_crate.crateUnit:getName()] = nil
+                                ctld.crateMove[_crateUnitName] = nil
 
                                 if _transUnit:getCoalition() == 1 then
-                                    ctld.spawnedCratesRED[_crate.crateUnit:getName()] = nil
+                                    ctld.spawnedCratesRED[_crateUnitName] = nil
                                 else
-                                    ctld.spawnedCratesBLUE[_crate.crateUnit:getName()] = nil
+                                    ctld.spawnedCratesBLUE[_crateUnitName] = nil
                                 end
 
                                 _crate.crateUnit:destroy()
 
                                 local _copiedCrate = mist.utils.deepCopy(_crate.details)
                                 _copiedCrate.simulatedSlingload = true
-                                ctld.inTransitSlingLoadCrates[_name] = _copiedCrate
+                                table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                                 ctld.adaptWeightToCargo(_name)
                             end
 
@@ -2679,12 +3006,15 @@ function ctld.loadNearbyCrate(_name)
 
     if _transUnit ~= nil  then
 
+        local _cargoCapacity = ctld.internalCargoLimits[_transUnit:getTypeName()] or 1
+        ctld.inTransitSlingLoadCrates[_name] = ctld.inTransitSlingLoadCrates[_name] or {}
+
         if ctld.inAir(_transUnit) then
             ctld.displayMessageToGroup(_transUnit, "You must land before you can load a crate!", 10,true)
             return
         end
 
-        if ctld.inTransitSlingLoadCrates[_name] == nil then
+        if #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity then
             local _crates = ctld.getCratesAndDistance(_transUnit)
 
             for _, _crate in pairs(_crates) do
@@ -2704,7 +3034,7 @@ function ctld.loadNearbyCrate(_name)
 
                     local _copiedCrate = mist.utils.deepCopy(_crate.details)
                     _copiedCrate.simulatedSlingload = true
-                    ctld.inTransitSlingLoadCrates[_name] = _copiedCrate
+                    table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                     ctld.adaptWeightToCargo(_name)
                     return
                 end
@@ -2713,8 +3043,12 @@ function ctld.loadNearbyCrate(_name)
             ctld.displayMessageToGroup(_transUnit, "No Crates within 50m to load!", 10,true)
 
         else
-            -- crate onboard
-            ctld.displayMessageToGroup(_transUnit, "You already have a "..ctld.inTransitSlingLoadCrates[_name].desc.." crate onboard!", 10,true)
+            -- Max crates onboard
+            local outputMsg = "Maximum number of crates are on board!"
+            for i = 1, _cargoCapacity do
+                outputMsg = outputMsg .. "\n" .. ctld.inTransitSlingLoadCrates[_name][i].desc
+            end
+            ctld.displayMessageToGroup(_transUnit, outputMsg, 10,true)
         end
     end
 
@@ -3004,13 +3338,14 @@ function ctld.getClosestCrate(_heli, _crates, _type)
     local _closetCrate = nil
     local _shortestDistance = -1
     local _distance = 0
+    local _minimumDistance = 5  -- prevents dynamic cargo crates from unpacking while in cargo hold
 
     for _, _crate in pairs(_crates) do
 
         if (_crate.details.unit == _type or _type == nil) then
             _distance = _crate.dist
 
-            if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
+            if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) and _distance > _minimumDistance then
                 _shortestDistance = _distance
                 _closetCrate = _crate
             end
@@ -3104,7 +3439,7 @@ function ctld.unpackCrates(_arguments)
 
             elseif _crate ~= nil and _crate.dist < 200 then
 
-                if ctld.forceCrateToBeMoved and ctld.crateMove[_crate.crateUnit:getName()] then
+                if ctld.forceCrateToBeMoved and ctld.crateMove[_crate.crateUnit:getName()] and not ctld.unitDynamicCargoCapable(_heli) then
                     ctld.displayMessageToGroup(_heli,"Sorry you must move this crate before you unpack it!", 20)
                     return
                 end
@@ -3133,15 +3468,14 @@ function ctld.unpackCrates(_arguments)
                     -- single crate
                     local _cratePoint = _crate.crateUnit:getPoint()
                     local _crateName = _crate.crateUnit:getName()
-
-                    -- ctld.spawnCrateStatic( _heli:getCoalition(),ctld.getNextUnitId(),{x=100,z=100},_crateName,100)
+                    local _crateHdg = mist.getHeading(_crate.crateUnit, true)
 
                     --remove crate
                   --  if ctld.slingLoad == false then
                         _crate.crateUnit:destroy()
                    -- end
 
-                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit })
+                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit }, { _crateHdg })
 
                     if _heli:getCoalition() == 1 then
                         ctld.spawnedCratesRED[_crateName] = nil
@@ -3172,7 +3506,7 @@ function ctld.unpackCrates(_arguments)
 
             else
 
-                ctld.displayMessageToGroup(_heli, "No friendly crates close enough to unpack", 20)
+                ctld.displayMessageToGroup(_heli, "No friendly crates close enough to unpack, or crate too close to aircraft.", 20)
             end
         end
     end, _arguments)
@@ -3292,55 +3626,51 @@ end
 
 --unloads the sling crate when the helicopter is on the ground or between 4.5 - 10 meters
 function ctld.dropSlingCrate(_args)
-    local _heli = ctld.getTransportUnit(_args[1])
+    local _unitName = _args[1]
+    local _heli = ctld.getTransportUnit(_unitName)
+    ctld.inTransitSlingLoadCrates[_unitName] = ctld.inTransitSlingLoadCrates[_unitName] or {}
 
     if _heli == nil then
         return -- no heli!
     end
 
-    local _currentCrate = ctld.inTransitSlingLoadCrates[_heli:getName()]
+    local _currentCrate = ctld.inTransitSlingLoadCrates[_unitName][#ctld.inTransitSlingLoadCrates[_unitName]]
 
     if _currentCrate == nil then
-        if ctld.hoverPickup then
+        if ctld.hoverPickup and ctld.loadCrateFromMenu then
+            ctld.displayMessageToGroup(_heli, "You are not currently transporting any crates. \n\nTo Pickup a crate, hover for "..ctld.hoverTime.." seconds above the crate or land and use F10 Crate Commands", 10)
+        elseif ctld.hoverPickup then
             ctld.displayMessageToGroup(_heli, "You are not currently transporting any crates. \n\nTo Pickup a crate, hover for "..ctld.hoverTime.." seconds above the crate", 10)
         else
             ctld.displayMessageToGroup(_heli, "You are not currently transporting any crates. \n\nTo Pickup a crate - land and use F10 Crate Commands to load one.", 10)
         end
     else
 
-        local _heli = ctld.getTransportUnit(_args[1])
-
         local _point = _heli:getPoint()
-
         local _unitId = ctld.getNextUnitId()
-
         local _side = _heli:getCoalition()
-
         local _name = string.format("%s #%i", _currentCrate.desc, _unitId)
 
+        local _hdg = mist.getHeading(_heli, true)
 
         local _heightDiff = ctld.heightDiff(_heli)
 
         if ctld.inAir(_heli) == false or _heightDiff <= 7.5 then
             ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely unhooked and is at your 12 o'clock", 10)
             _point = ctld.getPointAt12Oclock(_heli, 30)
-            --        elseif _heightDiff > 40.0 then
-            --            ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
-            --            ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
-            --            return
         elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
             ctld.displayMessageToGroup(_heli, _currentCrate.desc .. " crate has been safely dropped below you", 10)
-        else -- _heightDiff > 40.0
-            ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
+        else -- _heightDiff > 40.0, destroy crate
+            table.remove(ctld.inTransitSlingLoadCrates[_unitName],#ctld.inTransitSlingLoadCrates[_unitName])                                                                
+            ctld.adaptWeightToCargo(_unitName)
             ctld.displayMessageToGroup(_heli, "You were too high! The crate has been destroyed", 10)
             return
         end
 
-
         --remove crate from cargo
-        ctld.inTransitSlingLoadCrates[_heli:getName()] = nil
-        ctld.adaptWeightToCargo(_heli:getName())
-        local _spawnedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight,_side)
+        table.remove(ctld.inTransitSlingLoadCrates[_unitName],#ctld.inTransitSlingLoadCrates[_unitName])
+        ctld.adaptWeightToCargo(_unitName)
+        ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight, _side, _hdg)
     end
 end
 
@@ -3713,6 +4043,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
             local _uniqueTypes = {} -- stores each unique part of system
             local _types = {}
             local _points = {}
+            local _hdgs = {}
 
             local _units = _nearestSystem.group:getUnits()
 
@@ -3726,6 +4057,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
 
                         table.insert(_points, _units[x]:getPoint())
                         table.insert(_types, _units[x]:getTypeName())
+                        table.insert(_hdgs, mist.getHeading(_units[x], true))
                     end
                 end
             end
@@ -3739,7 +4071,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
 
                 _nearestSystem.group:destroy()
 
-                local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
+                local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types, _hdgs)
 
                 ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup, _aaSystemTemplate)
 
@@ -3773,7 +4105,7 @@ function ctld.getAASystemDetails(_hawkGroup,_aaSystemTemplate)
     local _hawkDetails = {}
 
     for _, _unit in pairs(_units) do
-        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName(), system =_aaSystemTemplate})
+        table.insert(_hawkDetails, { point = _unit:getPoint(), unit = _unit:getTypeName(), name = _unit:getName(), system =_aaSystemTemplate, hdg = mist.getHeading(_unit, true) })
     end
 
     return _hawkDetails
@@ -3799,74 +4131,154 @@ end
 function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTemplate)
 
     if ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTemplate) then
-        -- rearmed hawk
+        -- rearmed system
         return
     end
 
-    -- are there all the pieces close enough together
     local _systemParts = {}
 
     --initialise list of parts
     for _,_part in pairs(_aaSystemTemplate.parts) do
-        _systemParts[_part.name] = {name = _part.name,desc = _part.desc,found = false}
+        local _systemPart = {name = _part.name, desc = _part.desc, launcher = _part.launcher, amount = _part.amount, NoCrate = _part.NoCrate, found = 0, required = 1}
+        -- if the part is a NoCrate required, it's found by default
+        if _systemPart.NoCrate ~= nil then
+            _systemPart.found = 1
+        end
+        _systemParts[_part.name] = _systemPart
     end
 
-    -- find all nearest crates and add them to the list if they're part of the AA System
+    local _cratePositions = {}
+    local _crateHdg = {}
+
+    local crateDistance = 500
+
+    -- find all crates close enough and add them to the list if they're part of the AA System
     for _, _nearbyCrate in pairs(_nearbyCrates) do
+        if _nearbyCrate.dist < crateDistance then
 
-        if _nearbyCrate.dist < 500 then
+            local _name = _nearbyCrate.details.unit
 
-            if _systemParts[_nearbyCrate.details.unit] ~= nil and _systemParts[_nearbyCrate.details.unit].found == false  then
-                local _foundPart = _systemParts[_nearbyCrate.details.unit]
+            if _systemParts[_name] ~= nil then
 
-                _foundPart.found = true
-                _foundPart.crate = _nearbyCrate
+                local foundCount = _systemParts[_name].found
 
-                _systemParts[_nearbyCrate.details.unit] = _foundPart
+                -- if this is our first time encountering this part of the system
+                if foundCount == 0 then
+                    local _foundPart = _systemParts[_name]
+
+                    _foundPart.found = 1
+                    _foundPart.crates = {}
+
+                    -- store the number of crates required to compute how many crates will have to be removed later and to see if the system can be deployed
+                    local cratesRequired = _nearbyCrate.details.cratesRequired
+                    if  cratesRequired ~= nil then
+                        _foundPart.required = cratesRequired
+                    end
+
+                    _systemParts[_name] = _foundPart
+                    _cratePositions[_name] = {}
+                    _crateHdg[_name] = {}
+                else
+                    -- otherwise, we found another crate for the same part
+                    _systemParts[_name].found = foundCount + 1
+                end
+
+                -- add the crate to the part info along with it's position and heading
+                local crateUnit = _nearbyCrate.crateUnit
+                table.insert(_systemParts[_name].crates, _nearbyCrate)
+                table.insert(_cratePositions[_name], crateUnit:getPoint())
+                table.insert(_crateHdg[_name], mist.getHeading(crateUnit, true))
             end
         end
     end
 
-    local _count = 0
+    -- Compute the centroids for each type of crates and then the centroid of all the system crates which is used to find the spawn location for each part and a position for the NoCrate parts respectively
+    -- One issue, all crates are considered for the centroid and the headings but not all of them may be used if crate stacking is allowed
+    local _crateCentroids = {}
+    local _idxCentroids = {}
+    for _partName, _partPositions in pairs(_cratePositions) do
+        _crateCentroids[_partName] = ctld.getCentroid(_partPositions)
+        table.insert(_idxCentroids, _crateCentroids[_partName])
+    end
+    local _crateCentroid = ctld.getCentroid(_idxCentroids)
+
+    -- Compute the average heading for each type of crates to know the heading to spawn the part
+    local _aveHdg = {}
+    -- Headings of each group of crates
+    for _partName, _crateHeadings in pairs(_crateHdg) do
+        local crateCount = #_crateHeadings
+        _aveHdg[_partName] = 0
+        -- Heading of each crate within a group
+        for _index, _crateHeading in pairs(_crateHeadings) do
+            _aveHdg[_partName] = _crateHeading / crateCount + _aveHdg[_partName]
+        end
+    end
+
+    local spawnDistance = 50 -- circle radius to spawn units in a circle and randomize position relative to the crate location
+    local arcRad = math.pi * 2
+
     local _txt = ""
 
     local _posArray = {}
+    local _hdgArray = {}
     local _typeArray = {}
+    -- for each part of the system parts
     for _name, _systemPart in pairs(_systemParts) do
 
-        if _systemPart.found == false then
+        -- check if enough crates were found to build the part
+        if _systemPart.found < _systemPart.required then
             _txt = _txt.."Missing ".._systemPart.desc.."\n"
         else
+            -- use the centroid of the crates for this part as a spawn location
+            local _point = _crateCentroids[_name]
+            -- in the case this centroid does not exist (NoCrate), use the centroid of all crates found and add some randomness
+            if _point == nil then
+                _point = _crateCentroid
+                _point = { x = _point.x + math.random(0,3)*spawnDistance, y = _point.y, z = _point.z + math.random(0,3)*spawnDistance}
+            end
 
-            local _launcherPart = ctld.getLauncherUnitFromAATemplate(_aaSystemTemplate)
+            -- use the average heading to spawn the part at
+            local _hdg = _aveHdg[_name]
+            -- if non are found (NoCrate), random heading
+            if _hdg == nil then
+                _hdg = math.random(0, arcRad)
+            end
 
-            --handle multiple launchers from one crate
-            if (_name == "Hawk ln" and ctld.hawkLaunchers > 1)
-                    or (_launcherPart == _name and ctld.aaLaunchers  > 1) then
-
-                --add multiple launcher
-                local _launchers = ctld.aaLaunchers
-
-                if _name == "Hawk ln" then
-                    _launchers = ctld.hawkLaunchers
+            -- search for the amount of times this part needs to be spawned, by default 1 for any unit and aaLaunchers for launchers
+            local partAmount = 1
+            if _systemPart.amount == nil then
+                if _systemPart.launcher ~= nil then
+                    partAmount = ctld.aaLaunchers
                 end
+            else
+                -- but the amount may also be specified in the template
+                partAmount = _systemPart.amount
+            end
+            -- if crate stacking is allowed, then find the multiplication factor for the amount depending on how many crates are required and how many were found
+            if ctld.AASystemCrateStacking then
+                _systemPart.amountFactor = _systemPart.found - _systemPart.found%_systemPart.required
+            else
+                _systemPart.amountFactor = 1
+            end
+            partAmount = partAmount * _systemPart.amountFactor
 
-                for _i = 1, _launchers do
+            --handle multiple units per part by spawning them in a circle around the crate
+            if partAmount > 1 then
+                
+                local angular_step = arcRad / partAmount
 
-                    -- spawn in a circle around the crate
-                    local _angle = math.pi * 2 * (_i - 1) / _launchers
-                    local _xOffset = math.cos(_angle) * 12
-                    local _yOffset = math.sin(_angle) * 12
+                for _i = 1, partAmount do
+                    local _angle = (angular_step * (_i - 1) + _hdg)%arcRad
+                    local _xOffset = math.cos(_angle) * spawnDistance
+                    local _yOffset = math.sin(_angle) * spawnDistance
 
-                    local _point = _systemPart.crate.crateUnit:getPoint()
-
-                    _point = { x = _point.x + _xOffset, y = _point.y, z = _point.z + _yOffset }
-
-                    table.insert(_posArray, _point)
+                    table.insert(_posArray, { x = _point.x + _xOffset, y = _point.y, z = _point.z + _yOffset })
+                    table.insert(_hdgArray, _angle) -- also spawn them perpendicular to that point of the circle
                     table.insert(_typeArray, _name)
                 end
             else
-                table.insert(_posArray, _systemPart.crate.crateUnit:getPoint())
+                table.insert(_posArray, _point)
+                table.insert(_hdgArray, _hdg)
                 table.insert(_typeArray, _name)
             end
         end
@@ -3890,21 +4302,36 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
 
         -- destroy crates
         for _name, _systemPart in pairs(_systemParts) do
+            -- if there is a crate to delete in the first place
+            if  _systemPart.NoCrate ~= true then
+                -- figure out how many crates to delete since we searched for as many as possible, not all of them might have been used
+                local amountToDel = _systemPart.amountFactor*_systemPart.required
+                local DelCounter = 0
 
-            if _heli:getCoalition() == 1 then
-                ctld.spawnedCratesRED[_systemPart.crate.crateUnit:getName()] = nil
-            else
-                ctld.spawnedCratesBLUE[_systemPart.crate.crateUnit:getName()] = nil
+                -- for each crate found for this part
+                for _index, _crate in pairs(_systemPart.crates) do
+                    -- if we still need to delete some crates
+                    if DelCounter < amountToDel then
+                        if _heli:getCoalition() == 1 then
+                            ctld.spawnedCratesRED[_crate.crateUnit:getName()] = nil
+                        else
+                            ctld.spawnedCratesBLUE[_crate.crateUnit:getName()] = nil
+                        end
+
+                        --destroy
+                        -- if ctld.slingLoad == false then
+                            _crate.crateUnit:destroy()
+                            DelCounter = DelCounter + 1 -- count up for one more crate has been deleted
+                        --end
+                    else
+                        break
+                    end
+                end
             end
-
-            --destroy
-           -- if ctld.slingLoad == false then
-                _systemPart.crate.crateUnit:destroy()
-            --end
         end
 
         -- HAWK / BUK READY!
-        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _posArray, _typeArray)
+        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _posArray, _typeArray, _hdgArray)
 
         ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_aaSystemTemplate)
 
@@ -3989,10 +4416,12 @@ function ctld.repairAASystem(_heli, _nearestCrate,_aaSystem)
         --spawn new one
 
         local _types = {}
+        local _hdgs = {}
         local _points = {}
 
         for _, _part in pairs(_oldHawk) do
             table.insert(_points, _part.point)
+            table.insert(_hdgs, _part.hdg)
             table.insert(_types, _part.unit)
         end
 
@@ -4000,7 +4429,7 @@ function ctld.repairAASystem(_heli, _nearestCrate,_aaSystem)
         ctld.completeAASystems[_nearestHawk.group:getName()] = nil
         _nearestHawk.group:destroy()
 
-        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types)
+        local _spawnedGroup = ctld.spawnCrateGroup(_heli, _points, _types, _hdgs)
 
         ctld.completeAASystems[_spawnedGroup:getName()] = ctld.getAASystemDetails(_spawnedGroup,_aaSystem)
 
@@ -4048,6 +4477,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
     if #_nearbyMultiCrates == _nearestCrate.details.cratesRequired then
 
         local _point = _nearestCrate.crateUnit:getPoint()
+        local _crateHdg = mist.getHeading(_nearestCrate.crateUnit, true)
 
         -- destroy crates
         for _, _crate in pairs(_nearbyMultiCrates) do
@@ -4069,14 +4499,15 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
         end
 
 
-        local _spawnedGroup = ctld.spawnCrateGroup(_heli, { _point }, { _nearestCrate.details.unit })
-
-        ctld.processCallback({unit = _heli, crate =  _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})
-
-        local _txt = string.format("%s successfully deployed %s to the field using %d crates", ctld.getPlayerNameOrType(_heli), _nearestCrate.details.desc, #_nearbyMultiCrates)
-
-        trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
-
+        local _spawnedGroup = ctld.spawnCrateGroup(_heli, { _point }, { _nearestCrate.details.unit }, { _crateHdg })
+        if _spawnedGroup == nil then
+            ctld.logError("ctld.unpackMultiCrate group was not spawned - skipping setGrpROE")
+        else
+            ctld.setGrpROE(_spawnedGroup)
+            ctld.processCallback({unit = _heli, crate =  _nearestCrate , spawnedGroup = _spawnedGroup, action = "unpack"})    
+            local _txt = string.format("%s successfully deployed %s to the field using %d crates", ctld.getPlayerNameOrType(_heli), _nearestCrate.details.desc, #_nearbyMultiCrates)
+            trigger.action.outTextForCoalition(_heli:getCoalition(), _txt, 10)
+        end
     else
 
         local _txt = string.format("Cannot build %s!\n\nIt requires %d crates and there are %d \n\nOr the crates are not within 300m of each other", _nearestCrate.details.desc, _nearestCrate.details.cratesRequired, #_nearbyMultiCrates)
@@ -4086,7 +4517,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 end
 
 
-function ctld.spawnCrateGroup(_heli, _positions, _types)
+function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
 
     local _id = ctld.getNextGroupId()
 
@@ -4105,22 +4536,18 @@ function ctld.spawnCrateGroup(_heli, _positions, _types)
         ["task"] = {},
     }
 
-    if #_positions == 1 then
+    local _hdg = 120 * math.pi / 180 -- radians = 120 degrees
+    local _spreadMin = 5
+    local _spreadMax = 5
+    local _spreadMult = 1
+    for _i, _pos in ipairs(_positions) do
 
         local _unitId = ctld.getNextUnitId()
-        local _details = { type = _types[1], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[1], _unitId) }
-
-        _group.units[1] = ctld.createUnit(_positions[1].x + 5, _positions[1].z + 5, 120, _details)
-
-    else
-
-        for _i, _pos in ipairs(_positions) do
-
-            local _unitId = ctld.getNextUnitId()
-            local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
-
-            _group.units[_i] = ctld.createUnit(_pos.x + 5, _pos.z + 5, 120, _details)
+        local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
+        if _hdgs and _hdgs[_i] then
+            _hdg = _hdgs[_i]
         end
+        _group.units[_i] = ctld.createUnit(_pos.x +math.random(_spreadMin,_spreadMax)*_spreadMult, _pos.z +math.random(_spreadMin,_spreadMax)*_spreadMult, _hdg, _details)
     end
 
     --mist function
@@ -4534,15 +4961,13 @@ function ctld.inLogisticsZone(_heli)
     if ctld.inAir(_heli) then
         return false
     end
-
     local _heliPoint = _heli:getPoint()
-
     for _, _name in pairs(ctld.logisticUnits) do
-
         local _logistic = StaticObject.getByName(_name)
-
-        if _logistic ~= nil and _logistic:getCoalition() == _heli:getCoalition() then
-
+        if not _logistic then
+            _logistic = Unit.getByName(_name)
+        end
+        if _logistic ~= nil and _logistic:getCoalition() == _heli:getCoalition() and _logistic:getLife() > 0 then
             --get distance
             local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
 
@@ -4687,12 +5112,32 @@ function ctld.unitCanCarryVehicles(_unit)
 
     for _, _name in ipairs(ctld.vehicleTransportEnabled) do
         local _nameLower = string.lower(_name)
-        if string.match(_type, _nameLower) then
+        if string.find(_type, _nameLower, 1, true) then
             return true
         end
     end
 
     return false
+end
+
+function ctld.unitDynamicCargoCapable(_unit)
+    local cache = {}
+    local _type = string.lower(_unit:getTypeName())
+    local result = cache[_type]
+    if result == nil then
+        result = false
+        ctld.logDebug("ctld.unitDynamicCargoCapable(_type=[%s])", ctld.p(_type))
+        for _, _name in ipairs(ctld.dynamicCargoUnits) do
+            local _nameLower = string.lower(_name)
+            if string.find(_type, _nameLower, 1, true) then   --string.match does not work with patterns containing '-' as it is a magic character
+                result = true
+                break
+            end
+        end
+        cache[_type] = result
+        ctld.logDebug("result=[%s]", ctld.p(result))
+    end
+    return result
 end
 
 function ctld.isJTACUnitType(_type)
@@ -4824,29 +5269,25 @@ function ctld.getUnitActions(_unitType)
 
 end
 
--- Adds menuitem to all heli units that are active
-function ctld.addF10MenuOptions()
-    -- Loop through all Heli units
+-- Adds menuitem to a human unit
+function ctld.addTransportF10MenuOptions(_unitName)
+    ctld.logDebug("ctld.addTransportF10MenuOptions(_unitName=[%s])", ctld.p(_unitName))
 
-    timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 10)
+    local status, error = pcall(function()
 
-    for _, _unitName in pairs(ctld.transportPilotNames) do
-
-        local status, error = pcall(function()
-
-            local _unit = ctld.getTransportUnit(_unitName)
-
-            if _unit ~= nil then
-
+        local _unit = ctld.getTransportUnit(_unitName)
+        ctld.logTrace("_unit = %s", ctld.p(_unit))
+        if _unit then
+            local _unitTypename = _unit:getTypeName()
                 local _groupId = ctld.getGroupId(_unit)
 
                 if _groupId then
-
+                    ctld.logTrace("_groupId = %s", ctld.p(_groupId))
                     if ctld.addedTo[tostring(_groupId)] == nil then
 
                         local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
 
-                        local _unitActions = ctld.getUnitActions(_unit:getTypeName())
+                        local _unitActions = ctld.getUnitActions(_unitTypename)
 
                         missionCommands.addCommandForGroup(_groupId, "Check Cargo", _rootPath, ctld.checkTroopStatus, { _unitName })
 
@@ -4858,15 +5299,26 @@ function ctld.addF10MenuOptions()
 
 
                             -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
-                            local _transportLimit = ctld.getTransportLimit(_unit:getTypeName())
+                            local _transportLimit = ctld.getTransportLimit(_unitTypename)
+                            local itemNb = 0
+                            local menuEntries = {}
+                            local menuPath = _troopCommandsPath
                             for _,_loadGroup in pairs(ctld.loadableGroups) do
                                 if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
-
                                     -- check size & unit
                                     if _transportLimit >= _loadGroup.total then
-                                        missionCommands.addCommandForGroup(_groupId, "Load ".._loadGroup.name, _troopCommandsPath, ctld.loadTroopsFromZone, { _unitName, true,_loadGroup,false })
+                                        table.insert(menuEntries, { text = "Load ".._loadGroup.name, group = _loadGroup })
                                     end
                                 end
+                            end
+                            for _i, _menu in ipairs(menuEntries) do
+                                -- add the menu item
+                                itemNb = itemNb + 1
+                                if itemNb == 9 and _i < #menuEntries then -- page limit reached (first item is "unload")
+                                    menuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", menuPath)
+                                    itemNb = 1
+                                end
+                                missionCommands.addCommandForGroup(_groupId, _menu.text, menuPath, ctld.loadTroopsFromZone, { _unitName, true,_menu.group,false })
                             end
 
                             if ctld.unitCanCarryVehicles(_unit) then
@@ -4889,28 +5341,51 @@ function ctld.addF10MenuOptions()
                         if ctld.enableCrates and _unitActions.crates then
 
                             if ctld.unitCanCarryVehicles(_unit) == false then
+                                -- sort the crate categories alphabetically
+                                local crateCategories = {}
+                                for category, _ in pairs(ctld.spawnableCrates) do
+                                    table.insert(crateCategories, category)
+                                end
+                                table.sort(crateCategories)
+                                ctld.logTrace("crateCategories = [%s]", ctld.p(crateCategories))
 
-                                -- local _cratePath = missionCommands.addSubMenuForGroup(_groupId, "Spawn Crate", _rootPath)
                                 -- add menu for spawning crates
-                                for _subMenuName, _crates in pairs(ctld.spawnableCrates) do
+                                local itemNbMain = 0
+                                local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Crates", _rootPath)
+                                for _i, _category in ipairs(crateCategories) do
+                                    local _subMenuName = _category
+                                    local _crates = ctld.spawnableCrates[_subMenuName]
 
-                                    local _cratePath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _rootPath)
+                                    -- add the submenu item
+                                    itemNbMain = itemNbMain + 1
+                                    if itemNbMain == 10 and _i < #crateCategories then -- page limit reached
+                                        _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", _cratesMenuPath)
+                                        itemNbMain = 1
+                                    end
+                                    local itemNbSubmenu = 0
+                                    local menuEntries = {}
+                                    local _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratesMenuPath)
                                     for _, _crate in pairs(_crates) do
-
                                         if ctld.isJTACUnitType(_crate.unit) == false
                                                 or (ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled) then
                                             if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
-
                                                 local _crateRadioMsg = _crate.desc
-
                                                 --add in the number of crates required to build something
                                                 if _crate.cratesRequired ~= nil and _crate.cratesRequired > 1 then
                                                     _crateRadioMsg = _crateRadioMsg.." (".._crate.cratesRequired..")"
                                                 end
-
-                                                missionCommands.addCommandForGroup(_groupId,_crateRadioMsg, _cratePath, ctld.spawnCrate, { _unitName, _crate.weight })
+                                                table.insert(menuEntries, { text = _crateRadioMsg, crate = _crate })
                                             end
                                         end
+                                    end
+                                    for _i, _menu in ipairs(menuEntries) do
+                                        -- add the submenu item
+                                        itemNbSubmenu = itemNbSubmenu + 1
+                                        if itemNbSubmenu == 10 and _i < #menuEntries then -- page limit reached
+                                            _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", _subMenuPath)
+                                            itemNbSubmenu = 1
+                                        end
+                                        missionCommands.addCommandForGroup(_groupId, _menu.text, _subMenuPath, ctld.spawnCrate, { _unitName, _menu.crate.weight })
                                     end
                                 end
                             end
@@ -4920,14 +5395,14 @@ function ctld.addF10MenuOptions()
 
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
                             if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
-                                if  ctld.slingLoad == false then
+                                if  ctld.loadCrateFromMenu then
                                     missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
                             end
 
                             missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
 
-                            if ctld.slingLoad == false then
+                            if ctld.loadCrateFromMenu or ctld.hoverPickup then
                                 missionCommands.addCommandForGroup(_groupId, "Drop Crate", _crateCommands, ctld.dropSlingCrate, { _unitName })
                             end
 
@@ -4960,16 +5435,20 @@ function ctld.addF10MenuOptions()
                         ctld.addedTo[tostring(_groupId)] = true
                     end
                 end
-            else
-                -- env.info(string.format("unit nil %s",_unitName))
             end
         end)
 
-        if (not status) then
-            env.error(string.format("Error adding f10 to transport: %s", error), false)
-        end
+    if (not status) then
+        ctld.logError(string.format("Error adding f10 to transport: %s", error))
     end
+end
 
+function ctld.addOtherF10MenuOptions()
+    ctld.logDebug("ctld.addOtherF10MenuOptions")
+    
+    -- reschedule every 10 seconds
+    timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 10)
+    
     local status, error = pcall(function()
 
         -- now do any player controlled aircraft that ARENT transport units
@@ -5036,6 +5515,7 @@ function ctld.addJTACRadioCommand(_side)
                 
                 local newGroup = false
                 if ctld.jtacRadioAdded[tostring(_groupId)] == nil then
+                    ctld.logDebug("ctld.addJTACRadioCommand - adding JTAC radio menu for unit [%s]", ctld.p(_playerUnit:getName()))
                     newGroup = true
                     local JTACpath = missionCommands.addSubMenuForGroup(_groupId, ctld.jtacMenuName)
                     missionCommands.addCommandForGroup(_groupId, "JTAC Status", JTACpath, ctld.getJTACStatus, { _playerUnit:getName() })
@@ -5062,7 +5542,7 @@ function ctld.addJTACRadioCommand(_side)
                     local jtacCounter = 0
                     
                     for _jtacGroupName,jtacUnit in pairs(ctld.jtacUnits) do
-                        ctld.logTrace(string.format("JTAC - MENU - [%s] - processing menu", ctld.p(_jtacGroupName)))
+                        --ctld.logTrace(string.format("JTAC - MENU - [%s] - processing menu", ctld.p(_jtacGroupName)))
                         
                         --if the JTAC is on the same team as the group being considered
                         local jtacCoalition = ctld.jtacUnits[_jtacGroupName].side
@@ -5071,8 +5551,8 @@ function ctld.addJTACRadioCommand(_side)
                             if ctld.jtacGroupSubMenuPath[_jtacGroupName] and #ctld.jtacGroupSubMenuPath[_jtacGroupName]==2 then
                                 missionCommands.removeItemForGroup(_groupId, ctld.jtacGroupSubMenuPath[_jtacGroupName])
                             end
-                            ctld.logTrace(string.format("JTAC - MENU - [%s] - jtacTargetsList = %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacTargetsList[_jtacGroupName])))
-                            ctld.logTrace(string.format("JTAC - MENU - [%s] - jtacCurrentTargets = %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacCurrentTargets[_jtacGroupName])))
+                            --ctld.logTrace(string.format("JTAC - MENU - [%s] - jtacTargetsList = %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacTargetsList[_jtacGroupName])))
+                            --ctld.logTrace(string.format("JTAC - MENU - [%s] - jtacCurrentTargets = %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacCurrentTargets[_jtacGroupName])))
                             
                             local jtacActionMenu = false
                             for _,_specialOptionTable in pairs(ctld.jtacSpecialOptions) do
@@ -5095,7 +5575,7 @@ function ctld.addJTACRadioCommand(_side)
                                 end
                                 --add the JTAC group submenu to the current page
                                 ctld.jtacGroupSubMenuPath[_jtacGroupName] = missionCommands.addSubMenuForGroup(_groupId, jtacGroupSubMenuName, jtacCurrentPagePath)
-                                ctld.logTrace(string.format("JTAC - MENU - [%s] - jtacGroupSubMenuPath = %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacGroupSubMenuPath[_jtacGroupName])))
+                                --ctld.logTrace(string.format("JTAC - MENU - [%s] - jtacGroupSubMenuPath = %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacGroupSubMenuPath[_jtacGroupName])))
                                 
                                 --make a copy of the JTAC group submenu's path to insert the target's list on as many pages as required. The JTAC's group submenu path only leads to the first page
                                 local jtacTargetPagePath = mist.utils.deepCopy(ctld.jtacGroupSubMenuPath[_jtacGroupName])
@@ -5137,7 +5617,7 @@ function ctld.addJTACRadioCommand(_side)
                                 end
                                 
                                 if #ctld.jtacTargetsList[_jtacGroupName] >= 1 then
-                                    ctld.logTrace(string.format("JTAC - MENU - [%s] - adding targets menu", ctld.p(_jtacGroupName)))
+                                    --ctld.logTrace(string.format("JTAC - MENU - [%s] - adding targets menu", ctld.p(_jtacGroupName)))
 
                                     --add a reset targeting option to revert to automatic JTAC unit targeting
                                     missionCommands.addCommandForGroup(_groupId, "Reset TGT Selection", jtacTargetPagePath, ctld.setJTACTarget, {jtacGroupName = _jtacGroupName, targetName = nil})
@@ -5664,9 +6144,8 @@ function ctld.createSmokeMarker(_enemyUnit, _colour)
     --recreate in 5 mins
     ctld.jtacSmokeMarks[_enemyUnit:getName()] = timer.getTime() + 300.0
 
-    -- move smoke 2 meters above target for ease
     local _enemyPoint = _enemyUnit:getPoint()
-    trigger.action.smoke({ x = _enemyPoint.x + ctld.JTAC_smokeOffset_x, y = _enemyPoint.y + ctld.JTAC_smokeOffset_y, z = _enemyPoint.z + ctld.JTAC_smokeOffset_z }, _colour)
+    trigger.action.smoke({ x = _enemyPoint.x + math.random(-ctld.JTAC_smokeMarginOfError, ctld.JTAC_smokeMarginOfError) + ctld.JTAC_smokeOffset_x, y = _enemyPoint.y + ctld.JTAC_smokeOffset_y, z = _enemyPoint.z + math.random(-ctld.JTAC_smokeMarginOfError, ctld.JTAC_smokeMarginOfError) + ctld.JTAC_smokeOffset_z }, _colour)
 end
 
 function ctld.cancelLase(_jtacGroupName)
@@ -6282,6 +6761,24 @@ function ctld.setJTAC9Line(_args)
 end
 ctld.jtacSpecialOptions._9Line.setter = ctld.setJTAC9Line
 
+function ctld.setGrpROE(_grp, _ROE)
+    if _grp == nil then
+        ctld.logError("ctld.setGrpROE called with a nil group")
+        return
+    end
+
+    if _ROE == nil then
+        _ROE = AI.Option.Ground.val.ROE.OPEN_FIRE
+    end
+
+    if _grp and _grp:isExist() == true and #_grp:getUnits() > 0 then -- check if the group truly exists
+        local _controller = _grp:getController();
+        Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
+        Controller.setOption(_controller, AI.Option.Ground.id.ROE, _ROE)
+        _controller:setTask(_grp)
+    end
+end
+
 function ctld.isInfantry(_unit)
 
     local _typeName = _unit:getTypeName()
@@ -6782,9 +7279,9 @@ function ctld.initialize(force)
 
         timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
         timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
-        timer.scheduleFunction(ctld.addF10MenuOptions, nil, timer.getTime() + 5)
+        timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 5)
 
-        if ctld.enableCrates == true and ctld.slingLoad == false and ctld.hoverPickup == true then
+        if ctld.enableCrates == true and ctld.hoverPickup == true then
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
 
@@ -6855,12 +7352,80 @@ function ctld.initialize(force)
     end
     env.info("END search for crates")
 
+    -- register event handler
+    ctld.logInfo("registering event handler")
+    world.addEventHandler(ctld.eventHandler)
+
+
     -- don't initialize more than once
     ctld.alreadyInitialized = true
 
     env.info("CTLD READY")
 end
 
+--- Handle world events.
+ctld.eventHandler = {}
+function ctld.eventHandler:onEvent(event)
+    ctld.logTrace("ctld.eventHandler:onEvent(), event = %s", ctld.p(event))
+    if event == nil then
+        ctld.logError("Event handler was called with a nil event!")
+        return
+    end
+
+    -- check that we know the event
+    if not (
+        event.id == 15 -- S_EVENT_BIRTH"
+        or event.id == 20 -- S_EVENT_PLAYER_ENTER_UNIT
+        ) then
+        return
+    end
+
+    -- find the originator unit
+    local unitName = nil
+    if event.initiator ~= nil and event.initiator.getName then
+        unitName = event.initiator:getName()
+        ctld.logTrace("unitName = %s", ctld.p(unitName))
+    end
+    if not unitName then 
+        ctld.logWarning("no unitname found in event %s", ctld.p(event))
+        return
+    end
+
+    if mist.DBs.humansByName[unitName] then -- it's a human unit
+        ctld.logDebug("caught event BIRTH for human unit [%s]", ctld.p(unitName))
+        local _unit = Unit.getByName(unitName)
+        if _unit ~= nil then
+            -- assign transport pilot
+            ctld.logTrace("_unit = %s", ctld.p(_unit))
+
+            local playerTypeName = _unit:getTypeName()
+            ctld.logTrace("playerTypeName = %s", ctld.p(playerTypeName))
+
+            -- Allow units to CTLD by aircraft type and not by pilot name
+            if ctld.addPlayerAircraftByType then
+                for _,aircraftType in pairs(ctld.aircraftTypeTable) do
+                    if aircraftType == playerTypeName then
+                        ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
+                        -- add transport unit to the list
+                        table.insert(ctld.transportPilotNames, unitName)
+                        -- add transport radio menu
+                        ctld.addTransportF10MenuOptions(unitName)
+                        break
+                    end
+                end
+            else
+                for _, _unitName in pairs(ctld.transportPilotNames) do
+                    if _unitName == unitName then
+                        ctld.logTrace("adding by transportPilotNames, unitName = %s", ctld.p(unitName))
+                        -- add transport radio menu
+                        ctld.addTransportF10MenuOptions(unitName)
+                        break
+                    end
+                end
+            end
+        end
+    end
+end
 
 -- initialize the random number generator to make it almost random
 math.random(); math.random(); math.random()
