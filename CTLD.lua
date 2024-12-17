@@ -6770,9 +6770,7 @@ function ctld.setGrpROE(_grp, _ROE)
         _ROE = AI.Option.Ground.val.ROE.OPEN_FIRE
     end
 
-    _grp = ctld.getAliveGroup(_grp)
-
-    if _grp ~= nil then
+    if _grp and _grp:isExist() == true and #_grp:getUnits() > 0 then -- check if the group truly exists
         local _controller = _grp:getController();
         Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
         Controller.setOption(_controller, AI.Option.Ground.id.ROE, _ROE)
