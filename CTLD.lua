@@ -34,11 +34,11 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "202412.01"
+ctld.Version = "202412.02"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
-ctld.Debug = false
-ctld.Trace = false
+ctld.Debug = true
+ctld.Trace = true
 
 ctld.alreadyInitialized = false -- if true, ctld.initialize() will not run
 
@@ -50,7 +50,7 @@ ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics woul
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 -- Allow units to CTLD by aircraft type and not by pilot name - this is done everytime a player enters a new unit
-ctld.addPlayerAircraftByType = false
+ctld.addPlayerAircraftByType = true
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
 ctld.loadCrateFromMenu = false -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
@@ -682,15 +682,15 @@ ctld.loadableGroups = {
     {name = "Mortar Squad", mortar = 6 },
     {name = "JTAC Group", inf = 4, jtac = 1 }, -- will make a loadable group with 4 infantry and a JTAC soldier for both coalitions
     {name = "Single JTAC", jtac = 1 }, -- will make a loadable group witha single JTAC soldier for both coalitions
-    {name = "2x - Standard Groups", inf = 12, mg = 4, at = 4 },
-    {name = "2x - Anti Air", inf = 4, aa = 6  },
-    {name = "2x - Anti Tank", inf = 4, at = 12  },
-    {name = "2x - Standard Groups + 2x Mortar", inf = 12, mg = 4, at = 4, mortar = 12 },
-    {name = "3x - Standard Groups", inf = 18, mg = 6, at = 6 },
-    {name = "3x - Anti Air", inf = 6, aa = 9  },
-    {name = "3x - Anti Tank", inf = 6, at = 18  },
-    {name = "3x - Mortar Squad", mortar = 18},
-    {name = "5x - Mortar Squad", mortar = 30},
+    {name = "2x - Standard Groups", list = {"Standard Group", "Standard Group"}},
+    {name = "2x - Anti Airs", list = {"Anti Air", "Anti Air"}},
+    {name = "2x - Anti Tanks", list = {"Anti Tank", "Anti Tank"}},
+    {name = "2x - Standard Groups + 2x Mortar", list = {"Standard Group", "Standard Group", "Mortar Squad", "Mortar Squad"}},
+    {name = "2x - Standard Groups", list = {"Standard Group", "Standard Group", "Standard Group"}},
+    {name = "2x - Anti Airs", list = {"Anti Air", "Anti Air", "Anti Air"}},
+    {name = "2x - Anti Tanks", list = {"Anti Tank", "Anti Tank", "Anti Tank"}},
+    {name = "3x - Mortar Squad", list = {"Mortar Squad", "Mortar Squad", "Mortar Squad"}},
+    {name = "5x - Mortar Squad", list = {"Mortar Squad", "Mortar Squad", "Mortar Squad", "Mortar Squad", "Mortar Squad"}},
     -- {name = "Mortar Squad Red", inf = 2, mortar = 5, side =1 }, --would make a group loadable by RED only
 }
 
@@ -5318,7 +5318,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     menuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", menuPath)
                                     itemNb = 1
                                 end
-                                missionCommands.addCommandForGroup(_groupId, _menu.text, menuPath, ctld.loadTroopsFromZone, { _unitName, true,_menu.group,false })
+                                missionCommands.addCommandForGroup(_groupId, _menu.text, menuPath, ctld.loadTroopsFromZone, { _unitName, true, _menu.group, false })
                             end
 
                             if ctld.unitCanCarryVehicles(_unit) then
@@ -7241,34 +7241,41 @@ function ctld.initialize(force)
         end
     end
 
-    -- add total count
-
-    for _,_loadGroup in pairs(ctld.loadableGroups) do
-
-        _loadGroup.total = 0
-        if _loadGroup.aa then
-            _loadGroup.total = _loadGroup.aa + _loadGroup.total
+    local function countGroup(group)
+        local result = 0
+        if group.aa then
+            result = group.aa + result
         end
 
-        if _loadGroup.inf then
-            _loadGroup.total = _loadGroup.inf + _loadGroup.total
+        if group.inf then
+            result = group.inf + result
         end
 
 
-        if _loadGroup.mg then
-            _loadGroup.total = _loadGroup.mg + _loadGroup.total
+        if group.mg then
+            result = group.mg + result
         end
 
-        if _loadGroup.at then
-            _loadGroup.total = _loadGroup.at + _loadGroup.total
+        if group.at then
+            result = group.at + result
         end
 
-        if _loadGroup.mortar then
-            _loadGroup.total = _loadGroup.mortar + _loadGroup.total
+        if group.mortar then
+            result = group.mortar + result
         end
 
+        return result
     end
 
+    -- add total count
+    for _, group in pairs(ctld.loadableGroups) do
+        group.total = countGroup(group)
+        if group.list then
+            for _, subGroup in pairs(group.list) do
+                group.total = group.total + countGroup(subGroup)
+            end
+        end
+    end
 
     -- Scheduled functions (run cyclically) -- but hold execution for a second so we can override parts
 
