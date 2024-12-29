@@ -1,5 +1,5 @@
 --[[
-    Combat Troop and Logistics Drop_
+    Combat Troop and Logistics Drop
 
     Allows Huey, Mi-8 and C130 to transport troops internally and Helicopters to transport Logistic / Vehicle units to the field via sling-loads
     without requiring external mods.
@@ -7604,6 +7604,126 @@ function ctld.setJTAC9Line(_args)
 end
 ctld.jtacSpecialOptions._9Line.setter = ctld.setJTAC9Line
 
+-- ctld Automatic management of the orbiting of a flying JTAC (AI) (example a drone)
+--
+-- Use: this script allows you to orbit one or more AI flying devices above a target even if they move, as long as it detects one
+-- Associated with the use of the CTLD JTAC functions, you can assign a flight plan to a drone for example,
+-- the latter follows it, and starts orbiting as soon as it detects a target. -- As soon as it no longer detects a target, it resumes its flight plan
+-- Instructions: In the mission editor:
+-- 1> Load MIST + CTLD
+-- 2> Create a continuous TRIGGER at Temp greater than 6, which ACTION.EXECUTE SCRIPT:
+-- 		ctld.JTACAutoLase("gdrone1", 1688,false) -- defines the group "gdrone1" as a JTAC gives it the frequency 1688, without smoke marking
+-- 		ctld.autoOrbitingJTAC("gdrone1") -- launches the automatic management of the JTAC orbiting----------------------------------------------------------------------------------------------------------------------------------
+ctld.OrbitIinProgress = {}	    -- indique pour un group donné, si un ordre d'orbite est en cours ou non (non au début)
+ctld.debugFlag = false		-- si true => msg debut affiché, si false => pas d'affichage
+------------------------------------------------------------------------------------
+-- Launches automatic management of JTAC orbiting upon detection of a target
+function ctld.autoOrbitingJTAC()			
+	for k,v in pairs(ctld.jtacUnits) do					-- check status of each active JTAC
+		if ctld.jtacCurrentTargets[k] ~= nil then		-- if JTAC illuminates a target
+			if ctld.InOrbitList(k) == false then		-- JTAC has a target but is not in orbit => put it in orbit
+				ctld.startOrbitingJTACOnTarget(k, ctld.jtacCurrentTargets[k].name, 2000, 100)	-- orbit JTAC
+				ctld.OrbitIinProgress[k] =  timer.getTime()								-- remember new orbit fixation time
+            else																		-- JTAC is already in orbit => manage coordinate update to track target movement
+                if timer.getTime() > (ctld.OrbitIinProgress[k] + 60) then   			-- every 60" refresh orbit coordinate
+                    local nearestWP = ctld.NearWP(ctld.jtacCurrentTargets[k].name, k)
+					if nearestWP then
+						ctld.AjustRoute(k, ctld.NearWP(ctld.jtacCurrentTargets[k].name, k))
+					else																-- JTAC is in orbit, without next WP => stop orbit
+						Group.getByName(k):getController():resetTask()					-- stop JTAC orbiting 
+						ctld.OrbitIinProgress[k] =  nil									-- delete orbit
+					end
+                end
+			end
+		elseif ctld.jtacCurrentTargets[k] == nil then			-- if JTAC does not illuminate any targets
+            if ctld.InOrbitList(k) == true then					-- JTAC is in orbit, without target => stop orbit
+				Group.getByName(k):getController():resetTask()	-- stop JTAC orbiting 
+				ctld.OrbitIinProgress[k] =  nil					-- delete orbit
+			end
+        end
+	end
+    mist.scheduleFunction(ctld.autoOrbitingJTAC, {}, timer.getTime()+3)
+end
+------------------------------------------------------------------------------------
+-- orbits group "_grpName", on target "_unitTargetName"
+-- _alti in meters, speed in km/h
+function ctld.startOrbitingJTACOnTarget(_grpName, _unitTargetName, _alti, _speed)	
+	if (Unit.getByName(_unitTargetName) ~= nil) and (Group.getByName(_grpName) ~= nil) then			-- if target unit and JTAC group exist
+		local orbit = {
+		   id = 'Orbit', 
+			 params = { 
+			   pattern = 'Circle',
+			   point = mist.utils.makeVec2(mist.getAvgPos(mist.makeUnitTable({_unitTargetName}))),
+			   speed = _speed,
+			   altitude = _alti,
+		   } 
+		 }
+		 Group.getByName(_grpName):getController():pushTask(orbit)
+		 ctld.OrbitIinProgress[_grpName] = true
+	 end
+end
+-------------------------------------------------------------------------------------------
+-- checks if 1 unitName is already targeted by a JTAC
+function ctld.InOrbitList(_grpName)
+    for k, v in pairs(ctld.OrbitIinProgress) do
+		if k == _grpName then 
+			return true
+		end
+	end 
+	return false
+end
+-------------------------------------------------------------------------------------------
+-- returns the WayPoint number closest to the target on the JTAC route
+function ctld.NearWP(_unitTargetName, _grpName)
+    local WP = 0
+    local memoDist = 9999999	-- Lower distance checked
+    local JTACRoute = mist.getGroupRoute (_grpName, true)   -- retrieves the initial ME route
+        if Group.getByName(_grpName):getUnit(1) ~= nil and Unit.getByName(_unitTargetName) ~= nil then
+			if #JTACRoute > 0 then
+				for i=1, #JTACRoute do
+					local ptJTAC   = {x = JTACRoute[i].x, y = JTACRoute[i].y}
+					local ptTarget = mist.utils.makeVec2(Unit.getByName(_unitTargetName):getPoint())
+					local dist = mist.utils.get2DDist(ptJTAC, ptTarget)
+					if dist < memoDist then
+						memoDist = dist
+						WP = i
+					end
+				end
+			else
+				return nil
+			end
+        end
+    return WP
+end
+----------------------------------------------------------------------------
+-- Modifies the route by removing all WPs lower than the one passed in param to align the orbit with the WP closest to the target
+function ctld.AjustRoute(_grpName, firstWP)
+    local JTACRoute = mist.getGroupRoute (_grpName, true)
+	for i=0, #JTACRoute-1 do
+       	if firstWP+i <= #JTACRoute then
+        	JTACRoute[i+1] = JTACRoute[firstWP+i]		-- Replace the WPs kept at the start of the route
+        else 
+            JTACRoute[i+1] = nil						-- remove unnecessary WP
+        end
+    end
+    
+	local Mission = {} 	
+    Mission = { 
+                id = 'Mission', 
+                 params = { 
+                           route = {points = JTACRoute
+                				   }
+            			  }
+               } 
+
+    if ctld.InOrbitList(_grpName) == true then					-- if JTAC in orbit => stop it
+    	Group.getByName(_grpName):getController():resetTask()	-- stop JTAC orbiting
+        ctld.OrbitIinProgress[_grpName] =  nil
+    end
+    
+    Group.getByName(_grpName):getController():setTask(Mission)
+	return Mission
+end
 function ctld.setGrpROE(_grp, _ROE)
     if _grp == nil then
         ctld.logError("ctld.setGrpROE called with a nil group")
