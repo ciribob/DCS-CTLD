@@ -161,8 +161,6 @@ ctld.i18n["en"]["Delivered FOB Crate 60m at 6'oclock to you"] = nil
 ctld.i18n["en"]["FOB Crate dropped back to base"] = nil
 ctld.i18n["en"]["FOB Crate Loaded"] = nil
 ctld.i18n["en"]["%1 loaded a FOB Crate ready for delivery!"] = nil
-ctld.i18n["en"]["FOB Crate Loaded"] = nil
-ctld.i18n["en"]["%1 loaded a FOB Crate ready for delivery!"] = nil
 ctld.i18n["en"]["There are no friendly logistic units nearby to load a FOB crate from!"] = nil
 ctld.i18n["en"]["You already have troops onboard."] = nil
 ctld.i18n["en"]["You already have vehicles onboard."] = nil
@@ -190,7 +188,6 @@ ctld.i18n["en"]["Loaded %1 crate!"] = nil
 ctld.i18n["en"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = nil
 ctld.i18n["en"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = nil
 ctld.i18n["en"]["You must land before you can load a crate!"] = nil
-ctld.i18n["en"]["Loaded %1 crate!"] = nil
 ctld.i18n["en"]["No Crates within 50m to load!"] = nil
 ctld.i18n["en"]["Maximum number of crates are on board!"] = nil
 ctld.i18n["en"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = nil
@@ -205,7 +202,6 @@ ctld.i18n["en"]["You can't unpack that here! Take it to where it's needed!"] = n
 ctld.i18n["en"]["Sorry you must move this crate before you unpack it!"] = nil
 ctld.i18n["en"]["%1 successfully deployed %2 to the field"] = nil
 ctld.i18n["en"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = nil
-ctld.i18n["en"]["You can't unpack that here! Take it to where it's needed!"] = nil
 ctld.i18n["en"]["Finished building FOB! Crates and Troops can now be picked up."] = nil
 ctld.i18n["en"]["Finished building FOB! Crates can now be picked up."] = nil
 ctld.i18n["en"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] = nil
@@ -266,11 +262,46 @@ ctld.i18n["en"]["%1, wind and target speed laser spot compensations enabled"] = 
 ctld.i18n["en"]["%1, wind and target speed laser spot compensations disabled"] = nil
 ctld.i18n["en"]["%1, WHITE smoke deployed near target"] = nil
 
+--- F10 menu messages
+ctld.i18n["en"]["Actions"] = nil
+ctld.i18n["en"]["Troop Transport"] = nil
+ctld.i18n["en"]["Unload / Extract Troops"] = nil
+ctld.i18n["en"]["Next page"] = nil
+ctld.i18n["en"]["Load "] = nil
+ctld.i18n["en"]["Vehicle / FOB Transport"] = nil
+ctld.i18n["en"]["Vehicle / FOB Crates"] = nil
+ctld.i18n["en"]["Unload Vehicles"] = nil
+ctld.i18n["en"]["Load / Extract Vehicles"] = nil
+ctld.i18n["en"]["Load / Unload FOB Crate"] = nil
+ctld.i18n["en"]["CTLD Commands"] = nil
+ctld.i18n["en"]["CTLD"] = nil
+ctld.i18n["en"]["Check Cargo"] = nil
+ctld.i18n["en"]["Load Nearby Crate"] = nil
+ctld.i18n["en"]["Unpack Any Crate"] = nil
+ctld.i18n["en"]["Drop Crate"] = nil
+ctld.i18n["en"]["List Nearby Crates"] = nil
+ctld.i18n["en"]["List FOBs"] = nil
+ctld.i18n["en"]["List Beacons"] = nil
+ctld.i18n["en"]["List Radio Beacons"] = nil
+ctld.i18n["en"]["Smoke Markers"] = nil
+ctld.i18n["en"]["Drop Red Smoke"] = nil
+ctld.i18n["en"]["Drop Blue Smoke"] = nil
+ctld.i18n["en"]["Drop Orange Smoke"] = nil
+ctld.i18n["en"]["Drop Green Smoke"] = nil
+ctld.i18n["en"]["Drop Beacon"] = nil
+ctld.i18n["en"]["Radio Beacons"] = nil
+ctld.i18n["en"]["Remove Closet Beacon"] = nil
+ctld.i18n["en"]["JTAC Status"] = nil
+ctld.i18n["en"]["DISABLE "] = nil
+ctld.i18n["en"]["ENABLE "] = nil
+ctld.i18n["en"]["REQUEST "] = nil
+ctld.i18n["en"]["Reset TGT Selection"] = nil
+
 -- These are the string translations
 -- If you want to change the text then do so here
 -- If you want to add a new language then create a new block
 -- following the same format as the current ones
-
+--========  FRENCH - FRANCAIS =====================================================================================
 ctld.i18n["fr"] = {}
 
 --- groups names
@@ -278,7 +309,7 @@ ctld.i18n["fr"]["Standard Group"] = "Groupe standard"
 ctld.i18n["fr"]["Anti Air"] = "Défense aérienne"
 ctld.i18n["fr"]["Anti Tank"] = "Anti Tank"
 ctld.i18n["fr"]["Mortar Squad"] = "Groupe mortier"
-ctld.i18n["fr"]["JTAC Group"] = "Group JTAC"
+ctld.i18n["fr"]["JTAC Group"] = "Groupe JTAC"
 ctld.i18n["fr"]["Single JTAC"] = "JTAC seul"
 ctld.i18n["fr"]["2x - Standard Groups"] = "2x - Groupes standards"
 ctld.i18n["fr"]["2x - Anti Air"] = "2x - Défenses aériennes"
@@ -292,195 +323,486 @@ ctld.i18n["fr"]["5x - Mortar Squad"] = "5x - Groupes mortiers"
 ctld.i18n["fr"]["Mortar Squad Red"] = "Groupe mortier rouge"
 
 --- crates names
-ctld.i18n["fr"]["Humvee - MG"] = nil
-ctld.i18n["fr"]["Humvee - TOW"] = nil
-ctld.i18n["fr"]["Light Tank - MRAP"] = nil
-ctld.i18n["fr"]["Med Tank - LAV-25"] = nil
-ctld.i18n["fr"]["Heavy Tank - Abrams"] = nil
-ctld.i18n["fr"]["BTR-D"] = nil
-ctld.i18n["fr"]["BRDM-2"] = nil
-ctld.i18n["fr"]["Hummer - JTAC"] = nil
-ctld.i18n["fr"]["M-818 Ammo Truck"] = nil
-ctld.i18n["fr"]["M-978 Tanker"] = nil
-ctld.i18n["fr"]["SKP-11 - JTAC"] = nil
-ctld.i18n["fr"]["Ural-375 Ammo Truck"] = nil
-ctld.i18n["fr"]["KAMAZ Ammo Truck"] = nil
-ctld.i18n["fr"]["EWR Radar"] = nil
-ctld.i18n["fr"]["FOB Crate - Small"] = nil
-ctld.i18n["fr"]["MLRS"] = nil
-ctld.i18n["fr"]["SpGH DANA"] = nil
-ctld.i18n["fr"]["T155 Firtina"] = nil
-ctld.i18n["fr"]["Howitzer"] = nil
-ctld.i18n["fr"]["SPH 2S19 Msta"] = nil
-ctld.i18n["fr"]["M1097 Avenger"] = nil
-ctld.i18n["fr"]["M48 Chaparral"] = nil
-ctld.i18n["fr"]["Roland ADS"] = nil
-ctld.i18n["fr"]["Gepard AAA"] = nil
-ctld.i18n["fr"]["LPWS C-RAM"] = nil
-ctld.i18n["fr"]["9K33 Osa"] = nil
-ctld.i18n["fr"]["9P31 Strela-1"] = nil
-ctld.i18n["fr"]["9K35M Strela-10"] = nil
-ctld.i18n["fr"]["9K331 Tor"] = nil
-ctld.i18n["fr"]["2K22 Tunguska"] = nil
-ctld.i18n["fr"]["HAWK Launcher"] = nil
-ctld.i18n["fr"]["HAWK Search Radar"] = nil
-ctld.i18n["fr"]["HAWK Track Radar"] = nil
-ctld.i18n["fr"]["HAWK PCP"] = nil
-ctld.i18n["fr"]["HAWK CWAR"] = nil
-ctld.i18n["fr"]["HAWK Repair"] = nil
-ctld.i18n["fr"]["NASAMS Launcher 120C"] = nil
-ctld.i18n["fr"]["NASAMS Search/Track Radar"] = nil
-ctld.i18n["fr"]["NASAMS Command Post"] = nil
-ctld.i18n["fr"]["NASAMS Repair"] = nil
-ctld.i18n["fr"]["KUB Launcher"] = nil
-ctld.i18n["fr"]["KUB Radar"] = nil
-ctld.i18n["fr"]["KUB Repair"] = nil
-ctld.i18n["fr"]["BUK Launcher"] = nil
-ctld.i18n["fr"]["BUK Search Radar"] = nil
-ctld.i18n["fr"]["BUK CC Radar"] = nil
-ctld.i18n["fr"]["BUK Repair"] = nil
-ctld.i18n["fr"]["Patriot Launcher"] = nil
-ctld.i18n["fr"]["Patriot Radar"] = nil
-ctld.i18n["fr"]["Patriot ECS"] = nil
-ctld.i18n["fr"]["Patriot ICC"] = nil
-ctld.i18n["fr"]["Patriot EPP"] = nil
-ctld.i18n["fr"]["Patriot AMG (optional)"] = nil
-ctld.i18n["fr"]["Patriot Repair"] = nil
-ctld.i18n["fr"]["S-300 Grumble TEL C"] = nil
-ctld.i18n["fr"]["S-300 Grumble Flap Lid-A TR"] = nil
-ctld.i18n["fr"]["S-300 Grumble Clam Shell SR"] = nil
-ctld.i18n["fr"]["S-300 Grumble Big Bird SR"] = nil
-ctld.i18n["fr"]["S-300 Grumble C2"] = nil
-ctld.i18n["fr"]["S-300 Repair"] = nil
+ctld.i18n["fr"]["Humvee - MG"] = "Humvee - MG"
+ctld.i18n["fr"]["Humvee - TOW"] = "Humvee - TOW"
+ctld.i18n["fr"]["Light Tank - MRAP"] = "Light Tank - MRAP"
+ctld.i18n["fr"]["Med Tank - LAV-25"] = "Med Tank - LAV-25"
+ctld.i18n["fr"]["Heavy Tank - Abrams"] = "Heavy Tank - Abrams"
+ctld.i18n["fr"]["BTR-D"] = "BTR-D"
+ctld.i18n["fr"]["BRDM-2"] = "BRDM-2"
+ctld.i18n["fr"]["Hummer - JTAC"] = "Hummer - JTAC"
+ctld.i18n["fr"]["M-818 Ammo Truck"] = "M-818 Ammo Truck"
+ctld.i18n["fr"]["M-978 Tanker"] = "M-978 Tanker"
+ctld.i18n["fr"]["SKP-11 - JTAC"] = "SKP-11 - JTAC"
+ctld.i18n["fr"]["Ural-375 Ammo Truck"] = "Ural-375 Ammo Truck"
+ctld.i18n["fr"]["KAMAZ Ammo Truck"] = "KAMAZ Ammo Truck"
+ctld.i18n["fr"]["EWR Radar"] = "EWR Radar"
+ctld.i18n["fr"]["FOB Crate - Small"] = "FOB Crate - Small"
+ctld.i18n["fr"]["MLRS"] = "MLRS"
+ctld.i18n["fr"]["SpGH DANA"] = "SpGH DANA"
+ctld.i18n["fr"]["T155 Firtina"] = "T155 Firtina"
+ctld.i18n["fr"]["Howitzer"] = "Howitzer"
+ctld.i18n["fr"]["SPH 2S19 Msta"] = "SPH 2S19 Msta"
+ctld.i18n["fr"]["M1097 Avenger"] = "M1097 Avenger"
+ctld.i18n["fr"]["M48 Chaparral"] = "M48 Chaparral"
+ctld.i18n["fr"]["Roland ADS"] = "Roland ADS"
+ctld.i18n["fr"]["Gepard AAA"] = "Gepard AAA"
+ctld.i18n["fr"]["LPWS C-RAM"] = "LPWS C-RAM"
+ctld.i18n["fr"]["9K33 Osa"] = "9K33 Osa"
+ctld.i18n["fr"]["9P31 Strela-1"] = "9P31 Strela-1"
+ctld.i18n["fr"]["9K35M Strela-10"] = "9K35M Strela-10"
+ctld.i18n["fr"]["9K331 Tor"] = "9K331 Tor"
+ctld.i18n["fr"]["2K22 Tunguska"] = "2K22 Tunguska"
+ctld.i18n["fr"]["HAWK Launcher"] = "HAWK Launcher"
+ctld.i18n["fr"]["HAWK Search Radar"] = "HAWK Search Radar"
+ctld.i18n["fr"]["HAWK Track Radar"] = "HAWK Track Radar"
+ctld.i18n["fr"]["HAWK PCP"] = "HAWK PCP"
+ctld.i18n["fr"]["HAWK CWAR"] = "HAWK CWAR"
+ctld.i18n["fr"]["HAWK Repair"] = "HAWK Repair"
+ctld.i18n["fr"]["NASAMS Launcher 120C"] = "NASAMS Launcher 120C"
+ctld.i18n["fr"]["NASAMS Search/Track Radar"] = "NASAMS Search/Track Radar"
+ctld.i18n["fr"]["NASAMS Command Post"] = "NASAMS Command Post"
+ctld.i18n["fr"]["NASAMS Repair"] = "NASAMS Repair"
+ctld.i18n["fr"]["KUB Launcher"] = "KUB Launcher"
+ctld.i18n["fr"]["KUB Radar"] = "KUB Radar"
+ctld.i18n["fr"]["KUB Repair"] = "KUB Repair"
+ctld.i18n["fr"]["BUK Launcher"] = "BUK Launcher"
+ctld.i18n["fr"]["BUK Search Radar"] = "BUK Search Radar"
+ctld.i18n["fr"]["BUK CC Radar"] = "BUK CC Radar"
+ctld.i18n["fr"]["BUK Repair"] = "BUK Repair"
+ctld.i18n["fr"]["Patriot Launcher"] = "Patriot Launcher"
+ctld.i18n["fr"]["Patriot Radar"] = "Patriot Radar"
+ctld.i18n["fr"]["Patriot ECS"] = "Patriot ECS"
+ctld.i18n["fr"]["Patriot ICC"] = "Patriot ICC"
+ctld.i18n["fr"]["Patriot EPP"] = "Patriot EPP"
+ctld.i18n["fr"]["Patriot AMG (optional)"] = "Patriot AMG (optional)"
+ctld.i18n["fr"]["Patriot Repair"] = "Patriot Repair"
+ctld.i18n["fr"]["S-300 Grumble TEL C"] = "S-300 Grumble TEL C"
+ctld.i18n["fr"]["S-300 Grumble Flap Lid-A TR"] = "S-300 Grumble Flap Lid-A TR"
+ctld.i18n["fr"]["S-300 Grumble Clam Shell SR"] = "S-300 Grumble Clam Shell SR"
+ctld.i18n["fr"]["S-300 Grumble Big Bird SR"] = "S-300 Grumble Big Bird SR"
+ctld.i18n["fr"]["S-300 Grumble C2"] = "S-300 Grumble C2"
+ctld.i18n["fr"]["S-300 Repair"] = "S-300 Repair"
 
 --- mission design error messages
-ctld.i18n["fr"]["CTLD.lua ERROR: Can't find trigger called %1"] = nil
-ctld.i18n["fr"]["CTLD.lua ERROR: Can't find zone called %1"] = nil
-ctld.i18n["fr"]["CTLD.lua ERROR: Can't find zone or ship called %1"] = nil
-ctld.i18n["fr"]["CTLD.lua ERROR: Can't find crate with weight %1"] = nil
+ctld.i18n["fr"]["CTLD.lua ERROR: Can't find trigger called %1"]      = "CTLD.lua ERREUR : Impossible de trouver le déclencheur appelé %1"
+ctld.i18n["fr"]["CTLD.lua ERROR: Can't find zone called %1"]         = "CTLD.lua ERREUR : Impossible de trouver la zone appelée %1"
+ctld.i18n["fr"]["CTLD.lua ERROR: Can't find zone or ship called %1"] = "CTLD.lua ERREUR : Impossible de trouver la zone ou le navire appelé %1"
+ctld.i18n["fr"]["CTLD.lua ERROR: Can't find crate with weight %1"]   = "CTLD.lua ERREUR : Impossible de trouver une caisse avec un poids de %1"
 
 --- runtime messages
-ctld.i18n["fr"]["You are not close enough to friendly logistics to get a crate!"] = nil
-ctld.i18n["fr"]["No more JTAC Crates Left!"] = nil
-ctld.i18n["fr"]["Sorry you must wait %1 seconds before you can get another crate"] = nil
-ctld.i18n["fr"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = nil
-ctld.i18n["fr"]["%1 fast-ropped troops from %2 into combat"] = nil
-ctld.i18n["fr"]["%1 dropped troops from %2 into combat"] = nil
-ctld.i18n["fr"]["%1 fast-ropped troops from %2 into %3"] = nil
-ctld.i18n["fr"]["%1 dropped troops from %2 into %3"] = nil
-ctld.i18n["fr"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] = nil
-ctld.i18n["fr"]["%1 dropped vehicles from %2 into combat"] = nil
-ctld.i18n["fr"]["%1 loaded troops into %2"] = nil
-ctld.i18n["fr"]["%1 loaded %2 vehicles into %3"] = nil
-ctld.i18n["fr"]["%1 delivered a FOB Crate"] = nil
-ctld.i18n["fr"]["Delivered FOB Crate 60m at 6'oclock to you"] = nil
-ctld.i18n["fr"]["FOB Crate dropped back to base"] = nil
-ctld.i18n["fr"]["FOB Crate Loaded"] = nil
-ctld.i18n["fr"]["%1 loaded a FOB Crate ready for delivery!"] = nil
-ctld.i18n["fr"]["FOB Crate Loaded"] = nil
-ctld.i18n["fr"]["%1 loaded a FOB Crate ready for delivery!"] = nil
-ctld.i18n["fr"]["There are no friendly logistic units nearby to load a FOB crate from!"] = nil
-ctld.i18n["fr"]["You already have troops onboard."] = nil
-ctld.i18n["fr"]["You already have vehicles onboard."] = nil
-ctld.i18n["fr"]["This area has no more reinforcements available!"] = nil
-ctld.i18n["fr"]["You are not in a pickup zone and no one is nearby to extract"] = nil
-ctld.i18n["fr"]["You are not in a pickup zone"] = nil
-ctld.i18n["fr"]["No one to unload"] = nil
-ctld.i18n["fr"]["Dropped troops back to base"] = nil
-ctld.i18n["fr"]["Dropped vehicles back to base"] = nil
-ctld.i18n["fr"]["You already have troops onboard."] = nil
-ctld.i18n["fr"]["You already have vehicles onboard."] = nil
-ctld.i18n["fr"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = nil
-ctld.i18n["fr"]["%1 extracted troops in %2 from combat"] = nil
-ctld.i18n["fr"]["No extractable troops nearby!"] = nil
-ctld.i18n["fr"]["%1 extracted vehicles in %2 from combat"] = nil
-ctld.i18n["fr"]["No extractable vehicles nearby!"] = nil
-ctld.i18n["fr"]["%1 troops onboard (%2 kg)\n"] = nil
-ctld.i18n["fr"]["%1 vehicles onboard (%2)\n"] = nil
-ctld.i18n["fr"]["1 FOB Crate oboard (%1 kg)\n"] = nil
-ctld.i18n["fr"]["%1 crate onboard (%2 kg)\n"] = nil
-ctld.i18n["fr"]["Total weight of cargo : %1 kg\n"] = nil
-ctld.i18n["fr"]["No cargo."] = nil
-ctld.i18n["fr"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = nil
-ctld.i18n["fr"]["Loaded %1 crate!"] = nil
-ctld.i18n["fr"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = nil
-ctld.i18n["fr"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = nil
-ctld.i18n["fr"]["You must land before you can load a crate!"] = nil
-ctld.i18n["fr"]["Loaded %1 crate!"] = nil
-ctld.i18n["fr"]["No Crates within 50m to load!"] = nil
-ctld.i18n["fr"]["Maximum number of crates are on board!"] = nil
-ctld.i18n["fr"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = nil
-ctld.i18n["fr"]["FOB Crate - %1 m - %2 o'clock\n"] = nil
-ctld.i18n["fr"]["No Nearby Crates"] = nil
-ctld.i18n["fr"]["Nearby Crates:\n%1"] = nil
-ctld.i18n["fr"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = nil
-ctld.i18n["fr"]["FOB Positions:"] = nil
-ctld.i18n["fr"]["%1\nFOB @ %2"] = nil
-ctld.i18n["fr"]["Sorry, there are no active FOBs!"] = nil
-ctld.i18n["fr"]["You can't unpack that here! Take it to where it's needed!"] = nil
-ctld.i18n["fr"]["Sorry you must move this crate before you unpack it!"] = nil
-ctld.i18n["fr"]["%1 successfully deployed %2 to the field"] = nil
-ctld.i18n["fr"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = nil
-ctld.i18n["fr"]["You can't unpack that here! Take it to where it's needed!"] = nil
-ctld.i18n["fr"]["Finished building FOB! Crates and Troops can now be picked up."] = nil
-ctld.i18n["fr"]["Finished building FOB! Crates can now be picked up."] = nil
-ctld.i18n["fr"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] = nil
-ctld.i18n["fr"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] = nil
-ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = nil
-ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = nil
-ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = nil
-ctld.i18n["fr"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = nil
-ctld.i18n["fr"]["%1 crate has been safely dropped below you"] = nil
-ctld.i18n["fr"]["You were too high! The crate has been destroyed"] = nil
-ctld.i18n["fr"]["Radio Beacons:\n%1"] = nil
-ctld.i18n["fr"]["No Active Radio Beacons"] = nil
-ctld.i18n["fr"]["%1 deployed a Radio Beacon.\n\n%2"] = nil
-ctld.i18n["fr"]["You need to land before you can deploy a Radio Beacon!"] = nil
-ctld.i18n["fr"]["%1 removed a Radio Beacon.\n\n%2"] = nil
-ctld.i18n["fr"]["No Radio Beacons within 500m."] = nil
-ctld.i18n["fr"]["You need to land before remove a Radio Beacon"] = nil
-ctld.i18n["fr"]["%1 successfully rearmed a full %2 in the field"] = nil
-ctld.i18n["fr"]["Missing %1\n"] = nil
-ctld.i18n["fr"]["Out of parts for AA Systems. Current limit is %1\n"] = nil
-ctld.i18n["fr"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] = nil
-ctld.i18n["fr"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] = nil
-ctld.i18n["fr"]["%1 successfully repaired a full %2 in the field."] = nil
-ctld.i18n["fr"]["Cannot repair %1. No damaged %2 within 300m"] = nil
-ctld.i18n["fr"]["%1 successfully deployed %2 to the field using %3 crates."] = nil
-ctld.i18n["fr"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = nil
-ctld.i18n["fr"]["%1 dropped %2 smoke."] = nil
+ctld.i18n["fr"]["You are not close enough to friendly logistics to get a crate!"] = "Vous n'êtes pas assez proche de la logistique alliée pour obtenir une caisse !"
+ctld.i18n["fr"]["No more JTAC Crates Left!"] = "Plus de caisses JTAC disponibles !"
+ctld.i18n["fr"]["Sorry you must wait %1 seconds before you can get another crate"] = "Désolé, vous devez attendre %1 secondes avant de pouvoir obtenir une autre caisse"
+ctld.i18n["fr"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = "Une caisse %1 pesant %2 kg a été apportée et se trouve à votre %3 heure"
+ctld.i18n["fr"]["%1 fast-ropped troops from %2 into combat"] = "%1 a largué rapidement des troupes de %2 au combat"
+ctld.i18n["fr"]["%1 dropped troops from %2 into combat"] = "%1 a largué des troupes de %2 au combat"
+ctld.i18n["fr"]["%1 fast-ropped troops from %2 into %3"] = "%1 a largué rapidement des troupes de %2 à %3"
+ctld.i18n["fr"]["%1 dropped troops from %2 into %3"] = "%1 a largué des troupes de %2 à %3"
+ctld.i18n["fr"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] = "Trop haut ou trop rapide pour larguer des troupes au combat ! Survolez en dessous de %1 pieds ou atterrissez."
+ctld.i18n["fr"]["%1 dropped vehicles from %2 into combat"] = "%1 a largué des véhicules de %2 au combat"
+ctld.i18n["fr"]["%1 loaded troops into %2"] = "%1 a chargé des troupes dans %2"
+ctld.i18n["fr"]["%1 loaded %2 vehicles into %3"] = "%1 a chargé %2 véhicules dans %3"
+ctld.i18n["fr"]["%1 delivered a FOB Crate"] = "%1 a livré une caisse FOB"
+ctld.i18n["fr"]["Delivered FOB Crate 60m at 6'oclock to you"] = "Caisse FOB livrée à 60 m à 6 heures de vous"
+ctld.i18n["fr"]["FOB Crate dropped back to base"] = "Caisse FOB ramenée à la base"
+ctld.i18n["fr"]["FOB Crate Loaded"] = "Caisse FOB chargée"
+ctld.i18n["fr"]["%1 loaded a FOB Crate ready for delivery!"] = "%1 a chargé une caisse FOB prête à être livrée !"
+ctld.i18n["fr"]["There are no friendly logistic units nearby to load a FOB crate from!"] = "Il n'y a pas d'unités logistiques alliée à proximité pour charger une caisse FOB !"
+ctld.i18n["fr"]["You already have troops onboard."] = "Vous avez déjà des troupes à bord."
+ctld.i18n["fr"]["You already have vehicles onboard."] = "Vous avez déjà des véhicules à bord."
+ctld.i18n["fr"]["This area has no more reinforcements available!"] = "Cette zone n'a plus de renforts disponibles !"
+ctld.i18n["fr"]["You are not in a pickup zone and no one is nearby to extract"] = "Vous n'êtes pas dans une zone d'embarquement et personne n'est à proximité pour être extrait."
+ctld.i18n["fr"]["You are not in a pickup zone"] = "Vous n'êtes pas dans une zone d'embarquement"
+ctld.i18n["fr"]["No one to unload"] = "Personne à débarquer"
+ctld.i18n["fr"]["Dropped troops back to base"] = "Troupes larguées à la base"
+ctld.i18n["fr"]["Dropped vehicles back to base"] = "Véhicules largués à la base"
+ctld.i18n["fr"]["You already have troops onboard."] = "Vous avez déjà des troupes à bord."
+ctld.i18n["fr"]["You already have vehicles onboard."] = "Vous avez déjà des véhicules à bord."
+ctld.i18n["fr"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = "Désolé - Le groupe de %1 est trop important. \n\nLa limite est de %2 pour %3"
+ctld.i18n["fr"]["%1 extracted troops in %2 from combat"] = "%1 troupes extraites du combat en %2"
+ctld.i18n["fr"]["No extractable troops nearby!"] = "Aucune troupe extractible à proximité !"
+ctld.i18n["fr"]["%1 extracted vehicles in %2 from combat"] = "%1 véhicules extraits du combat en %2"
+ctld.i18n["fr"]["No extractable vehicles nearby!"] = "Aucun véhicule extractible à proximité !"
+ctld.i18n["fr"]["%1 troops onboard (%2 kg)\n"] = "%1 troupes à bord (%2 kg)\n"
+ctld.i18n["fr"]["%1 vehicles onboard (%2)\n"] = "%1 véhicules à bord (%2)\n"
+ctld.i18n["fr"]["1 FOB Crate oboard (%1 kg)\n"] = "1 caisse FOB à bord (%1 kg)\n"
+ctld.i18n["fr"]["%1 crate onboard (%2 kg)\n"] = "%1 caisse à bord (%2 kg)\n"
+ctld.i18n["fr"]["Total weight of cargo : %1 kg\n"] = "Poids total de la cargaison : %1 kg\n"
+ctld.i18n["fr"]["No cargo."] = "Aucune cargaison."
+ctld.i18n["fr"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "Stationaire au-dessus de la caisse %1. \n\nMaintenez le stationaire pendant %2 secondes ! \n\nSi le compte à rebours s'arrête, vous êtes trop loin !"
+ctld.i18n["fr"]["Loaded %1 crate!"] = "Caisse %1 chargée !"
+ctld.i18n["fr"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = "Trop bas pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
+ctld.i18n["fr"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = "Trop haut pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
+ctld.i18n["fr"]["You must land before you can load a crate!"] = "Vous devez atterrir avant de pouvoir charger une caisse !"
+ctld.i18n["fr"]["No Crates within 50m to load!"] = "Aucune caisse à moins de 50 m pour charger !"
+ctld.i18n["fr"]["Maximum number of crates are on board!"] = "Nombre maximal de caisses à bord !"
+ctld.i18n["fr"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = "%1\n%2 caisse - kg %3 - %4 m - %5 heures"
+ctld.i18n["fr"]["FOB Crate - %1 m - %2 o'clock\n"] = "Caisse FOB - %1 m - %2 heures\n"
+ctld.i18n["fr"]["No Nearby Crates"] = "Aucune caisse à proximité"
+ctld.i18n["fr"]["Nearby Crates:\n%1"] = "Caisses à proximité :\n%1"
+ctld.i18n["fr"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = "Caisses FOB à proximité (non chargeables par élingue) :\n%1"
+ctld.i18n["fr"]["FOB Positions:"] = "Positions FOB :"
+ctld.i18n["fr"]["%1\nFOB @ %2"] = "%1\nFOB @ %2"
+ctld.i18n["fr"]["Sorry, there are no active FOBs!"] = "Désolé, il n'y a pas de FOB actif !"
+ctld.i18n["fr"]["You can't unpack that here! Take it to where it's needed!"] = "Vous ne pouvez déballer ça ici ! Emmenez-le là où vous en avez besoin !"
+ctld.i18n["fr"]["Sorry you must move this crate before you unpack it!"] = "Désolé, vous devez déplacer cette caisse avant de la déballer !"
+ctld.i18n["fr"]["%1 successfully deployed %2 to the field"] = "%1 a déployé avec succès %2 sur le terrain."
+ctld.i18n["fr"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = "Aucune caisse alliée n'est suffisamment proche pour être déballée, ou la caisse est trop proche d'un avion."
+ctld.i18n["fr"]["Finished building FOB! Crates and Troops can now be picked up."] = "Construction du FOB terminée ! Les caisses et les troupes peuvent maintenant embarqués."
+ctld.i18n["fr"]["Finished building FOB! Crates can now be picked up."] = "Construction du FOB terminée ! Les caisses peuvent maintenant être embarqués."
+ctld.i18n["fr"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] = "%1 a commencé à construire le FOB en utilisant %2 caisses FOB, il sera terminé dans %3 secondes.\nPosition marquée par le fumigène."
+ctld.i18n["fr"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] = "Impossible de construire le FOB !\n\nIl nécessite %1 grandes caisses FOB (3 petites caisses FOB équivalent à 1 grande caisse FOB) et il y a l'équivalent de %2 grandes caisses FOB à proximité\n\nOu les caisses ne sont pas à moins de 750 m les unes des autres autre"
+ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = "Vous ne transportez actuellement aucune caisse. \n\nPour charger une caisse, survolez la caisse pendant %1 secondes ou atterrissez et utilisez les commandes de caisse F10."
+ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = "Vous ne transportez actuellement aucune caisse. \n\nPour ramasser une caisse, survolez la caisse pendant %1 secondes."
+ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = "Vous ne transportez actuellement aucune caisse. \n\nPour charger une caisse, atterrissez et utilisez les commandes de caisse F10."
+ctld.i18n["fr"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = "%1 caisse a été décrochée en toute sécurité et se trouve à votre %2 heures"
+ctld.i18n["fr"]["%1 crate has been safely dropped below you"] = "%1 caisse a été déposée en toute sécurité sous vous"
+ctld.i18n["fr"]["You were too high! The crate has been destroyed"] = "Vous étiez trop haut! La caisse a été détruite"
+ctld.i18n["fr"]["Radio Beacons:\n%1"] = "Balises radio :\n%1"
+ctld.i18n["fr"]["No Active Radio Beacons"] = "Aucune balise radio active"
+ctld.i18n["fr"]["%1 deployed a Radio Beacon.\n\n%2"] = "%1 a déployé une balise radio.\n\n%2"
+ctld.i18n["fr"]["You need to land before you can deploy a Radio Beacon!"] = "Vous devez atterrir avant de pouvoir déployer une balise radio !"
+ctld.i18n["fr"]["%1 removed a Radio Beacon.\n\n%2"] = "%1 a supprimé une balise radio.\n\n%2"
+ctld.i18n["fr"]["No Radio Beacons within 500m."] = "Aucune balise radio à moins de 500m."
+ctld.i18n["fr"]["You need to land before remove a Radio Beacon"] = "Vous devez atterrir avant de retirer une balise radio"
+ctld.i18n["fr"]["%1 successfully rearmed a full %2 in the field"] = "%1 a réarmé avec succès un %2 complet sur le terrain"
+ctld.i18n["fr"]["Missing %1\n"] = "%1 manquant\n"
+ctld.i18n["fr"]["Out of parts for AA Systems. Current limit is %1\n"] = "Plus de pièces pour les systèmes AA. La limite actuelle est de %1\n"
+ctld.i18n["fr"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] = "Impossible de construire %1\n%2\n\nOu les caisses ne sont pas assez proches les unes des autres"
+ctld.i18n["fr"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] = "%1 a déployé avec succès un %2 complet sur le terrain. \n\nLa limite du système actif AA est : %3\nActif : %4"
+ctld.i18n["fr"]["%1 successfully repaired a full %2 in the field."] = "%1 a réparé avec succès un %2 complet sur le terrain."
+ctld.i18n["fr"]["Cannot repair %1. No damaged %2 within 300m"] = "Impossible de réparer %1. Aucun %2 endommagé à moins de 300 m"
+ctld.i18n["fr"]["%1 successfully deployed %2 to the field using %3 crates."] = "%1 a déployé avec succès %2 sur le terrain en utilisant %3 caisses."
+ctld.i18n["fr"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = "Impossible de construire %1 !\n\nIl faut %2 caisses et il y en a %3 \n\nOu les caisses ne sont pas à moins de 300 m les unes des autres"
+ctld.i18n["fr"]["%1 dropped %2 smoke."] = "%1 a largué un fumigène %2."
 
 --- JTAC messages
-ctld.i18n["fr"]["JTAC Group %1 KIA!"] = nil
-ctld.i18n["fr"]["%1, selected target reacquired, %2"] = nil
-ctld.i18n["fr"][". CODE: %1. POSITION: %2"] = nil
-ctld.i18n["fr"]["new target, "] = nil
-ctld.i18n["fr"]["standing by on %1"] = nil
-ctld.i18n["fr"]["lasing %1"] = nil
-ctld.i18n["fr"][", temporarily %1"] = nil
-ctld.i18n["fr"]["target lost"] = nil
-ctld.i18n["fr"]["target destroyed"] = nil
-ctld.i18n["fr"][", selected %1"] = nil
-ctld.i18n["fr"]["%1 %2 target lost."] = nil
-ctld.i18n["fr"]["%1 %2 target destroyed."] = nil
-ctld.i18n["fr"]["JTAC STATUS: \n\n"] = nil
-ctld.i18n["fr"][", available on %1 %2,"] = nil
-ctld.i18n["fr"]["UNKNOWN"] = nil
-ctld.i18n["fr"][" targeting "] = nil
-ctld.i18n["fr"][" targeting selected unit "] = nil
-ctld.i18n["fr"][" attempting to find selected unit, temporarily targeting "] = nil
-ctld.i18n["fr"]["(Laser OFF) "] = nil
-ctld.i18n["fr"]["Visual On: "] = nil
-ctld.i18n["fr"][" searching for targets %1\n"] = nil
-ctld.i18n["fr"]["No Active JTACs"] = nil
-ctld.i18n["fr"][", targeting selected unit, %1"] = nil
-ctld.i18n["fr"][". CODE: %1. POSITION: %2"] = nil
-ctld.i18n["fr"][", target selection reset."] = nil
-ctld.i18n["fr"]["%1, laser and smokes enabled"] = nil
-ctld.i18n["fr"]["%1, laser and smokes disabled"] = nil
-ctld.i18n["fr"]["%1, wind and target speed laser spot compensations enabled"] = nil
-ctld.i18n["fr"]["%1, wind and target speed laser spot compensations disabled"] = nil
-ctld.i18n["fr"]["%1, WHITE smoke deployed near target"] = nil
+ctld.i18n["fr"]["JTAC Group %1 KIA!"] = "Groupe JTAC %1 KIA !"
+ctld.i18n["fr"]["%1, selected target reacquired, %2"] = "%1, cible sélectionnée réacquise, %2"
+ctld.i18n["fr"][". CODE: %1. POSITION: %2"] = ". CODE : %1. POSITION : %2"
+ctld.i18n["fr"]["new target, "] = "nouvelle cible, "
+ctld.i18n["fr"]["standing by on %1"] = "en attente sur %1"
+ctld.i18n["fr"]["lasing %1"] = "laser %1"
+ctld.i18n["fr"][", temporarily %1"] = ", temporairement %1"
+ctld.i18n["fr"]["target lost"] = "cible perdue"
+ctld.i18n["fr"]["target destroyed"] = "cible détruite"
+ctld.i18n["fr"][", selected %1"] = ", %1 sélectionné"
+ctld.i18n["fr"]["%1 %2 target lost."] = "%1 %2 cible perdue."
+ctld.i18n["fr"]["%1 %2 target destroyed."] = "%1 %2 cible détruite."
+ctld.i18n["fr"]["JTAC STATUS: \n\n"] = "ÉTAT JTAC : \n\n"
+ctld.i18n["fr"][", available on %1 %2,"] = ", disponible sur %1 %2,"
+ctld.i18n["fr"]["UNKNOWN"] = "INCONNU"
+ctld.i18n["fr"][" targeting "] = " ciblage "
+ctld.i18n["fr"][" targeting selected unit "] = " ciblage de l'unité sélectionnée "
+ctld.i18n["fr"][" attempting to find selected unit, temporarily targeting "] = " tentative de recherche de l'unité sélectionnée, ciblage temporaire "
+ctld.i18n["fr"]["(Laser OFF) "] = "(Laser INACTIF) "
+ctld.i18n["fr"]["Visual On: "] = "Visuel activé : "
+ctld.i18n["fr"][" searching for targets %1\n"] = " recherche de cibles %1\n"
+ctld.i18n["fr"]["No Active JTACs"] = "Aucun JTAC actif"
+ctld.i18n["fr"][", targeting selected unit, %1"] = ", ciblage de l'unité sélectionnée, %1"
+ctld.i18n["fr"][". CODE: %1. POSITION: %2"] = ". CODE : %1. POSITION : %2"
+ctld.i18n["fr"][", target selection reset."] = ", sélection de cible réinitialisée."
+ctld.i18n["fr"]["%1, laser and smokes enabled"] = "%1, laser et fumigènes activés"
+ctld.i18n["fr"]["%1, laser and smokes disabled"] = "%1, laser et fumigènes désactivés"
+ctld.i18n["fr"]["%1, wind and target speed laser spot compensations enabled"] = "%1, compensations activées de la vitesse du vent et de la cible pour le spot laser"
+ctld.i18n["fr"]["%1, wind and target speed laser spot compensations disabled"] = "%1, compensations désactivées de la vitesse du vent et de la cible pour le spot laser"
+ctld.i18n["fr"]["%1, WHITE smoke deployed near target"] = "%1, fumigène BLANCHE déployée près de la cible"
+
+--- F10 menu messages
+ctld.i18n["fr"]["Actions"] = "Actions"
+ctld.i18n["fr"]["Troop Transport"] = "Transport troupes"
+ctld.i18n["fr"]["Unload / Extract Troops"] = "Débarqt / Embarqt Troupes"
+ctld.i18n["fr"]["Next page"] = "page suiv."
+ctld.i18n["fr"]["Load "] = "Charger"
+ctld.i18n["fr"]["Vehicle / FOB Transport"] = "Transport Vehicule / FOB"
+ctld.i18n["fr"]["Vehicle / FOB Crates"] = "Caisses Vehicule / FOB"
+ctld.i18n["fr"]["Unload Vehicles"] = "Décharger Vehicles"
+ctld.i18n["fr"]["Load / Extract Vehicles"] = "Chargt / Déchargt Vehicules"
+ctld.i18n["fr"]["Load / Unload FOB Crate"] = "Chargt / Déchargt Caisse FOB"
+ctld.i18n["fr"]["CTLD Commands"] = "Commandes CTLD"
+ctld.i18n["fr"]["CTLD"] = "CTLD"
+ctld.i18n["fr"]["Check Cargo"] = "Vérif° chargement"
+ctld.i18n["fr"]["Load Nearby Crate"] = "Charger caisse proche"
+ctld.i18n["fr"]["Unpack Any Crate"] = "Décharger caisses"
+ctld.i18n["fr"]["Drop Crate"] = "Déposer Caisse"
+ctld.i18n["fr"]["List Nearby Crates"] = "Liste caisses proches"
+ctld.i18n["fr"]["List FOBs"] = "Liste FOBs"
+ctld.i18n["fr"]["List Beacons"] = "Liste balises"
+ctld.i18n["fr"]["List Radio Beacons"] = "Liste Radio balises"
+ctld.i18n["fr"]["Smoke Markers"] = "Marques Fumées"
+ctld.i18n["fr"]["Drop Red Smoke"] = "Déposer Fumi Rouge"
+ctld.i18n["fr"]["Drop Blue Smoke"] = "Déposer Fumi Bleu"
+ctld.i18n["fr"]["Drop Orange Smoke"] = "Déposer Fumi Orange"
+ctld.i18n["fr"]["Drop Green Smoke"] = "Déposer Fumi Vert"
+ctld.i18n["fr"]["Drop Beacon"] = "Déposer Fumi Vert"
+ctld.i18n["fr"]["Radio Beacons"] = "Déposer Balise"
+ctld.i18n["fr"]["Remove Closet Beacon"] = "Supprimer Balise +proche"
+ctld.i18n["fr"]["JTAC Status"] = "Statut JTAC"
+ctld.i18n["fr"]["DISABLE "] = "DESACTIVE "
+ctld.i18n["fr"]["ENABLE "] = "ACTIVE "
+ctld.i18n["fr"]["REQUEST "] = "DEMANDE"
+ctld.i18n["fr"]["Reset TGT Selection"] = "Réinitialiser sélection TGT"
+
+--======  SPANISH : ESPAÑOL====================================================================================
+ctld.i18n["sp"] = {}
+
+--- groups names
+ctld.i18n["sp"]["Standard Group"] = "Grupo estándar"
+ctld.i18n["sp"]["Anti Air"] = "Defensa aérea"
+ctld.i18n["sp"]["Anti Tank"] = "Antitanque"
+ctld.i18n["sp"]["Mortar Squad"] = "Grupo mortero"
+ctld.i18n["sp"]["JTAC Group"] = "Grupo JTAC"
+ctld.i18n["sp"]["Single JTAC"] = "JTAC solo"
+ctld.i18n["sp"]["2x - Standard Groups"] = "2x - Grupos estándares"
+ctld.i18n["sp"]["2x - Anti Air"] = "2x - Defensas aéreas"
+ctld.i18n["sp"]["2x - Anti Tank"] = "2x - Antitanque"
+ctld.i18n["sp"]["2x - Standard Groups + 2x morteros"] = "2x - Grupos estándar + 2x Grupos morteros"
+ctld.i18n["sp"]["3x - Standard Groups"] = "3x - Defensas aéreas"
+ctld.i18n["sp"]["3x - Anti Air"] = "3x - Defensas aéreas"
+ctld.i18n["sp"]["3x - Anti Tank"] = "3x - Antitanque"
+ctld.i18n["sp"]["3x - Mortar Squad"] = "3x - Grupos de morteros"
+ctld.i18n["sp"]["5x - Mortar Squad"] = "5x - Grupos de morteros"
+ctld.i18n["sp"]["Mortar Squad Red"] = "Grupo mortero rojo"
+
+--- crates names
+ctld.i18n["sp"]["Humvee - MG"] = "Humvee - MG"
+ctld.i18n["sp"]["Humvee - TOW"] = "Humvee - TOW"
+ctld.i18n["sp"]["Light Tank - MRAP"] = "Light Tank - MRAP"
+ctld.i18n["sp"]["Med Tank - LAV-25"] = "Med Tank - LAV-25"
+ctld.i18n["sp"]["Heavy Tank - Abrams"] = "Heavy Tank - Abrams"
+ctld.i18n["sp"]["BTR-D"] = "BTR-D"
+ctld.i18n["sp"]["BRDM-2"] = "BRDM-2"
+ctld.i18n["sp"]["Hummer - JTAC"] = "Hummer - JTAC"
+ctld.i18n["sp"]["M-818 Ammo Truck"] = "M-818 Ammo Truck"
+ctld.i18n["sp"]["M-978 Tanker"] = "M-978 Tanker"
+ctld.i18n["sp"]["SKP-11 - JTAC"] = "SKP-11 - JTAC"
+ctld.i18n["sp"]["Ural-375 Ammo Truck"] = "Ural-375 Ammo Truck"
+ctld.i18n["sp"]["KAMAZ Ammo Truck"] = "KAMAZ Ammo Truck"
+ctld.i18n["sp"]["EWR Radar"] = "EWR Radar"
+ctld.i18n["sp"]["FOB Crate - Small"] = "FOB Crate - Small"
+ctld.i18n["sp"]["MLRS"] = "MLRS"
+ctld.i18n["sp"]["SpGH DANA"] = "SpGH DANA"
+ctld.i18n["sp"]["T155 Firtina"] = "T155 Firtina"
+ctld.i18n["sp"]["Howitzer"] = "Howitzer"
+ctld.i18n["sp"]["SPH 2S19 Msta"] = "SPH 2S19 Msta"
+ctld.i18n["sp"]["M1097 Avenger"] = "M1097 Avenger"
+ctld.i18n["sp"]["M48 Chaparral"] = "M48 Chaparral"
+ctld.i18n["sp"]["Roland ADS"] = "Roland ADS"
+ctld.i18n["sp"]["Gepard AAA"] = "Gepard AAA"
+ctld.i18n["sp"]["LPWS C-RAM"] = "LPWS C-RAM"
+ctld.i18n["sp"]["9K33 Osa"] = "9K33 Osa"
+ctld.i18n["sp"]["9P31 Strela-1"] = "9P31 Strela-1"
+ctld.i18n["sp"]["9K35M Strela-10"] = "9K35M Strela-10"
+ctld.i18n["sp"]["9K331 Tor"] = "9K331 Tor"
+ctld.i18n["sp"]["2K22 Tunguska"] = "2K22 Tunguska"
+ctld.i18n["sp"]["HAWK Launcher"] = "HAWK Launcher"
+ctld.i18n["sp"]["HAWK Search Radar"] = "HAWK Search Radar"
+ctld.i18n["sp"]["HAWK Track Radar"] = "HAWK Track Radar"
+ctld.i18n["sp"]["HAWK PCP"] = "HAWK PCP"
+ctld.i18n["sp"]["HAWK CWAR"] = "HAWK CWAR"
+ctld.i18n["sp"]["HAWK Repair"] = "HAWK Repair"
+ctld.i18n["sp"]["NASAMS Launcher 120C"] = "NASAMS Launcher 120C"
+ctld.i18n["sp"]["NASAMS Search/Track Radar"] = "NASAMS Search/Track Radar"
+ctld.i18n["sp"]["NASAMS Command Post"] = "NASAMS Command Post"
+ctld.i18n["sp"]["NASAMS Repair"] = "NASAMS Repair"
+ctld.i18n["sp"]["KUB Launcher"] = "KUB Launcher"
+ctld.i18n["sp"]["KUB Radar"] = "KUB Radar"
+ctld.i18n["sp"]["KUB Repair"] = "KUB Repair"
+ctld.i18n["sp"]["BUK Launcher"] = "BUK Launcher"
+ctld.i18n["sp"]["BUK Search Radar"] = "BUK Search Radar"
+ctld.i18n["sp"]["BUK CC Radar"] = "BUK CC Radar"
+ctld.i18n["sp"]["BUK Repair"] = "BUK Repair"
+ctld.i18n["sp"]["Patriot Launcher"] = "Patriot Launcher"
+ctld.i18n["sp"]["Patriot Radar"] = "Patriot Radar"
+ctld.i18n["sp"]["Patriot ECS"] = "Patriot ECS"
+ctld.i18n["sp"]["Patriot ICC"] = "Patriot ICC"
+ctld.i18n["sp"]["Patriot EPP"] = "Patriot EPP"
+ctld.i18n["sp"]["Patriot AMG (optional)"] = "Patriot AMG (optional)"
+ctld.i18n["sp"]["Patriot Repair"] = "Patriot Repair"
+ctld.i18n["sp"]["S-300 Grumble TEL C"] = "S-300 Grumble TEL C"
+ctld.i18n["sp"]["S-300 Grumble Flap Lid-A TR"] = "S-300 Grumble Flap Lid-A TR"
+ctld.i18n["sp"]["S-300 Grumble Clam Shell SR"] = "S-300 Grumble Clam Shell SR"
+ctld.i18n["sp"]["S-300 Grumble Big Bird SR"] = "S-300 Grumble Big Bird SR"
+ctld.i18n["sp"]["S-300 Grumble C2"] = "S-300 Grumble C2"
+ctld.i18n["sp"]["S-300 Repair"] = "S-300 Repair"
+
+--- mission design error messages
+ctld.i18n["sp"]["CTLD.lua ERROR: Can't find trigger called %1"]      = "CTLD.lua ERROR : Imposible encontrar el activador llamado %1"
+ctld.i18n["sp"]["CTLD.lua ERROR: Can't find zone called %1"]         = "CTLD.lua ERROR : Imposible encontrar la zona llamada %1"
+ctld.i18n["sp"]["CTLD.lua ERROR: Can't find zone or ship called %1"] = "CTLD.lua ERROR : Imposible encontrar la zona o el barco llamado %1"
+ctld.i18n["sp"]["CTLD.lua ERROR: Can't find crate with weight %1"]   = "CTLD.lua ERROR : Imposible encontrar una caja con un peso de %1"
+
+--- runtime messages
+ctld.i18n["sp"]["You are not close enough to friendly logistics to get a crate!"] = "¡No estás lo suficientemente cerca de la logística amigable para conseguir una caja!"
+ctld.i18n["sp"]["No more JTAC Crates Left!"] = "¡No hay más cajas JTAC disponibles!"
+ctld.i18n["sp"]["Sorry you must wait %1 seconds before you can get another crate"] = "Lo sentimos, debes esperar %1 segundos antes de poder conseguir otra caja"
+ctld.i18n["sp"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = "Una caja %1 que pesa %2 kg ha sido sacada y está a tus %3 en punto "
+ctld.i18n["sp"]["%1 fast-ropped troops from %2 into combat"] = "%1 lanzó rápidamente tropas de %2 al combate"
+ctld.i18n["sp"]["%1 dropped troops from %2 into combat"] = "%1 arrojó tropas de %2 al combate"
+ctld.i18n["sp"]["%1 fast-ropped troops from %2 into %3"] = "%1 lanzó tropas rápidamente de %2 a %3"
+ctld.i18n["sp"]["%1 dropped troops from %2 into %3"] = "%1 arrojó tropas de %2 a %3"
+ctld.i18n["sp"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] = "¡Demasiado alto o demasiado rápido para lanzar tropas al combate! Coloca el cursor por debajo de % 1 pies o aterriza."
+ctld.i18n["sp"]["%1 dropped vehicles from %2 into combat"] = "%1 descargo vehículos de %2 en combate"
+ctld.i18n["sp"]["%1 loaded troops into %2"] = "%1 cargó tropas en %2"
+ctld.i18n["sp"]["%1 loaded %2 vehicles into %3"] = "%1 cargó %2 vehículos en %3"
+ctld.i18n["sp"]["%1 delivered a FOB Crate"] = "%1 entregó una caja FOB"
+ctld.i18n["sp"]["Delivered FOB Crate 60m at 6'oclock to you"] = "Se le entregó la caja FOB de 60 m a sus 6 horas"
+ctld.i18n["sp"]["FOB Crate dropped back to base"] = "La caja FOB volvió a la base"
+ctld.i18n["sp"]["FOB Crate Loaded"] = "Caja FOB cargada"
+ctld.i18n["sp"]["%1 loaded a FOB Crate ready for delivery!"] = "%1 cargó una caja FOB lista para su entrega!"
+ctld.i18n["sp"]["There are no friendly logistic units nearby to load a FOB crate from!"] = "¡No hay unidades logísticas amigas cerca para cargar una caja FOB!"
+ctld.i18n["sp"]["You already have troops onboard."] = "Ya tienes tropas a bordo."
+ctld.i18n["sp"]["You already have vehicles onboard."] = "Ya tiene vehículos a bordo."
+ctld.i18n["sp"]["This area has no more reinforcements available!"] = "¡Esta área no tiene más refuerzos disponibles!"
+ctld.i18n["sp"]["You are not in a pickup zone and no one is nearby to extract"] = "No estás en una zona de recogida y no hay nadie cerca para extraerlo"
+ctld.i18n["sp"]["You are not in a pickup zone"] = "No estás en una zona de recogida"
+ctld.i18n["sp"]["No one to unload"] = "Nadie para descargar"
+ctld.i18n["sp"]["Dropped troops back to base"] = "Tropas arrojadas a la base"
+ctld.i18n["sp"]["Dropped vehicles back to base"] = "Vehículos arrojados a la base"
+ctld.i18n["sp"]["You already have troops onboard."] = "Ya tienes tropas a bordo."
+ctld.i18n["sp"]["You already have vehicles onboard."] = "Ya tiene vehículos a bordo."
+ctld.i18n["sp"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = "Lo sentimos, el grupo de %1 es demasiado grande. \n \nEl límite es %2 para %3"
+ctld.i18n["sp"]["%1 extracted troops in %2 from combat"] = "%1 tropas extraídas del combate en %2"
+ctld.i18n["sp"]["No extractable troops nearby!"] = "¡No hay tropas extraíbles cerca!"
+ctld.i18n["sp"]["%1 extracted vehicles in %2 from combat"] = "%1 vehículos extraídos del combate en %2"
+ctld.i18n["sp"]["No extractable vehicles nearby!"] = "¡No hay vehículos extraíbles cerca!"
+ctld.i18n["sp"]["%1 troops onboard (%2 kg)\n"] = "%1 tropas a bordo (%2 kg)\n"
+ctld.i18n["sp"]["%1 vehicles onboard (%2)\n"] = "%1 vehículos a bordo (%2)\n"
+ctld.i18n["sp"]["1 FOB Crate oboard (%1 kg)\n"] = "1 caja FOB a bordo (%1 kg)\n"
+ctld.i18n["sp"]["%1 crate onboard (%2 kg)\n"] = "%1 caja a bordo (%2 kg)\n"
+ctld.i18n["sp"]["Total weight of cargo : %1 kg\n"] = "Peso total de la carga: %1 kg\n"
+ctld.i18n["sp"]["No cargo."] = "Aucune cargaison."
+ctld.i18n["sp"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "Stationaire au-dessus de la caisse %1. \n\nMaintenez le stationaire pendant %2 secondes ! \n\nSi le compte à rebours s'arrête, vous êtes trop loin !"
+ctld.i18n["sp"]["Loaded %1 crate!"] = "Caisse %1 chargée !"
+ctld.i18n["sp"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = "Trop bas pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
+ctld.i18n["sp"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = "Trop haut pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
+ctld.i18n["sp"]["You must land before you can load a crate!"] = "Vous devez atterrir avant de pouvoir charger une caisse !"
+ctld.i18n["sp"]["No Crates within 50m to load!"] = "Aucune caisse à moins de 50 m pour charger !"
+ctld.i18n["sp"]["Maximum number of crates are on board!"] = "Nombre maximal de caisses à bord !"
+ctld.i18n["sp"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = "%1\n%2 caisse - kg %3 - %4 m - %5 heures"
+ctld.i18n["sp"]["FOB Crate - %1 m - %2 o'clock\n"] = "Caisse FOB - %1 m - %2 heures\n"
+ctld.i18n["sp"]["No Nearby Crates"] = "Aucune caisse à proximité"
+ctld.i18n["sp"]["Nearby Crates:\n%1"] = "Caisses à proximité :\n%1"
+ctld.i18n["sp"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = "Caisses FOB à proximité (non chargeables par élingue) :\n%1"
+ctld.i18n["sp"]["FOB Positions:"] = "Positions FOB :"
+ctld.i18n["sp"]["%1\nFOB @ %2"] = "%1\nFOB @ %2"
+ctld.i18n["sp"]["Sorry, there are no active FOBs!"] = "Désolé, il n'y a pas de FOB actif !"
+ctld.i18n["sp"]["No cargo."] = "Sin carga."
+ctld.i18n["sp"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "Estacionario sobre la caja %1 \n\n¡Mantenlo flotando durante %2 segundos! \n\n¡Si la cuenta regresiva se detiene, estás demasiado lejos!"
+ctld.i18n["sp"]["Loaded %1 crate!"] = "¡Caja %1 cargada!"
+ctld.i18n["sp"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = "Demasiado bajo para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
+ctld.i18n["sp"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = "Demasiado alto para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
+ctld.i18n["sp"]["You must land before you can load a crate!"] = "¡Debes aterrizar antes de poder cargar una caja!"
+ctld.i18n["sp"]["No Crates within 50m to load!"] = "¡No hay cajas para cargar en un radio de 50 m!"
+ctld.i18n["sp"]["Maximum number of crates are on board!"] = "¡Número máximo de cajas a bordo!"
+ctld.i18n["sp"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = "%1\n%2 caja - kg %3 - %4 m - %5 horas"
+ctld.i18n["sp"]["FOB Crate - %1 m - %2 o'clock\n"] = "Caja FOB - %1 m - %2 horas\n"
+ctld.i18n["sp"]["No Nearby Crates"] = "No hay cajas cerca"
+ctld.i18n["sp"]["Nearby Crates:\n%1"] = "Cajas cercanas:\n%1"
+ctld.i18n["sp"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = "Cajas FOB cercanas (no se pueden cargar con eslinga):\n%1"
+ctld.i18n["sp"]["FOB Positions:"] = "Posiciones FOB:"
+ctld.i18n["sp"]["%1\nFOB @ %2"] = "%1\nFOB @ %2"
+ctld.i18n["sp"]["Sorry, there are no active FOBs!"] = "¡Lo sentimos, no hay FOB activos!"
+ctld.i18n["sp"]["You can't unpack that here! Take it to where it's needed!"] = "¡No puedes desembalar eso aquí! ¡Llévalo a donde lo necesites!"
+ctld.i18n["sp"]["Sorry you must move this crate before you unpack it!"] = "¡Lo siento, debes mover esta caja antes de desempacarla!"
+ctld.i18n["sp"]["%1 successfully deployed %2 to the field"] = "%1 implementó exitosamente %2 en el campo."
+ctld.i18n["sp"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = "No hay cajas amigas lo suficientemente cerca para desempacar, o la caja está demasiado cerca de un avión"
+ctld.i18n["sp"]["Finished building FOB! Crates and Troops can now be picked up."] = "¡Construcción FOB completada! Ahora se pueden recoger cajas y tropas"
+ctld.i18n["sp"]["Finished building FOB! Crates can now be picked up."] ="¡Construcción FOB completada! Las cajas ahora se pueden recoger."
+ctld.i18n["sp"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] = "%1 comenzó a construir FOB usando %2 cajas FOB , estará terminado en %3 segundos.\nPosición marcada por la bomba de humo."
+ctld.i18n["sp"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] = "¡No se puede construir el FOB!\n\nSe requiere %1 cajas FOB grandes (3 cajas FOB pequeñas equivalente a 1 caja FOB grande) y hay el equivalente a %2 cajas FOB grandes cerca\n\nO las cajas no están a menos de 750 m una de otra"
+ctld.i18n["sp"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = "Actualmente no estás transportando ninguna caja.\n\nPara cargar una caja, flota sobre la caja durante %1 segundos o aterrice y use los comandos de caja F10."
+ctld.i18n["sp"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = "Actualmente no estás transportando ninguna caja. \n\nPour recoge una caja, flota sobre la caja durante %1 segundos."
+ctld.i18n["sp"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = "Actualmente no estás transportando ninguna caja. \n\nPara cargar una caja, aterriza y usa los controles de la caja F10."
+ctld.i18n["sp"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = "%1 caja ha sido desenganchada de forma segura y está en tu %2 horas"
+ctld.i18n["sp"]["%1 crate has been safely dropped below you"] = "%1 caja se ha dejado caer de forma segura debajo de ti"
+ctld.i18n["sp"]["You were too high! The crate has been destroyed"] = "¡Estabas demasiado drogado! La caja ha sido destruida"
+ctld.i18n["sp"]["Radio Beacons:\n%1"] = "Balizas de radio:\n%1"
+ctld.i18n["sp"]["No Active Radio Beacons"] = "No hay radiobalizas activas"
+ctld.i18n["sp"]["%1 deployed a Radio Beacon.\n\n%2"] = "%1 implementó una radiobaliza.\n\n%2"
+ctld.i18n["sp"]["You need to land before you can deploy a Radio Beacon!"] = "¡Debes aterrizar antes de poder desplegar una radiobaliza!"
+ctld.i18n["sp"]["%1 removed a Radio Beacon.\n\n%2"] = "%1 eliminó una radiobaliza.\n\n%2"
+ctld.i18n["sp"]["No Radio Beacons within 500m."] = "No hay radiobalizas a menos de 500 m."
+ctld.i18n["sp"]["You need to land before remove a Radio Beacon"] = "Es necesario aterrizar antes de eliminar una radiobaliza"
+ctld.i18n["sp"]["%1 successfully rearmed a full %2 in the field"] = "%1 rearmó exitosamente un %2 completo en el campo"
+ctld.i18n["sp"]["Missing %1\n"] = "%1 falta\n"
+ctld.i18n["sp"]["Out of parts for AA Systems. Current limit is %1\n"] = "Sin piezas para sistemas AA. El límite actual es %1\n"
+ctld.i18n["sp"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] = "Imposible construir %1\n%2\n\nO las cajas no están lo suficientemente cerca el uno del otro."
+ctld.i18n["sp"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] = "%1 implementó exitosamente un % 2 completo en el campo \n\nEl límite AA del sistema activo es: %3\nActivo: %4"
+ctld.i18n["sp"]["%1 successfully repaired a full %2 in the field."] = "%1 reparó exitosamente un %2 completo en el campo."
+ctld.i18n["sp"]["Cannot repair %1. No damaged %2 within 300m"] = "Imposible de reparar %1. No hay daños en %2 dentro de 300 m"
+ctld.i18n["sp"]["%1 successfully deployed %2 to the field using %3 crates."] = "%1 implementó exitosamente %2 en el campo usando %3 cajas."
+ctld.i18n["sp"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = "Imposible construir %1 !\n\nNecesitamos %2 cajas y hay %3 \n\nO las cajas están a no menos de 300 m una de otra"
+ctld.i18n["sp"]["%1 dropped %2 smoke."] = "%1 arrojó un %2 humo."
+
+--- JTAC messages
+ctld.i18n["sp"]["JTAC Group %1 KIA!"] = "¡Grupo JTAC %1 KIA!"
+ctld.i18n["sp"]["%1, selected target reacquired, %2"] = "%1, objetivo seleccionado readquirido, %2"
+ctld.i18n["sp"][". CODE: %1. POSITION: %2"] = ". CÓDIGO: %1. POSICIÓN: %2"
+ctld.i18n["sp"]["new target, "] = "nuevo objetivo, "
+ctld.i18n["sp"]["standing by on %1"] = "en espera en %1"
+ctld.i18n["sp"]["lasing %1"] = "láser %1"
+ctld.i18n["sp"][", temporarily %1"] = ", temporalmente %1"
+ctld.i18n["sp"]["target lost"] = "objetivo perdido"
+ctld.i18n["sp"]["target destroyed"] = "objetivo destruido"
+ctld.i18n["sp"][", selected %1"] = ", %1 seleccionado"
+ctld.i18n["sp"]["%1 %2 target lost."] = "%1 %2 objetivo perdido."
+ctld.i18n["sp"]["%1 %2 target destroyed."] = "%1 %2 objetivo destruido."
+ctld.i18n["sp"]["JTAC STATUS: \n\n"] = "ESTADO JTAC: \n\n"
+ctld.i18n["sp"][", available on %1 %2,"] = ", disponible en %1 %2,"
+ctld.i18n["sp"]["UNKNOWN"] = "DESCONOCIDO"
+ctld.i18n["sp"][" targeting "] = " apuntación "
+ctld.i18n["sp"][" targeting selected unit "] = " apuntando a la unidad seleccionada"
+ctld.i18n["sp"][" attempting to find selected unit, temporarily targeting "] = " intento de encontrar la unidad seleccionada, objetivo temporal "
+ctld.i18n["sp"]["(Laser OFF) "] = "(Láser INACTIVO) "
+ctld.i18n["sp"]["Visual On: "] = "Visual activado: "
+ctld.i18n["sp"][" searching for targets %1\n"] = " buscando objetivos %1\n"
+ctld.i18n["sp"]["No Active JTACs"] = "No hay JTAC activos"
+ctld.i18n["sp"][", targeting selected unit, %1"] = ", apuntando a la unidad seleccionada, %1"
+ctld.i18n["sp"][". CODE: %1. POSITION: %2"] = ". CÓDIGO: %1. POSICIÓN: %2"
+ctld.i18n["sp"][", target selection reset."] = ", reinicio de selección de objetivo."
+ctld.i18n["sp"]["%1, laser and smokes enabled"] = "%1, láser y humo habilitados"
+ctld.i18n["sp"]["%1, laser and smokes disabled"] = "%1, láser y humo deshabilitados"
+ctld.i18n["sp"]["%1, wind and target speed laser spot compensations enabled"] = "%1, compensaciones habilitadas del viento y de velocidad del objetivo para el punto láser"
+ctld.i18n["sp"]["%1, wind and target speed laser spot compensations disabled"] = "%1, compensaciones deshabilitadas del viento y de velocidad del objetivo para el punto láser"
+ctld.i18n["sp"]["%1, WHITE smoke deployed near target"] = "%1, humo BLANCO desplegado cerca del objetivo"
+
+--- F10 menu messages
+ctld.i18n["sp"]["Actions"] = "Acciones"
+ctld.i18n["sp"]["Troop Transport"] = "Transporte de tropas"
+ctld.i18n["sp"]["Unload / Extract Troops"] = "Descargar/Extraer tropas"
+ctld.i18n["sp"]["Next page"] = "Página siguiente"
+ctld.i18n["sp"]["Load "] = "Cargar "
+ctld.i18n["sp"]["Vehicle / FOB Transport"] = "Transporte Vehículo / FOB"
+ctld.i18n["sp"]["Vehicle / FOB Crates"] = "Cajas Vehículo / FOB"
+ctld.i18n["sp"]["Unload Vehicles"] = "Descargar vehículos"
+ctld.i18n["sp"]["Load / Extract Vehicles"] = "Cargar/Extraer vehículos"
+ctld.i18n["sp"]["Load / Unload FOB Crate"] = "Cargar/Descargar caja FOB"
+ctld.i18n["sp"]["CTLD Commands"] = "Comandos CTLD"
+ctld.i18n["sp"]["CTLD"] = "CTLD"
+ctld.i18n["sp"]["Check Cargo"] = "Verificar carga"
+ctld.i18n["sp"]["Load Nearby Crate"] = "Cargar caja cercana"
+ctld.i18n["sp"]["Unpack Any Crate"] = "Desempaquetar las cajas"
+ctld.i18n["sp"]["Drop Crate"] = "Descargar caja"
+ctld.i18n["sp"]["List Nearby Crates"] = "Enumerar cajas cercanas"
+ctld.i18n["sp"]["List FOBs"] = "Enumerar FOBs"
+ctld.i18n["sp"]["List Beacons"] = "Enumerar balizas"
+ctld.i18n["sp"]["List Radio Beacons"] = "Enumerar radiobalizas"
+ctld.i18n["sp"]["Smoke Markers"] = "Marcadores de humo"
+ctld.i18n["sp"]["Drop Red Smoke"] = "Soltar humo rojo"
+ctld.i18n["sp"]["Drop Blue Smoke"] = "Soltar humo azul"
+ctld.i18n["sp"]["Drop Orange Smoke"] = "Soltar humo naranja"
+ctld.i18n["sp"]["Drop Green Smoke"] = "Soltar humo verde"
+ctld.i18n["sp"]["Drop Beacon"] = "Soltar baliza"
+ctld.i18n["sp"]["Radio Beacons"] = "Balizas de radio"
+ctld.i18n["sp"]["Remove Closet Beacon"] = "Quitar baliza cercana"
+ctld.i18n["sp"]["JTAC Status"] = "Estado de JTAC"
+ctld.i18n["sp"]["DISABLE "] = "DESHABILITAR "
+ctld.i18n["sp"]["ENABLE "] = "HABILITAR "
+ctld.i18n["sp"]["REQUEST "] = "SOLICITUD "
+ctld.i18n["sp"]["Reset TGT Selection"] = "Restablecer selección TGT"
+--========================================================================================================================
 
 --- Translates a string (text) with parameters (parameters) to the language defined in ctld.i18n_lang
 ---@param text string The text to translate, with the parameters as %1, %2, etc. (all strings!!!!)
@@ -5800,17 +6122,17 @@ function ctld.addTransportF10MenuOptions(_unitName)
                     ctld.logTrace("_groupId = %s", ctld.p(_groupId))
                     if ctld.addedTo[tostring(_groupId)] == nil then
 
-                        local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
+                        local _rootPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("CTLD"))
 
                         local _unitActions = ctld.getUnitActions(_unitTypename)
 
-                        missionCommands.addCommandForGroup(_groupId, "Check Cargo", _rootPath, ctld.checkTroopStatus, { _unitName })
+                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Check Cargo"), _rootPath, ctld.checkTroopStatus, { _unitName })
 
                         if _unitActions.troops then
 
-                            local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Troop Transport", _rootPath)
+                            local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Troop Transport"), _rootPath)
 
-                            missionCommands.addCommandForGroup(_groupId, "Unload / Extract Troops", _troopCommandsPath, ctld.unloadExtractTroops, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload / Extract Troops"), _troopCommandsPath, ctld.unloadExtractTroops, { _unitName })
 
 
                             -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
@@ -5822,7 +6144,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
                                     -- check size & unit
                                     if _transportLimit >= _loadGroup.total then
-                                        table.insert(menuEntries, { text = "Load ".._loadGroup.name, group = _loadGroup })
+                                        table.insert(menuEntries, { text = ctld.i18n_translate("Load ").._loadGroup.name, group = _loadGroup })
                                     end
                                 end
                             end
@@ -5830,7 +6152,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 -- add the menu item
                                 itemNb = itemNb + 1
                                 if itemNb == 9 and _i < #menuEntries then -- page limit reached (first item is "unload")
-                                    menuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", menuPath)
+                                    menuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Next page"), menuPath)
                                     itemNb = 1
                                 end
                                 missionCommands.addCommandForGroup(_groupId, _menu.text, menuPath, ctld.loadTroopsFromZone, { _unitName, true,_menu.group,false })
@@ -5838,16 +6160,16 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
                             if ctld.unitCanCarryVehicles(_unit) then
 
-                                local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Transport", _rootPath)
+                                local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Vehicle / FOB Transport"), _rootPath)
 
-                                missionCommands.addCommandForGroup(_groupId, "Unload Vehicles", _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
-                                missionCommands.addCommandForGroup(_groupId, "Load / Extract Vehicles", _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
+                                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload Vehicles"), _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
+                                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"), _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
 
                                 if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
 
-                                    missionCommands.addCommandForGroup(_groupId, "Load / Unload FOB Crate", _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
+                                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Unload FOB Crate"), _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
                                 end
-                                missionCommands.addCommandForGroup(_groupId, "Check Cargo", _vehicleCommandsPath, ctld.checkTroopStatus, { _unitName })
+                                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Check Cargo"), _vehicleCommandsPath, ctld.checkTroopStatus, { _unitName })
                             end
 
                         end
@@ -5866,7 +6188,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
                                 -- add menu for spawning crates
                                 local itemNbMain = 0
-                                local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Vehicle / FOB Crates", _rootPath)
+                                local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Vehicle / FOB Crates"), _rootPath)
                                 for _i, _category in ipairs(crateCategories) do
                                     local _subMenuName = _category
                                     local _crates = ctld.spawnableCrates[_subMenuName]
@@ -5874,7 +6196,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     -- add the submenu item
                                     itemNbMain = itemNbMain + 1
                                     if itemNbMain == 10 and _i < #crateCategories then -- page limit reached
-                                        _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", _cratesMenuPath)
+                                        _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Next page"), _cratesMenuPath)
                                         itemNbMain = 1
                                     end
                                     local itemNbSubmenu = 0
@@ -5897,7 +6219,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                         -- add the submenu item
                                         itemNbSubmenu = itemNbSubmenu + 1
                                         if itemNbSubmenu == 10 and _i < #menuEntries then -- page limit reached
-                                            _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, "Next page", _subMenuPath)
+                                            _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Next page"), _subMenuPath)
                                             itemNbSubmenu = 1
                                         end
                                         missionCommands.addCommandForGroup(_groupId, _menu.text, _subMenuPath, ctld.spawnCrate, { _unitName, _menu.crate.weight })
@@ -5908,43 +6230,43 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
                         if (ctld.enabledFOBBuilding or ctld.enableCrates) and _unitActions.crates then
 
-                            local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, "CTLD Commands", _rootPath)
+                            local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("CTLD Commands"), _rootPath)
                             if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
                                 if  ctld.loadCrateFromMenu then
-                                    missionCommands.addCommandForGroup(_groupId, "Load Nearby Crate", _crateCommands, ctld.loadNearbyCrate,  _unitName )
+                                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate"), _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
                             end
 
-                            missionCommands.addCommandForGroup(_groupId, "Unpack Any Crate", _crateCommands, ctld.unpackCrates, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unpack Any Crate"), _crateCommands, ctld.unpackCrates, { _unitName })
 
                             if ctld.loadCrateFromMenu or ctld.hoverPickup then
-                                missionCommands.addCommandForGroup(_groupId, "Drop Crate", _crateCommands, ctld.dropSlingCrate, { _unitName })
+                                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Crate"), _crateCommands, ctld.dropSlingCrate, { _unitName })
                             end
 
-                            missionCommands.addCommandForGroup(_groupId, "List Nearby Crates", _crateCommands, ctld.listNearbyCrates, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Nearby Crates"), _crateCommands, ctld.listNearbyCrates, { _unitName })
 
                             if ctld.enabledFOBBuilding then
-                                missionCommands.addCommandForGroup(_groupId, "List FOBs", _crateCommands, ctld.listFOBS, { _unitName })
+                                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List FOBs"), _crateCommands, ctld.listFOBS, { _unitName })
                             end
                         end
 
 
                         if ctld.enableSmokeDrop then
-                            local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId, "Smoke Markers", _rootPath)
-                            missionCommands.addCommandForGroup(_groupId, "Drop Red Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
-                            missionCommands.addCommandForGroup(_groupId, "Drop Blue Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
-                            missionCommands.addCommandForGroup(_groupId, "Drop Orange Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
-                            missionCommands.addCommandForGroup(_groupId, "Drop Green Smoke", _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
+                            local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Smoke Markers"), _rootPath)
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Red Smoke"), _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Blue Smoke"), _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Orange Smoke"), _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Green Smoke"), _smokeMenu, ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
                         end
 
                         if ctld.enabledRadioBeaconDrop then
-                            local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, "Radio Beacons", _rootPath)
-                            missionCommands.addCommandForGroup(_groupId, "List Beacons", _radioCommands, ctld.listRadioBeacons, { _unitName })
-                            missionCommands.addCommandForGroup(_groupId, "Drop Beacon", _radioCommands, ctld.dropRadioBeacon, { _unitName })
-                            missionCommands.addCommandForGroup(_groupId, "Remove Closet Beacon", _radioCommands, ctld.removeRadioBeacon, { _unitName })
+                            local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Radio Beacons"), _rootPath)
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands, ctld.listRadioBeacons, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Beacon"), _radioCommands, ctld.dropRadioBeacon, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Remove Closet Beacon"), _radioCommands, ctld.removeRadioBeacon, { _unitName })
                         elseif ctld.deployedRadioBeacons ~= {} then
-                            local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, "Radio Beacons", _rootPath)
-                            missionCommands.addCommandForGroup(_groupId, "List Beacons", _radioCommands, ctld.listRadioBeacons, { _unitName })
+                            local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Radio Beacons"), _rootPath)
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands, ctld.listRadioBeacons, { _unitName })
                         end
 
                         ctld.addedTo[tostring(_groupId)] = true
@@ -6008,7 +6330,7 @@ function ctld.addRadioListCommand(_side)
             if _groupId then
 
                 if ctld.addedTo[tostring(_groupId)] == nil then
-                    missionCommands.addCommandForGroup(_groupId, "List Radio Beacons", nil, ctld.listRadioBeacons, { _playerUnit:getName() })
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Radio Beacons"), nil, ctld.listRadioBeacons, { _playerUnit:getName() })
                     ctld.addedTo[tostring(_groupId)] = true
                 end
             end
@@ -6033,7 +6355,7 @@ function ctld.addJTACRadioCommand(_side)
                     ctld.logDebug("ctld.addJTACRadioCommand - adding JTAC radio menu for unit [%s]", ctld.p(_playerUnit:getName()))
                     newGroup = true
                     local JTACpath = missionCommands.addSubMenuForGroup(_groupId, ctld.jtacMenuName)
-                    missionCommands.addCommandForGroup(_groupId, "JTAC Status", JTACpath, ctld.getJTACStatus, { _playerUnit:getName() })
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("JTAC Status"), JTACpath, ctld.getJTACStatus, { _playerUnit:getName() })
                     ctld.jtacRadioAdded[tostring(_groupId)] = true
                 end
 
@@ -6108,7 +6430,7 @@ function ctld.addJTACRadioCommand(_side)
 
                                             if not jtacSpecialOptPagePath then
                                                 itemCounter = itemCounter + 1 --one item is added to the first JTAC target page
-                                                jtacSpecialOptPagePath = missionCommands.addSubMenuForGroup(_groupId, "Actions", jtacTargetPagePath)
+                                                jtacSpecialOptPagePath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Actions"), jtacTargetPagePath)
                                             end
 
                                             SpecialOptionsCounter = SpecialOptionsCounter+1
@@ -6120,12 +6442,12 @@ function ctld.addJTACRadioCommand(_side)
 
                                             if _specialOption.jtacs then
                                                 if _specialOption.jtacs[_jtacGroupName] then
-                                                    missionCommands.addCommandForGroup(_groupId, "DISABLE " ..  _specialOption.message, jtacSpecialOptPagePath, _specialOption.setter, {jtacGroupName = _jtacGroupName, value = false})
+                                                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("DISABLE ") ..  _specialOption.message, jtacSpecialOptPagePath, _specialOption.setter, {jtacGroupName = _jtacGroupName, value = false})
                                                 else
-                                                    missionCommands.addCommandForGroup(_groupId, "ENABLE " .. _specialOption.message, jtacSpecialOptPagePath, _specialOption.setter, {jtacGroupName = _jtacGroupName, value = true})
+                                                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("ENABLE ") .. _specialOption.message, jtacSpecialOptPagePath, _specialOption.setter, {jtacGroupName = _jtacGroupName, value = true})
                                                 end
                                             else
-                                                missionCommands.addCommandForGroup(_groupId, "REQUEST " .. _specialOption.message, jtacSpecialOptPagePath, _specialOption.setter, {jtacGroupName = _jtacGroupName, value = false}) --value is not used here
+                                                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("REQUEST ") .. _specialOption.message, jtacSpecialOptPagePath, _specialOption.setter, {jtacGroupName = _jtacGroupName, value = false}) --value is not used here
                                             end
                                         end
                                     end
@@ -6135,7 +6457,7 @@ function ctld.addJTACRadioCommand(_side)
                                     --ctld.logTrace(string.format("JTAC - MENU - [%s] - adding targets menu", ctld.p(_jtacGroupName)))
 
                                     --add a reset targeting option to revert to automatic JTAC unit targeting
-                                    missionCommands.addCommandForGroup(_groupId, "Reset TGT Selection", jtacTargetPagePath, ctld.setJTACTarget, {jtacGroupName = _jtacGroupName, targetName = nil})
+                                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Reset TGT Selection"), jtacTargetPagePath, ctld.setJTACTarget, {jtacGroupName = _jtacGroupName, targetName = nil})
 
                                     itemCounter = itemCounter + 1 --one item is added to the first JTAC target page
 
