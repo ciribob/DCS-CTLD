@@ -7613,7 +7613,8 @@ ctld.jtacSpecialOptions._9Line.setter = ctld.setJTAC9Line
 -- 1> Load MIST + CTLD
 -- 2> Create a continuous TRIGGER at Temp greater than 6, which ACTION.EXECUTE SCRIPT:
 -- 		ctld.JTACAutoLase("gdrone1", 1688,false) -- defines the group "gdrone1" as a JTAC gives it the frequency 1688, without smoke marking
--- 		ctld.autoOrbitingJTAC("gdrone1") -- launches the automatic management of the JTAC orbiting----------------------------------------------------------------------------------------------------------------------------------
+-- 		ctld.autoOrbitingJTAC() -- launches the automatic management of the JTAC orbiting
+-------------------------------------------------------------------------------------------------------
 ctld.OrbitIinProgress = {}	    -- indique pour un group donné, si un ordre d'orbite est en cours ou non (non au début)
 ctld.debugFlag = false		-- si true => msg debut affiché, si false => pas d'affichage
 ------------------------------------------------------------------------------------
