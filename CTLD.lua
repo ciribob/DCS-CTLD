@@ -7647,7 +7647,7 @@ function ctld.autoOrbitingJTAC()
 end
 ------------------------------------------------------------------------------------
 -- orbits group "_grpName", on target "_unitTargetName"
--- _alti in meters, speed in km/h
+-- orbiting _alti in meters, speed in km/h
 function ctld.startOrbitingJTACOnTarget(_grpName, _unitTargetName, _alti, _speed)	
 	if (Unit.getByName(_unitTargetName) ~= nil) and (Group.getByName(_grpName) ~= nil) then			-- if target unit and JTAC group exist
 		local orbit = {
@@ -7675,6 +7675,8 @@ function ctld.InOrbitList(_grpName)
 end
 -------------------------------------------------------------------------------------------
 -- returns the WayPoint number closest to the target on the JTAC route
+-- _unitTargetName = enmy unitName wich is or was targeted by JTAC
+-- _grpName = flying JTAC groupName
 function ctld.NearWP(_unitTargetName, _grpName)
     local WP = 0
     local memoDist = 9999999	-- Lower distance checked
@@ -7697,7 +7699,8 @@ function ctld.NearWP(_unitTargetName, _grpName)
     return WP
 end
 ----------------------------------------------------------------------------
--- Modifies the route by removing all WPs lower than the one passed in param to align the orbit with the WP closest to the target
+-- Modifies the flying JTAC route by removing all WPs lower than the one passed in param 
+-- to align the orbit with the WP closest to the target
 function ctld.AjustRoute(_grpName, firstWP)
     local JTACRoute = mist.getGroupRoute (_grpName, true)
 	for i=0, #JTACRoute-1 do
