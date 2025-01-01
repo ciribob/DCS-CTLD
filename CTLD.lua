@@ -50,7 +50,7 @@ ctld.staticBugWorkaround = false --  DCS had a bug where destroying statics woul
 ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 -- Allow units to CTLD by aircraft type and not by pilot name - this is done everytime a player enters a new unit
-ctld.addPlayerAircraftByType = false
+ctld.addPlayerAircraftByType = true
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
 ctld.loadCrateFromMenu = false -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
@@ -5283,8 +5283,9 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
                 if _groupId then
                     ctld.logTrace("_groupId = %s", ctld.p(_groupId))
+                    ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
                     if ctld.addedTo[tostring(_groupId)] == nil then
-
+                        ctld.logTrace("adding CTLD menu for _groupId = %s", ctld.p(_groupId))
                         local _rootPath = missionCommands.addSubMenuForGroup(_groupId, "CTLD")
 
                         local _unitActions = ctld.getUnitActions(_unitTypename)
@@ -5433,6 +5434,8 @@ function ctld.addTransportF10MenuOptions(_unitName)
                         end
 
                         ctld.addedTo[tostring(_groupId)] = true
+                        ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
+                        ctld.logTrace("done adding CTLD menu for _groupId = %s", ctld.p(_groupId))
                     end
                 end
             end
@@ -5492,7 +5495,9 @@ function ctld.addRadioListCommand(_side)
 
             if _groupId then
 
+                ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
                 if ctld.addedTo[tostring(_groupId)] == nil then
+                    ctld.logTrace("adding List Radio Beacons for _groupId = %s", ctld.p(_groupId))
                     missionCommands.addCommandForGroup(_groupId, "List Radio Beacons", nil, ctld.listRadioBeacons, { _playerUnit:getName() })
                     ctld.addedTo[tostring(_groupId)] = true
                 end
@@ -7373,10 +7378,7 @@ function ctld.eventHandler:onEvent(event)
     end
 
     -- check that we know the event
-    if not (
-        event.id == 15 -- S_EVENT_BIRTH"
-        or event.id == 20 -- S_EVENT_PLAYER_ENTER_UNIT
-        ) then
+    if event.id ~= 20 then -- S_EVENT_PLAYER_ENTER_UNIT
         return
     end
 
@@ -7384,47 +7386,63 @@ function ctld.eventHandler:onEvent(event)
     local unitName = nil
     if event.initiator ~= nil and event.initiator.getName then
         unitName = event.initiator:getName()
-        ctld.logTrace("unitName = %s", ctld.p(unitName))
+        ctld.logDebug("caught event S_EVENT_PLAYER_ENTER_UNIT for unit [%s]", ctld.p(unitName))
     end
     if not unitName then 
         ctld.logWarning("no unitname found in event %s", ctld.p(event))
         return
     end
 
-    if mist.DBs.humansByName[unitName] then -- it's a human unit
-        ctld.logDebug("caught event BIRTH for human unit [%s]", ctld.p(unitName))
-        local _unit = Unit.getByName(unitName)
-        if _unit ~= nil then
-            -- assign transport pilot
-            ctld.logTrace("_unit = %s", ctld.p(_unit))
-
-            local playerTypeName = _unit:getTypeName()
-            ctld.logTrace("playerTypeName = %s", ctld.p(playerTypeName))
-
-            -- Allow units to CTLD by aircraft type and not by pilot name
-            if ctld.addPlayerAircraftByType then
-                for _,aircraftType in pairs(ctld.aircraftTypeTable) do
-                    if aircraftType == playerTypeName then
-                        ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
-                        -- add transport unit to the list
-                        table.insert(ctld.transportPilotNames, unitName)
-                        -- add transport radio menu
-                        ctld.addTransportF10MenuOptions(unitName)
-                        break
+    local nextSteps = coroutine.create(function()
+        ctld.logTrace("in the 'nextSteps' coroutine")
+        if mist.DBs.humansByName[unitName] then -- it's a human unit
+            ctld.logDebug("caught event S_EVENT_PLAYER_ENTER_UNIT for human unit [%s]", ctld.p(unitName))
+            local _unit = Unit.getByName(unitName)
+            if _unit ~= nil then
+                -- assign transport pilot
+                ctld.logTrace("_unit = %s", ctld.p(_unit))
+    
+                local playerTypeName = _unit:getTypeName()
+                ctld.logTrace("playerTypeName = %s", ctld.p(playerTypeName))
+    
+                -- Allow units to CTLD by aircraft type and not by pilot name
+                if ctld.addPlayerAircraftByType then
+                    for _,aircraftType in pairs(ctld.aircraftTypeTable) do
+                        if aircraftType == playerTypeName then
+                            ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
+                            -- add transport unit to the list
+                            table.insert(ctld.transportPilotNames, unitName)
+                            -- add transport radio menu
+                            ctld.addTransportF10MenuOptions(unitName)
+                            break
+                        end
                     end
-                end
-            else
-                for _, _unitName in pairs(ctld.transportPilotNames) do
-                    if _unitName == unitName then
-                        ctld.logTrace("adding by transportPilotNames, unitName = %s", ctld.p(unitName))
-                        -- add transport radio menu
-                        ctld.addTransportF10MenuOptions(unitName)
-                        break
+                else
+                    for _, _unitName in pairs(ctld.transportPilotNames) do
+                        if _unitName == unitName then
+                            ctld.logTrace("adding by transportPilotNames, unitName = %s", ctld.p(unitName))
+                            -- add transport radio menu
+                            ctld.addTransportF10MenuOptions(unitName)
+                            break
+                        end
                     end
                 end
             end
         end
+    end)
+
+    if not mist.DBs.humansByName[unitName] then
+        -- give a few milliseconds for MiST to handle the BIRTH event too
+        ctld.logTrace("give MiST some time to handle the BIRTH event too")
+        timer.scheduleFunction(function()
+            ctld.logTrace("resuming the 'nextSteps' coroutine in a timer")
+            coroutine.resume(nextSteps)
+        end, nil, timer.getTime() + 0.5)
+    else
+        ctld.logTrace("resuming the 'nextSteps' coroutine immediately")
+        coroutine.resume(nextSteps)
     end
+
 end
 
 -- initialize the random number generator to make it almost random
