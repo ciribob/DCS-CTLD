@@ -34,13 +34,13 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.1.0"
+ctld.Version = "1.2.0"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
-ctld.Debug = false
-ctld.Trace = false
+ctld.Debug = true
+ctld.Trace = true
 
-ctld.alreadyInitialized = false -- if true, ctld.initialize() will not run
+ctld.dontInitialize = false -- if true, ctld.initialize() will not run; instead, you'll have to run it from your own code - it's useful when you want to override some functions/parameters before the initialization takes place
 
 -- ***************************************************************
 -- *************** Internationalization (I18N) *******************
@@ -5472,20 +5472,24 @@ end
 
 -- are we near friendly logistics zone
 function ctld.inLogisticsZone(_heli)
+    ctld.logDebug("ctld.inLogisticsZone(), _heli = %s", ctld.p(_heli))
 
     if ctld.inAir(_heli) then
         return false
     end
     local _heliPoint = _heli:getPoint()
+    ctld.logDebug("_heliPoint = %s", ctld.p(_heliPoint))
     for _, _name in pairs(ctld.logisticUnits) do
+        ctld.logDebug("_name = %s", ctld.p(_name))
         local _logistic = StaticObject.getByName(_name)
         if not _logistic then
             _logistic = Unit.getByName(_name)
         end
+        ctld.logDebug("_logistic = %s", ctld.p(_logistic))
         if _logistic ~= nil and _logistic:getCoalition() == _heli:getCoalition() and _logistic:getLife() > 0 then
             --get distance
             local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
-
+            ctld.logDebug("_dist = %s", ctld.p(_dist))
             if _dist <= ctld.maximumDistanceLogistic then
                 return true
             end
@@ -7555,15 +7559,12 @@ end
 
 
 -- ***************** SETUP SCRIPT ****************
-function ctld.initialize(force)
-    ctld.logInfo(string.format("Initializing version %s", ctld.Version))
-    ctld.logTrace(string.format("ctld.alreadyInitialized=%s", ctld.p(ctld.alreadyInitialized)))
-    ctld.logTrace(string.format("force=%s", ctld.p(force)))
-
-    if ctld.alreadyInitialized and not force then
-        ctld.logInfo(string.format("Bypassing initialization because ctld.alreadyInitialized = true"))
+function ctld.initialize()
+    if ctld.dontInitialize then
+        ctld.logInfo(string.format("Skipping initializion of version %s because ctld.dontInitialize is true", ctld.Version))
         return
     end
+    ctld.logInfo(string.format("Initializing version %s", ctld.Version))
 
     assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
 
@@ -7877,10 +7878,6 @@ function ctld.initialize(force)
     ctld.logInfo("registering event handler")
     world.addEventHandler(ctld.eventHandler)
 
-
-    -- don't initialize more than once
-    ctld.alreadyInitialized = true
-
     env.info("CTLD READY")
 end
 
@@ -7967,9 +7964,9 @@ math.random(); math.random(); math.random()
 --- Enable/Disable error boxes displayed on screen.
 env.setErrorMessageBoxEnabled(false)
 
--- initialize CTLD in 2 seconds, so other scripts have a chance to modify the configuration before initialization
-ctld.logInfo(string.format("Loading version %s in 2 seconds", ctld.Version))
-timer.scheduleFunction(ctld.initialize, nil, timer.getTime() + 2)
+-- initialize CTLD
+-- if you need to have a chance to modify the configuration before initialization in your other scripts, please set ctld.dontInitialize to true and call ctld.initialize() manually
+ctld.initialize()
 
 --DEBUG FUNCTION
 --        for key, value in pairs(getmetatable(_spawnedCrate)) do
