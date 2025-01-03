@@ -20,6 +20,7 @@ This script is a rewrite of some of the functionality of the original Complete C
 * [Setup in Mission Editor](#setup-in-mission-editor)
   * [Script Setup](#script-setup)
   * [Script Configuration](#script-configuration)
+  * [Internationalization (multiple languages for text)](#internationalization)
   * [Pickup and Dropoff Zones Setup](#pickup-and-dropoff-zones-setup)
   * [Waypoint Zones Setup](#waypoint-zones-setup)
   * [Transport Unit Setup](#transport-unit-setup)
@@ -301,6 +302,32 @@ Example showing what happens if you dont have enough crates:
 
 **Make sure that after making any changes to the script you remove and re-add the script to the mission. **
 
+### Internationalization
+
+CTLD supports multiple languages (English being the base and the reference).
+
+This is done via the `ctld.i18n` table that can be found at the beginning of the script.
+
+#### Changing the language
+
+You can easily switch the language you want CTLD to display its messages and name its radio menus, by changing the `ctld.i18n_lang` parameter to a supported language.
+Supported languages are all listed near the parameter in the code, so it's easy to uncomment the line you wish to use.
+
+Example, to set it to French: `ctld.i18n_lang = "fr"`
+
+#### Adding or editing a translation
+
+Translations are referenced by the english text, and can contain numbered parameters that will be replaced (in the calling code) by values.
+
+This allows for different languages placing words at different places in a sentence.
+
+To add a translation, simply copy the complete `ctld.i18n["en"]` table to a new one, and replace the language (`"en"`) with the one you want to add (`"de"` for example).
+
+Then, replace all the `= nil` statements with the translation; for example, `ctld.i18n["de"]["Standard Group"] = "Standard-Kampfgruppe"`.
+
+Finally, switch the CTLD language to the new one you defined (example: `ctld.i18n_lang = "de"`) and test.
+
+Please share your work with the community, contact Zip [on Github](https://github.com/davidp57) or [on Discord](https://discordapp.com/users/421317390807203850).
 
 ### Pickup and Dropoff Zones Setup
 Pickup zones are used by transport aircraft and helicopters to load troops and vehicles. A transport unit must be inside of the radius of the trigger and the right side (RED or BLUE or BOTH) in order to load troops and vehicles.
