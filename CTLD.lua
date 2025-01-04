@@ -814,77 +814,8 @@ ctld.i18n["es"]["Reset TGT Selection"] = "Restablecer selección TGT"
 ---@param ... any (list) The parameters to replace in the text, in order (all paremeters will be converted to string)
 ---@return string the translated and formatted text
 function ctld.i18n_translate(text, ...)
-    local function p(o, level)
-        local MAX_LEVEL = 20
-        if level == nil then level = 0 end
-        if level > MAX_LEVEL then
-            return ""
-        end
-        local text = ""
-        if (type(o) == "table") then
-            text = "\n"
-            for key,value in pairs(o) do
-                for i=0, level do
-                    text = text .. " "
-                end
-                text = text .. ".".. key.."="..p(value, level+1) .. "\n"
-            end
-        elseif (type(o) == "function") then
-            text = "[function]"
-        elseif (type(o) == "boolean") then
-            if o == true then
-                text = "[true]"
-            else
-                text = "[false]"
-            end
-        else
-            if o == nil then
-                text = "[nil]"
-            else
-                text = tostring(o)
-            end
-        end
-        return text
-    end
-    local function formatText(text, ...)
-        if not text then
-            return ""
-        end
-        if type(text) ~= 'string' then
-            text = p(text)
-        else
-            local args = ...
-            if args and args.n and args.n > 0 then
-                local pArgs = {}
-                for i=1,args.n do
-                    pArgs[i] = p(args[i])
-                end
-                text = text:format(unpack(pArgs))
-            end
-        end
-        local fName = nil
-        local cLine = nil
-        if debug and debug.getinfo then
-            local dInfo = debug.getinfo(3)
-            fName = dInfo.name
-            cLine = dInfo.currentline
-        end
-        if fName and cLine then
-            return fName .. '|' .. cLine .. ': ' .. text
-        elseif cLine then
-            return cLine .. ': ' .. text
-        else
-            return ' ' .. text
-        end
-    end
-    local function logTrace(message, ...)
-        message = formatText(message, arg)
-        env.info(" T - " .. ctld.Id .. message)
-    end
 
-    logTrace("ctld.i18n_translate(lang=%s, text=%s", p(ctld.i18n_lang), p(text))
     local _text = ctld.i18n[ctld.i18n_lang][text]
-    logTrace("_text=%s", p(_text))
 
     -- default to english
     if _text == nil then
@@ -899,14 +830,13 @@ function ctld.i18n_translate(text, ...)
     if arg and arg.n and arg.n > 0 then
         local _args = {}
         for i=1,arg.n do
-            _args[i] = p(arg[i])
+            _args[i] = tostring(arg[i]) or ""
         end
         for i = 1, #_args do
             _text = string.gsub(_text, "%%" .. i, _args[i])
         end
     end
 
-    logTrace("returning %s", p(_text))
     return _text
 end
 
