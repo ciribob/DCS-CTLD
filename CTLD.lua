@@ -35,7 +35,7 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.2.0"
+ctld.Version = "1.2.1"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -7887,10 +7887,6 @@ end
 
 -- ***************** SETUP SCRIPT ****************
 function ctld.initialize()
-    if ctld.dontInitialize then
-        ctld.logInfo(string.format("Skipping initializion of version %s because ctld.dontInitialize is true", ctld.Version))
-        return
-    end
     ctld.logInfo(string.format("Initializing version %s", ctld.Version))
 
     assert(mist ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
@@ -8293,10 +8289,8 @@ env.setErrorMessageBoxEnabled(false)
 
 -- initialize CTLD
 -- if you need to have a chance to modify the configuration before initialization in your other scripts, please set ctld.dontInitialize to true and call ctld.initialize() manually
-ctld.initialize()
-
---DEBUG FUNCTION
---        for key, value in pairs(getmetatable(_spawnedCrate)) do
---            env.info(tostring(key))
---            env.info(tostring(value))
---        end
+if ctld.dontInitialize then
+    ctld.logInfo(string.format("Skipping initializion of version %s because ctld.dontInitialize is true", ctld.Version))
+else
+    ctld.initialize()
+end
