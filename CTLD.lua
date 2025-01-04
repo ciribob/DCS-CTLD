@@ -3968,7 +3968,7 @@ function ctld.listNearbyCrates(_args)
     local _txt = ctld.i18n_translate("No Nearby Crates")
     if _message ~= "" or _fobMsg ~= "" then
 
-        local _txt = ""
+        _txt = ""
 
         if _message ~= "" then
             _txt = ctld.i18n_translate("Nearby Crates:\n%1", _message)
