@@ -4430,8 +4430,14 @@ function ctld.dropSlingCrate(_args)
         local _heightDiff = ctld.heightDiff(_heli)
 
         if ctld.inAir(_heli) == false or _heightDiff <= 7.5 then
-            ctld.displayMessageToGroup(_heli, ctld.i18n_translate("%1 crate has been safely unhooked and is at your %2 o'clock", _currentCrate.desc, ctld.getClockDirection(_heli, _currentCrate.crateUnit)), 10)
             _point = ctld.getPointAt12Oclock(_heli, 30)
+            local _position = "12"
+
+            if ctld.unitDynamicCargoCapable(_heli) then
+                _point = ctld.getPointAt6Oclock(_heli, 15)
+                _position = "6"
+            end
+            ctld.displayMessageToGroup(_heli, ctld.i18n_translate("%1 crate has been safely unhooked and is at your %2 o'clock", _currentCrate.desc, _position), 10)
         elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("%1 crate has been safely dropped below you", _currentCrate.desc), 10)
         else -- _heightDiff > 40.0, destroy crate
