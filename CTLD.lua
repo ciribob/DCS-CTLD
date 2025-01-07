@@ -35,7 +35,7 @@ ctld = {} -- DONT REMOVE!
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.2.1"
+ctld.Version = "1.2.2"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -8143,40 +8143,47 @@ end
 --- Handle world events.
 ctld.eventHandler = {}
 function ctld.eventHandler:onEvent(event)
-    ctld.logTrace("ctld.eventHandler:onEvent(), event = %s", ctld.p(event))
+    ctld.logTrace("ctld.eventHandler:onEvent()")
     if event == nil then
         ctld.logError("Event handler was called with a nil event!")
         return
     end
 
+    local eventName = "unknown"
     -- check that we know the event
-    if event.id ~= 20 then -- S_EVENT_PLAYER_ENTER_UNIT
+    if event.id == world.event.S_EVENT_PLAYER_ENTER_UNIT then
+        eventName = "S_EVENT_PLAYER_ENTER_UNIT"
+    elseif event.id == world.event.S_EVENT_BIRTH then
+        eventName = "S_EVENT_BIRTH"
+    else
+        ctld.logTrace("Ignoring event %s", ctld.p(event))
         return
     end
+    ctld.logDebug("caught event %s: %s", ctld.p(eventName), ctld.p(event))
 
     -- find the originator unit
     local unitName = nil
     if event.initiator ~= nil and event.initiator.getName then
         unitName = event.initiator:getName()
-        ctld.logDebug("caught event S_EVENT_PLAYER_ENTER_UNIT for unit [%s]", ctld.p(unitName))
+        ctld.logDebug("unitName = [%s]", ctld.p(unitName))
     end
     if not unitName then
-        ctld.logWarning("no unitname found in event %s", ctld.p(event))
+        ctld.logInfo("no unitname found in event %s", ctld.p(event))
         return
     end
 
-    local nextSteps = coroutine.create(function()
-        ctld.logTrace("in the 'nextSteps' coroutine")
+    local function processHumanPlayer()
+        ctld.logTrace("in the 'processHumanPlayer' function")
         if mist.DBs.humansByName[unitName] then -- it's a human unit
-            ctld.logDebug("caught event S_EVENT_PLAYER_ENTER_UNIT for human unit [%s]", ctld.p(unitName))
+            ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
             local _unit = Unit.getByName(unitName)
             if _unit ~= nil then
                 -- assign transport pilot
                 ctld.logTrace("_unit = %s", ctld.p(_unit))
-    
+
                 local playerTypeName = _unit:getTypeName()
                 ctld.logTrace("playerTypeName = %s", ctld.p(playerTypeName))
-    
+
                 -- Allow units to CTLD by aircraft type and not by pilot name
                 if ctld.addPlayerAircraftByType then
                     for _,aircraftType in pairs(ctld.aircraftTypeTable) do
@@ -8201,18 +8208,18 @@ function ctld.eventHandler:onEvent(event)
                 end
             end
         end
-    end)
+    end
 
     if not mist.DBs.humansByName[unitName] then
         -- give a few milliseconds for MiST to handle the BIRTH event too
         ctld.logTrace("give MiST some time to handle the BIRTH event too")
         timer.scheduleFunction(function()
-            ctld.logTrace("resuming the 'nextSteps' coroutine in a timer")
-            coroutine.resume(nextSteps)
-        end, nil, timer.getTime() + 0.5)
+            ctld.logTrace("calling the 'processHumanPlayer' function in a timer")
+            processHumanPlayer()
+        end, nil, timer.getTime()+0.5)
     else
-        ctld.logTrace("resuming the 'nextSteps' coroutine immediately")
-        coroutine.resume(nextSteps)
+        ctld.logTrace("calling the 'processHumanPlayer' function immediately")
+        processHumanPlayer()
     end
 
 end
