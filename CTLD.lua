@@ -529,8 +529,8 @@ ctld.i18n["fr"]["CTLD Commands"] = "Commandes CTLD"
 ctld.i18n["fr"]["CTLD"] = "CTLD"
 ctld.i18n["fr"]["Check Cargo"] = "Vérif° chargement"
 ctld.i18n["fr"]["Load Nearby Crate"] = "Charger caisse proche"
-ctld.i18n["fr"]["Unpack Any Crate"] = "Décharger caisses"
-ctld.i18n["fr"]["Drop Crate"] = "Déposer Caisse"
+ctld.i18n["fr"]["Unpack Any Crate"] = "Déballer caisses"
+ctld.i18n["fr"]["Drop Crate"] = "Décharger Caisse"
 ctld.i18n["fr"]["List Nearby Crates"] = "Liste caisses proches"
 ctld.i18n["fr"]["List FOBs"] = "Liste FOBs"
 ctld.i18n["fr"]["List Beacons"] = "Liste balises"
@@ -6120,9 +6120,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
                         end
 
-
                         if ctld.enableCrates and _unitActions.crates then
-
                             if ctld.unitCanCarryVehicles(_unit) == false then
                                 -- sort the crate categories alphabetically
                                 local crateCategories = {}
@@ -6182,20 +6180,18 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate"), _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
                             end
-
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unpack Any Crate"), _crateCommands, ctld.unpackCrates, { _unitName })
-
+                            
                             if ctld.loadCrateFromMenu or ctld.hoverPickup then
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Crate"), _crateCommands, ctld.dropSlingCrate, { _unitName })
                             end
 
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unpack Any Crate"), _crateCommands, ctld.unpackCrates, { _unitName })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Nearby Crates"), _crateCommands, ctld.listNearbyCrates, { _unitName })
 
                             if ctld.enabledFOBBuilding then
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List FOBs"), _crateCommands, ctld.listFOBS, { _unitName })
                             end
                         end
-
 
                         if ctld.enableSmokeDrop then
                             local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Smoke Markers"), _rootPath)
@@ -6222,7 +6218,6 @@ function ctld.addTransportF10MenuOptions(_unitName)
                 end
             end
         end)
-
     if (not status) then
         ctld.logError(string.format("Error adding f10 to transport: %s", error))
     end
@@ -6230,10 +6225,8 @@ end
 
 function ctld.addOtherF10MenuOptions()
     ctld.logDebug("ctld.addOtherF10MenuOptions")
-
     -- reschedule every 10 seconds
     timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 10)
-
     local status, error = pcall(function()
 
         -- now do any player controlled aircraft that ARENT transport units
@@ -6245,23 +6238,15 @@ function ctld.addOtherF10MenuOptions()
             ctld.addRadioListCommand(1)
         end
 
-
         if ctld.JTAC_jtacStatusF10 then
-
-            -- get all BLUE players
-            ctld.addJTACRadioCommand(2)
-
-            -- get all RED players
-            ctld.addJTACRadioCommand(1)
+            ctld.addJTACRadioCommand(2) -- get all BLUE players
+            ctld.addJTACRadioCommand(1) -- get all RED players
         end
-
     end)
 
     if (not status) then
         env.error(string.format("Error adding f10 to other players: %s", error), false)
     end
-
-
 end
 
 --add to all players that arent transport
