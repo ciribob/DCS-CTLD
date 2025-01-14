@@ -399,7 +399,7 @@ ctld.i18n["fr"]["CTLD.lua ERROR: Can't find crate with weight %1"]   = "CTLD.lua
 ctld.i18n["fr"]["You are not close enough to friendly logistics to get a crate!"] = "Vous n'êtes pas assez proche de la logistique alliée pour obtenir une caisse !"
 ctld.i18n["fr"]["No more JTAC Crates Left!"] = "Plus de caisses JTAC disponibles !"
 ctld.i18n["fr"]["Sorry you must wait %1 seconds before you can get another crate"] = "Désolé, vous devez attendre %1 secondes avant de pouvoir obtenir une autre caisse"
-ctld.i18n["fr"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = "Une caisse %1 pesant %2 kg a été apportée et se trouve à votre %3 heure"
+ctld.i18n["fr"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = "Une caisse %1 pesant %2 kg a été apportée et se trouve à vos %3 heure"
 ctld.i18n["fr"]["%1 fast-ropped troops from %2 into combat"] = "%1 a largué rapidement des troupes de %2 au combat"
 ctld.i18n["fr"]["%1 dropped troops from %2 into combat"] = "%1 a largué des troupes de %2 au combat"
 ctld.i18n["fr"]["%1 fast-ropped troops from %2 into %3"] = "%1 a largué rapidement des troupes de %2 à %3"
@@ -461,7 +461,7 @@ ctld.i18n["fr"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small 
 ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = "Vous ne transportez actuellement aucune caisse. \n\nPour charger une caisse, survolez la caisse pendant %1 secondes ou atterrissez et utilisez les commandes de caisse F10."
 ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = "Vous ne transportez actuellement aucune caisse. \n\nPour ramasser une caisse, survolez la caisse pendant %1 secondes."
 ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = "Vous ne transportez actuellement aucune caisse. \n\nPour charger une caisse, atterrissez et utilisez les commandes de caisse F10."
-ctld.i18n["fr"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = "%1 caisse a été décrochée en toute sécurité et se trouve à votre %2 heures"
+ctld.i18n["fr"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = "%1 caisse a été décrochée en toute sécurité et se trouve à vos %2 heures"
 ctld.i18n["fr"]["%1 crate has been safely dropped below you"] = "%1 caisse a été déposée en toute sécurité sous vous"
 ctld.i18n["fr"]["You were too high! The crate has been destroyed"] = "Vous étiez trop haut! La caisse a été détruite"
 ctld.i18n["fr"]["Radio Beacons:\n%1"] = "Balises radio :\n%1"
@@ -529,8 +529,8 @@ ctld.i18n["fr"]["CTLD Commands"] = "Commandes CTLD"
 ctld.i18n["fr"]["CTLD"] = "CTLD"
 ctld.i18n["fr"]["Check Cargo"] = "Vérif° chargement"
 ctld.i18n["fr"]["Load Nearby Crate"] = "Charger caisse proche"
-ctld.i18n["fr"]["Unpack Any Crate"] = "Décharger caisses"
-ctld.i18n["fr"]["Drop Crate"] = "Déposer Caisse"
+ctld.i18n["fr"]["Unpack Any Crate"] = "Déballer caisses"
+ctld.i18n["fr"]["Drop Crate"] = "Décharger Caisse"
 ctld.i18n["fr"]["List Nearby Crates"] = "Liste caisses proches"
 ctld.i18n["fr"]["List FOBs"] = "Liste FOBs"
 ctld.i18n["fr"]["List Beacons"] = "Liste balises"
@@ -642,7 +642,7 @@ ctld.i18n["es"]["CTLD.lua ERROR: Can't find crate with weight %1"]   = "CTLD.lua
 ctld.i18n["es"]["You are not close enough to friendly logistics to get a crate!"] = "¡No estás lo suficientemente cerca de la logística amigable para conseguir una caja!"
 ctld.i18n["es"]["No more JTAC Crates Left!"] = "¡No hay más cajas JTAC disponibles!"
 ctld.i18n["es"]["Sorry you must wait %1 seconds before you can get another crate"] = "Lo sentimos, debes esperar %1 segundos antes de poder conseguir otra caja"
-ctld.i18n["es"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = "Una caja %1 que pesa %2 kg ha sido sacada y está a tus %3 en punto "
+ctld.i18n["es"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = "Una caja %1 que pesa %2 kg ha sido sacada y está a tus %3 horas "
 ctld.i18n["es"]["%1 fast-ropped troops from %2 into combat"] = "%1 lanzó rápidamente tropas de %2 al combate"
 ctld.i18n["es"]["%1 dropped troops from %2 into combat"] = "%1 arrojó tropas de %2 al combate"
 ctld.i18n["es"]["%1 fast-ropped troops from %2 into %3"] = "%1 lanzó tropas rápidamente de %2 a %3"
@@ -678,21 +678,21 @@ ctld.i18n["es"]["1 FOB Crate oboard (%1 kg)\n"] = "1 caja FOB a bordo (%1 kg)\n"
 ctld.i18n["es"]["%1 crate onboard (%2 kg)\n"] = "%1 caja a bordo (%2 kg)\n"
 ctld.i18n["es"]["Total weight of cargo : %1 kg\n"] = "Peso total de la carga: %1 kg\n"
 ctld.i18n["es"]["No cargo."] = "Aucune cargaison."
-ctld.i18n["es"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "Stationaire au-dessus de la caisse %1. \n\nMaintenez le stationaire pendant %2 secondes ! \n\nSi le compte à rebours s'arrête, vous êtes trop loin !"
-ctld.i18n["es"]["Loaded %1 crate!"] = "Caisse %1 chargée !"
-ctld.i18n["es"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = "Trop bas pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
-ctld.i18n["es"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = "Trop haut pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
-ctld.i18n["es"]["You must land before you can load a crate!"] = "Vous devez atterrir avant de pouvoir charger une caisse !"
-ctld.i18n["es"]["No Crates within 50m to load!"] = "Aucune caisse à moins de 50 m pour charger !"
-ctld.i18n["es"]["Maximum number of crates are on board!"] = "Nombre maximal de caisses à bord !"
-ctld.i18n["es"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = "%1\n%2 caisse - kg %3 - %4 m - %5 heures"
-ctld.i18n["es"]["FOB Crate - %1 m - %2 o'clock\n"] = "Caisse FOB - %1 m - %2 heures\n"
-ctld.i18n["es"]["No Nearby Crates"] = "Aucune caisse à proximité"
-ctld.i18n["es"]["Nearby Crates:\n%1"] = "Caisses à proximité :\n%1"
-ctld.i18n["es"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = "Caisses FOB à proximité (non chargeables par élingue) :\n%1"
-ctld.i18n["es"]["FOB Positions:"] = "Positions FOB :"
+ctld.i18n["es"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "Flotando sobre %1 caja. \n\n¡Manténte flotando sobre ella durante %2 segundos! \n\n¡Si la cuenta regresiva se detiene, estás demasiado lejos!"
+ctld.i18n["es"]["Loaded %1 crate!"] = "Caja %1 cargada !"
+ctld.i18n["es"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = "Demasiado bajo para enganchar la caja %1.\n\nManténte flotando sobre ella durante %2 segundos"
+ctld.i18n["es"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = "Demasiado alto para enganchar la caja %1.\n\nManténte flotando sobre ella durante %2 segundos"
+ctld.i18n["es"]["You must land before you can load a crate!"] = "¡Debes aterrizar antes de poder cargar una caja!"
+ctld.i18n["es"]["No Crates within 50m to load!"] = "¡No hay cajas para cargar a 50 m a la redonda!"
+ctld.i18n["es"]["Maximum number of crates are on board!"] = "¡El número máximo de cajas está a bordo!"
+ctld.i18n["es"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = "%1\n%2 caja - kg %3 - %4 m - %5 horas"
+ctld.i18n["es"]["FOB Crate - %1 m - %2 o'clock\n"] = "Caja FOB - %1 m - %2 horas\n"
+ctld.i18n["es"]["No Nearby Crates"] = "Ninguna caja de proximidad"
+ctld.i18n["es"]["Nearby Crates:\n%1"] = "Cajas cercanas:\n%1"
+ctld.i18n["es"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = "Cajas FOB cercanas (no transportable por cable):\n%1"
+ctld.i18n["es"]["FOB Positions:"] = "Posiciones FOB:"
 ctld.i18n["es"]["%1\nFOB @ %2"] = "%1\nFOB @ %2"
-ctld.i18n["es"]["Sorry, there are no active FOBs!"] = "Désolé, il n'y a pas de FOB actif !"
+ctld.i18n["es"]["Sorry, there are no active FOBs!"] = "¡Lo sentimos, no hay FOB activos!"
 ctld.i18n["es"]["No cargo."] = "Sin carga."
 ctld.i18n["es"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "Estacionario sobre la caja %1 \n\n¡Mantenlo flotando durante %2 segundos! \n\n¡Si la cuenta regresiva se detiene, estás demasiado lejos!"
 ctld.i18n["es"]["Loaded %1 crate!"] = "¡Caja %1 cargada!"
@@ -720,7 +720,7 @@ ctld.i18n["es"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small 
 ctld.i18n["es"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = "Actualmente no estás transportando ninguna caja.\n\nPara cargar una caja, flota sobre la caja durante %1 segundos o aterrice y use los comandos de caja F10."
 ctld.i18n["es"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = "Actualmente no estás transportando ninguna caja. \n\nPour recoge una caja, flota sobre la caja durante %1 segundos."
 ctld.i18n["es"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = "Actualmente no estás transportando ninguna caja. \n\nPara cargar una caja, aterriza y usa los controles de la caja F10."
-ctld.i18n["es"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = "%1 caja ha sido desenganchada de forma segura y está en tu %2 horas"
+ctld.i18n["es"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = "%1 caja ha sido desenganchada de forma segura y está en tus %2 horas"
 ctld.i18n["es"]["%1 crate has been safely dropped below you"] = "%1 caja se ha dejado caer de forma segura debajo de ti"
 ctld.i18n["es"]["You were too high! The crate has been destroyed"] = "¡Estabas demasiado drogado! La caja ha sido destruida"
 ctld.i18n["es"]["Radio Beacons:\n%1"] = "Balizas de radio:\n%1"
@@ -858,21 +858,16 @@ ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by 
 -- There are some bug with Sling-loading that can cause crashes, if these occur set slingLoad to false
 -- to use the other method.
 -- Set staticBugFix  to FALSE if use set ctld.slingLoad to TRUE
-
 ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
-
 ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a group extraction
 ctld.maximumDistanceLogistic = 200 -- max distance from vehicle to logistics to allow a loading or spawning operation
 ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
 ctld.maximumMoveDistance = 2000 -- max distance for troops to move from drop point if no enemy is nearby
-
 ctld.minimumDeployDistance = 1000 -- minimum distance from a friendly pickup zone where you can deploy a crate
-
 ctld.numberOfTroops = 10 -- default number of troops to load on a transport heli or C-130
                          -- also works as maximum size of group that'll fit into a helicopter unless overridden
 ctld.enableFastRopeInsertion = true -- allows you to drop troops by fast rope
 ctld.fastRopeMaximumHeight = 18.28 -- in meters which is 60 ft max fast rope (not rappell) safe height
-
 ctld.vehiclesForTransportRED = { "BRDM-2", "BTR_D" } -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
 ctld.vehiclesForTransportBLUE = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
 ctld.vehiclesWeight = {
@@ -884,35 +879,25 @@ ctld.vehiclesWeight = {
 
 ctld.spawnRPGWithCoalition = true --spawns a friendly RPG unit with Coalition forces
 ctld.spawnStinger = false -- spawns a stinger / igla soldier with a group of 6 or more soldiers!
-
-ctld.enabledFOBBuilding = true -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
--- In future i'd like it to be a FARP but so far that seems impossible...
--- You can also enable troop Pickup at FOBS
-
+ctld.enabledFOBBuilding = true  -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
+                                -- In future i'd like it to be a FARP but so far that seems impossible...
+                                -- You can also enable troop Pickup at FOBS
 ctld.cratesRequiredForFOB = 3 -- The amount of crates required to build a FOB. Once built, helis can spawn crates at this outpost to be carried and deployed in another area.
 -- The large crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
 -- Small FOB crates can be moved by helicopter. The FOB will require ctld.cratesRequiredForFOB larges crates and small crates are 1/3 of a large fob crate
 -- To build the FOB entirely out of small crates you will need ctld.cratesRequiredForFOB * 3
 
 ctld.troopPickupAtFOB = true -- if true, troops can also be picked up at a created FOB
-
 ctld.buildTimeFOB = 120 --time in seconds for the FOB to be built
-
 ctld.crateWaitTime = 40 -- time in seconds to wait before you can spawn another crate
-
 ctld.forceCrateToBeMoved = true -- a crate must be picked up at least once and moved before it can be unpacked. Helps to reduce crate spam
-
 ctld.radioSound = "beacon.ogg" -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
 ctld.radioSoundFC3 = "beaconsilent.ogg" -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
-
 ctld.deployedBeaconBattery = 30 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
-
 ctld.enabledRadioBeaconDrop = true -- if its set to false then beacons cannot be dropped by units
-
 ctld.allowRandomAiTeamPickups = false -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
 
 -- Simulated Sling load configuration
-
 ctld.minimumHoverHeight = 7.5 -- Lowest allowable height for crate hover
 ctld.maximumHoverHeight = 12.0 -- Highest allowable height for crate hover
 ctld.maxDistanceFromCrate = 5.5 -- Maximum distance from from crate for hover
@@ -920,10 +905,8 @@ ctld.hoverTime = 10 -- Time to hold hover above a crate for loading in seconds
 
 -- end of Simulated Sling load configuration
 
--- AA SYSTEM CONFIG --
-
+-- ***************** AA SYSTEM CONFIG *****************
 ctld.aaLaunchers = 3 -- controls how many launchers to add to the AA systems when its spawned if no amount is specified in the template.
-
 -- Sets a limit on the number of active AA systems that can be built for RED.
 -- A system is counted as Active if its fully functional and has all parts
 -- If a system is partially destroyed, it no longer counts towards the total
@@ -931,44 +914,31 @@ ctld.aaLaunchers = 3 -- controls how many launchers to add to the AA systems whe
 -- to unpack them
 
 ctld.AASystemLimitRED = 20 -- Red side limit
-
 ctld.AASystemLimitBLUE = 20 -- Blue side limit
 
 -- Allows players to create systems using as many crates as they like
 -- Example : an amount X of patriot launcher crates allows for Y launchers to be deployed, if a player brings 2*X+Z crates (Z being lower then X), then deploys the patriot site, 2*Y launchers will be in the group and Z launcher crate will be left over
 
 ctld.AASystemCrateStacking = false
-
---END AA SYSTEM CONFIG --
+--END AA SYSTEM CONFIG ------------------------------------
 
 -- ***************** JTAC CONFIGURATION *****************
-
 ctld.JTAC_LIMIT_RED = 10 -- max number of JTAC Crates for the RED Side
 ctld.JTAC_LIMIT_BLUE = 10 -- max number of JTAC Crates for the BLUE Side
-
 ctld.JTAC_dropEnabled = true -- allow JTAC Crate spawn from F10 menu
-
 ctld.JTAC_maxDistance = 10000 -- How far a JTAC can "see" in meters (with Line of Sight)
-
 ctld.JTAC_smokeOn_RED = true -- enables marking of target with smoke for RED forces
 ctld.JTAC_smokeOn_BLUE = true -- enables marking of target with smoke for BLUE forces
-
 ctld.JTAC_smokeColour_RED = 4 -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
 ctld.JTAC_smokeColour_BLUE = 1 -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
-
 ctld.JTAC_smokeMarginOfError = 50 -- error that the JTAC is allowed to make when popping a smoke (in meters)
-
 ctld.JTAC_smokeOffset_x = 0.0 -- distance in the X direction from target to smoke (meters)
 ctld.JTAC_smokeOffset_y = 2.0 -- distance in the Y direction from target to smoke (meters)
 ctld.JTAC_smokeOffset_z = 0.0 -- distance in the z direction from target to smoke (meters)
-
 ctld.JTAC_jtacStatusF10 = true -- enables F10 JTAC Status menu
-
 ctld.JTAC_location = true -- shows location of target in JTAC message
 ctld.location_DMS = false -- shows coordinates as Degrees Minutes Seconds instead of Degrees Decimal minutes
-
 ctld.JTAC_lock = "all" -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
-
 ctld.JTAC_allowStandbyMode = true -- if true, allow players to toggle lasing on/off
 ctld.JTAC_laseSpotCorrections = true -- if true, each JTAC will have a special option (toggle on/off) available in it's menu to attempt to lead the target, taking into account current wind conditions and the speed of the target (particularily useful against moving heavy armor)
 ctld.JTAC_allowSmokeRequest = true -- if true, allow players to request a smoke on target (temporary)
@@ -977,21 +947,14 @@ ctld.JTAC_allow9Line = true -- if true, allow players to ask for a 9Line (indivi
 -- ***************** Pickup, dropoff and waypoint zones *****************
 
 -- Available colors (anything else like "none" disables smoke): "green", "red", "white", "orange", "blue", "none",
-
 -- Use any of the predefined names or set your own ones
-
 -- You can add number as a third option to limit the number of soldier or vehicle groups that can be loaded from a zone.
 -- Dropping back a group at a limited zone will add one more to the limit
-
 -- If a zone isn't ACTIVE then you can't pickup from that zone until the zone is activated by ctld.activatePickupZone
 -- using the Mission editor
-
 -- You can pickup from a SHIP by adding the SHIP UNIT NAME instead of a zone name
-
 -- Side - Controls which side can load/unload troops at the zone
-
 -- Flag Number - Optional last field. If set the current number of groups remaining can be obtained from the flag value
-
 --pickupZones = { "Zone name or Ship Unit Name", "smoke color", "limit (-1 unlimited)", "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", flag number (optional) }
 ctld.pickupZones = {
     { "pickzone1", "blue", -1, "yes", 0 },
@@ -1019,7 +982,6 @@ ctld.pickupZones = {
     { "USA Carrier", "blue", 10, "yes", 0, 1001 }, -- instead of a Zone Name you can also use the UNIT NAME of a ship
 }
 
-
 -- dropOffZones = {"name","smoke colour",0,side 1 = Red or 2 = Blue or 0 = Both sides}
 ctld.dropOffZones = {
     { "dropzone1", "green", 2 },
@@ -1034,7 +996,6 @@ ctld.dropOffZones = {
     { "dropzone10", "none", 1 },
 }
 
-
 --wpZones = { "Zone name", "smoke color",  "ACTIVE (yes/no)", "side (0 = Both sides / 1 = Red / 2 = Blue )", }
 ctld.wpZones = {
     { "wpzone1", "green","yes", 2 },
@@ -1048,7 +1009,6 @@ ctld.wpZones = {
     { "wpzone9", "none","yes", 1 },
     { "wpzone10", "none","no", 0 }, -- Both sides as its set to 0
 }
-
 
 -- ******************** Transports names **********************
 -- If ctld.addPlayerAircraftByType = True, comment or uncomment lines to allow aircraft's type carry CTLD
@@ -1197,7 +1157,6 @@ ctld.transportPilotNames = {
     -- *** AI transports names (different names only to ease identification in mission) ***
 
     -- Use any of the predefined names or set your own ones
-
     "transport1",
     "transport2",
     "transport3",
@@ -1230,7 +1189,6 @@ ctld.transportPilotNames = {
 -- *************** Optional Extractable GROUPS *****************
 
 -- Use any of the predefined names or set your own ones
-
 ctld.extractableGroups = {
     "extract1",
     "extract2",
@@ -1265,7 +1223,6 @@ ctld.extractableGroups = {
 
 -- Use any of the predefined names or set your own ones
 -- When a logistic unit is destroyed, you will no longer be able to spawn crates
-
 ctld.logisticUnits = {
     "logistic1",
     "logistic2",
@@ -1296,9 +1253,7 @@ ctld.dynamicCargoUnits = {
     "CH-47Fbl1",
 }
 
-
 -- ************** Maximum Units SETUP for UNITS ******************
-
 -- Put the name of the Unit you want to limit group sizes too
 -- i.e
 -- ["UH-1H"] = 10,
@@ -1307,7 +1262,6 @@ ctld.dynamicCargoUnits = {
 -- Make sure the unit name is exactly right or it wont work
 
 ctld.unitLoadLimits = {
-
     -- Remove the -- below to turn on options
     -- ["SA342Mistral"] = 4,
     -- ["SA342L"] = 4,
@@ -1362,7 +1316,6 @@ ctld.unitLoadLimits = {
 }
 
 -- Put the name of the Unit you want to enable loading multiple crates
-
 ctld.internalCargoLimits = {
 
     -- Remove the -- below to turn on options
@@ -1372,7 +1325,6 @@ ctld.internalCargoLimits = {
 
 
 -- ************** Allowable actions for UNIT TYPES ******************
-
 -- Put the name of the Unit you want to limit actions for
 -- NOTE - the unit must've been listed in the transportPilotNames list above
 -- This can be used in conjunction with the options above for group sizes
@@ -6120,9 +6072,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
                         end
 
-
                         if ctld.enableCrates and _unitActions.crates then
-
                             if ctld.unitCanCarryVehicles(_unit) == false then
                                 -- sort the crate categories alphabetically
                                 local crateCategories = {}
@@ -6182,20 +6132,18 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate"), _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
                             end
-
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unpack Any Crate"), _crateCommands, ctld.unpackCrates, { _unitName })
-
+                            
                             if ctld.loadCrateFromMenu or ctld.hoverPickup then
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Crate"), _crateCommands, ctld.dropSlingCrate, { _unitName })
                             end
 
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unpack Any Crate"), _crateCommands, ctld.unpackCrates, { _unitName })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Nearby Crates"), _crateCommands, ctld.listNearbyCrates, { _unitName })
 
                             if ctld.enabledFOBBuilding then
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List FOBs"), _crateCommands, ctld.listFOBS, { _unitName })
                             end
                         end
-
 
                         if ctld.enableSmokeDrop then
                             local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Smoke Markers"), _rootPath)
@@ -6222,7 +6170,6 @@ function ctld.addTransportF10MenuOptions(_unitName)
                 end
             end
         end)
-
     if (not status) then
         ctld.logError(string.format("Error adding f10 to transport: %s", error))
     end
@@ -6230,10 +6177,8 @@ end
 
 function ctld.addOtherF10MenuOptions()
     ctld.logDebug("ctld.addOtherF10MenuOptions")
-
     -- reschedule every 10 seconds
     timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 10)
-
     local status, error = pcall(function()
 
         -- now do any player controlled aircraft that ARENT transport units
@@ -6245,23 +6190,15 @@ function ctld.addOtherF10MenuOptions()
             ctld.addRadioListCommand(1)
         end
 
-
         if ctld.JTAC_jtacStatusF10 then
-
-            -- get all BLUE players
-            ctld.addJTACRadioCommand(2)
-
-            -- get all RED players
-            ctld.addJTACRadioCommand(1)
+            ctld.addJTACRadioCommand(2) -- get all BLUE players
+            ctld.addJTACRadioCommand(1) -- get all RED players
         end
-
     end)
 
     if (not status) then
         env.error(string.format("Error adding f10 to other players: %s", error), false)
     end
-
-
 end
 
 --add to all players that arent transport
