@@ -129,7 +129,9 @@ Optionaly, you can disable the STTS (text to speech over SRS) feature (4).
 
 First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a "TIME MORE" of 1. "TIME MORE" means run the actions after X seconds into the mission.
 
-Load the CTLD a few seconds after MIST using a second trigger with a "TIME MORE" and a DO SCRIPT of CTLD.lua. 
+If you want to make use of translations (internationalization features, a.k.a. "i18n"), you need to load the `CTLD-i18n.lua` script _before_ CTLD. Do this by adding a second trigger with a "TIME MORE" and a DO SCRIPT of `CTLD-i18n.lua`. 
+
+Load CTLD using a second (or third) trigger with a "TIME MORE" and a DO SCRIPT of `CTLD.lua`. 
 
 You will also need to load in **both** the **beacon.ogg** sound file and the **beaconsilent.ogg** for Radio beacon homing. This can be done by adding a two Sound To Country actions. Pick an unused country, like Australia so no one actually hears the audio when joining at the start of the mission. If you don't add the **two** Audio files, radio beacons will not work. Make sure not to rename the file as well.
 
@@ -306,7 +308,7 @@ Example showing what happens if you dont have enough crates:
 
 CTLD supports multiple languages (English being the base and the reference).
 
-This is done via the `ctld.i18n` table that can be found at the beginning of the script.
+This is done via the `ctld.i18n` table that can be found at the beginning of the `CTLD-i18n.lua` script.
 
 #### Changing the language
 
@@ -321,7 +323,7 @@ Translations are referenced by the english text, and can contain numbered parame
 
 This allows for different languages placing words at different places in a sentence.
 
-To add a translation, simply copy the complete `ctld.i18n["en"]` table to a new one, and replace the language (`"en"`) with the one you want to add (`"de"` for example).
+To add a translation, edit the `CTLD-i18n.lua` script, simply copy the complete `ctld.i18n["en"]` table to a new one, and replace the language (`"en"`) with the one you want to add (`"de"` for example).
 
 Then, replace all the `= nil` statements with the translation; for example, `ctld.i18n["de"]["Standard Group"] = "Standard-Kampfgruppe"`.
 
