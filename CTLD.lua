@@ -38,7 +38,7 @@ end
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.2.2"
+ctld.Version = "1.3.0"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -53,9 +53,9 @@ ctld.dontInitialize = false -- if true, ctld.initialize() will not run; instead,
 -- If you want to change the language replace "en" with the language you want to use
 
 --========  ENGLISH - the reference ===========================================================================
---ctld.i18n_lang = "en"
+ctld.i18n_lang = "en"
 --========  FRENCH - FRANCAIS =================================================================================
-ctld.i18n_lang = "fr"
+--ctld.i18n_lang = "fr"
 --======  SPANISH : ESPAÑOL ====================================================================================
 --ctld.i18n_lang = "es"
 --======  Korean : 한국어 ====================================================================================
