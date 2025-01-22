@@ -7252,18 +7252,15 @@ function ctld.generateFMFrequencies()
 end
 
 function ctld.getPositionString(_unit)
-
     if ctld.JTAC_location == false then
         return ""
     end
 
-    local _lat, _lon = coord.LOtoLL(_unit:getPosition().p)
-
-    local _latLngStr = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
-
+    local _lat, _lon  = coord.LOtoLL(_unit:getPosition().p)
+    local _latLngStr  = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
     local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
-
-    return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString
+    local _TargetAlti = land.getHeight(mist.utils.makeVec2(_unit:getPoint()))
+    return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString .. " - Alt " .. mist.utils.round(_TargetAlti, 0) .. " m / " .. mist.utils.round(_TargetAlti/0.3048, 0) .. " ft"
 end
 
 
