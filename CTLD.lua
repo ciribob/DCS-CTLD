@@ -7266,6 +7266,76 @@ function ctld.getPositionString(_unit)
     return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString
 end
 
+--**********************************************************************
+-- RECOGNITION SUPPORT FUNCTIONS
+-- Shows/remove/refresh marks in F10 map on targets in LOS of a unit passed in params
+---------------------------------------------------------------------
+-- examples ---------------------------------------------------------
+--ctld.showTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
+--ctld.removeTargetsInLosOnF10Map(Unit.getByName("uh2-1"))
+--
+--ctld.showTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
+--ctld.refreshTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
+----------------------------------------------------------------------
+if ctld == nil then
+    ctld = {}
+end
+if ctld.lastMarkId == nil then
+	ctld.lastMarkId = 0
+end
+--------------------------------------------------------------------
+function ctld.showTargetsInLosOnF10Map(_unitObject, _searchRadius, _markRadius) -- _unitObject targeting
+    																			-- _searchRadius and _markRadius in meters
+    if _unitObject then
+        local enemyCoa = 1
+        local enemyColor = "red"
+        local color = {1, 0, 0, 0.2}     -- red
+
+        if _unitObject:getCoalition() == 1 then
+            enemyCoa = 2
+            enemyColor = "blue"
+            color = {51/255, 51/255, 1, 0.2} -- blue
+        end
+
+        local t =  mist.getUnitsLOS({_unitObject:getName()}, 180, mist.makeUnitTable({'['..enemyColor..'][vehicle]'}),180, _searchRadius)
+
+        local MarkIds = {}
+        if t then
+            for i=1, #t do   -- for each unit having los on enemies            
+                for j=1, #t[i].vis do
+                    local targetPoint = t[i].vis[j]:getPoint()		-- point of each target on LOS
+                    ctld.lastMarkId = ctld.lastMarkId  + 1
+                    trigger.action.circleToAll(_unitObject:getCoalition(), ctld.lastMarkId, targetPoint, _markRadius , color, color, 1, false, nil)
+                	MarkIds[#MarkIds+1] = ctld.lastMarkId
+                end
+            end
+        end
+        mist.DBs.humansByName[_unitObject:getName()].losMarkIds = MarkIds -- store list of marksIds generated and show on F10 map
+        return true  
+    else
+        return false
+    end
+end
+---------------------------------------------------------
+function ctld.removeTargetsInLosOnF10Map(_unitObject)
+    local unitName = _unitObject:getName()
+    if mist.DBs.humansByName[unitName].losMarkIds then 
+        for i=1, #mist.DBs.humansByName[_unitObject:getName()].losMarkIds do   -- for each unit having los on enemies 
+            trigger.action.removeMark(mist.DBs.humansByName[unitName].losMarkIds[i])
+        end
+        mist.DBs.humansByName[unitName].losMarkIds = nil
+    end
+end
+---------------------------------------------------------
+function ctld.refreshTargetsInLosOnF10Map(_unitObject, _searchRadius, _markRadius)
+    ctld.removeTargetsInLosOnF10Map(_unitObject)
+    ctld.showTargetsInLosOnF10Map(_unitObject, _searchRadius, _markRadius)
+end
+--- test ------------------------------------------------------
+--"uh1-1"    --"uh2-1"
+--local unitName = "uh2-1"
+--ctld.showTargetsInLosOnF10Map(Unit.getByName(unitName),2000,200)
+--**********************************************************************
 
 -- ***************** SETUP SCRIPT ****************
 function ctld.initialize()
