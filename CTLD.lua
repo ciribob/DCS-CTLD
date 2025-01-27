@@ -7287,6 +7287,8 @@ end
 function ctld.showTargetsInLosOnF10Map(_unitObject, _searchRadius, _markRadius) -- _unitObject targeting
     																			-- _searchRadius and _markRadius in meters
     if _unitObject then
+        local TargetsInLOS = {}
+        
         local enemyCoa = 1
         local enemyColor = "red"
         local color = {1, 0, 0, 0.2}     -- red
@@ -7307,13 +7309,14 @@ function ctld.showTargetsInLosOnF10Map(_unitObject, _searchRadius, _markRadius) 
                     ctld.lastMarkId = ctld.lastMarkId  + 1
                     trigger.action.circleToAll(_unitObject:getCoalition(), ctld.lastMarkId, targetPoint, _markRadius , color, color, 1, false, nil)
                 	MarkIds[#MarkIds+1] = ctld.lastMarkId
+                    TargetsInLOS[#TargetsInLOS+1] = {targetObject=t[i].vis[j]:getName(), targetTypeName=t[i].vis[j]:getTypeName(), targetPoint=targetPoint}
                 end
             end
         end
         mist.DBs.humansByName[_unitObject:getName()].losMarkIds = MarkIds -- store list of marksIds generated and show on F10 map
-        return true  
+        return TargetsInLOS  
     else
-        return false
+        return nil
     end
 end
 ---------------------------------------------------------
@@ -7329,7 +7332,7 @@ end
 ---------------------------------------------------------
 function ctld.refreshTargetsInLosOnF10Map(_unitObject, _searchRadius, _markRadius)
     ctld.removeTargetsInLosOnF10Map(_unitObject)
-    ctld.showTargetsInLosOnF10Map(_unitObject, _searchRadius, _markRadius)
+    return ctld.showTargetsInLosOnF10Map(_unitObject, _searchRadius, _markRadius)  -- returns TargetsInLOS table
 end
 --- test ------------------------------------------------------
 --"uh1-1"    --"uh2-1"
