@@ -260,6 +260,12 @@ ctld.i18n["fr"]["DISABLE "] = "DESACTIVE "
 ctld.i18n["fr"]["ENABLE "] = "ACTIVE "
 ctld.i18n["fr"]["REQUEST "] = "DEMANDE"
 ctld.i18n["fr"]["Reset TGT Selection"] = "Réinitialiser sélection TGT"
+-- F10 RECON menus
+ctld.i18n["fr"]["RECON"] = "RECONNAISSANCE"
+ctld.i18n["fr"]["Show targets in LOS (refresh)"] = "Marquer cibles visibles sur carte F10"
+ctld.i18n["fr"]["Hide targets in LOS"] = "Effacer marques sur carte F10"
+ctld.i18n["fr"]["START autoRefresh targets in LOS"] = "Lancer suivi automatique des cibles"
+ctld.i18n["fr"]["STOP autoRefresh targets in LOS"] = "Stopper suivi automatique des cibles"
 
 --======  SPANISH : ESPAÑOL====================================================================================
 ctld.i18n["es"] = {}
@@ -521,6 +527,12 @@ ctld.i18n["es"]["DISABLE "] = "DESHABILITAR "
 ctld.i18n["es"]["ENABLE "] = "HABILITAR "
 ctld.i18n["es"]["REQUEST "] = "SOLICITUD "
 ctld.i18n["es"]["Reset TGT Selection"] = "Restablecer selección TGT"
+-- F10 RECON menus
+ctld.i18n["es"]["RECON"] = "RECONOCIMIENTO"
+ctld.i18n["es"]["Show targets in LOS (refresh)"] = "Marcar objetivos visibles en el mapa F10"
+ctld.i18n["es"]["Hide targets in LOS"] = "Borrar marcas del mapa F10"
+ctld.i18n["es"]["START autoRefresh targets in LOS"] = "Iniciar el seguimiento automático de objetivos"
+ctld.i18n["es"]["STOP autoRefresh targets in LOS"] = "Detener el seguimiento automático de objetivos"
 --========================================================================================================================
 
 --========  Korean - 한국어 =====================================================================================
