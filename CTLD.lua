@@ -311,6 +311,12 @@ ctld.i18n["en"]["DISABLE "] = nil
 ctld.i18n["en"]["ENABLE "] = nil
 ctld.i18n["en"]["REQUEST "] = nil
 ctld.i18n["en"]["Reset TGT Selection"] = nil
+-- F10 RECON menus
+ctld.i18n["en"]["RECON"] = nil
+ctld.i18n["en"]["Show targets in LOS (refresh)"] = nil
+ctld.i18n["en"]["Hide targets in LOS"] = nil
+ctld.i18n["en"]["START autoRefresh targets in LOS"] = nil
+ctld.i18n["en"]["STOP autoRefresh targets in LOS"] = nil
 
 --- Translates a string (text) with parameters (parameters) to the language defined in ctld.i18n_lang
 ---@param text string The text to translate, with the parameters as %1, %2, etc. (all strings!!!!)
