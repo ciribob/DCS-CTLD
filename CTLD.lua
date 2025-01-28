@@ -7281,9 +7281,7 @@ end
 
 --ctld.reconShowTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
 ----------------------------------------------------------------------
-if ctld == nil then
-    ctld = {}
-end
+--if ctld == nil then  ctld = {} end
 if ctld.lastMarkId == nil then
 	ctld.lastMarkId = 0
 end
