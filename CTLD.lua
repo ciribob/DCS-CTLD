@@ -7319,7 +7319,6 @@ function ctld.addReconRadioCommand(_side) -- _side = 1 or 2 (red  or blue)
                             if ctld.reconAutoRefreshLosTargetMarks then
                                 local c1 = missionCommands.addCommandForGroup(	_groupId, ctld.i18n_translate("STOP autoRefresh targets in LOS"), RECONpath, 
                                     											ctld.reconStopAutorefreshTargetsInLosOnF10Map,  _groupId, _playerUnit)
-trigger.action.outText(tostring(_groupId).." - " .. mist.utils.tableShow(c1), 20)                           
                             else
                                 local c2 = missionCommands.addCommandForGroup(	_groupId, ctld.i18n_translate("START autoRefresh targets in LOS"), RECONpath,
                                     											ctld.reconStartAutorefreshTargetsInLosOnF10Map,
@@ -7329,7 +7328,6 @@ trigger.action.outText(tostring(_groupId).." - " .. mist.utils.tableShow(c1), 20
                                                                                     ctld.reconLosMarkRadius,
                                                                                     true
                                 											)
-trigger.action.outText(tostring(_groupId).." - " .. mist.utils.tableShow(c2), 20) 
                             end
                             ctld.reconRadioAdded[tostring(_groupId)] = timer.getTime()  --fetch the time to check for a regular refresh
                         else
