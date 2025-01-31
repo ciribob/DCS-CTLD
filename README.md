@@ -57,6 +57,7 @@ This script is a rewrite of some of the functionality of the original Complete C
   * [Mi\-8 ARC\-9 VHF Radio Setup](#mi-8-arc-9-vhf-radio-setup)
   * [UH\-1 ADF VHF Radio Setup](#uh-1-adf-vhf-radio-setup)
 * [Advanced Scripting](#advanced-scripting)
+* [recognition assistance](#recognition-assistance)
 
 ## Features
 The script supports:
@@ -103,6 +104,7 @@ The script supports:
 	* Count soldiers extracted to a zone (the soldiers disappear)
 * Waypoint triggers to force dropped groups to head to a location
 * Advanced Scripting Callback system
+* Target recognition assistance functions to mark targets on the F10 map
 
 A complete test mission is included.
 
@@ -1101,6 +1103,13 @@ Radio configured to the correct frequency for a beacon:
 White pointer pointing to beacon on the compass:
 
 ![alt text](http://i1056.photobucket.com/albums/t379/cfisher881/dcs.exe_DX9_20150608_075211_zpsdaus4wxt.png~original "Radio Compass")
+
+# recognition-assistance
+The recognition functions in the F10 menu allow you to mark/delete/refresh marks on targets within sight of the aircraft being piloted by the player.
+
+Enabling/disabling automatic refreshing of marks on targets within view allows you to track them as they move.
+
+Below is a complete list of all the "actions" plus the data that is sent through. For more information its best to check the CTLD Code to see more details of the arguments.
 
 # Advanced Scripting
 
