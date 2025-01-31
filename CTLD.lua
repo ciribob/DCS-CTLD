@@ -69,7 +69,7 @@ end
 -- If a string is not found in the current language then it will default to this language
 -- Note that no translation is provided for this language (obviously) but that we'll maintain this table to help the translators.
 ctld.i18n["en"] = {}
-ctld.i18n["en"].translation_version = "1.0" -- make sure that all the translations are compatible with this version of the english language texts
+ctld.i18n["en"].translation_version = "1.1" -- make sure that all the translations are compatible with this version of the english language texts
 local lang="en";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -106,6 +106,8 @@ ctld.i18n["en"]["Ural-375 Ammo Truck"] = nil
 ctld.i18n["en"]["KAMAZ Ammo Truck"] = nil
 ctld.i18n["en"]["EWR Radar"] = nil
 ctld.i18n["en"]["FOB Crate - Small"] = nil
+ctld.i18n["en"]["MQ-9 Repear - JTAC"] = nil
+ctld.i18n["en"]["RQ-1A Predator - JTAC"] = nil
 ctld.i18n["en"]["MLRS"] = nil
 ctld.i18n["en"]["SpGH DANA"] = nil
 ctld.i18n["en"]["T155 Firtina"] = nil
@@ -284,7 +286,7 @@ ctld.i18n["en"]["Unload / Extract Troops"] = nil
 ctld.i18n["en"]["Next page"] = nil
 ctld.i18n["en"]["Load "] = nil
 ctld.i18n["en"]["Vehicle / FOB Transport"] = nil
-ctld.i18n["en"]["Vehicle / FOB Crates"] = nil
+ctld.i18n["en"]["Vehicle / FOB Crates / Drone"] = nil
 ctld.i18n["en"]["Unload Vehicles"] = nil
 ctld.i18n["en"]["Load / Extract Vehicles"] = nil
 ctld.i18n["en"]["Load / Unload FOB Crate"] = nil
@@ -1076,6 +1078,15 @@ ctld.spawnableCrates = {
         { weight = 1005.16, desc = ctld.i18n_translate("S-300 Repair"), unit = "S-300 Repair", side = 1 },
         -- End of S-300
     },
+    ["Drone"] = {
+        --- BLUE MQ-9 Repear
+        { weight = 1006.01, desc = ctld.i18n_translate("MQ-9 Repear - JTAC"), unit = "MQ-9 Reaper", side = 2 },
+        -- End of BLUE MQ-9 Repear
+
+        --- RED MQ-1A Predator
+        { weight = 1006.11, desc = ctld.i18n_translate("MQ-1A Predator - JTAC"), unit = "RQ-1A Predator", side = 1 },
+        -- End of RED MQ-1A Predator
+    },
 }
 
 ctld.spawnableCratesModels = {
@@ -1144,9 +1155,11 @@ ctld.spawnableCratesModels = {
 
 -- if the unit is on this list, it will be made into a JTAC when deployed
 ctld.jtacUnitTypes = {
-    "SKP", "Hummer" -- there are some wierd encoding issues so if you write SKP-11 it wont match as the - sign is encoded differently...
+    "SKP", "Hummer", -- there are some wierd encoding issues so if you write SKP-11 it wont match as the - sign is encoded differently...
+    "MQ", "RQ"        --"MQ-9 Repear", "RQ-1A Predator"}
 }
-
+ctld.jtacDroneRadius   = 1000 -- JTAC offset radius in meters for orbiting drones
+ctld.jtacDroneAltitude = 7000 -- JTAC altitude in meters for orbiting drones
 -- ***************************************************************
 -- **************** Mission Editor Functions *********************
 -- ***************************************************************
@@ -4757,13 +4770,9 @@ end
 
 
 function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
-
     local _id = ctld.getNextGroupId()
-
     local _groupName = _types[1] .. "  #" .. _id
-
     local _side = _heli:getCoalition()
-
     local _group = {
         ["visible"] = false,
        -- ["groupId"] = _id,
@@ -4772,29 +4781,139 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
         --        ["y"] = _positions[1].z,
         --        ["x"] = _positions[1].x,
         ["name"] = _groupName,
-        ["task"] = {},
+        ["tasks"] = {},
+        ["radioSet"] = false,
+        ["task"] = "Reconnaissance",
+        ["route"]  = {},
     }
 
     local _hdg = 120 * math.pi / 180 -- radians = 120 degrees
-    local _spreadMin = 5
-    local _spreadMax = 5
-    local _spreadMult = 1
-    for _i, _pos in ipairs(_positions) do
-
-        local _unitId = ctld.getNextUnitId()
-        local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
-        if _hdgs and _hdgs[_i] then
-            _hdg = _hdgs[_i]
+    if _types[1] ~= "MQ-9 Reaper" and _types[1] ~= "RQ-1A Predator" then  -- non-drones - JTAC
+        local _spreadMin = 5
+        local _spreadMax = 5
+        local _spreadMult = 1
+        for _i, _pos in ipairs(_positions) do
+            local _unitId = ctld.getNextUnitId()
+            local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
+            
+            if _hdgs and _hdgs[_i] then
+                _hdg = _hdgs[_i]
+            end
+ 
+            _group.units[_i] = ctld.createUnit(	_pos.x +math.random(_spreadMin,_spreadMax)*_spreadMult, 
+                								_pos.z +math.random(_spreadMin,_spreadMax)*_spreadMult, 
+                								_hdg, 
+                								_details)
         end
-        _group.units[_i] = ctld.createUnit(_pos.x +math.random(_spreadMin,_spreadMax)*_spreadMult, _pos.z +math.random(_spreadMin,_spreadMax)*_spreadMult, _hdg, _details)
+        _group.category = Group.Category.GROUND
+    else        -- drones - JTAC
+        local _unitId = ctld.getNextUnitId()
+        local _details = {  type      = _types[1], 
+                            unitId    = _unitId, 
+                            name      = string.format("Unpacked %s #%i", _types[1], _unitId),
+            				livery_id = "'camo' scheme",
+							skill     = "High",
+                            speed     = 80,
+            				payload   = {	pylons = {}, fuel = 1300, flare = 0, chaff = 0, gun = 100 } }
+        
+        _group.units[1] = ctld.createUnit(  _positions[1].x, 
+                                            _positions[1].z + ctld.jtacDroneRadius, 
+                                            _hdg, 
+                                            _details)
+        
+        _group.category = Group.Category.AIRPLANE   -- for drones
+
+        -- create drone orbiting route 
+		local DroneRoute = { 
+						["points"] = 
+						{
+							[1] = 
+							{
+								["alt"] = 2000,
+								["action"] = "Turning Point",
+								["alt_type"] = "BARO",
+								["properties"] = 
+								{
+									["addopt"] = {},
+								}, -- end of ["properties"]
+								["speed"] = 80,
+								["task"] = 
+								{
+									["id"] = "ComboTask",
+									["params"] = 
+									{
+										["tasks"] = 
+										{
+											[1] = 
+											{
+												["enabled"] = true,
+												["auto"] = false,
+												["id"] = "WrappedAction",
+												["number"] = 1,
+												["params"] = 
+												{
+													["action"] = 
+													{
+														["id"] = "EPLRS",
+														["params"] = 
+														{
+															["value"] = true,
+															["groupId"] = 0,
+														}, -- end of ["params"]
+													}, -- end of ["action"]
+												}, -- end of ["params"]
+											}, -- end of [1]
+											[2] = 
+											{
+												["number"] = 2,
+												["auto"] = false,
+												["id"] = "Orbit",
+												["enabled"] = true,
+												["params"] = 
+												{
+													["altitude"] = ctld.jtacDroneAltitude,
+													["pattern"]  = "Circle",
+													["speed"]    = 80,
+												}, -- end of ["params"]
+											}, -- end of [2]
+											[3] = 
+											{
+												["enabled"] = true,
+												["auto"] = false,
+												["id"] = "WrappedAction",
+												["number"] = 3,
+												["params"] = 
+												{
+													["action"] = 
+													{
+														["id"] = "Option",
+														["params"] = 
+														{
+															["value"] = true,
+															["name"] = 6,
+														}, -- end of ["params"]
+													}, -- end of ["action"]
+												}, -- end of ["params"]
+											}, -- end of [3]
+										}, -- end of ["tasks"]
+									}, -- end of ["params"]
+								}, -- end of ["task"]
+								["type"] = "Turning Point",
+								["ETA"] = 0,
+								["ETA_locked"] = true,
+								["y"] = _positions[1].z,
+								["x"] = _positions[1].x,
+								["speed_locked"] = true,
+								["formation_template"] = "",
+							}, -- end of [1]
+						}, -- end of ["points"]
+					} -- end of ["route"]
+		---------------------------------------------------------------------------------
+        _group.route = DroneRoute
     end
-
-    --mist function
-    _group.category = Group.Category.GROUND
+    
     _group.country = _heli:getCountry()
-
-    local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
-
+	local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
     return _spawnedGroup
 end
 
@@ -5593,7 +5712,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
                                 -- add menu for spawning crates
                                 local itemNbMain = 0
-                                local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Vehicle / FOB Crates"), _rootPath)
+                                local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Vehicle / FOB Crates / Drone"), _rootPath)
                                 for _i, _category in ipairs(crateCategories) do
                                     local _subMenuName = _category
                                     local _crates = ctld.spawnableCrates[_subMenuName]
@@ -7252,18 +7371,15 @@ function ctld.generateFMFrequencies()
 end
 
 function ctld.getPositionString(_unit)
-
     if ctld.JTAC_location == false then
         return ""
     end
 
-    local _lat, _lon = coord.LOtoLL(_unit:getPosition().p)
-
-    local _latLngStr = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
-
+    local _lat, _lon  = coord.LOtoLL(_unit:getPosition().p)
+    local _latLngStr  = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
     local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
-
-    return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString
+    local _TargetAlti = land.getHeight(mist.utils.makeVec2(_unit:getPoint()))
+    return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString .. " - ALTI: " .. mist.utils.round(_TargetAlti, 0) .. " m / " .. mist.utils.round(_TargetAlti/0.3048, 0) .. " ft"
 end
 
 

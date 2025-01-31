@@ -18,7 +18,7 @@ ctld.i18n = {}
 
 --========  FRENCH - FRANCAIS =====================================================================================
 ctld.i18n["fr"] = {}
-ctld.i18n["fr"].translation_version = "1.0" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["fr"].translation_version = "1.1" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="fr";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -55,6 +55,8 @@ ctld.i18n["fr"]["Ural-375 Ammo Truck"] = nil
 ctld.i18n["fr"]["KAMAZ Ammo Truck"] = nil
 ctld.i18n["fr"]["EWR Radar"] = nil
 ctld.i18n["fr"]["FOB Crate - Small"] = nil
+ctld.i18n["en"]["MQ-9 Repear - JTAC"] = nil
+ctld.i18n["en"]["RQ-1A Predator - JTAC"] = nil
 ctld.i18n["fr"]["MLRS"] = nil
 ctld.i18n["fr"]["SpGH DANA"] = nil
 ctld.i18n["fr"]["T155 Firtina"] = nil
@@ -233,7 +235,7 @@ ctld.i18n["fr"]["Unload / Extract Troops"] = "Débarqt / Embarqt Troupes"
 ctld.i18n["fr"]["Next page"] = "page suiv."
 ctld.i18n["fr"]["Load "] = "Charger "
 ctld.i18n["fr"]["Vehicle / FOB Transport"] = "Transport Vehicule / FOB"
-ctld.i18n["fr"]["Vehicle / FOB Crates"] = "Caisses Vehicule / FOB"
+ctld.i18n["fr"]["Vehicle / FOB Crates / Drone"] = "Caisses Vehicule / FOB / Drone"
 ctld.i18n["fr"]["Unload Vehicles"] = "Décharger Vehicles"
 ctld.i18n["fr"]["Load / Extract Vehicles"] = "Chargt / Déchargt Vehicules"
 ctld.i18n["fr"]["Load / Unload FOB Crate"] = "Chargt / Déchargt Caisse FOB"
@@ -263,7 +265,7 @@ ctld.i18n["fr"]["Reset TGT Selection"] = "Réinitialiser sélection TGT"
 
 --======  SPANISH : ESPAÑOL====================================================================================
 ctld.i18n["es"] = {}
-ctld.i18n["es"].translation_version = "1.0" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["es"].translation_version = "1.1" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="es";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -300,6 +302,8 @@ ctld.i18n["es"]["Ural-375 Ammo Truck"] = nil
 ctld.i18n["es"]["KAMAZ Ammo Truck"] = nil
 ctld.i18n["es"]["EWR Radar"] = nil
 ctld.i18n["es"]["FOB Crate - Small"] = nil
+ctld.i18n["en"]["MQ-9 Repear - JTAC"] = nil
+ctld.i18n["en"]["RQ-1A Predator - JTAC"] = nil
 ctld.i18n["es"]["MLRS"] = nil
 ctld.i18n["es"]["SpGH DANA"] = nil
 ctld.i18n["es"]["T155 Firtina"] = nil
@@ -494,7 +498,7 @@ ctld.i18n["es"]["Unload / Extract Troops"] = "Descargar/Extraer tropas"
 ctld.i18n["es"]["Next page"] = "Página siguiente"
 ctld.i18n["es"]["Load "] = "Cargar "
 ctld.i18n["es"]["Vehicle / FOB Transport"] = "Transporte Vehículo / FOB"
-ctld.i18n["es"]["Vehicle / FOB Crates"] = "Cajas Vehículo / FOB"
+ctld.i18n["es"]["Vehicle / FOB Crates / Drone"] = "Cajas Vehículo / FOB / Dron"
 ctld.i18n["es"]["Unload Vehicles"] = "Descargar vehículos"
 ctld.i18n["es"]["Load / Extract Vehicles"] = "Cargar/Extraer vehículos"
 ctld.i18n["es"]["Load / Unload FOB Crate"] = "Cargar/Descargar caja FOB"
@@ -525,7 +529,7 @@ ctld.i18n["es"]["Reset TGT Selection"] = "Restablecer selección TGT"
 
 --========  Korean - 한국어 =====================================================================================
 ctld.i18n["ko"] = {}
-ctld.i18n["ko"].translation_version = "1.0" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["ko"].translation_version = "1.1" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="ko";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
