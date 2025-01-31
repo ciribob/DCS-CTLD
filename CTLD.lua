@@ -3366,7 +3366,7 @@ function ctld.loadNearbyCrate(_name)
 
             if _crate.dist < 50.0 then
                 if #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity then
-                    ctld.displayMessageToGroup(_transUnit, ctld.i18n_translate("Loaded %1 crate!", _crate.details.desc), 10,true)
+                    ctld.displayMessageToGroup(_transUnit, ctld.i18n_translate("Loaded %1 crate!", _crate.details.desc), 10)
 
                     if _transUnit:getCoalition() == 1 then
                         ctld.spawnedCratesRED[_crate.crateUnit:getName()] = nil
@@ -3977,10 +3977,7 @@ function ctld.dropSlingCrate(_args)
         end
     else
         local _point = _heli:getPoint()
-        local _unitId = ctld.getNextUnitId()
         local _side = _heli:getCoalition()
-        local _name = string.format("%s #%i", _currentCrate.desc, _unitId)
-        local _model_type = nil
         local _hdg = mist.getHeading(_heli, true)
         local _heightDiff = ctld.heightDiff(_heli)
 
@@ -3990,7 +3987,15 @@ function ctld.dropSlingCrate(_args)
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You were too high! The crate has been destroyed"), 10)
             return
         end
-        for _, _crate in pairs(ctld.inTransitSlingLoadCrates[_unitName]) do
+        local _loadedCratesCopy = mist.utils.deepCopy(ctld.inTransitSlingLoadCrates[_unitName])
+        ctld.logTrace("_loadedCratesCopy = %s", ctld.p(_loadedCratesCopy))
+        for _, _crate in pairs(_loadedCratesCopy) do
+            ctld.logTrace("_crate = %s", ctld.p(_crate))
+            ctld.logTrace("ctld.inAir(_heli) = %s", ctld.p(ctld.inAir(_heli)))
+            ctld.logTrace("_heightDiff = %s", ctld.p(_heightDiff))
+            local _unitId = ctld.getNextUnitId()
+            local _name = string.format("%s #%i", _crate.desc, _unitId)
+            local _model_type = nil
             if ctld.inAir(_heli) == false or _heightDiff <= 7.5 then
                 _point = ctld.getPointAt12Oclock(_heli, 30)
                 local _position = "12"
