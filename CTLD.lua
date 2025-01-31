@@ -3381,6 +3381,7 @@ function ctld.loadNearbyCrate(_name)
                     local _copiedCrate = mist.utils.deepCopy(_crate.details)
                     _copiedCrate.simulatedSlingload = true
                     table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
+                    loaded = true
                     ctld.adaptWeightToCargo(_name)
                 else
                     -- Max crates onboard
