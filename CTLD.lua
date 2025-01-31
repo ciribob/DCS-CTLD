@@ -69,7 +69,7 @@ end
 -- If a string is not found in the current language then it will default to this language
 -- Note that no translation is provided for this language (obviously) but that we'll maintain this table to help the translators.
 ctld.i18n["en"] = {}
-ctld.i18n["en"].translation_version = "1.0" -- make sure that all the translations are compatible with this version of the english language texts
+ctld.i18n["en"].translation_version = "1.1" -- make sure that all the translations are compatible with this version of the english language texts
 local lang="en";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names

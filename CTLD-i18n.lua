@@ -18,7 +18,7 @@ ctld.i18n = {}
 
 --========  FRENCH - FRANCAIS =====================================================================================
 ctld.i18n["fr"] = {}
-ctld.i18n["fr"].translation_version = "1.0" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["fr"].translation_version = "1.1" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="fr";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -265,7 +265,7 @@ ctld.i18n["fr"]["Reset TGT Selection"] = "Réinitialiser sélection TGT"
 
 --======  SPANISH : ESPAÑOL====================================================================================
 ctld.i18n["es"] = {}
-ctld.i18n["es"].translation_version = "1.0" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["es"].translation_version = "1.1" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="es";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -529,7 +529,7 @@ ctld.i18n["es"]["Reset TGT Selection"] = "Restablecer selección TGT"
 
 --========  Korean - 한국어 =====================================================================================
 ctld.i18n["ko"] = {}
-ctld.i18n["ko"].translation_version = "1.0" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["ko"].translation_version = "1.1" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="ko";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
