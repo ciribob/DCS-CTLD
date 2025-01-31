@@ -29,9 +29,9 @@
     Send beers (or kind messages) to Ciribob [on Discord](https://discordapp.com/users/204712384747536384), he's the reason we have CTLD ^^
  ]]
 
+ assert(ctld ~= nil, "\n\n** HEY MISSION-DESIGNER! **\n\nCTLD-i18n has not been loaded!\n\nMake sure CTLD-i18n is loaded\n*before* running this script!\n\nIt contains all the translations!\n")
 if not ctld then -- should be defined first by CTLD-i18n.lua, but just in case it's an old mission, let's keep it here
-    trigger.action.outText("\n\n** HEY MISSION-DESIGNER! **\n\nCTLD-i18n has not been loaded!\n\nMake sure CTLD-i18n is loaded\n*before* running this script!\n\nIt contains all the translations!\n", 10)
-    ctld = {} -- DONT REMOVE!
+   ctld = {} -- DONT REMOVE!
 end
 
 --- Identifier. All output in DCS.log will start with this.
@@ -69,7 +69,7 @@ end
 -- If a string is not found in the current language then it will default to this language
 -- Note that no translation is provided for this language (obviously) but that we'll maintain this table to help the translators.
 ctld.i18n["en"] = {}
-ctld.i18n["en"].translation_version = "1.2" -- make sure that all the translations are compatible with this version of the english language texts
+ctld.i18n["en"].translation_version = "1.3" -- make sure that all the translations are compatible with this version of the english language texts
 local lang="en";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -106,8 +106,6 @@ ctld.i18n["en"]["Ural-375 Ammo Truck"] = nil
 ctld.i18n["en"]["KAMAZ Ammo Truck"] = nil
 ctld.i18n["en"]["EWR Radar"] = nil
 ctld.i18n["en"]["FOB Crate - Small"] = nil
-ctld.i18n["en"]["MQ-9 Repear - JTAC"] = nil
-ctld.i18n["en"]["RQ-1A Predator - JTAC"] = nil
 ctld.i18n["en"]["MLRS"] = nil
 ctld.i18n["en"]["SpGH DANA"] = nil
 ctld.i18n["en"]["T155 Firtina"] = nil
@@ -246,6 +244,11 @@ ctld.i18n["en"]["Cannot repair %1. No damaged %2 within 300m"] = nil
 ctld.i18n["en"]["%1 successfully deployed %2 to the field using %3 crates."] = nil
 ctld.i18n["en"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = nil
 ctld.i18n["en"]["%1 dropped %2 smoke."] = nil
+ctld.i18n["en"]["No space to place a crate at 12 oclock !"] = nil
+ctld.i18n["en"]["No space to place a radio beacon at 12 oclock !"] = nil
+ctld.i18n["en"]["No space to drop a crate at 12 oclock !"] = nil
+ctld.i18n["en"]["No space to place a crate at 6 oclock !"] = nil
+ctld.i18n["en"]["No space to unload a crate at 6 oclock !"] = nil
 
 --- JTAC messages
 ctld.i18n["en"]["JTAC Group %1 KIA!"] = nil
@@ -286,7 +289,7 @@ ctld.i18n["en"]["Unload / Extract Troops"] = nil
 ctld.i18n["en"]["Next page"] = nil
 ctld.i18n["en"]["Load "] = nil
 ctld.i18n["en"]["Vehicle / FOB Transport"] = nil
-ctld.i18n["en"]["Vehicle / FOB Crates / Drone"] = nil
+ctld.i18n["en"]["Vehicle / FOB Crates"] = nil
 ctld.i18n["en"]["Unload Vehicles"] = nil
 ctld.i18n["en"]["Load / Extract Vehicles"] = nil
 ctld.i18n["en"]["Load / Unload FOB Crate"] = nil
@@ -307,18 +310,12 @@ ctld.i18n["en"]["Drop Orange Smoke"] = nil
 ctld.i18n["en"]["Drop Green Smoke"] = nil
 ctld.i18n["en"]["Drop Beacon"] = nil
 ctld.i18n["en"]["Radio Beacons"] = nil
-ctld.i18n["en"]["Remove Closest Beacon"] = nil
+ctld.i18n["en"]["Remove Closet Beacon"] = nil
 ctld.i18n["en"]["JTAC Status"] = nil
 ctld.i18n["en"]["DISABLE "] = nil
 ctld.i18n["en"]["ENABLE "] = nil
 ctld.i18n["en"]["REQUEST "] = nil
 ctld.i18n["en"]["Reset TGT Selection"] = nil
--- F10 RECON menus
-ctld.i18n["en"]["RECON"] = nil
-ctld.i18n["en"]["Show targets in LOS (refresh)"] = nil
-ctld.i18n["en"]["Hide targets in LOS"] = nil
-ctld.i18n["en"]["START autoRefresh targets in LOS"] = nil
-ctld.i18n["en"]["STOP autoRefresh targets in LOS"] = nil
 
 --- Translates a string (text) with parameters (parameters) to the language defined in ctld.i18n_lang
 ---@param text string The text to translate, with the parameters as %1, %2, etc. (all strings!!!!)
@@ -1084,15 +1081,6 @@ ctld.spawnableCrates = {
         { weight = 1005.16, desc = ctld.i18n_translate("S-300 Repair"), unit = "S-300 Repair", side = 1 },
         -- End of S-300
     },
-    ["Drone"] = {
-        --- BLUE MQ-9 Repear
-        { weight = 1006.01, desc = ctld.i18n_translate("MQ-9 Repear - JTAC"), unit = "MQ-9 Reaper", side = 2 },
-        -- End of BLUE MQ-9 Repear
-
-        --- RED MQ-1A Predator
-        { weight = 1006.11, desc = ctld.i18n_translate("MQ-1A Predator - JTAC"), unit = "RQ-1A Predator", side = 1 },
-        -- End of RED MQ-1A Predator
-    },
 }
 
 ctld.spawnableCratesModels = {
@@ -1161,11 +1149,9 @@ ctld.spawnableCratesModels = {
 
 -- if the unit is on this list, it will be made into a JTAC when deployed
 ctld.jtacUnitTypes = {
-    "SKP", "Hummer", -- there are some wierd encoding issues so if you write SKP-11 it wont match as the - sign is encoded differently...
-    "MQ", "RQ"        --"MQ-9 Repear", "RQ-1A Predator"}
+    "SKP", "Hummer" -- there are some wierd encoding issues so if you write SKP-11 it wont match as the - sign is encoded differently...
 }
-ctld.jtacDroneRadius   = 1000 -- JTAC offset radius in meters for orbiting drones
-ctld.jtacDroneAltitude = 7000 -- JTAC altitude in meters for orbiting drones
+
 -- ***************************************************************
 -- **************** Mission Editor Functions *********************
 -- ***************************************************************
@@ -2240,31 +2226,26 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     return _spawnedCrate
 end
 
-
+-- Spawns a new crate
+-- param _arguments table
+-- return spwanedCrate or nil
 function ctld.spawnCrate(_arguments)
-
+    local spwanedCrate = {}
     local _status, _err = pcall(function(_args)
-
         -- use the cargo weight to guess the type of unit as no way to add description :(
-
         local _crateType = ctld.crateLookupTable[tostring(_args[2])]
         local _heli = ctld.getTransportUnit(_args[1])
 
         if _crateType ~= nil and _heli ~= nil and ctld.inAir(_heli) == false then
 
             if ctld.inLogisticsZone(_heli) == false then
-
                 ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You are not close enough to friendly logistics to get a crate!"), 10)
-
                 return
             end
 
             if ctld.isJTACUnitType(_crateType.unit) then
-
                 local _limitHit = false
-
                 if _heli:getCoalition() == 1 then
-
                     if ctld.JTAC_LIMIT_RED == 0 then
                         _limitHit = true
                     else
@@ -2286,7 +2267,6 @@ function ctld.spawnCrate(_arguments)
 
             -- check crate spam
             if _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] > timer.getTime() then
-
                 ctld.displayMessageToGroup(_heli,ctld.i18n_translate("Sorry you must wait %1 seconds before you can get another crate", (ctld.crateWait[_heli:getPlayerName()]  - timer.getTime())), 20)
                 return
             end
@@ -2296,34 +2276,38 @@ function ctld.spawnCrate(_arguments)
             end
 
             local _heli = ctld.getTransportUnit(_args[1])
-
             local _model_type = nil
-
             local _point = ctld.getPointAt12Oclock(_heli, 30)
+            
+            if _point == nil then
+                ctld.displayMessageToGroup(_heli, ctld.i18n_translate("No space to place a crate at 12 oclock !"), 10)
+                return
+            end
+
             local _position = "12"
 
             if ctld.unitDynamicCargoCapable(_heli) then
                 _model_type = "dynamic"
                 _point = ctld.getPointAt6Oclock(_heli, 15)
+                if _point == nil then
+                    ctld.displayMessageToGroup(_heli, ctld.i18n_translate("No space to place a crate at 6 oclock !"), 10)
+                    return
+                end
                 _position = "6"
             end
 
             local _unitId = ctld.getNextUnitId()
-
             local _side = _heli:getCoalition()
-
             local _name = string.format("%s #%i", _crateType.desc, _unitId)
-
-            ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight, _side, 0, _model_type)
+            spwanedCrate = ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crateType.weight, _side, 0, _model_type)
 
             -- add to move table
             ctld.crateMove[_name] = _name
-
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock ", _crateType.desc, _crateType.weight, _position), 20)
-
         else
             env.info("Couldn't find crate item to spawn")
         end
+        return spwanedCrate
     end, _arguments)
 
     if (not _status) then
@@ -2332,25 +2316,82 @@ function ctld.spawnCrate(_arguments)
 end
 
 function ctld.getPointAt12Oclock(_unit, _offset)
-
     local _position = _unit:getPosition()
-    local _angle = math.atan2(_position.x.z, _position.x.x)
-    local _xOffset = math.cos(_angle) * _offset
-    local _yOffset = math.sin(_angle) * _offset
+    local _angle    = math.atan2(_position.x.z, _position.x.x)
+    local _point    = _unit:getPoint()
+    local attemps   = 0
 
-    local _point = _unit:getPoint()
-    return { x = _point.x + _xOffset, z = _point.z + _yOffset, y = _point.y }
+    while attemps <= 5 do    -- 5 attempts to find a free point
+        local _xOffset  = math.cos(_angle) * _offset
+        local _yOffset  = math.sin(_angle) * _offset
+        local spwanPoint = { x = _point.x + _xOffset, z = _point.z + _yOffset, y = _point.y }
+        if ctld.isPointFreeToSpwan(spwanPoint, 5) then
+            return spwanPoint
+        else
+            _offset = _offset + 5
+        end
+        attemps = attemps + 1
+    end
+    return nil  -- no free point found
 end
 
+function ctld.isPointFreeToSpwan(_point, _radius)
+    local units = mist.makeUnitTable ({"[all]"})
+    local r, u = ctld.isUnitInCircle(mist.makeUnitTable({"[all]"}), _point, _radius)
+    if r then
+        return false    -- unit in circle => point not free to spwan 
+    end
+    return true         -- no unit in circle => point is free to spwan 
+end
+
+-- Check if a point is free of units
+-- returns true and unit if a unit is found in the circle
+-- or false if no units are found in the circle 
+-- params : _unit_names to check table 
+--          _centerCirclePointToCheck point {x=1, y=2, z=3}
+--          _radius in meters
+function ctld.isUnitInCircle(_unit_names, _centerCirclePointToCheck, _radius)
+	local units = {}
+
+    -- build units & static list to check
+	for k = 1, #_unit_names do
+		local unit = Unit.getByName(_unit_names[k]) or StaticObject.getByName(_unit_names[k])
+		if unit and unit:isExist() == true then
+			units[#units + 1] = unit
+		end
+	end
+
+    -- check if one of existing units is in the circle defined by center & radius
+	for units_ind = 1, #units do
+        local currentUnitPoint = units[units_ind]:getPoint()
+        if mist.utils.get2DDist(_centerCirclePointToCheck, currentUnitPoint) <= _radius then
+            return true, units[units_ind]
+        end
+	end
+    return false    -- no units in circle
+end
+----- examples -----------------------------------------------
+--- local isOneUnitInCircle, unit = ctld.getUnitsIncircle({"unit1", "unit2"}, {x=1, y=2, z=3}, 100)
+--- local isOneUnitInCircle, unit = ctld.getUnitsIncircle(mist.makeUnitTable({"[all]"}), {x=1, y=2, z=3}, 100)
+
 function ctld.getPointAt6Oclock(_unit, _offset)
-
     local _position = _unit:getPosition()
-    local _angle = math.atan2(_position.x.z, _position.x.x) + math.pi
-    local _xOffset = math.cos(_angle) * _offset
-    local _yOffset = math.sin(_angle) * _offset
+    local _angle    = math.atan2(_position.x.z, _position.x.x) + math.pi
+    local _point    = _unit:getPoint()
+    local attemps   = 0
 
-    local _point = _unit:getPoint()
-    return { x = _point.x + _xOffset, z = _point.z + _yOffset, y = _point.y }
+    while attemps <= 5 do    -- 5 attempts to find a free point
+        local _xOffset  = math.cos(_angle) * _offset
+        local _yOffset  = math.sin(_angle) * _offset
+        local spwanPoint = { x = _point.x + _xOffset, z = _point.z + _yOffset, y = _point.y }
+        if ctld.isPointFreeToSpwan(spwanPoint, 5) then
+            return spwanPoint
+        else
+            _offset = _offset + 5
+        end
+        attemps = attemps + 1
+    end
+    return nil  -- no free point found
 end
 
 function ctld.troopsOnboard(_heli, _troops)
@@ -3668,58 +3709,41 @@ end
 function ctld.unpackCrates(_arguments)
 
     local _status, _err = pcall(function(_args)
-
         local _heli = ctld.getTransportUnit(_args[1])
+        local spawnedGroups = {}
 
         if _heli ~= nil and ctld.inAir(_heli) == false then
-
             local _crates = ctld.getCratesAndDistance(_heli)
             local _crate = ctld.getClosestCrate(_heli, _crates)
 
-
             if ctld.inLogisticsZone(_heli) == true  or  ctld.farEnoughFromLogisticZone(_heli) == false then
-
                 ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You can't unpack that here! Take it to where it's needed!"), 20)
-
                 return
             end
 
-
-
             if _crate ~= nil and _crate.dist < 750
                     and (_crate.details.unit == "FOB" or _crate.details.unit == "FOB-SMALL") then
-
                 ctld.unpackFOBCrates(_crates, _heli)
-
                 return
-
             elseif _crate ~= nil and _crate.dist < 200 then
-
                 if ctld.forceCrateToBeMoved and ctld.crateMove[_crate.crateUnit:getName()] and not ctld.unitDynamicCargoCapable(_heli) then
                     ctld.displayMessageToGroup(_heli, ctld.i18n_translate("Sorry you must move this crate before you unpack it!"), 20)
                     return
                 end
 
-
                 local _aaTemplate = ctld.getAATemplate(_crate.details.unit)
 
                 if _aaTemplate then
-
                     if _crate.details.unit == _aaTemplate.repair then
                         ctld.repairAASystem(_heli, _crate,_aaTemplate)
                     else
                         ctld.unpackAASystem(_heli, _crate, _crates,_aaTemplate)
                     end
-
                     return -- stop processing
                     -- is multi crate?
                 elseif _crate.details.cratesRequired ~= nil and _crate.details.cratesRequired > 1 then
-                    -- multicrate
-
-                    ctld.unpackMultiCrate(_heli, _crate, _crates)
-
+                    ctld.unpackMultiCrate(_heli, _crate, _crates)     -- multicrate
                     return
-
                 else
                     -- single crate
                     local _cratePoint = _crate.crateUnit:getPoint()
@@ -3731,7 +3755,7 @@ function ctld.unpackCrates(_arguments)
                         _crate.crateUnit:destroy()
                    -- end
 
-                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit }, { _crateHdg })
+                    spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit }, { _crateHdg })
 
                     if _heli:getCoalition() == 1 then
                         ctld.spawnedCratesRED[_crateName] = nil
@@ -3742,29 +3766,24 @@ function ctld.unpackCrates(_arguments)
                     ctld.processCallback({unit = _heli, crate = _crate , spawnedGroup = _spawnedGroups, action = "unpack"})
 
                     if _crate.details.unit == "1L13 EWR" then
-                        ctld.addEWRTask(_spawnedGroups)
-
+                        ctld.addEWRTask(spawnedGroups)
                         --       env.info("Added EWR")
                     end
-
 
                     trigger.action.outTextForCoalition(_heli:getCoalition(), ctld.i18n_translate("%1 successfully deployed %2 to the field", ctld.getPlayerNameOrType(_heli), _crate.details.desc), 10)
 
                     if ctld.isJTACUnitType(_crate.details.unit) and ctld.JTAC_dropEnabled then
-
                         local _code = table.remove(ctld.jtacGeneratedLaserCodes, 1)
                         --put to the end
                         table.insert(ctld.jtacGeneratedLaserCodes, _code)
-
                         ctld.JTACStart(_spawnedGroups:getName(), _code) --(_jtacGroupName, _laserCode, _smoke, _lock, _colour)
                     end
                 end
-
             else
-
                 ctld.displayMessageToGroup(_heli, ctld.i18n_translate("No friendly crates close enough to unpack, or crate too close to aircraft."), 20)
             end
         end
+        return spawnedGroups
     end, _arguments)
 
     if (not _status) then
@@ -3911,10 +3930,20 @@ function ctld.dropSlingCrate(_args)
 
         if ctld.inAir(_heli) == false or _heightDiff <= 7.5 then
             _point = ctld.getPointAt12Oclock(_heli, 30)
+            
+            if _point == nil then
+                ctld.displayMessageToGroup(_heli, ctld.i18n_translate("No space to drop a crate at 12 oclock !"), 10)
+                return
+            end
+            
             local _position = "12"
 
             if ctld.unitDynamicCargoCapable(_heli) then
                 _point = ctld.getPointAt6Oclock(_heli, 15)
+                if _point == nil then
+                    ctld.displayMessageToGroup(_heli, ctld.i18n_translate("No space to unload a crate at 6 oclock !"), 10)
+                    return
+                end
                 _position = "6"
             end
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("%1 crate has been safely unhooked and is at your %2 o'clock", _currentCrate.desc, _position), 10)
@@ -4164,6 +4193,11 @@ function ctld.dropRadioBeacon(_args)
         --deploy 50 m infront
         --try to spawn at 12 oclock to us
         local _point = ctld.getPointAt12Oclock(_heli, 50)
+            
+        if _point == nil then
+            ctld.displayMessageToGroup(_heli, ctld.i18n_translate("No space to place a radio beacon at 12 oclock !"), 10)
+            return
+        end
 
         ctld.beaconCount = ctld.beaconCount + 1
         local _name = "Beacon #" .. ctld.beaconCount
@@ -4776,9 +4810,13 @@ end
 
 
 function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
+
     local _id = ctld.getNextGroupId()
+
     local _groupName = _types[1] .. "  #" .. _id
+
     local _side = _heli:getCoalition()
+
     local _group = {
         ["visible"] = false,
        -- ["groupId"] = _id,
@@ -4787,139 +4825,29 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
         --        ["y"] = _positions[1].z,
         --        ["x"] = _positions[1].x,
         ["name"] = _groupName,
-        ["tasks"] = {},
-        ["radioSet"] = false,
-        ["task"] = "Reconnaissance",
-        ["route"]  = {},
+        ["task"] = {},
     }
 
     local _hdg = 120 * math.pi / 180 -- radians = 120 degrees
-    if _types[1] ~= "MQ-9 Reaper" and _types[1] ~= "RQ-1A Predator" then  -- non-drones - JTAC
-        local _spreadMin = 5
-        local _spreadMax = 5
-        local _spreadMult = 1
-        for _i, _pos in ipairs(_positions) do
-            local _unitId = ctld.getNextUnitId()
-            local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
-            
-            if _hdgs and _hdgs[_i] then
-                _hdg = _hdgs[_i]
-            end
- 
-            _group.units[_i] = ctld.createUnit(	_pos.x +math.random(_spreadMin,_spreadMax)*_spreadMult, 
-                								_pos.z +math.random(_spreadMin,_spreadMax)*_spreadMult, 
-                								_hdg, 
-                								_details)
-        end
-        _group.category = Group.Category.GROUND
-    else        -- drones - JTAC
-        local _unitId = ctld.getNextUnitId()
-        local _details = {  type      = _types[1], 
-                            unitId    = _unitId, 
-                            name      = string.format("Unpacked %s #%i", _types[1], _unitId),
-            				livery_id = "'camo' scheme",
-							skill     = "High",
-                            speed     = 80,
-            				payload   = {	pylons = {}, fuel = 1300, flare = 0, chaff = 0, gun = 100 } }
-        
-        _group.units[1] = ctld.createUnit(  _positions[1].x, 
-                                            _positions[1].z + ctld.jtacDroneRadius, 
-                                            _hdg, 
-                                            _details)
-        
-        _group.category = Group.Category.AIRPLANE   -- for drones
+    local _spreadMin = 5
+    local _spreadMax = 5
+    local _spreadMult = 1
+    for _i, _pos in ipairs(_positions) do
 
-        -- create drone orbiting route 
-		local DroneRoute = { 
-						["points"] = 
-						{
-							[1] = 
-							{
-								["alt"] = 2000,
-								["action"] = "Turning Point",
-								["alt_type"] = "BARO",
-								["properties"] = 
-								{
-									["addopt"] = {},
-								}, -- end of ["properties"]
-								["speed"] = 80,
-								["task"] = 
-								{
-									["id"] = "ComboTask",
-									["params"] = 
-									{
-										["tasks"] = 
-										{
-											[1] = 
-											{
-												["enabled"] = true,
-												["auto"] = false,
-												["id"] = "WrappedAction",
-												["number"] = 1,
-												["params"] = 
-												{
-													["action"] = 
-													{
-														["id"] = "EPLRS",
-														["params"] = 
-														{
-															["value"] = true,
-															["groupId"] = 0,
-														}, -- end of ["params"]
-													}, -- end of ["action"]
-												}, -- end of ["params"]
-											}, -- end of [1]
-											[2] = 
-											{
-												["number"] = 2,
-												["auto"] = false,
-												["id"] = "Orbit",
-												["enabled"] = true,
-												["params"] = 
-												{
-													["altitude"] = ctld.jtacDroneAltitude,
-													["pattern"]  = "Circle",
-													["speed"]    = 80,
-												}, -- end of ["params"]
-											}, -- end of [2]
-											[3] = 
-											{
-												["enabled"] = true,
-												["auto"] = false,
-												["id"] = "WrappedAction",
-												["number"] = 3,
-												["params"] = 
-												{
-													["action"] = 
-													{
-														["id"] = "Option",
-														["params"] = 
-														{
-															["value"] = true,
-															["name"] = 6,
-														}, -- end of ["params"]
-													}, -- end of ["action"]
-												}, -- end of ["params"]
-											}, -- end of [3]
-										}, -- end of ["tasks"]
-									}, -- end of ["params"]
-								}, -- end of ["task"]
-								["type"] = "Turning Point",
-								["ETA"] = 0,
-								["ETA_locked"] = true,
-								["y"] = _positions[1].z,
-								["x"] = _positions[1].x,
-								["speed_locked"] = true,
-								["formation_template"] = "",
-							}, -- end of [1]
-						}, -- end of ["points"]
-					} -- end of ["route"]
-		---------------------------------------------------------------------------------
-        _group.route = DroneRoute
+        local _unitId = ctld.getNextUnitId()
+        local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
+        if _hdgs and _hdgs[_i] then
+            _hdg = _hdgs[_i]
+        end
+        _group.units[_i] = ctld.createUnit(_pos.x +math.random(_spreadMin,_spreadMax)*_spreadMult, _pos.z +math.random(_spreadMin,_spreadMax)*_spreadMult, _hdg, _details)
     end
-    
+
+    --mist function
+    _group.category = Group.Category.GROUND
     _group.country = _heli:getCountry()
-	local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
+
+    local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
+
     return _spawnedGroup
 end
 
@@ -5319,12 +5247,15 @@ function ctld.inWaypointZone(_point,_coalition)
     return {inZone = false}
 end
 
--- are we near friendly logistics zone
+--- are we near friendly logistics zone
+-- param _heli  = unitOnject of helicopter
+-- return[1]    = true or false
+-- return[2]    = StaticObjectName near which the helicopter is located
 function ctld.inLogisticsZone(_heli)
     ctld.logDebug("ctld.inLogisticsZone(), _heli = %s", ctld.p(_heli))
 
     if ctld.inAir(_heli) then
-        return false
+        return false, nil
     end
     local _heliPoint = _heli:getPoint()
     ctld.logDebug("_heliPoint = %s", ctld.p(_heliPoint))
@@ -5340,14 +5271,24 @@ function ctld.inLogisticsZone(_heli)
             local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
             ctld.logDebug("_dist = %s", ctld.p(_dist))
             if _dist <= ctld.maximumDistanceLogistic then
-                return true
+                return true, _name
             end
         end
     end
-
-    return false
+    return false, nil
 end
 
+-- return logisticIndex from ctld.logisticUnits for e given LogisticUnitName
+function ctld.getLogisticIndexByName(_LogUnitName)
+	if _LogUnitName then
+		for i=1, #ctld.logisticUnits do
+			if ctld.logisticUnits[i] == _LogUnitName then
+				return i
+			end
+		end
+	end
+	return nil
+end
 
 -- are far enough from a friendly logistics zone
 function ctld.farEnoughFromLogisticZone(_heli)
@@ -5718,7 +5659,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
                                 -- add menu for spawning crates
                                 local itemNbMain = 0
-                                local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Vehicle / FOB Crates / Drone"), _rootPath)
+                                local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Vehicle / FOB Crates"), _rootPath)
                                 for _i, _category in ipairs(crateCategories) do
                                     local _subMenuName = _category
                                     local _crates = ctld.spawnableCrates[_subMenuName]
@@ -5766,7 +5707,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate"), _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
                             end
-
+                            
                             if ctld.loadCrateFromMenu or ctld.hoverPickup then
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Crate"), _crateCommands, ctld.dropSlingCrate, { _unitName })
                             end
@@ -5791,7 +5732,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Radio Beacons"), _rootPath)
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands, ctld.listRadioBeacons, { _unitName })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Beacon"), _radioCommands, ctld.dropRadioBeacon, { _unitName })
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Remove Closest Beacon"), _radioCommands, ctld.removeRadioBeacon, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Remove Closet Beacon"), _radioCommands, ctld.removeRadioBeacon, { _unitName })
                         elseif ctld.deployedRadioBeacons ~= {} then
                             local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Radio Beacons"), _rootPath)
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands, ctld.listRadioBeacons, { _unitName })
@@ -5827,11 +5768,6 @@ function ctld.addOtherF10MenuOptions()
         if ctld.JTAC_jtacStatusF10 then
             ctld.addJTACRadioCommand(2) -- get all BLUE players
             ctld.addJTACRadioCommand(1) -- get all RED players
-        end
-
-        if ctld.reconF10Menu then
-            ctld.addReconRadioCommand(2) -- get all BLUE players
-            ctld.addReconRadioCommand(1) -- get all RED players
         end
     end)
 
@@ -7382,200 +7318,20 @@ function ctld.generateFMFrequencies()
 end
 
 function ctld.getPositionString(_unit)
+
     if ctld.JTAC_location == false then
         return ""
     end
 
-    local _lat, _lon  = coord.LOtoLL(_unit:getPosition().p)
-    local _latLngStr  = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
+    local _lat, _lon = coord.LOtoLL(_unit:getPosition().p)
+
+    local _latLngStr = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
+
     local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
-    local _TargetAlti = land.getHeight(mist.utils.makeVec2(_unit:getPoint()))
-    return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString .. " - ALTI: " .. mist.utils.round(_TargetAlti, 0) .. " m / " .. mist.utils.round(_TargetAlti/0.3048, 0) .. " ft"
+
+    return " @ " .. _latLngStr .. " - MGRS " .. _mgrsString
 end
 
---**********************************************************************
---                   RECOGNITION SUPPORT FUNCTIONS
--- Shows/remove/refresh marks in F10 map on targets in LOS of a unit passed in params
----------------------------------------------------------------------
--- examples ---------------------------------------------------------
---ctld.reconRefreshTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
---ctld.reconRemoveTargetsInLosOnF10Map(Unit.getByName("uh2-1"))
---ctld.reconShowTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
-----------------------------------------------------------------------
---if ctld == nil then  ctld = {} end
-if ctld.lastMarkId == nil then
-    ctld.lastMarkId = 0
-end
-
--- ***************** RECON CONFIGURATION *****************
-ctld.reconF10Menu         = true -- enables F10 RECON menu
-ctld.reconMenuName        = ctld.i18n_translate("RECON") --name of the CTLD JTAC radio menu
-ctld.reconRadioAdded      = {} --stores the groups that have had the radio menu added
-ctld.reconLosSearchRadius = 2000 -- search radius in meters
-ctld.reconLosMarkRadius   = 100 -- mark radius dimension in meters
-ctld.reconAutoRefreshLosTargetMarks = true    -- if true recon LOS marks are automaticaly refreshed on F10 map
-ctld.reconLastScheduleIdAutoRefresh = 0
-
----- F10 RECON Menus ------------------------------------------------------------------
-function ctld.addReconRadioCommand(_side) -- _side = 1 or 2 (red  or blue)
-    if ctld.reconF10Menu then
-        if _side == 1 or _side == 2 then
-            local _players = coalition.getPlayers(_side)
-            if _players ~= nil then
-                for _, _playerUnit in pairs(_players) do
-                    local _groupId = ctld.getGroupId(_playerUnit)
-                    if _groupId then
-                        if ctld.reconRadioAdded[tostring(_groupId)] == nil then
-                            ctld.logDebug("ctld.addReconRadioCommand - adding RECON radio menu for unit [%s]", ctld.p(_playerUnit:getName()))
-                            local RECONpath = missionCommands.addSubMenuForGroup(_groupId, ctld.reconMenuName)
-                            missionCommands.addCommandForGroup(_groupId,
-                                ctld.i18n_translate("Show targets in LOS (refresh)"), RECONpath,
-                                ctld.reconRefreshTargetsInLosOnF10Map, {
-                                    _groupId      = _groupId,
-                                    _playerUnit   = _playerUnit,
-                                    _searchRadius = ctld.reconLosSearchRadius,
-                                    _markRadius   = ctld.reconLosMarkRadius,
-                                    _boolRemove   = true
-                                })
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Hide targets in LOS"), RECONpath, ctld.reconRemoveTargetsInLosOnF10Map,  _playerUnit)
-                            if ctld.reconAutoRefreshLosTargetMarks then
-                                missionCommands.addCommandForGroup(_groupId,
-                                    ctld.i18n_translate("STOP autoRefresh targets in LOS"), RECONpath,
-                                    ctld.reconStopAutorefreshTargetsInLosOnF10Map,
-                                    _groupId,
-                                    _playerUnit,
-                                    ctld.reconLosSearchRadius,
-                                    ctld.reconLosMarkRadius,
-                                    true)
-                            else
-                                missionCommands.addCommandForGroup(_groupId,
-                                    ctld.i18n_translate("START autoRefresh targets in LOS"), RECONpath,
-                                    ctld.reconStartAutorefreshTargetsInLosOnF10Map,
-                                    _groupId,
-                                    _playerUnit,
-                                    ctld.reconLosSearchRadius,
-                                    ctld.reconLosMarkRadius,
-                                    true
-                                )
-                            end
-                            ctld.reconRadioAdded[tostring(_groupId)] = timer.getTime()  --fetch the time to check for a regular refresh
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
---------------------------------------------------------------------
-function ctld.reconStopAutorefreshTargetsInLosOnF10Map(_groupId, _playerUnit, _searchRadius, _markRadius, _boolRemove)
-    ctld.reconAutoRefreshLosTargetMarks = false
-
-    if ctld.reconLastScheduleIdAutoRefresh ~= 0 then
-        timer.removeFunction(ctld.reconLastScheduleIdAutoRefresh)    -- reset last schedule
-    end
-
-    ctld.reconRemoveTargetsInLosOnF10Map(_playerUnit)
-    missionCommands.removeItemForGroup(_groupId, {ctld.reconMenuName, ctld.i18n_translate("STOP autoRefresh targets in LOS")})
-    missionCommands.addCommandForGroup( _groupId, ctld.i18n_translate("START autoRefresh targets in LOS"), {ctld.reconMenuName},
-                                        ctld.reconStartAutorefreshTargetsInLosOnF10Map,
-                                        _groupId,
-                                        _playerUnit,
-                                        _searchRadius,
-                                        _markRadius,
-                                        _boolRemove)
-end
---------------------------------------------------------------------
-function ctld.reconStartAutorefreshTargetsInLosOnF10Map(_groupId, _playerUnit, _searchRadius, _markRadius, _boolRemove)
-    ctld.reconAutoRefreshLosTargetMarks = true
-    ctld.reconRefreshTargetsInLosOnF10Map({ _groupId      = _groupId,
-                                            _playerUnit   = _playerUnit,
-                                            _searchRadius = _searchRadius or ctld.reconLosSearchRadius,
-                                            _markRadius   = _markRadius or ctld.reconLosMarkRadius,
-                                            _boolRemove   = _boolRemove or true},
-                                            timer.getTime())
-    missionCommands.removeItemForGroup( _groupId, {ctld.reconMenuName, ctld.i18n_translate("START autoRefresh targets in LOS")})
-    missionCommands.addCommandForGroup( _groupId, ctld.i18n_translate("STOP autoRefresh targets in LOS"), {ctld.reconMenuName},
-                                        ctld.reconStopAutorefreshTargetsInLosOnF10Map,
-                                        _groupId,
-                                        _playerUnit,
-                                        _searchRadius,
-                                        _markRadius,
-                                        _boolRemove)
-end
---------------------------------------------------------------------
-function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRadius)    -- _groupId targeting
-                                                                                        -- _searchRadius and _markRadius in meters
-    if _playerUnit then
-        local TargetsInLOS = {}
-
-        local enemyColor = "red"
-        local color = {1, 0, 0, 0.2}     -- red
-
-        if _playerUnit:getCoalition() == 1 then
-            enemyColor = "blue"
-            color = {51/255, 51/255, 1, 0.2} -- blue
-        end
-
-        local t =  mist.getUnitsLOS({_playerUnit:getName()}, 180, mist.makeUnitTable({'['..enemyColor..'][vehicle]'}),180, _searchRadius)
-
-        local MarkIds = {}
-        if t then
-            for i=1, #t do                                      -- for each unit having los on enemies
-                for j=1, #t[i].vis do                           -- for each enemy unit in los
-                    local targetPoint = t[i].vis[j]:getPoint()    -- point of each target on LOS
-                    ctld.lastMarkId = ctld.lastMarkId  + 1
-                    trigger.action.circleToAll(_playerUnit:getCoalition(), ctld.lastMarkId, targetPoint, _markRadius , color, color, 1, false, nil)
-                    MarkIds[#MarkIds+1] = ctld.lastMarkId
-                    TargetsInLOS[#TargetsInLOS+1] = { targetObject   = t[i].vis[j]:getName(),
-                                                      targetTypeName = t[i].vis[j]:getTypeName(),
-                                                      targetPoint    = targetPoint}
-                end
-            end
-        end
-        mist.DBs.humansByName[_playerUnit:getName()].losMarkIds = MarkIds -- store list of marksIds generated and showed on F10 map
-        return TargetsInLOS
-    else
-        return nil
-    end
-end
----------------------------------------------------------
-function ctld.reconRemoveTargetsInLosOnF10Map(_playerUnit)
-    local unitName = _playerUnit:getName()
-    if mist.DBs.humansByName[unitName].losMarkIds then
-        for i=1, #mist.DBs.humansByName[unitName].losMarkIds do   -- for each unit having los on enemies
-            trigger.action.removeMark(mist.DBs.humansByName[unitName].losMarkIds[i])
-        end
-        mist.DBs.humansByName[unitName].losMarkIds = nil
-    end
-end
----------------------------------------------------------
-function ctld.reconRefreshTargetsInLosOnF10Map(_params, _t)     -- _params._playerUnit targeting
-                                                                -- _params._searchRadius and _params._markRadius in meters
-                                                                -- _params._boolRemove = true to remove previous marksIds
-    if _t == nil then _t = timer.getTime() end
-
-    if ctld.reconAutoRefreshLosTargetMarks then        -- to follow mobile enemy targets
-        ctld.reconLastScheduleIdAutoRefresh = timer.scheduleFunction(ctld.reconRefreshTargetsInLosOnF10Map, {_groupId      = _params._groupId,
-                                                                                                             _playerUnit   = _params._playerUnit,
-                                                                                                             _searchRadius = _params._searchRadius,
-                                                                                                             _markRadius   = _params._markRadius,
-                                                                                                             _boolRemove   = _params._boolRemove
-                                                                                                            },
-                                                                                                             timer.getTime() + 10)
-    end
-
-    if _params._boolRemove == true then
-        ctld.reconRemoveTargetsInLosOnF10Map(_params._playerUnit)
-    end
-
-    return ctld.reconShowTargetsInLosOnF10Map(_params._playerUnit, _params._searchRadius, _params._markRadius)  -- returns TargetsInLOS table
-end
---- test ------------------------------------------------------
---local unitName = "uh2-1"          --"uh1-1"  --"uh2-1"
---ctld.reconShowTargetsInLosOnF10Map(Unit.getByName(unitName),2000,200)
-
-
---**********************************************************************
 
 -- ***************** SETUP SCRIPT ****************
 function ctld.initialize()

@@ -18,7 +18,7 @@ ctld.i18n = {}
 
 --========  FRENCH - FRANCAIS =====================================================================================
 ctld.i18n["fr"] = {}
-ctld.i18n["fr"].translation_version = "1.2" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["fr"].translation_version = "1.3" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="fr";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -55,8 +55,8 @@ ctld.i18n["fr"]["Ural-375 Ammo Truck"] = nil
 ctld.i18n["fr"]["KAMAZ Ammo Truck"] = nil
 ctld.i18n["fr"]["EWR Radar"] = nil
 ctld.i18n["fr"]["FOB Crate - Small"] = nil
-ctld.i18n["en"]["MQ-9 Repear - JTAC"] = nil
-ctld.i18n["en"]["RQ-1A Predator - JTAC"] = nil
+ctld.i18n["fr"]["MQ-9 Repear - JTAC"] = nil
+ctld.i18n["fr"]["RQ-1A Predator - JTAC"] = nil
 ctld.i18n["fr"]["MLRS"] = nil
 ctld.i18n["fr"]["SpGH DANA"] = nil
 ctld.i18n["fr"]["T155 Firtina"] = nil
@@ -195,6 +195,11 @@ ctld.i18n["fr"]["Cannot repair %1. No damaged %2 within 300m"] = "Impossible de 
 ctld.i18n["fr"]["%1 successfully deployed %2 to the field using %3 crates."] = "%1 a déployé avec succès %2 sur le terrain en utilisant %3 caisses."
 ctld.i18n["fr"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = "Impossible de construire %1 !\n\nIl faut %2 caisses et il y en a %3 \n\nOu les caisses ne sont pas à moins de 300 m les unes des autres"
 ctld.i18n["fr"]["%1 dropped %2 smoke."] = "%1 a largué un fumigène %2."
+ctld.i18n["fr"]["No space to place a crate at 12 oclock !"] = "Pas assez de place dans vos 12 heures pour y placer une caisse"
+ctld.i18n["fr"]["No space to place a radio beacon at 12 oclock !"] = "Pas assez de place dans vos 12 heures pour y placer une balise radio"
+ctld.i18n["fr"]["No space to drop a crate at 12 oclock !"] = "Pas assez de place dans vos 12 heures pour y déposer une caisse"
+ctld.i18n["fr"]["No space to place a crate at 6 oclock !"] = "Pas assez de place dans vos 6 heures pour y placer une caisse"
+ctld.i18n["fr"]["No space to unload a crate at 6 oclock !"] = "Pas assez de place dans vos 6 heures pour y décharger une caisse"
 
 --- JTAC messages
 ctld.i18n["fr"]["JTAC Group %1 KIA!"] = "Groupe JTAC %1 KIA !"
@@ -271,7 +276,7 @@ ctld.i18n["fr"]["STOP autoRefresh targets in LOS"] = "Stopper suivi automatique 
 
 --======  SPANISH : ESPAÑOL====================================================================================
 ctld.i18n["es"] = {}
-ctld.i18n["es"].translation_version = "1.2" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["es"].translation_version = "1.3" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="es";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -308,8 +313,8 @@ ctld.i18n["es"]["Ural-375 Ammo Truck"] = nil
 ctld.i18n["es"]["KAMAZ Ammo Truck"] = nil
 ctld.i18n["es"]["EWR Radar"] = nil
 ctld.i18n["es"]["FOB Crate - Small"] = nil
-ctld.i18n["en"]["MQ-9 Repear - JTAC"] = nil
-ctld.i18n["en"]["RQ-1A Predator - JTAC"] = nil
+ctld.i18n["es"]["MQ-9 Repear - JTAC"] = nil
+ctld.i18n["es"]["RQ-1A Predator - JTAC"] = nil
 ctld.i18n["es"]["MLRS"] = nil
 ctld.i18n["es"]["SpGH DANA"] = nil
 ctld.i18n["es"]["T155 Firtina"] = nil
@@ -464,6 +469,11 @@ ctld.i18n["es"]["Cannot repair %1. No damaged %2 within 300m"] = "Imposible de r
 ctld.i18n["es"]["%1 successfully deployed %2 to the field using %3 crates."] = "%1 implementó exitosamente %2 en el campo usando %3 cajas."
 ctld.i18n["es"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = "Imposible construir %1 !\n\nNecesitamos %2 cajas y hay %3 \n\nO las cajas están a no menos de 300 m una de otra"
 ctld.i18n["es"]["%1 dropped %2 smoke."] = "%1 arrojó un %2 humo."
+ctld.i18n["es"]["No space to place a crate at 12 oclock !"] = "No hay espacio para colocar una caja a tus 12 horas!"
+ctld.i18n["es"]["No space to place a radio beacon at 12 oclock !"] = "¡No hay espacio para colocar una radiobaliza a tus 12 horas!"
+ctld.i18n["es"]["No space to drop a crate at 12 oclock !"] = "¡No hay espacio para dejar una caja a tus 12 horas!"
+ctld.i18n["es"]["No space to place a crate at 6 oclock !"] = "¡No hay espacio para colocar una caja a las 6 horas!"
+ctld.i18n["es"]["No space to unload a crate at 6 oclock !"] = "¡No hay espacio para descargar una caja a tus seis horas!"
 
 --- JTAC messages
 ctld.i18n["es"]["JTAC Group %1 KIA!"] = "¡Grupo JTAC %1 KIA!"
