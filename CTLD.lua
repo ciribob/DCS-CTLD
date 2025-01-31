@@ -305,7 +305,7 @@ ctld.i18n["en"]["Drop Orange Smoke"] = nil
 ctld.i18n["en"]["Drop Green Smoke"] = nil
 ctld.i18n["en"]["Drop Beacon"] = nil
 ctld.i18n["en"]["Radio Beacons"] = nil
-ctld.i18n["en"]["Remove Closet Beacon"] = nil
+ctld.i18n["en"]["Remove Closest Beacon"] = nil
 ctld.i18n["en"]["JTAC Status"] = nil
 ctld.i18n["en"]["DISABLE "] = nil
 ctld.i18n["en"]["ENABLE "] = nil
@@ -5647,7 +5647,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate"), _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
                             end
-                            
+
                             if ctld.loadCrateFromMenu or ctld.hoverPickup then
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Crate"), _crateCommands, ctld.dropSlingCrate, { _unitName })
                             end
@@ -5672,7 +5672,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Radio Beacons"), _rootPath)
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands, ctld.listRadioBeacons, { _unitName })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Beacon"), _radioCommands, ctld.dropRadioBeacon, { _unitName })
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Remove Closet Beacon"), _radioCommands, ctld.removeRadioBeacon, { _unitName })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Remove Closest Beacon"), _radioCommands, ctld.removeRadioBeacon, { _unitName })
                         elseif ctld.deployedRadioBeacons ~= {} then
                             local _radioCommands = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Radio Beacons"), _rootPath)
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands, ctld.listRadioBeacons, { _unitName })
@@ -7284,12 +7284,11 @@ end
 -- examples ---------------------------------------------------------
 --ctld.reconRefreshTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
 --ctld.reconRemoveTargetsInLosOnF10Map(Unit.getByName("uh2-1"))
-
 --ctld.reconShowTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
 ----------------------------------------------------------------------
 --if ctld == nil then  ctld = {} end
 if ctld.lastMarkId == nil then
-	ctld.lastMarkId = 0
+    ctld.lastMarkId = 0
 end
 
 -- ***************** RECON CONFIGURATION *****************
@@ -7298,12 +7297,12 @@ ctld.reconMenuName        = ctld.i18n_translate("RECON") --name of the CTLD JTAC
 ctld.reconRadioAdded      = {} --stores the groups that have had the radio menu added
 ctld.reconLosSearchRadius = 2000 -- search radius in meters
 ctld.reconLosMarkRadius   = 100 -- mark radius dimension in meters
-ctld.reconAutoRefreshLosTargetMarks = true	-- if true recon LOS marks are automaticaly refreshed on F10 map
+ctld.reconAutoRefreshLosTargetMarks = true    -- if true recon LOS marks are automaticaly refreshed on F10 map
 ctld.reconLastScheduleIdAutoRefresh = 0
 
 ---- F10 RECON Menus ------------------------------------------------------------------
 function ctld.addReconRadioCommand(_side) -- _side = 1 or 2 (red  or blue)
-    if ctld.reconF10Menu then    
+    if ctld.reconF10Menu then
         if _side == 1 or _side == 2 then
             local _players = coalition.getPlayers(_side)
             if _players ~= nil then
@@ -7313,29 +7312,37 @@ function ctld.addReconRadioCommand(_side) -- _side = 1 or 2 (red  or blue)
                         if ctld.reconRadioAdded[tostring(_groupId)] == nil then
                             ctld.logDebug("ctld.addReconRadioCommand - adding RECON radio menu for unit [%s]", ctld.p(_playerUnit:getName()))
                             local RECONpath = missionCommands.addSubMenuForGroup(_groupId, ctld.reconMenuName)
-                            missionCommands.addCommandForGroup(	_groupId, ctld.i18n_translate("Show targets in LOS (refresh)"), RECONpath, 
-                                								ctld.reconRefreshTargetsInLosOnF10Map, { 	_groupId      = _groupId,
-                                    																		_playerUnit   = _playerUnit,
-																											_searchRadius = ctld.reconLosSearchRadius, 
-                                    																		_markRadius   = ctld.reconLosMarkRadius,
-                                    																		_boolRemove   = true})
+                            missionCommands.addCommandForGroup(_groupId,
+                                ctld.i18n_translate("Show targets in LOS (refresh)"), RECONpath,
+                                ctld.reconRefreshTargetsInLosOnF10Map, {
+                                    _groupId      = _groupId,
+                                    _playerUnit   = _playerUnit,
+                                    _searchRadius = ctld.reconLosSearchRadius,
+                                    _markRadius   = ctld.reconLosMarkRadius,
+                                    _boolRemove   = true
+                                })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Hide targets in LOS"), RECONpath, ctld.reconRemoveTargetsInLosOnF10Map,  _playerUnit)
                             if ctld.reconAutoRefreshLosTargetMarks then
-                                local c1 = missionCommands.addCommandForGroup(	_groupId, ctld.i18n_translate("STOP autoRefresh targets in LOS"), RECONpath, 
-                                    											ctld.reconStopAutorefreshTargetsInLosOnF10Map,  _groupId, _playerUnit)
+                                missionCommands.addCommandForGroup(_groupId,
+                                    ctld.i18n_translate("STOP autoRefresh targets in LOS"), RECONpath,
+                                    ctld.reconStopAutorefreshTargetsInLosOnF10Map,
+                                    _groupId,
+                                    _playerUnit,
+                                    ctld.reconLosSearchRadius,
+                                    ctld.reconLosMarkRadius,
+                                    true)
                             else
-                                local c2 = missionCommands.addCommandForGroup(	_groupId, ctld.i18n_translate("START autoRefresh targets in LOS"), RECONpath,
-                                    											ctld.reconStartAutorefreshTargetsInLosOnF10Map,
-                                    												_groupId,
-                                                                                    _playerUnit,
-                                                                                    ctld.reconLosSearchRadius, 
-                                                                                    ctld.reconLosMarkRadius,
-                                                                                    true
-                                											)
+                                missionCommands.addCommandForGroup(_groupId,
+                                    ctld.i18n_translate("START autoRefresh targets in LOS"), RECONpath,
+                                    ctld.reconStartAutorefreshTargetsInLosOnF10Map,
+                                    _groupId,
+                                    _playerUnit,
+                                    ctld.reconLosSearchRadius,
+                                    ctld.reconLosMarkRadius,
+                                    true
+                                )
                             end
                             ctld.reconRadioAdded[tostring(_groupId)] = timer.getTime()  --fetch the time to check for a regular refresh
-                        else
-                            
                         end
                     end
                 end
@@ -7344,50 +7351,51 @@ function ctld.addReconRadioCommand(_side) -- _side = 1 or 2 (red  or blue)
     end
 end
 --------------------------------------------------------------------
-function ctld.reconStopAutorefreshTargetsInLosOnF10Map(_groupId, _playerUnit)
+function ctld.reconStopAutorefreshTargetsInLosOnF10Map(_groupId, _playerUnit, _searchRadius, _markRadius, _boolRemove)
     ctld.reconAutoRefreshLosTargetMarks = false
-    
+
     if ctld.reconLastScheduleIdAutoRefresh ~= 0 then
-    	timer.removeFunction(ctld.reconLastScheduleIdAutoRefresh)	-- reset last schedule
+        timer.removeFunction(ctld.reconLastScheduleIdAutoRefresh)    -- reset last schedule
     end
-    
+
     ctld.reconRemoveTargetsInLosOnF10Map(_playerUnit)
     missionCommands.removeItemForGroup(_groupId, {ctld.reconMenuName, ctld.i18n_translate("STOP autoRefresh targets in LOS")})
-	missionCommands.addCommandForGroup(	_groupId, ctld.i18n_translate("START autoRefresh targets in LOS"), {ctld.reconMenuName}, 
-        								ctld.reconStartAutorefreshTargetsInLosOnF10Map,
-        								_groupId,
+    missionCommands.addCommandForGroup( _groupId, ctld.i18n_translate("START autoRefresh targets in LOS"), {ctld.reconMenuName},
+                                        ctld.reconStartAutorefreshTargetsInLosOnF10Map,
+                                        _groupId,
                                         _playerUnit,
-                                        _searchRadius, 
+                                        _searchRadius,
                                         _markRadius,
                                         _boolRemove)
 end
 --------------------------------------------------------------------
 function ctld.reconStartAutorefreshTargetsInLosOnF10Map(_groupId, _playerUnit, _searchRadius, _markRadius, _boolRemove)
-    ctld.reconAutoRefreshLosTargetMarks = true 
-    ctld.reconRefreshTargetsInLosOnF10Map({	_groupId      = _groupId,
+    ctld.reconAutoRefreshLosTargetMarks = true
+    ctld.reconRefreshTargetsInLosOnF10Map({ _groupId      = _groupId,
                                             _playerUnit   = _playerUnit,
-                                            _searchRadius = ctld.reconLosSearchRadius, 
-                                            _markRadius   = ctld.reconLosMarkRadius,
-                                            _boolRemove   = true},
-    										timer.getTime())
-    missionCommands.removeItemForGroup(	_groupId, {ctld.reconMenuName, ctld.i18n_translate("START autoRefresh targets in LOS")})
-    missionCommands.addCommandForGroup(	_groupId, ctld.i18n_translate("STOP autoRefresh targets in LOS"), {ctld.reconMenuName}, 
-        								ctld.reconStopAutorefreshTargetsInLosOnF10Map, 
-        								_groupId,
-        								_playerUnit)                       
+                                            _searchRadius = _searchRadius or ctld.reconLosSearchRadius,
+                                            _markRadius   = _markRadius or ctld.reconLosMarkRadius,
+                                            _boolRemove   = _boolRemove or true},
+                                            timer.getTime())
+    missionCommands.removeItemForGroup( _groupId, {ctld.reconMenuName, ctld.i18n_translate("START autoRefresh targets in LOS")})
+    missionCommands.addCommandForGroup( _groupId, ctld.i18n_translate("STOP autoRefresh targets in LOS"), {ctld.reconMenuName},
+                                        ctld.reconStopAutorefreshTargetsInLosOnF10Map,
+                                        _groupId,
+                                        _playerUnit,
+                                        _searchRadius,
+                                        _markRadius,
+                                        _boolRemove)
 end
 --------------------------------------------------------------------
-function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRadius) 	-- _groupId targeting
-    																							-- _searchRadius and _markRadius in meters
+function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRadius)    -- _groupId targeting
+                                                                                        -- _searchRadius and _markRadius in meters
     if _playerUnit then
         local TargetsInLOS = {}
-        
-        local enemyCoa = 1
+
         local enemyColor = "red"
         local color = {1, 0, 0, 0.2}     -- red
 
         if _playerUnit:getCoalition() == 1 then
-            enemyCoa = 2
             enemyColor = "blue"
             color = {51/255, 51/255, 1, 0.2} -- blue
         end
@@ -7396,20 +7404,20 @@ function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRad
 
         local MarkIds = {}
         if t then
-            for i=1, #t do                                      -- for each unit having los on enemies 
+            for i=1, #t do                                      -- for each unit having los on enemies
                 for j=1, #t[i].vis do                           -- for each enemy unit in los
-                    local targetPoint = t[i].vis[j]:getPoint()	-- point of each target on LOS
+                    local targetPoint = t[i].vis[j]:getPoint()    -- point of each target on LOS
                     ctld.lastMarkId = ctld.lastMarkId  + 1
                     trigger.action.circleToAll(_playerUnit:getCoalition(), ctld.lastMarkId, targetPoint, _markRadius , color, color, 1, false, nil)
-                	MarkIds[#MarkIds+1] = ctld.lastMarkId
-                    TargetsInLOS[#TargetsInLOS+1] = {targetObject   = t[i].vis[j]:getName(), 
-                                                     targetTypeName = t[i].vis[j]:getTypeName(), 
-                                                     targetPoint    = targetPoint}
+                    MarkIds[#MarkIds+1] = ctld.lastMarkId
+                    TargetsInLOS[#TargetsInLOS+1] = { targetObject   = t[i].vis[j]:getName(),
+                                                      targetTypeName = t[i].vis[j]:getTypeName(),
+                                                      targetPoint    = targetPoint}
                 end
             end
         end
         mist.DBs.humansByName[_playerUnit:getName()].losMarkIds = MarkIds -- store list of marksIds generated and showed on F10 map
-        return TargetsInLOS  
+        return TargetsInLOS
     else
         return nil
     end
@@ -7417,33 +7425,33 @@ end
 ---------------------------------------------------------
 function ctld.reconRemoveTargetsInLosOnF10Map(_playerUnit)
     local unitName = _playerUnit:getName()
-    if mist.DBs.humansByName[unitName].losMarkIds then 
-        for i=1, #mist.DBs.humansByName[unitName].losMarkIds do   -- for each unit having los on enemies 
+    if mist.DBs.humansByName[unitName].losMarkIds then
+        for i=1, #mist.DBs.humansByName[unitName].losMarkIds do   -- for each unit having los on enemies
             trigger.action.removeMark(mist.DBs.humansByName[unitName].losMarkIds[i])
         end
         mist.DBs.humansByName[unitName].losMarkIds = nil
     end
 end
 ---------------------------------------------------------
-function ctld.reconRefreshTargetsInLosOnF10Map(_params, _t) 	-- _params._playerUnit targeting
-    															-- _params._searchRadius and _params._markRadius in meters
+function ctld.reconRefreshTargetsInLosOnF10Map(_params, _t)     -- _params._playerUnit targeting
+                                                                -- _params._searchRadius and _params._markRadius in meters
                                                                 -- _params._boolRemove = true to remove previous marksIds
     if _t == nil then _t = timer.getTime() end
-    
-    if ctld.reconAutoRefreshLosTargetMarks then		-- to follow mobile enemy targets
+
+    if ctld.reconAutoRefreshLosTargetMarks then        -- to follow mobile enemy targets
         ctld.reconLastScheduleIdAutoRefresh = timer.scheduleFunction(ctld.reconRefreshTargetsInLosOnF10Map, {_groupId      = _params._groupId,
-                                                                                                             _playerUnit   = _params._playerUnit, 
+                                                                                                             _playerUnit   = _params._playerUnit,
                                                                                                              _searchRadius = _params._searchRadius,
-                                                                                                             _markRadius   = _params._markRadius, 
-                                                                                                             _boolRemove   = _params._boolRemove 
-            																								}, 
+                                                                                                             _markRadius   = _params._markRadius,
+                                                                                                             _boolRemove   = _params._boolRemove
+                                                                                                            },
                                                                                                              timer.getTime() + 10)
     end
 
     if _params._boolRemove == true then
         ctld.reconRemoveTargetsInLosOnF10Map(_params._playerUnit)
     end
-    
+
     return ctld.reconShowTargetsInLosOnF10Map(_params._playerUnit, _params._searchRadius, _params._markRadius)  -- returns TargetsInLOS table
 end
 --- test ------------------------------------------------------

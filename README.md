@@ -1125,6 +1125,8 @@ ctld.addCallback(function(_args)
 end)
 ```
 
+Below is a complete list of all the "actions" plus the data that is sent through. For more information its best to check the CTLD Code to see more details of the arguments.
+
 * `{unit = "Unit that did the action", unloaded = "DCS Troops Group", action = "dropped_troops"}`
 * `{unit = "Unit that did the action", unloaded = "DCS Vehicles Group", action = "dropped_vehicles"}`
 * `{unit = "Unit that did the action", unloaded = "List of picked up vehicles", action = "load_vehicles"}`
