@@ -41,8 +41,8 @@ ctld.Id = "CTLD - "
 ctld.Version = "1.3.0"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
-ctld.Debug = false
-ctld.Trace = false
+ctld.Debug = true
+ctld.Trace = true
 
 ctld.dontInitialize = false -- if true, ctld.initialize() will not run; instead, you'll have to run it from your own code - it's useful when you want to override some functions/parameters before the initialization takes place
 
@@ -69,256 +69,286 @@ end
 -- If a string is not found in the current language then it will default to this language
 -- Note that no translation is provided for this language (obviously) but that we'll maintain this table to help the translators.
 ctld.i18n["en"] = {}
-ctld.i18n["en"].translation_version = "1.2" -- make sure that all the translations are compatible with this version of the english language texts
+ctld.i18n["en"].translation_version = "1.3" -- make sure that all the translations are compatible with this version of the english language texts
 local lang="en";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
-ctld.i18n["en"]["Standard Group"] = nil
-ctld.i18n["en"]["Anti Air"] = nil
-ctld.i18n["en"]["Anti Tank"] = nil
-ctld.i18n["en"]["Mortar Squad"] = nil
-ctld.i18n["en"]["JTAC Group"] = nil
-ctld.i18n["en"]["Single JTAC"] = nil
-ctld.i18n["en"]["2x - Standard Groups"] = nil
-ctld.i18n["en"]["2x - Anti Air"] = nil
-ctld.i18n["en"]["2x - Anti Tank"] = nil
-ctld.i18n["en"]["2x - Standard Groups + 2x Mortar"] = nil
-ctld.i18n["en"]["3x - Standard Groups"] = nil
-ctld.i18n["en"]["3x - Anti Air"] = nil
-ctld.i18n["en"]["3x - Anti Tank"] = nil
-ctld.i18n["en"]["3x - Mortar Squad"] = nil
-ctld.i18n["en"]["5x - Mortar Squad"] = nil
-ctld.i18n["en"]["Mortar Squad Red"] = nil
+ctld.i18n["en"]["Standard Group"] = ""
+ctld.i18n["en"]["Anti Air"] = ""
+ctld.i18n["en"]["Anti Tank"] = ""
+ctld.i18n["en"]["Mortar Squad"] = ""
+ctld.i18n["en"]["JTAC Group"] = ""
+ctld.i18n["en"]["Single JTAC"] = ""
+ctld.i18n["en"]["2x - Standard Groups"] = ""
+ctld.i18n["en"]["2x - Anti Air"] = ""
+ctld.i18n["en"]["2x - Anti Tank"] = ""
+ctld.i18n["en"]["2x - Standard Groups + 2x Mortar"] = ""
+ctld.i18n["en"]["3x - Standard Groups"] = ""
+ctld.i18n["en"]["3x - Anti Air"] = ""
+ctld.i18n["en"]["3x - Anti Tank"] = ""
+ctld.i18n["en"]["3x - Mortar Squad"] = ""
+ctld.i18n["en"]["5x - Mortar Squad"] = ""
+ctld.i18n["en"]["Mortar Squad Red"] = ""
 
 --- crates names
-ctld.i18n["en"]["Humvee - MG"] = nil
-ctld.i18n["en"]["Humvee - TOW"] = nil
-ctld.i18n["en"]["Light Tank - MRAP"] = nil
-ctld.i18n["en"]["Med Tank - LAV-25"] = nil
-ctld.i18n["en"]["Heavy Tank - Abrams"] = nil
-ctld.i18n["en"]["BTR-D"] = nil
-ctld.i18n["en"]["BRDM-2"] = nil
-ctld.i18n["en"]["Hummer - JTAC"] = nil
-ctld.i18n["en"]["M-818 Ammo Truck"] = nil
-ctld.i18n["en"]["M-978 Tanker"] = nil
-ctld.i18n["en"]["SKP-11 - JTAC"] = nil
-ctld.i18n["en"]["Ural-375 Ammo Truck"] = nil
-ctld.i18n["en"]["KAMAZ Ammo Truck"] = nil
-ctld.i18n["en"]["EWR Radar"] = nil
-ctld.i18n["en"]["FOB Crate - Small"] = nil
-ctld.i18n["en"]["MQ-9 Repear - JTAC"] = nil
-ctld.i18n["en"]["RQ-1A Predator - JTAC"] = nil
-ctld.i18n["en"]["MLRS"] = nil
-ctld.i18n["en"]["SpGH DANA"] = nil
-ctld.i18n["en"]["T155 Firtina"] = nil
-ctld.i18n["en"]["Howitzer"] = nil
-ctld.i18n["en"]["SPH 2S19 Msta"] = nil
-ctld.i18n["en"]["M1097 Avenger"] = nil
-ctld.i18n["en"]["M48 Chaparral"] = nil
-ctld.i18n["en"]["Roland ADS"] = nil
-ctld.i18n["en"]["Gepard AAA"] = nil
-ctld.i18n["en"]["LPWS C-RAM"] = nil
-ctld.i18n["en"]["9K33 Osa"] = nil
-ctld.i18n["en"]["9P31 Strela-1"] = nil
-ctld.i18n["en"]["9K35M Strela-10"] = nil
-ctld.i18n["en"]["9K331 Tor"] = nil
-ctld.i18n["en"]["2K22 Tunguska"] = nil
-ctld.i18n["en"]["HAWK Launcher"] = nil
-ctld.i18n["en"]["HAWK Search Radar"] = nil
-ctld.i18n["en"]["HAWK Track Radar"] = nil
-ctld.i18n["en"]["HAWK PCP"] = nil
-ctld.i18n["en"]["HAWK CWAR"] = nil
-ctld.i18n["en"]["HAWK Repair"] = nil
-ctld.i18n["en"]["NASAMS Launcher 120C"] = nil
-ctld.i18n["en"]["NASAMS Search/Track Radar"] = nil
-ctld.i18n["en"]["NASAMS Command Post"] = nil
-ctld.i18n["en"]["NASAMS Repair"] = nil
-ctld.i18n["en"]["KUB Launcher"] = nil
-ctld.i18n["en"]["KUB Radar"] = nil
-ctld.i18n["en"]["KUB Repair"] = nil
-ctld.i18n["en"]["BUK Launcher"] = nil
-ctld.i18n["en"]["BUK Search Radar"] = nil
-ctld.i18n["en"]["BUK CC Radar"] = nil
-ctld.i18n["en"]["BUK Repair"] = nil
-ctld.i18n["en"]["Patriot Launcher"] = nil
-ctld.i18n["en"]["Patriot Radar"] = nil
-ctld.i18n["en"]["Patriot ECS"] = nil
-ctld.i18n["en"]["Patriot ICC"] = nil
-ctld.i18n["en"]["Patriot EPP"] = nil
-ctld.i18n["en"]["Patriot AMG (optional)"] = nil
-ctld.i18n["en"]["Patriot Repair"] = nil
-ctld.i18n["en"]["S-300 Grumble TEL C"] = nil
-ctld.i18n["en"]["S-300 Grumble Flap Lid-A TR"] = nil
-ctld.i18n["en"]["S-300 Grumble Clam Shell SR"] = nil
-ctld.i18n["en"]["S-300 Grumble Big Bird SR"] = nil
-ctld.i18n["en"]["S-300 Grumble C2"] = nil
-ctld.i18n["en"]["S-300 Repair"] = nil
+ctld.i18n["en"]["Humvee - MG"] = ""
+ctld.i18n["en"]["Humvee - TOW"] = ""
+ctld.i18n["en"]["Light Tank - MRAP"] = ""
+ctld.i18n["en"]["Med Tank - LAV-25"] = ""
+ctld.i18n["en"]["Heavy Tank - Abrams"] = ""
+ctld.i18n["en"]["BTR-D"] = ""
+ctld.i18n["en"]["BRDM-2"] = ""
+ctld.i18n["en"]["Hummer - JTAC"] = ""
+ctld.i18n["en"]["M-818 Ammo Truck"] = ""
+ctld.i18n["en"]["M-978 Tanker"] = ""
+ctld.i18n["en"]["SKP-11 - JTAC"] = ""
+ctld.i18n["en"]["Ural-375 Ammo Truck"] = ""
+ctld.i18n["en"]["KAMAZ Ammo Truck"] = ""
+ctld.i18n["en"]["EWR Radar"] = ""
+ctld.i18n["en"]["FOB Crate - Small"] = ""
+ctld.i18n["en"]["MQ-9 Repear - JTAC"] = ""
+ctld.i18n["en"]["RQ-1A Predator - JTAC"] = ""
+ctld.i18n["en"]["MLRS"] = ""
+ctld.i18n["en"]["SpGH DANA"] = ""
+ctld.i18n["en"]["T155 Firtina"] = ""
+ctld.i18n["en"]["Howitzer"] = ""
+ctld.i18n["en"]["SPH 2S19 Msta"] = ""
+ctld.i18n["en"]["M1097 Avenger"] = ""
+ctld.i18n["en"]["M48 Chaparral"] = ""
+ctld.i18n["en"]["Roland ADS"] = ""
+ctld.i18n["en"]["Gepard AAA"] = ""
+ctld.i18n["en"]["LPWS C-RAM"] = ""
+ctld.i18n["en"]["9K33 Osa"] = ""
+ctld.i18n["en"]["9P31 Strela-1"] = ""
+ctld.i18n["en"]["9K35M Strela-10"] = ""
+ctld.i18n["en"]["9K331 Tor"] = ""
+ctld.i18n["en"]["2K22 Tunguska"] = ""
+ctld.i18n["en"]["HAWK Launcher"] = ""
+ctld.i18n["en"]["HAWK Search Radar"] = ""
+ctld.i18n["en"]["HAWK Track Radar"] = ""
+ctld.i18n["en"]["HAWK PCP"] = ""
+ctld.i18n["en"]["HAWK CWAR"] = ""
+ctld.i18n["en"]["HAWK Repair"] = ""
+ctld.i18n["en"]["NASAMS Launcher 120C"] = ""
+ctld.i18n["en"]["NASAMS Search/Track Radar"] = ""
+ctld.i18n["en"]["NASAMS Command Post"] = ""
+ctld.i18n["en"]["NASAMS Repair"] = ""
+ctld.i18n["en"]["KUB Launcher"] = ""
+ctld.i18n["en"]["KUB Radar"] = ""
+ctld.i18n["en"]["KUB Repair"] = ""
+ctld.i18n["en"]["BUK Launcher"] = ""
+ctld.i18n["en"]["BUK Search Radar"] = ""
+ctld.i18n["en"]["BUK CC Radar"] = ""
+ctld.i18n["en"]["BUK Repair"] = ""
+ctld.i18n["en"]["Patriot Launcher"] = ""
+ctld.i18n["en"]["Patriot Radar"] = ""
+ctld.i18n["en"]["Patriot ECS"] = ""
+ctld.i18n["en"]["Patriot ICC"] = ""
+ctld.i18n["en"]["Patriot EPP"] = ""
+ctld.i18n["en"]["Patriot AMG (optional)"] = ""
+ctld.i18n["en"]["Patriot Repair"] = ""
+ctld.i18n["en"]["S-300 Grumble TEL C"] = ""
+ctld.i18n["en"]["S-300 Grumble Flap Lid-A TR"] = ""
+ctld.i18n["en"]["S-300 Grumble Clam Shell SR"] = ""
+ctld.i18n["en"]["S-300 Grumble Big Bird SR"] = ""
+ctld.i18n["en"]["S-300 Grumble C2"] = ""
+ctld.i18n["en"]["S-300 Repair"] = ""
+ctld.i18n["en"]["Humvee - TOW - All crates"] = ""
+ctld.i18n["en"]["Light Tank - MRAP - All crates"] = ""
+ctld.i18n["en"]["Med Tank - LAV-25 - All crates"] = ""
+ctld.i18n["en"]["Heavy Tank - Abrams - All crates"] = ""
+ctld.i18n["en"]["Hummer - JTAC - All crates"] = ""
+ctld.i18n["en"]["M-818 Ammo Truck - All crates"] = ""
+ctld.i18n["en"]["M-978 Tanker - All crates"] = ""
+ctld.i18n["en"]["Ural-375 Ammo Truck - All crates"] = ""
+ctld.i18n["en"]["EWR Radar - All crates"] = ""
+ctld.i18n["en"]["MLRS - All crates"] = ""
+ctld.i18n["en"]["SpGH DANA - All crates"] = ""
+ctld.i18n["en"]["T155 Firtina - All crates"] = ""
+ctld.i18n["en"]["Howitzer - All crates"] = ""
+ctld.i18n["en"]["SPH 2S19 Msta - All crates"] = ""
+ctld.i18n["en"]["M1097 Avenger - All crates"] = ""
+ctld.i18n["en"]["M48 Chaparral - All crates"] = ""
+ctld.i18n["en"]["Roland ADS - All crates"] = ""
+ctld.i18n["en"]["Gepard AAA - All crates"] = ""
+ctld.i18n["en"]["LPWS C-RAM - All crates"] = ""
+ctld.i18n["en"]["9K33 Osa - All crates"] = ""
+ctld.i18n["en"]["9P31 Strela-1 - All crates"] = ""
+ctld.i18n["en"]["9K35M Strela-10 - All crates"] = ""
+ctld.i18n["en"]["9K331 Tor - All crates"] = ""
+ctld.i18n["en"]["2K22 Tunguska - All crates"] = ""
+ctld.i18n["en"]["HAWK - All crates"] = ""
+ctld.i18n["en"]["NASAMS - All crates"] = ""
+ctld.i18n["en"]["KUB - All crates"] = ""
+ctld.i18n["en"]["BUK - All crates"] = ""
+ctld.i18n["en"]["Patriot - All crates"] = ""
+ctld.i18n["en"]["Patriot - All crates"] = ""
 
 --- mission design error messages
-ctld.i18n["en"]["CTLD.lua ERROR: Can't find trigger called %1"] = nil
-ctld.i18n["en"]["CTLD.lua ERROR: Can't find zone called %1"] = nil
-ctld.i18n["en"]["CTLD.lua ERROR: Can't find zone or ship called %1"] = nil
-ctld.i18n["en"]["CTLD.lua ERROR: Can't find crate with weight %1"] = nil
+ctld.i18n["en"]["CTLD.lua ERROR: Can't find trigger called %1"] = ""
+ctld.i18n["en"]["CTLD.lua ERROR: Can't find zone called %1"] = ""
+ctld.i18n["en"]["CTLD.lua ERROR: Can't find zone or ship called %1"] = ""
+ctld.i18n["en"]["CTLD.lua ERROR: Can't find crate with weight %1"] = ""
 
 --- runtime messages
-ctld.i18n["en"]["You are not close enough to friendly logistics to get a crate!"] = nil
-ctld.i18n["en"]["No more JTAC Crates Left!"] = nil
-ctld.i18n["en"]["Sorry you must wait %1 seconds before you can get another crate"] = nil
-ctld.i18n["en"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = nil
-ctld.i18n["en"]["%1 fast-ropped troops from %2 into combat"] = nil
-ctld.i18n["en"]["%1 dropped troops from %2 into combat"] = nil
-ctld.i18n["en"]["%1 fast-ropped troops from %2 into %3"] = nil
-ctld.i18n["en"]["%1 dropped troops from %2 into %3"] = nil
-ctld.i18n["en"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] = nil
-ctld.i18n["en"]["%1 dropped vehicles from %2 into combat"] = nil
-ctld.i18n["en"]["%1 loaded troops into %2"] = nil
-ctld.i18n["en"]["%1 loaded %2 vehicles into %3"] = nil
-ctld.i18n["en"]["%1 delivered a FOB Crate"] = nil
-ctld.i18n["en"]["Delivered FOB Crate 60m at 6'oclock to you"] = nil
-ctld.i18n["en"]["FOB Crate dropped back to base"] = nil
-ctld.i18n["en"]["FOB Crate Loaded"] = nil
-ctld.i18n["en"]["%1 loaded a FOB Crate ready for delivery!"] = nil
-ctld.i18n["en"]["There are no friendly logistic units nearby to load a FOB crate from!"] = nil
-ctld.i18n["en"]["You already have troops onboard."] = nil
-ctld.i18n["en"]["You already have vehicles onboard."] = nil
-ctld.i18n["en"]["This area has no more reinforcements available!"] = nil
-ctld.i18n["en"]["You are not in a pickup zone and no one is nearby to extract"] = nil
-ctld.i18n["en"]["You are not in a pickup zone"] = nil
-ctld.i18n["en"]["No one to unload"] = nil
-ctld.i18n["en"]["Dropped troops back to base"] = nil
-ctld.i18n["en"]["Dropped vehicles back to base"] = nil
-ctld.i18n["en"]["You already have troops onboard."] = nil
-ctld.i18n["en"]["You already have vehicles onboard."] = nil
-ctld.i18n["en"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = nil
-ctld.i18n["en"]["%1 extracted troops in %2 from combat"] = nil
-ctld.i18n["en"]["No extractable troops nearby!"] = nil
-ctld.i18n["en"]["%1 extracted vehicles in %2 from combat"] = nil
-ctld.i18n["en"]["No extractable vehicles nearby!"] = nil
-ctld.i18n["en"]["%1 troops onboard (%2 kg)\n"] = nil
-ctld.i18n["en"]["%1 vehicles onboard (%2)\n"] = nil
-ctld.i18n["en"]["1 FOB Crate oboard (%1 kg)\n"] = nil
-ctld.i18n["en"]["%1 crate onboard (%2 kg)\n"] = nil
-ctld.i18n["en"]["Total weight of cargo : %1 kg\n"] = nil
-ctld.i18n["en"]["No cargo."] = nil
-ctld.i18n["en"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = nil
-ctld.i18n["en"]["Loaded %1 crate!"] = nil
-ctld.i18n["en"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = nil
-ctld.i18n["en"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = nil
-ctld.i18n["en"]["You must land before you can load a crate!"] = nil
-ctld.i18n["en"]["No Crates within 50m to load!"] = nil
-ctld.i18n["en"]["Maximum number of crates are on board!"] = nil
-ctld.i18n["en"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = nil
-ctld.i18n["en"]["FOB Crate - %1 m - %2 o'clock\n"] = nil
-ctld.i18n["en"]["No Nearby Crates"] = nil
-ctld.i18n["en"]["Nearby Crates:\n%1"] = nil
-ctld.i18n["en"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = nil
-ctld.i18n["en"]["FOB Positions:"] = nil
-ctld.i18n["en"]["%1\nFOB @ %2"] = nil
-ctld.i18n["en"]["Sorry, there are no active FOBs!"] = nil
-ctld.i18n["en"]["You can't unpack that here! Take it to where it's needed!"] = nil
-ctld.i18n["en"]["Sorry you must move this crate before you unpack it!"] = nil
-ctld.i18n["en"]["%1 successfully deployed %2 to the field"] = nil
-ctld.i18n["en"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = nil
-ctld.i18n["en"]["Finished building FOB! Crates and Troops can now be picked up."] = nil
-ctld.i18n["en"]["Finished building FOB! Crates can now be picked up."] = nil
-ctld.i18n["en"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] = nil
-ctld.i18n["en"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] = nil
-ctld.i18n["en"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = nil
-ctld.i18n["en"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = nil
-ctld.i18n["en"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = nil
-ctld.i18n["en"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = nil
-ctld.i18n["en"]["%1 crate has been safely dropped below you"] = nil
-ctld.i18n["en"]["You were too high! The crate has been destroyed"] = nil
-ctld.i18n["en"]["Radio Beacons:\n%1"] = nil
-ctld.i18n["en"]["No Active Radio Beacons"] = nil
-ctld.i18n["en"]["%1 deployed a Radio Beacon.\n\n%2"] = nil
-ctld.i18n["en"]["You need to land before you can deploy a Radio Beacon!"] = nil
-ctld.i18n["en"]["%1 removed a Radio Beacon.\n\n%2"] = nil
-ctld.i18n["en"]["No Radio Beacons within 500m."] = nil
-ctld.i18n["en"]["You need to land before remove a Radio Beacon"] = nil
-ctld.i18n["en"]["%1 successfully rearmed a full %2 in the field"] = nil
-ctld.i18n["en"]["Missing %1\n"] = nil
-ctld.i18n["en"]["Out of parts for AA Systems. Current limit is %1\n"] = nil
-ctld.i18n["en"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] = nil
-ctld.i18n["en"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] = nil
-ctld.i18n["en"]["%1 successfully repaired a full %2 in the field."] = nil
-ctld.i18n["en"]["Cannot repair %1. No damaged %2 within 300m"] = nil
-ctld.i18n["en"]["%1 successfully deployed %2 to the field using %3 crates."] = nil
-ctld.i18n["en"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = nil
-ctld.i18n["en"]["%1 dropped %2 smoke."] = nil
+ctld.i18n["en"]["You are not close enough to friendly logistics to get a crate!"] = ""
+ctld.i18n["en"]["No more JTAC Crates Left!"] = ""
+ctld.i18n["en"]["Sorry you must wait %1 seconds before you can get another crate"] = ""
+ctld.i18n["en"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = ""
+ctld.i18n["en"]["%1 fast-ropped troops from %2 into combat"] = ""
+ctld.i18n["en"]["%1 dropped troops from %2 into combat"] = ""
+ctld.i18n["en"]["%1 fast-ropped troops from %2 into %3"] = ""
+ctld.i18n["en"]["%1 dropped troops from %2 into %3"] = ""
+ctld.i18n["en"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] = ""
+ctld.i18n["en"]["%1 dropped vehicles from %2 into combat"] = ""
+ctld.i18n["en"]["%1 loaded troops into %2"] = ""
+ctld.i18n["en"]["%1 loaded %2 vehicles into %3"] = ""
+ctld.i18n["en"]["%1 delivered a FOB Crate"] = ""
+ctld.i18n["en"]["Delivered FOB Crate 60m at 6'oclock to you"] = ""
+ctld.i18n["en"]["FOB Crate dropped back to base"] = ""
+ctld.i18n["en"]["FOB Crate Loaded"] = ""
+ctld.i18n["en"]["%1 loaded a FOB Crate ready for delivery!"] = ""
+ctld.i18n["en"]["There are no friendly logistic units nearby to load a FOB crate from!"] = ""
+ctld.i18n["en"]["You already have troops onboard."] = ""
+ctld.i18n["en"]["You already have vehicles onboard."] = ""
+ctld.i18n["en"]["This area has no more reinforcements available!"] = ""
+ctld.i18n["en"]["You are not in a pickup zone and no one is nearby to extract"] = ""
+ctld.i18n["en"]["You are not in a pickup zone"] = ""
+ctld.i18n["en"]["No one to unload"] = ""
+ctld.i18n["en"]["Dropped troops back to base"] = ""
+ctld.i18n["en"]["Dropped vehicles back to base"] = ""
+ctld.i18n["en"]["You already have troops onboard."] = ""
+ctld.i18n["en"]["You already have vehicles onboard."] = ""
+ctld.i18n["en"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = ""
+ctld.i18n["en"]["%1 extracted troops in %2 from combat"] = ""
+ctld.i18n["en"]["No extractable troops nearby!"] = ""
+ctld.i18n["en"]["%1 extracted vehicles in %2 from combat"] = ""
+ctld.i18n["en"]["No extractable vehicles nearby!"] = ""
+ctld.i18n["en"]["%1 troops onboard (%2 kg)\n"] = ""
+ctld.i18n["en"]["%1 vehicles onboard (%2)\n"] = ""
+ctld.i18n["en"]["1 FOB Crate oboard (%1 kg)\n"] = ""
+ctld.i18n["en"]["%1 crate onboard (%2 kg)\n"] = ""
+ctld.i18n["en"]["Total weight of cargo : %1 kg\n"] = ""
+ctld.i18n["en"]["No cargo."] = ""
+ctld.i18n["en"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = ""
+ctld.i18n["en"]["Loaded %1 crate!"] = ""
+ctld.i18n["en"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = ""
+ctld.i18n["en"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = ""
+ctld.i18n["en"]["You must land before you can load a crate!"] = ""
+ctld.i18n["en"]["No Crates within 50m to load!"] = ""
+ctld.i18n["en"]["Maximum number of crates are on board!"] = ""
+ctld.i18n["en"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = ""
+ctld.i18n["en"]["FOB Crate - %1 m - %2 o'clock\n"] = ""
+ctld.i18n["en"]["No Nearby Crates"] = ""
+ctld.i18n["en"]["Nearby Crates:\n%1"] = ""
+ctld.i18n["en"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = ""
+ctld.i18n["en"]["FOB Positions:"] = ""
+ctld.i18n["en"]["%1\nFOB @ %2"] = ""
+ctld.i18n["en"]["Sorry, there are no active FOBs!"] = ""
+ctld.i18n["en"]["You can't unpack that here! Take it to where it's needed!"] = ""
+ctld.i18n["en"]["Sorry you must move this crate before you unpack it!"] = ""
+ctld.i18n["en"]["%1 successfully deployed %2 to the field"] = ""
+ctld.i18n["en"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = ""
+ctld.i18n["en"]["Finished building FOB! Crates and Troops can now be picked up."] = ""
+ctld.i18n["en"]["Finished building FOB! Crates can now be picked up."] = ""
+ctld.i18n["en"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] = ""
+ctld.i18n["en"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] = ""
+ctld.i18n["en"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = ""
+ctld.i18n["en"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = ""
+ctld.i18n["en"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = ""
+ctld.i18n["en"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = ""
+ctld.i18n["en"]["%1 crate has been safely dropped below you"] = ""
+ctld.i18n["en"]["You were too high! The crate has been destroyed"] = ""
+ctld.i18n["en"]["Radio Beacons:\n%1"] = ""
+ctld.i18n["en"]["No Active Radio Beacons"] = ""
+ctld.i18n["en"]["%1 deployed a Radio Beacon.\n\n%2"] = ""
+ctld.i18n["en"]["You need to land before you can deploy a Radio Beacon!"] = ""
+ctld.i18n["en"]["%1 removed a Radio Beacon.\n\n%2"] = ""
+ctld.i18n["en"]["No Radio Beacons within 500m."] = ""
+ctld.i18n["en"]["You need to land before remove a Radio Beacon"] = ""
+ctld.i18n["en"]["%1 successfully rearmed a full %2 in the field"] = ""
+ctld.i18n["en"]["Missing %1\n"] = ""
+ctld.i18n["en"]["Out of parts for AA Systems. Current limit is %1\n"] = ""
+ctld.i18n["en"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] = ""
+ctld.i18n["en"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] = ""
+ctld.i18n["en"]["%1 successfully repaired a full %2 in the field."] = ""
+ctld.i18n["en"]["Cannot repair %1. No damaged %2 within 300m"] = ""
+ctld.i18n["en"]["%1 successfully deployed %2 to the field using %3 crates."] = ""
+ctld.i18n["en"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = ""
+ctld.i18n["en"]["%1 dropped %2 smoke."] = ""
 
 --- JTAC messages
-ctld.i18n["en"]["JTAC Group %1 KIA!"] = nil
-ctld.i18n["en"]["%1, selected target reacquired, %2"] = nil
-ctld.i18n["en"][". CODE: %1. POSITION: %2"] = nil
-ctld.i18n["en"]["new target, "] = nil
-ctld.i18n["en"]["standing by on %1"] = nil
-ctld.i18n["en"]["lasing %1"] = nil
-ctld.i18n["en"][", temporarily %1"] = nil
-ctld.i18n["en"]["target lost"] = nil
-ctld.i18n["en"]["target destroyed"] = nil
-ctld.i18n["en"][", selected %1"] = nil
-ctld.i18n["en"]["%1 %2 target lost."] = nil
-ctld.i18n["en"]["%1 %2 target destroyed."] = nil
-ctld.i18n["en"]["JTAC STATUS: \n\n"] = nil
-ctld.i18n["en"][", available on %1 %2,"] = nil
-ctld.i18n["en"]["UNKNOWN"] = nil
-ctld.i18n["en"][" targeting "] = nil
-ctld.i18n["en"][" targeting selected unit "] = nil
-ctld.i18n["en"][" attempting to find selected unit, temporarily targeting "] = nil
-ctld.i18n["en"]["(Laser OFF) "] = nil
-ctld.i18n["en"]["Visual On: "] = nil
-ctld.i18n["en"][" searching for targets %1\n"] = nil
-ctld.i18n["en"]["No Active JTACs"] = nil
-ctld.i18n["en"][", targeting selected unit, %1"] = nil
-ctld.i18n["en"][". CODE: %1. POSITION: %2"] = nil
-ctld.i18n["en"][", target selection reset."] = nil
-ctld.i18n["en"]["%1, laser and smokes enabled"] = nil
-ctld.i18n["en"]["%1, laser and smokes disabled"] = nil
-ctld.i18n["en"]["%1, wind and target speed laser spot compensations enabled"] = nil
-ctld.i18n["en"]["%1, wind and target speed laser spot compensations disabled"] = nil
-ctld.i18n["en"]["%1, WHITE smoke deployed near target"] = nil
+ctld.i18n["en"]["JTAC Group %1 KIA!"] = ""
+ctld.i18n["en"]["%1, selected target reacquired, %2"] = ""
+ctld.i18n["en"][". CODE: %1. POSITION: %2"] = ""
+ctld.i18n["en"]["new target, "] = ""
+ctld.i18n["en"]["standing by on %1"] = ""
+ctld.i18n["en"]["lasing %1"] = ""
+ctld.i18n["en"][", temporarily %1"] = ""
+ctld.i18n["en"]["target lost"] = ""
+ctld.i18n["en"]["target destroyed"] = ""
+ctld.i18n["en"][", selected %1"] = ""
+ctld.i18n["en"]["%1 %2 target lost."] = ""
+ctld.i18n["en"]["%1 %2 target destroyed."] = ""
+ctld.i18n["en"]["JTAC STATUS: \n\n"] = ""
+ctld.i18n["en"][", available on %1 %2,"] = ""
+ctld.i18n["en"]["UNKNOWN"] = ""
+ctld.i18n["en"][" targeting "] = ""
+ctld.i18n["en"][" targeting selected unit "] = ""
+ctld.i18n["en"][" attempting to find selected unit, temporarily targeting "] = ""
+ctld.i18n["en"]["(Laser OFF) "] = ""
+ctld.i18n["en"]["Visual On: "] = ""
+ctld.i18n["en"][" searching for targets %1\n"] = ""
+ctld.i18n["en"]["No Active JTACs"] = ""
+ctld.i18n["en"][", targeting selected unit, %1"] = ""
+ctld.i18n["en"][". CODE: %1. POSITION: %2"] = ""
+ctld.i18n["en"][", target selection reset."] = ""
+ctld.i18n["en"]["%1, laser and smokes enabled"] = ""
+ctld.i18n["en"]["%1, laser and smokes disabled"] = ""
+ctld.i18n["en"]["%1, wind and target speed laser spot compensations enabled"] = ""
+ctld.i18n["en"]["%1, wind and target speed laser spot compensations disabled"] = ""
+ctld.i18n["en"]["%1, WHITE smoke deployed near target"] = ""
 
 --- F10 menu messages
-ctld.i18n["en"]["Actions"] = nil
-ctld.i18n["en"]["Troop Transport"] = nil
-ctld.i18n["en"]["Unload / Extract Troops"] = nil
-ctld.i18n["en"]["Next page"] = nil
-ctld.i18n["en"]["Load "] = nil
-ctld.i18n["en"]["Vehicle / FOB Transport"] = nil
-ctld.i18n["en"]["Vehicle / FOB Crates / Drone"] = nil
-ctld.i18n["en"]["Unload Vehicles"] = nil
-ctld.i18n["en"]["Load / Extract Vehicles"] = nil
-ctld.i18n["en"]["Load / Unload FOB Crate"] = nil
-ctld.i18n["en"]["CTLD Commands"] = nil
-ctld.i18n["en"]["CTLD"] = nil
-ctld.i18n["en"]["Check Cargo"] = nil
-ctld.i18n["en"]["Load Nearby Crate"] = nil
-ctld.i18n["en"]["Unpack Any Crate"] = nil
-ctld.i18n["en"]["Drop Crate"] = nil
-ctld.i18n["en"]["List Nearby Crates"] = nil
-ctld.i18n["en"]["List FOBs"] = nil
-ctld.i18n["en"]["List Beacons"] = nil
-ctld.i18n["en"]["List Radio Beacons"] = nil
-ctld.i18n["en"]["Smoke Markers"] = nil
-ctld.i18n["en"]["Drop Red Smoke"] = nil
-ctld.i18n["en"]["Drop Blue Smoke"] = nil
-ctld.i18n["en"]["Drop Orange Smoke"] = nil
-ctld.i18n["en"]["Drop Green Smoke"] = nil
-ctld.i18n["en"]["Drop Beacon"] = nil
-ctld.i18n["en"]["Radio Beacons"] = nil
-ctld.i18n["en"]["Remove Closest Beacon"] = nil
-ctld.i18n["en"]["JTAC Status"] = nil
-ctld.i18n["en"]["DISABLE "] = nil
-ctld.i18n["en"]["ENABLE "] = nil
-ctld.i18n["en"]["REQUEST "] = nil
-ctld.i18n["en"]["Reset TGT Selection"] = nil
+ctld.i18n["en"]["Actions"] = ""
+ctld.i18n["en"]["Troop Transport"] = ""
+ctld.i18n["en"]["Unload / Extract Troops"] = ""
+ctld.i18n["en"]["Next page"] = ""
+ctld.i18n["en"]["Load "] = ""
+ctld.i18n["en"]["Vehicle / FOB Transport"] = ""
+ctld.i18n["en"]["Vehicle / FOB Crates / Drone"] = ""
+ctld.i18n["en"]["Unload Vehicles"] = ""
+ctld.i18n["en"]["Load / Extract Vehicles"] = ""
+ctld.i18n["en"]["Load / Unload FOB Crate"] = ""
+ctld.i18n["en"]["CTLD Commands"] = ""
+ctld.i18n["en"]["CTLD"] = ""
+ctld.i18n["en"]["Check Cargo"] = ""
+ctld.i18n["en"]["Load Nearby Crate(s)"] = ""
+ctld.i18n["en"]["Unpack Any Crate"] = ""
+ctld.i18n["en"]["Drop Crate(s)"] = ""
+ctld.i18n["en"]["List Nearby Crates"] = ""
+ctld.i18n["en"]["List FOBs"] = ""
+ctld.i18n["en"]["List Beacons"] = ""
+ctld.i18n["en"]["List Radio Beacons"] = ""
+ctld.i18n["en"]["Smoke Markers"] = ""
+ctld.i18n["en"]["Drop Red Smoke"] = ""
+ctld.i18n["en"]["Drop Blue Smoke"] = ""
+ctld.i18n["en"]["Drop Orange Smoke"] = ""
+ctld.i18n["en"]["Drop Green Smoke"] = ""
+ctld.i18n["en"]["Drop Beacon"] = ""
+ctld.i18n["en"]["Radio Beacons"] = ""
+ctld.i18n["en"]["Remove Closest Beacon"] = ""
+ctld.i18n["en"]["JTAC Status"] = ""
+ctld.i18n["en"]["DISABLE "] = ""
+ctld.i18n["en"]["ENABLE "] = ""
+ctld.i18n["en"]["REQUEST "] = ""
+ctld.i18n["en"]["Reset TGT Selection"] = ""
 -- F10 RECON menus
-ctld.i18n["en"]["RECON"] = nil
-ctld.i18n["en"]["Show targets in LOS (refresh)"] = nil
-ctld.i18n["en"]["Hide targets in LOS"] = nil
-ctld.i18n["en"]["START autoRefresh targets in LOS"] = nil
-ctld.i18n["en"]["STOP autoRefresh targets in LOS"] = nil
+ctld.i18n["en"]["RECON"] = ""
+ctld.i18n["en"]["Show targets in LOS (refresh)"] = ""
+ctld.i18n["en"]["Hide targets in LOS"] = ""
+ctld.i18n["en"]["START autoRefresh targets in LOS"] = ""
+ctld.i18n["en"]["STOP autoRefresh targets in LOS"] = ""
 
 --- Translates a string (text) with parameters (parameters) to the language defined in ctld.i18n_lang
 ---@param text string The text to translate, with the parameters as %1, %2, etc. (all strings!!!!)
@@ -340,7 +370,7 @@ function ctld.i18n_translate(text, ...)
     end
 
     -- default to the provided text
-    if _text == nil then
+    if _text == nil or _text == "" then
         _text = text
     end
 
@@ -368,7 +398,7 @@ ctld.disableAllSmoke = false -- if true, all smoke is diabled at pickup and drop
 ctld.addPlayerAircraftByType = true
 
 ctld.hoverPickup = true --  if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
-ctld.loadCrateFromMenu = false -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
+ctld.loadCrateFromMenu = true -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
 ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
@@ -836,8 +866,8 @@ ctld.unitLoadLimits = {
 ctld.internalCargoLimits = {
 
     -- Remove the -- below to turn on options
-    --["Mi-8MT"] = 2,
-    --["CH-47Fbl1"] = 4,
+    ["Mi-8MT"] = 2,
+    ["CH-47Fbl1"] = 8,
 }
 
 
@@ -980,9 +1010,13 @@ ctld.spawnableCrates = {
         --- BLUE
         { weight = 1000.01, desc = ctld.i18n_translate("Humvee - MG"), unit = "M1043 HMMWV Armament", side = 2 },  --careful with the names as the script matches the desc to JTAC types
         { weight = 1000.02, desc = ctld.i18n_translate("Humvee - TOW"), unit = "M1045 HMMWV TOW", side = 2, cratesRequired = 2 },
+        { multiple = {1000.02, 1000.02}, desc = ctld.i18n_translate("Humvee - TOW - All crates"), side = 2 },
         { weight = 1000.03, desc = ctld.i18n_translate("Light Tank - MRAP"), unit="MaxxPro_MRAP", side = 2, cratesRequired = 2 },
+        { multiple = {1000.03, 1000.03}, desc = ctld.i18n_translate("Light Tank - MRAP - All crates"), side = 2 },
         { weight = 1000.04, desc = ctld.i18n_translate("Med Tank - LAV-25"), unit="LAV-25", side = 2, cratesRequired = 3 },
+        { multiple = {1000.04, 1000.04, 1000.04}, desc = ctld.i18n_translate("Med Tank - LAV-25 - All crates"), side = 2 },
         { weight = 1000.05, desc = ctld.i18n_translate("Heavy Tank - Abrams"), unit="M1A2C_SEP_V3", side = 2, cratesRequired = 4 },
+        { multiple = {1000.05, 1000.05, 1000.05, 1000.05}, desc = ctld.i18n_translate("Heavy Tank - Abrams - All crates"), side = 2 },
 
         --- RED
         { weight = 1000.11, desc = ctld.i18n_translate("BTR-D"), unit = "BTR_D", side = 1 },
@@ -992,44 +1026,64 @@ ctld.spawnableCrates = {
     ["Support"] = {
         --- BLUE
         { weight = 1001.01, desc = ctld.i18n_translate("Hummer - JTAC"), unit = "Hummer", side = 2, cratesRequired = 2 }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
+        { multiple = {1001.01, 1001.01}, desc = ctld.i18n_translate("Hummer - JTAC - All crates"), side = 2 },
         { weight = 1001.02, desc = ctld.i18n_translate("M-818 Ammo Truck"), unit = "M 818", side = 2, cratesRequired = 2 },
+        { multiple = {1001.02, 1001.02}, desc = ctld.i18n_translate("M-818 Ammo Truck - All crates"), side = 2 },
         { weight = 1001.03, desc = ctld.i18n_translate("M-978 Tanker"), unit = "M978 HEMTT Tanker", side = 2, cratesRequired = 2 },
+        { multiple = {1001.03, 1001.03}, desc = ctld.i18n_translate("M-978 Tanker - All crates"), side = 2 },
 
          --- RED
         { weight = 1001.11, desc = ctld.i18n_translate("SKP-11 - JTAC"), unit = "SKP-11", side = 1 }, -- used as jtac and unarmed, not on the crate list if JTAC is disabled
         { weight = 1001.12, desc = ctld.i18n_translate("Ural-375 Ammo Truck"), unit = "Ural-375", side = 1, cratesRequired = 2 },
+        { multiple = {1001.12, 1001.12}, desc = ctld.i18n_translate("Ural-375 Ammo Truck - All crates"), side = 1 },
         { weight = 1001.13, desc = ctld.i18n_translate("KAMAZ Ammo Truck"), unit = "KAMAZ Truck", side = 1, cratesRequired = 2 },
 
         --- Both
         { weight = 1001.21, desc = ctld.i18n_translate("EWR Radar"), unit="FPS-117", cratesRequired = 3 },
+        { multiple = {1001.21, 1001.21, 1001.21}, desc = ctld.i18n_translate("EWR Radar - All crates") },
         { weight = 1001.22, desc = ctld.i18n_translate("FOB Crate - Small"), unit = "FOB-SMALL" }, -- Builds a FOB! - requires 3 * ctld.cratesRequiredForFOB
 
     },
     ["Artillery"] = {
         --- BLUE
         { weight = 1002.01, desc = ctld.i18n_translate("MLRS"), unit = "MLRS", side=2, cratesRequired = 3 },
+        { multiple = {1002.01, 1002.01, 1002.01}, desc = ctld.i18n_translate("MLRS - All crates"), side=2 },
         { weight = 1002.02, desc = ctld.i18n_translate("SpGH DANA"), unit = "SpGH_Dana", side=2, cratesRequired = 3 },
+        { multiple = {1002.02, 1002.02, 1002.02}, desc = ctld.i18n_translate("SpGH DANA - All crates"), side=2 },
         { weight = 1002.03, desc = ctld.i18n_translate("T155 Firtina"), unit = "T155_Firtina", side=2, cratesRequired = 3 },
+        { multiple = {1002.03, 1002.03, 1002.03}, desc = ctld.i18n_translate("T155 Firtina - All crates"), side=2 },
         { weight = 1002.04, desc = ctld.i18n_translate("Howitzer"), unit = "M-109", side=2, cratesRequired = 3 },
+        { multiple = {1002.04, 1002.04, 1002.04}, desc = ctld.i18n_translate("Howitzer - All crates"), side=2 },
 
         --- RED
         { weight = 1002.11, desc = ctld.i18n_translate("SPH 2S19 Msta"), unit = "SAU Msta", side = 1, cratesRequired = 3 },
+        { multiple = {1002.11, 1002.11, 1002.11}, desc = ctld.i18n_translate("SPH 2S19 Msta - All crates"), side=1 },
 
     },
     ["SAM short range"] = {
         --- BLUE
         { weight = 1003.01, desc = ctld.i18n_translate("M1097 Avenger"), unit = "M1097 Avenger", side = 2, cratesRequired = 3 },
+        { multiple = {1003.01, 1003.01, 1003.01}, desc = ctld.i18n_translate("M1097 Avenger - All crates"), side=2 },
         { weight = 1003.02, desc = ctld.i18n_translate("M48 Chaparral"), unit = "M48 Chaparral", side = 2, cratesRequired = 2 },
+        { multiple = {1003.02, 1003.02}, desc = ctld.i18n_translate("M48 Chaparral - All crates"), side=2 },
         { weight = 1003.03, desc = ctld.i18n_translate("Roland ADS"), unit = "Roland ADS", side = 2, cratesRequired = 3 },
+        { multiple = {1003.03, 1003.03, 1003.03}, desc = ctld.i18n_translate("Roland ADS - All crates"), side=2 },
         { weight = 1003.04, desc = ctld.i18n_translate("Gepard AAA"), unit = "Gepard", side = 2, cratesRequired = 3 },
+        { multiple = {1003.04, 1003.04, 1003.04}, desc = ctld.i18n_translate("Gepard AAA - All crates"), side=2 },
         { weight = 1003.05, desc = ctld.i18n_translate("LPWS C-RAM"), unit = "HEMTT_C-RAM_Phalanx", side = 2, cratesRequired = 3 },
+        { multiple = {1003.05, 1003.05, 1003.05}, desc = ctld.i18n_translate("LPWS C-RAM - All crates"), side=2 },
 
         --- RED
         { weight = 1003.11, desc = ctld.i18n_translate("9K33 Osa"), unit = "Osa 9A33 ln", side = 1, cratesRequired = 3 },
+        { multiple = {1003.11, 1003.11, 1003.11}, desc = ctld.i18n_translate("9K33 Osa - All crates"), side=1 },
         { weight = 1003.12, desc = ctld.i18n_translate("9P31 Strela-1"), unit = "Strela-1 9P31", side = 1, cratesRequired = 3 },
+        { multiple = {1003.12, 1003.12, 1003.12}, desc = ctld.i18n_translate("9P31 Strela-1 - All crates"), side=1 },
         { weight = 1003.13, desc = ctld.i18n_translate("9K35M Strela-10"), unit = "Strela-10M3", side = 1, cratesRequired = 3 },
+        { multiple = {1003.13, 1003.13, 1003.13}, desc = ctld.i18n_translate("9K35M Strela-10 - All crates"), side=1 },
         { weight = 1003.14, desc = ctld.i18n_translate("9K331 Tor"), unit = "Tor 9A331", side = 1, cratesRequired = 3 },
+        { multiple = {1003.14, 1003.14, 1003.14}, desc = ctld.i18n_translate("9K331 Tor - All crates"), side=1 },
         { weight = 1003.15, desc = ctld.i18n_translate("2K22 Tunguska"), unit = "2S6 Tunguska", side = 1, cratesRequired = 3 },
+        { multiple = {1003.15, 1003.15, 1003.15}, desc = ctld.i18n_translate("2K22 Tunguska - All crates"), side=1 },
     },
     ["SAM mid range"] = {
         --- BLUE
@@ -1040,6 +1094,7 @@ ctld.spawnableCrates = {
         { weight = 1004.04, desc = ctld.i18n_translate("HAWK PCP"), unit = "Hawk pcp" , side = 2 },
         { weight = 1004.05, desc = ctld.i18n_translate("HAWK CWAR"), unit = "Hawk cwar" , side = 2 },
         { weight = 1004.06, desc = ctld.i18n_translate("HAWK Repair"), unit = "HAWK Repair" , side = 2 },
+        { multiple = {1004.01, 1004.02, 1004.03, 1004.04, 1004.05, 1004.06}, desc = ctld.i18n_translate("HAWK - All crates"), side = 2 },
         -- End of HAWK
 
         -- NASAMS Sysyem
@@ -1047,6 +1102,7 @@ ctld.spawnableCrates = {
         { weight = 1004.12, desc = ctld.i18n_translate("NASAMS Search/Track Radar"), unit = "NASAMS_Radar_MPQ64F1", side = 2 },
         { weight = 1004.13, desc = ctld.i18n_translate("NASAMS Command Post"), unit = "NASAMS_Command_Post", side = 2 },
         { weight = 1004.14, desc = ctld.i18n_translate("NASAMS Repair"), unit = "NASAMS Repair", side = 2 },
+        { multiple = {1004.11, 1004.12, 1004.13, 1004.14}, desc = ctld.i18n_translate("NASAMS - All crates"), side = 2 },
         -- End of NASAMS
 
         --- RED
@@ -1054,6 +1110,7 @@ ctld.spawnableCrates = {
         { weight = 1004.21, desc = ctld.i18n_translate("KUB Launcher"), unit = "Kub 2P25 ln", side = 1},
         { weight = 1004.22, desc = ctld.i18n_translate("KUB Radar"), unit = "Kub 1S91 str", side = 1 },
         { weight = 1004.23, desc = ctld.i18n_translate("KUB Repair"), unit = "KUB Repair", side = 1},
+        { multiple = {1004.21, 1004.22, 1004.23}, desc = ctld.i18n_translate("KUB - All crates"), side = 1 },
         -- End of KUB
 
         -- BUK System
@@ -1061,6 +1118,7 @@ ctld.spawnableCrates = {
         { weight = 1004.32, desc = ctld.i18n_translate("BUK Search Radar"), unit = "SA-11 Buk SR 9S18M1", side = 1},
         { weight = 1004.33, desc = ctld.i18n_translate("BUK CC Radar"), unit = "SA-11 Buk CC 9S470M1", side = 1},
         { weight = 1004.34, desc = ctld.i18n_translate("BUK Repair"), unit = "BUK Repair", side = 1},
+        { multiple = {1004.31, 1004.32, 1004.33, 1004.34}, desc = ctld.i18n_translate("BUK - All crates"), side = 1 },
         -- END of BUK
     },
     ["SAM long range"] = {
@@ -1073,6 +1131,7 @@ ctld.spawnableCrates = {
         -- { weight = 1005.05, desc = ctld.i18n_translate("Patriot EPP"), unit = "Patriot EPP", side = 2 },
         { weight = 1005.06, desc = ctld.i18n_translate("Patriot AMG (optional)"), unit = "Patriot AMG" , side = 2 },
         { weight = 1005.07, desc = ctld.i18n_translate("Patriot Repair"), unit = "Patriot Repair" , side = 2 },
+        { multiple = {1005.01, 1005.02, 1005.03, 1005.06, 1005.07}, desc = ctld.i18n_translate("Patriot - All crates"), side = 2 },
         -- End of Patriot
 
         -- S-300 SYSTEM
@@ -1082,6 +1141,7 @@ ctld.spawnableCrates = {
         { weight = 1005.14, desc = ctld.i18n_translate("S-300 Grumble Big Bird SR"), unit = "S-300PS 64H6E sr", side = 1 },
         { weight = 1005.15, desc = ctld.i18n_translate("S-300 Grumble C2"), unit = "S-300PS 54K6 cp", side = 1 },
         { weight = 1005.16, desc = ctld.i18n_translate("S-300 Repair"), unit = "S-300 Repair", side = 1 },
+        { multiple = {1005.11, 1005.12, 1005.13, 1005.14, 1005.15, 1005.16}, desc = ctld.i18n_translate("Patriot - All crates"), side = 1 },
         -- End of S-300
     },
     ["Drone"] = {
@@ -2059,6 +2119,12 @@ function ctld.logError(message, ...)
     env.info(" E - " .. ctld.Id .. message)
 end
 
+
+function ctld.logWarning(message, ...)
+    message = ctld.formatText(message, arg)
+    env.info(" W - " .. ctld.Id .. message)
+end
+
 function ctld.logInfo(message, ...)
     message = ctld.formatText(message, arg)
     env.info(" I - " .. ctld.Id .. message)
@@ -2109,7 +2175,7 @@ function ctld.getTransportUnit(_unitName)
     return nil
 end
 
-function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side, _hdg,_model_type)
+function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side, _hdg, _model_type)
 
     local _crate
     local _spawnedCrate
@@ -2248,6 +2314,15 @@ function ctld.spawnCrate(_arguments)
         -- use the cargo weight to guess the type of unit as no way to add description :(
 
         local _crateType = ctld.crateLookupTable[tostring(_args[2])]
+        if _crateType and _crateType.multiple then
+            for _, weight in pairs(_crateType.multiple) do
+                local _aCrateType = ctld.crateLookupTable[tostring(weight)]
+                if _aCrateType then
+                    ctld.spawnCrate({_args[1], _aCrateType.weight})
+                end
+            end
+            return
+        end
         local _heli = ctld.getTransportUnit(_args[1])
 
         if _crateType ~= nil and _heli ~= nil and ctld.inAir(_heli) == false then
@@ -2331,26 +2406,29 @@ function ctld.spawnCrate(_arguments)
     end
 end
 
+ctld.randomCrateSpacing = 12 -- meters
 function ctld.getPointAt12Oclock(_unit, _offset)
-
-    local _position = _unit:getPosition()
-    local _angle = math.atan2(_position.x.z, _position.x.x)
-    local _xOffset = math.cos(_angle) * _offset
-    local _yOffset = math.sin(_angle) * _offset
-
-    local _point = _unit:getPoint()
-    return { x = _point.x + _xOffset, z = _point.z + _yOffset, y = _point.y }
+    return ctld.getPointAtDirection(_unit, _offset, 0)
 end
 
 function ctld.getPointAt6Oclock(_unit, _offset)
+    return ctld.getPointAtDirection(_unit, _offset, math.pi)
+end
 
+function ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
+
+    ctld.logTrace("_offset = %s", ctld.p(_offset))
+    local _randomOffsetX = math.random(ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
+    local _randomOffsetZ = math.random(0, ctld.randomCrateSpacing)
+    ctld.logTrace("_randomOffsetX = %s", ctld.p(_randomOffsetX))
+    ctld.logTrace("_randomOffsetZ = %s", ctld.p(_randomOffsetZ))
     local _position = _unit:getPosition()
-    local _angle = math.atan2(_position.x.z, _position.x.x) + math.pi
-    local _xOffset = math.cos(_angle) * _offset
-    local _yOffset = math.sin(_angle) * _offset
+    local _angle = math.atan2(_position.x.z, _position.x.x) + _directionInRadian
+    local _xOffset = math.cos(_angle) * _offset + _randomOffsetX
+    local _zOffset = math.sin(_angle) * _offset + _randomOffsetZ
 
     local _point = _unit:getPoint()
-    return { x = _point.x + _xOffset, z = _point.z + _yOffset, y = _point.y }
+    return { x = _point.x + _xOffset, z = _point.z + _zOffset, y = _point.y }
 end
 
 function ctld.troopsOnboard(_heli, _troops)
@@ -3282,12 +3360,12 @@ function ctld.loadNearbyCrate(_name)
             return
         end
 
-        if #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity then
-            local _crates = ctld.getCratesAndDistance(_transUnit)
+        local _crates = ctld.getCratesAndDistance(_transUnit)
+        local loaded = false
+        for _, _crate in pairs(_crates) do
 
-            for _, _crate in pairs(_crates) do
-
-                if _crate.dist < 50.0 then
+            if _crate.dist < 50.0 then
+                if #ctld.inTransitSlingLoadCrates[_name] < _cargoCapacity then
                     ctld.displayMessageToGroup(_transUnit, ctld.i18n_translate("Loaded %1 crate!", _crate.details.desc), 10,true)
 
                     if _transUnit:getCoalition() == 1 then
@@ -3304,23 +3382,21 @@ function ctld.loadNearbyCrate(_name)
                     _copiedCrate.simulatedSlingload = true
                     table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                     ctld.adaptWeightToCargo(_name)
+                else
+                    -- Max crates onboard
+                    local outputMsg = ctld.i18n_translate("Maximum number of crates are on board!")
+                    for i = 1, _cargoCapacity do
+                        outputMsg = outputMsg .. "\n" .. ctld.inTransitSlingLoadCrates[_name][i].desc
+                    end
+                    ctld.displayMessageToGroup(_transUnit, outputMsg, 10,true)
                     return
                 end
             end
-
+        end
+        if not loaded then
             ctld.displayMessageToGroup(_transUnit, ctld.i18n_translate("No Crates within 50m to load!"), 10,true)
-
-        else
-            -- Max crates onboard
-            local outputMsg = ctld.i18n_translate("Maximum number of crates are on board!")
-            for i = 1, _cargoCapacity do
-                outputMsg = outputMsg .. "\n" .. ctld.inTransitSlingLoadCrates[_name][i].desc
-            end
-            ctld.displayMessageToGroup(_transUnit, outputMsg, 10,true)
         end
     end
-
-
 end
 
 --check each minute if the beacons' batteries have failed, and stop them accordingly
@@ -3899,38 +3975,38 @@ function ctld.dropSlingCrate(_args)
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."), 10)
         end
     else
-
         local _point = _heli:getPoint()
         local _unitId = ctld.getNextUnitId()
         local _side = _heli:getCoalition()
         local _name = string.format("%s #%i", _currentCrate.desc, _unitId)
-
+        local _model_type = nil
         local _hdg = mist.getHeading(_heli, true)
-
         local _heightDiff = ctld.heightDiff(_heli)
 
-        if ctld.inAir(_heli) == false or _heightDiff <= 7.5 then
-            _point = ctld.getPointAt12Oclock(_heli, 30)
-            local _position = "12"
-
-            if ctld.unitDynamicCargoCapable(_heli) then
-                _point = ctld.getPointAt6Oclock(_heli, 15)
-                _position = "6"
-            end
-            ctld.displayMessageToGroup(_heli, ctld.i18n_translate("%1 crate has been safely unhooked and is at your %2 o'clock", _currentCrate.desc, _position), 10)
-        elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
-            ctld.displayMessageToGroup(_heli, ctld.i18n_translate("%1 crate has been safely dropped below you", _currentCrate.desc), 10)
-        else -- _heightDiff > 40.0, destroy crate
+        if _heightDiff > 40.0 then
             table.remove(ctld.inTransitSlingLoadCrates[_unitName],#ctld.inTransitSlingLoadCrates[_unitName])
             ctld.adaptWeightToCargo(_unitName)
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You were too high! The crate has been destroyed"), 10)
             return
         end
-
-        --remove crate from cargo
-        table.remove(ctld.inTransitSlingLoadCrates[_unitName],#ctld.inTransitSlingLoadCrates[_unitName])
+        for _, _crate in pairs(ctld.inTransitSlingLoadCrates[_unitName]) do
+            if ctld.inAir(_heli) == false or _heightDiff <= 7.5 then
+                _point = ctld.getPointAt12Oclock(_heli, 30)
+                local _position = "12"
+                if ctld.unitDynamicCargoCapable(_heli) then
+                    _model_type = "dynamic"
+                    _point = ctld.getPointAt6Oclock(_heli, 15)
+                    _position = "6"
+                end
+                ctld.displayMessageToGroup(_heli, ctld.i18n_translate("%1 crate has been safely unhooked and is at your %2 o'clock", _crate.desc, _position), 10)
+            elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
+                ctld.displayMessageToGroup(_heli, ctld.i18n_translate("%1 crate has been safely dropped below you", _crate.desc), 10)
+            end
+            --remove crate from cargo
+            table.remove(ctld.inTransitSlingLoadCrates[_unitName],#ctld.inTransitSlingLoadCrates[_unitName])
+            ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _crate.weight, _side, _hdg, _model_type)
+        end
         ctld.adaptWeightToCargo(_unitName)
-        ctld.spawnCrateStatic(_heli:getCountry(), _unitId, _point, _name, _currentCrate.weight, _side, _hdg)
     end
 end
 
@@ -5509,16 +5585,15 @@ function ctld.unitDynamicCargoCapable(_unit)
 end
 
 function ctld.isJTACUnitType(_type)
-
-    _type = string.lower(_type)
-
-    for _, _name in ipairs(ctld.jtacUnitTypes) do
-        local _nameLower = string.lower(_name)
-        if string.match(_type, _nameLower) then
-            return true
+    if _type then
+        _type = string.lower(_type)
+        for _, _name in ipairs(ctld.jtacUnitTypes) do
+            local _nameLower = string.lower(_name)
+            if string.match(_type, _nameLower) then
+                return true
+            end
         end
     end
-
     return false
 end
 
@@ -5733,19 +5808,27 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     local menuEntries = {}
                                     local _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratesMenuPath)
                                     for _, _crate in pairs(_crates) do
-                                        if ctld.isJTACUnitType(_crate.unit) == false
-                                                or (ctld.isJTACUnitType(_crate.unit) == true and ctld.JTAC_dropEnabled) then
+                                        ctld.logTrace("_crate = [%s]", ctld.p(_crate))
+                                        local isJTAC = ctld.isJTACUnitType(_crate.unit)
+                                        ctld.logTrace("isJTAC = [%s]", ctld.p(isJTAC))
+                                        if not isJTAC or (isJTAC and ctld.JTAC_dropEnabled) then
                                             if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
                                                 local _crateRadioMsg = _crate.desc
                                                 --add in the number of crates required to build something
                                                 if _crate.cratesRequired ~= nil and _crate.cratesRequired > 1 then
                                                     _crateRadioMsg = _crateRadioMsg.." (".._crate.cratesRequired..")"
                                                 end
-                                                table.insert(menuEntries, { text = _crateRadioMsg, crate = _crate })
+                                                if _crate.multiple then
+                                                    _crateRadioMsg = "* " .. _crateRadioMsg
+                                                end
+                                                local _menuEntry = { text = _crateRadioMsg, crate = _crate }
+                                                ctld.logTrace("_menuEntry = [%s]", ctld.p(_menuEntry))
+                                                table.insert(menuEntries, _menuEntry)
                                             end
                                         end
                                     end
                                     for _i, _menu in ipairs(menuEntries) do
+                                        ctld.logTrace("_menu = [%s]", ctld.p(_menu))
                                         -- add the submenu item
                                         itemNbSubmenu = itemNbSubmenu + 1
                                         if itemNbSubmenu == 10 and _i < #menuEntries then -- page limit reached
@@ -5763,12 +5846,12 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             local _crateCommands = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("CTLD Commands"), _rootPath)
                             if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
                                 if  ctld.loadCrateFromMenu then
-                                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate"), _crateCommands, ctld.loadNearbyCrate,  _unitName )
+                                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate(s)"), _crateCommands, ctld.loadNearbyCrate,  _unitName )
                                 end
                             end
 
                             if ctld.loadCrateFromMenu or ctld.hoverPickup then
-                                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Crate"), _crateCommands, ctld.dropSlingCrate, { _unitName })
+                                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Crate(s)"), _crateCommands, ctld.dropSlingCrate, { _unitName })
                             end
 
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unpack Any Crate"), _crateCommands, ctld.unpackCrates, { _unitName })
@@ -7656,6 +7739,13 @@ function ctld.initialize()
         for _, _crate in pairs(_crates) do
             -- convert number to string otherwise we'll have a pointless giant
             -- table. String means 'hashmap' so it will only contain the right number of elements
+            if _crate.multiple then
+                local _totalWeight = 0
+                for _, _weight in pairs(_crate.multiple) do
+                    _totalWeight = _totalWeight + _weight
+                end
+                _crate.weight = _totalWeight
+            end
             ctld.crateLookupTable[tostring(_crate.weight)] = _crate
         end
     end
@@ -7979,6 +8069,37 @@ function ctld.eventHandler:onEvent(event)
     end
 
 end
+
+function ctld.i18n_check(language, verbose)
+    local english = ctld.i18n["en"]
+    local tocheck = ctld.i18n[language]
+    if not tocheck then
+        ctld.logError(string.format("CTLD.i18n_check: Language %s not found", language))
+        return false
+    end
+    local englishVersion = english.translation_version
+    local tocheckVersion = tocheck.translation_version
+    if englishVersion ~= tocheckVersion then
+        ctld.logError(string.format("CTLD.i18n_check: Language version mismatch: EN has version %s, %s has version %s", englishVersion, language, tocheckVersion))
+    end
+    --ctld.logTrace(string.format("english = %s", ctld.p(english)))
+    for textRef, textEnglish in pairs(english) do
+        if textRef ~= "translation_version" then
+            local textTocheck = tocheck[textRef]
+            if not textTocheck then
+                ctld.logError(string.format("CTLD.i18n_check: checking %s text [%s]: not found", language, textRef))
+            elseif textTocheck == textEnglish then
+                ctld.logWarning(string.format("CTLD.i18n_check: checking %s text [%s]: same as in EN", language, textRef))
+            elseif verbose then
+                ctld.logInfo(string.format("CTLD.i18n_check: checking %s text [%s]: OK", language, textRef))
+            end
+        end
+    end
+end
+
+-- example of usage:
+ctld.i18n_check("fr")
+
 
 -- initialize the random number generator to make it almost random
 math.random(); math.random(); math.random()
