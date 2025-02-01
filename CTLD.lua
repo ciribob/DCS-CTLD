@@ -401,6 +401,7 @@ ctld.hoverPickup = true --  if set to false you can load crates with the F10 men
 ctld.loadCrateFromMenu = true -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
 
 ctld.enableCrates = true -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
+ctld.enableAllCrates = true -- if false, the "all crates" menu items will not be displayed
 ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
 -- There are some bug with Sling-loading that can cause crashes, if these occur set slingLoad to false
 -- to use the other method.
@@ -1094,7 +1095,7 @@ ctld.spawnableCrates = {
         { weight = 1004.04, desc = ctld.i18n_translate("HAWK PCP"), unit = "Hawk pcp" , side = 2 },
         { weight = 1004.05, desc = ctld.i18n_translate("HAWK CWAR"), unit = "Hawk cwar" , side = 2 },
         { weight = 1004.06, desc = ctld.i18n_translate("HAWK Repair"), unit = "HAWK Repair" , side = 2 },
-        { multiple = {1004.01, 1004.02, 1004.03, 1004.04, 1004.05, 1004.06}, desc = ctld.i18n_translate("HAWK - All crates"), side = 2 },
+        { multiple = {1004.01, 1004.02, 1004.03}, desc = ctld.i18n_translate("HAWK - All crates"), side = 2 },
         -- End of HAWK
 
         -- NASAMS Sysyem
@@ -1102,7 +1103,7 @@ ctld.spawnableCrates = {
         { weight = 1004.12, desc = ctld.i18n_translate("NASAMS Search/Track Radar"), unit = "NASAMS_Radar_MPQ64F1", side = 2 },
         { weight = 1004.13, desc = ctld.i18n_translate("NASAMS Command Post"), unit = "NASAMS_Command_Post", side = 2 },
         { weight = 1004.14, desc = ctld.i18n_translate("NASAMS Repair"), unit = "NASAMS Repair", side = 2 },
-        { multiple = {1004.11, 1004.12, 1004.13, 1004.14}, desc = ctld.i18n_translate("NASAMS - All crates"), side = 2 },
+        { multiple = {1004.11, 1004.12, 1004.13}, desc = ctld.i18n_translate("NASAMS - All crates"), side = 2 },
         -- End of NASAMS
 
         --- RED
@@ -1110,7 +1111,7 @@ ctld.spawnableCrates = {
         { weight = 1004.21, desc = ctld.i18n_translate("KUB Launcher"), unit = "Kub 2P25 ln", side = 1},
         { weight = 1004.22, desc = ctld.i18n_translate("KUB Radar"), unit = "Kub 1S91 str", side = 1 },
         { weight = 1004.23, desc = ctld.i18n_translate("KUB Repair"), unit = "KUB Repair", side = 1},
-        { multiple = {1004.21, 1004.22, 1004.23}, desc = ctld.i18n_translate("KUB - All crates"), side = 1 },
+        { multiple = {1004.21, 1004.22}, desc = ctld.i18n_translate("KUB - All crates"), side = 1 },
         -- End of KUB
 
         -- BUK System
@@ -1118,7 +1119,7 @@ ctld.spawnableCrates = {
         { weight = 1004.32, desc = ctld.i18n_translate("BUK Search Radar"), unit = "SA-11 Buk SR 9S18M1", side = 1},
         { weight = 1004.33, desc = ctld.i18n_translate("BUK CC Radar"), unit = "SA-11 Buk CC 9S470M1", side = 1},
         { weight = 1004.34, desc = ctld.i18n_translate("BUK Repair"), unit = "BUK Repair", side = 1},
-        { multiple = {1004.31, 1004.32, 1004.33, 1004.34}, desc = ctld.i18n_translate("BUK - All crates"), side = 1 },
+        { multiple = {1004.31, 1004.32, 1004.33}, desc = ctld.i18n_translate("BUK - All crates"), side = 1 },
         -- END of BUK
     },
     ["SAM long range"] = {
@@ -1131,7 +1132,7 @@ ctld.spawnableCrates = {
         -- { weight = 1005.05, desc = ctld.i18n_translate("Patriot EPP"), unit = "Patriot EPP", side = 2 },
         { weight = 1005.06, desc = ctld.i18n_translate("Patriot AMG (optional)"), unit = "Patriot AMG" , side = 2 },
         { weight = 1005.07, desc = ctld.i18n_translate("Patriot Repair"), unit = "Patriot Repair" , side = 2 },
-        { multiple = {1005.01, 1005.02, 1005.03, 1005.06, 1005.07}, desc = ctld.i18n_translate("Patriot - All crates"), side = 2 },
+        { multiple = {1005.01, 1005.02, 1005.03}, desc = ctld.i18n_translate("Patriot - All crates"), side = 2 },
         -- End of Patriot
 
         -- S-300 SYSTEM
@@ -1141,7 +1142,7 @@ ctld.spawnableCrates = {
         { weight = 1005.14, desc = ctld.i18n_translate("S-300 Grumble Big Bird SR"), unit = "S-300PS 64H6E sr", side = 1 },
         { weight = 1005.15, desc = ctld.i18n_translate("S-300 Grumble C2"), unit = "S-300PS 54K6 cp", side = 1 },
         { weight = 1005.16, desc = ctld.i18n_translate("S-300 Repair"), unit = "S-300 Repair", side = 1 },
-        { multiple = {1005.11, 1005.12, 1005.13, 1005.14, 1005.15, 1005.16}, desc = ctld.i18n_translate("Patriot - All crates"), side = 1 },
+        { multiple = {1005.11, 1005.12, 1005.13, 1005.14, 1005.15}, desc = ctld.i18n_translate("Patriot - All crates"), side = 1 },
         -- End of S-300
     },
     ["Drone"] = {
@@ -4471,6 +4472,9 @@ function ctld.countTableEntries(_table)
 end
 
 function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTemplate)
+    ctld.logTrace("_nearestCrate = %s", ctld.p(_nearestCrate))
+    ctld.logTrace("_nearbyCrates = %s", ctld.p(_nearbyCrates))
+    ctld.logTrace("_aaSystemTemplate = %s", ctld.p(_aaSystemTemplate))
 
     if ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTemplate) then
         -- rearmed system
@@ -4496,30 +4500,38 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
 
     -- find all crates close enough and add them to the list if they're part of the AA System
     for _, _nearbyCrate in pairs(_nearbyCrates) do
+        ctld.logTrace("_nearbyCrate = %s", ctld.p(_nearbyCrate))
         if _nearbyCrate.dist < crateDistance then
 
             local _name = _nearbyCrate.details.unit
+            ctld.logTrace("_name = %s", ctld.p(_name))
 
             if _systemParts[_name] ~= nil then
 
                 local foundCount = _systemParts[_name].found
+                ctld.logTrace("foundCount = %s", ctld.p(foundCount))
+
+                if not _cratePositions[_name] then
+                    _cratePositions[_name] = {}
+                end
+                if not _crateHdg[_name] then
+                    _crateHdg[_name] = {}
+                end
 
                 -- if this is our first time encountering this part of the system
                 if foundCount == 0 then
                     local _foundPart = _systemParts[_name]
 
                     _foundPart.found = 1
-                    _foundPart.crates = {}
 
                     -- store the number of crates required to compute how many crates will have to be removed later and to see if the system can be deployed
                     local cratesRequired = _nearbyCrate.details.cratesRequired
+                    ctld.logTrace("cratesRequired = %s", ctld.p(cratesRequired))
                     if  cratesRequired ~= nil then
                         _foundPart.required = cratesRequired
                     end
 
                     _systemParts[_name] = _foundPart
-                    _cratePositions[_name] = {}
-                    _crateHdg[_name] = {}
                 else
                     -- otherwise, we found another crate for the same part
                     _systemParts[_name].found = foundCount + 1
@@ -4527,6 +4539,9 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates,_aaSystemTempla
 
                 -- add the crate to the part info along with it's position and heading
                 local crateUnit = _nearbyCrate.crateUnit
+                if not _systemParts[_name].crates then
+                    _systemParts[_name].crates = {}
+                end
                 table.insert(_systemParts[_name].crates, _nearbyCrate)
                 table.insert(_cratePositions[_name], crateUnit:getPoint())
                 table.insert(_crateHdg[_name], mist.getHeading(crateUnit, true))
@@ -5815,21 +5830,23 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     local _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratesMenuPath)
                                     for _, _crate in pairs(_crates) do
                                         ctld.logTrace("_crate = [%s]", ctld.p(_crate))
-                                        local isJTAC = ctld.isJTACUnitType(_crate.unit)
-                                        ctld.logTrace("isJTAC = [%s]", ctld.p(isJTAC))
-                                        if not isJTAC or (isJTAC and ctld.JTAC_dropEnabled) then
-                                            if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
-                                                local _crateRadioMsg = _crate.desc
-                                                --add in the number of crates required to build something
-                                                if _crate.cratesRequired ~= nil and _crate.cratesRequired > 1 then
-                                                    _crateRadioMsg = _crateRadioMsg.." (".._crate.cratesRequired..")"
+                                        if not(_crate.multiple) or ctld.enableAllCrates then
+                                            local isJTAC = ctld.isJTACUnitType(_crate.unit)
+                                            ctld.logTrace("isJTAC = [%s]", ctld.p(isJTAC))
+                                            if not isJTAC or (isJTAC and ctld.JTAC_dropEnabled) then
+                                                if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
+                                                    local _crateRadioMsg = _crate.desc
+                                                    --add in the number of crates required to build something
+                                                    if _crate.cratesRequired ~= nil and _crate.cratesRequired > 1 then
+                                                        _crateRadioMsg = _crateRadioMsg.." (".._crate.cratesRequired..")"
+                                                    end
+                                                    if _crate.multiple then
+                                                        _crateRadioMsg = "* " .. _crateRadioMsg
+                                                    end
+                                                    local _menuEntry = { text = _crateRadioMsg, crate = _crate }
+                                                    ctld.logTrace("_menuEntry = [%s]", ctld.p(_menuEntry))
+                                                    table.insert(menuEntries, _menuEntry)
                                                 end
-                                                if _crate.multiple then
-                                                    _crateRadioMsg = "* " .. _crateRadioMsg
-                                                end
-                                                local _menuEntry = { text = _crateRadioMsg, crate = _crate }
-                                                ctld.logTrace("_menuEntry = [%s]", ctld.p(_menuEntry))
-                                                table.insert(menuEntries, _menuEntry)
                                             end
                                         end
                                     end
@@ -8104,7 +8121,7 @@ function ctld.i18n_check(language, verbose)
 end
 
 -- example of usage:
-ctld.i18n_check("fr")
+--ctld.i18n_check("fr")
 
 
 -- initialize the random number generator to make it almost random
