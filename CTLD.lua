@@ -38,11 +38,11 @@ end
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.3.0"
+ctld.Version = "1.3.1"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
-ctld.Debug = true
-ctld.Trace = true
+ctld.Debug = false
+ctld.Trace = false
 
 ctld.dontInitialize = false -- if true, ctld.initialize() will not run; instead, you'll have to run it from your own code - it's useful when you want to override some functions/parameters before the initialization takes place
 
@@ -2308,23 +2308,33 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
 end
 
 
-function ctld.spawnCrate(_arguments)
+function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 
     local _status, _err = pcall(function(_args)
 
         -- use the cargo weight to guess the type of unit as no way to add description :(
-
         local _crateType = ctld.crateLookupTable[tostring(_args[2])]
+
+        local _heli = ctld.getTransportUnit(_args[1])
+        if not _heli then
+            return
+        end
+
+        -- check crate spam
+        if not(bypassCrateWaitTime) and _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] > timer.getTime() then
+            ctld.displayMessageToGroup(_heli,ctld.i18n_translate("Sorry you must wait %1 seconds before you can get another crate", (ctld.crateWait[_heli:getPlayerName()]  - timer.getTime())), 20)
+            return
+        end
+
         if _crateType and _crateType.multiple then
             for _, weight in pairs(_crateType.multiple) do
                 local _aCrateType = ctld.crateLookupTable[tostring(weight)]
                 if _aCrateType then
-                    ctld.spawnCrate({_args[1], _aCrateType.weight})
+                    ctld.spawnCrate({_args[1], _aCrateType.weight}, true)
                 end
             end
             return
         end
-        local _heli = ctld.getTransportUnit(_args[1])
 
         if _crateType ~= nil and _heli ~= nil and ctld.inAir(_heli) == false then
 
@@ -2358,13 +2368,6 @@ function ctld.spawnCrate(_arguments)
                     ctld.displayMessageToGroup(_heli, ctld.i18n_translate("No more JTAC Crates Left!"), 10)
                     return
                 end
-            end
-
-            -- check crate spam
-            if _heli:getPlayerName() ~= nil and ctld.crateWait[_heli:getPlayerName()] and  ctld.crateWait[_heli:getPlayerName()] > timer.getTime() then
-
-                ctld.displayMessageToGroup(_heli,ctld.i18n_translate("Sorry you must wait %1 seconds before you can get another crate", (ctld.crateWait[_heli:getPlayerName()]  - timer.getTime())), 20)
-                return
             end
 
             if _heli:getPlayerName() ~= nil then
