@@ -8113,11 +8113,11 @@ function ctld.i18n_check(language, verbose)
         if textRef ~= "translation_version" then
             local textTocheck = tocheck[textRef]
             if not textTocheck then
-                ctld.logError(string.format("CTLD.i18n_check: checking %s text [%s]: not found", language, textRef))
+                ctld.logError(string.format( "CTLD.i18n_check: NOT FOUND: checking %s text [%s]", language, textRef))
             elseif textTocheck == textEnglish then
-                ctld.logWarning(string.format("CTLD.i18n_check: checking %s text [%s]: same as in EN", language, textRef))
+                ctld.logWarning(string.format("CTLD.i18n_check:     SAME: checking %s text [%s] as in EN", language, textRef))
             elseif verbose then
-                ctld.logInfo(string.format("CTLD.i18n_check: checking %s text [%s]: OK", language, textRef))
+                ctld.logInfo(string.format(   "CTLD.i18n_check:       OK: checking %s text [%s]", language, textRef))
             end
         end
     end
