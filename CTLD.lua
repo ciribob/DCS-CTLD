@@ -1958,6 +1958,44 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point,_hdg)
 
 end
 
+function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
+    local _unit = ctld.getTransportUnit(_PlayerTransportUnitName)
+
+    if _unit == nil then
+        return
+    end
+
+    local _point = _unit:getPoint()
+    local _units = {}
+    local _unitList = ctld.getNearbyUnits(_point, _radius)
+
+    for _, _nearbyUnit in pairs(_unitList) do
+        if _nearbyUnit:isActive() then
+            table.insert(_units, _nearbyUnit)
+        end
+    end
+
+    return _units
+
+end
+
+function ctld.getNearbyUnits(_point, _radius) 
+    local _units = {} 
+    local _unitList = mist.DBs.unitsByName
+    for k, _unit in pairs(mist.DBs.unitsByName) do
+        local u = Unit.getByName(k)
+        if u and u:isActive() then
+            --local _dist = ctld.getDistance(u:getPoint(), _point)
+            local _dist = mist.utils.get2DDist(u:getPoin(), _point)
+            if _dist <= _radius then
+                table.insert(_units, u)
+            end
+        end
+    end
+    return _units
+end
+
+
 -- ***************************************************************
 -- **************** BE CAREFUL BELOW HERE ************************
 -- ***************************************************************
@@ -2161,16 +2199,14 @@ ctld.getNextGroupId = function()
 end
 
 function ctld.getTransportUnit(_unitName)
-
     if _unitName == nil then
         return nil
     end
 
-    local _heli = Unit.getByName(_unitName)
+    local transportUnitObject = Unit.getByName(_unitName)
 
-    if _heli ~= nil and _heli:isActive() and _heli:getLife() > 0 then
-
-        return _heli
+    if _hetransportUnitObjectli ~= nil and transportUnitObject:isActive() and transportUnitObject:getLife() > 0 then
+        return transportUnitObject
     end
 
     return nil
