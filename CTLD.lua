@@ -409,6 +409,8 @@ ctld.slingLoad = false -- if false, crates can be used WITHOUT slingloading, by 
 ctld.enableSmokeDrop = true -- if false, helis and c-130 will not be able to drop smoke
 ctld.maxExtractDistance = 125 -- max distance from vehicle to troops to allow a group extraction
 ctld.maximumDistanceLogistic = 200 -- max distance from vehicle to logistics to allow a loading or spawning operation
+ctld.enableRepackingVehicles = true -- if true, vehicles can be repacked into crates
+ctld.maximumDistanceRepackableUnitsSearch = 200 -- max distance from transportUnit to search  force repackable units
 ctld.maximumSearchDistance = 4000 -- max distance for troops to search for enemy
 ctld.maximumMoveDistance = 2000 -- max distance for troops to move from drop point if no enemy is nearby
 ctld.minimumDeployDistance = 1000 -- minimum distance from a friendly pickup zone where you can deploy a crate
@@ -1958,25 +1960,67 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point,_hdg)
 
 end
 
+--ctld.maximumDistanceRepackableUnitsSearch = 200
 function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
-    local _unit = ctld.getTransportUnit(_PlayerTransportUnitName)
-
-    if _unit == nil then
+    local unit = ctld.getTransportUnit(_PlayerTransportUnitName)
+    if unit == nil then
         return
     end
 
-    local _point = _unit:getPoint()
-    local _units = {}
-    local _unitList = ctld.getNearbyUnits(_point, _radius)
-
-    for _, _nearbyUnit in pairs(_unitList) do
-        if _nearbyUnit:isActive() then
-            table.insert(_units, _nearbyUnit)
+    local point    = unit:getPoint()
+    local unitList = ctld.getNearbyUnits(point, _radius)
+    local repackableUnits = {}
+    for i=1, #unitList do
+        local repackableUnit = isRepackableUnit(unitList[i])
+        if repackableUnit then
+            repackableUnit["repackableUnitGroupID"] = unitList[i]:getGroup():getID()
+            table.insert(repackableUnits,  mist.utils.deepCopy(repackableUnit))
         end
     end
+    return repackableUnits
+end
 
-    return _units
+function isRepackableUnit(_unitID)
+    local unitType = _unitID:getTypeName()
+    for k,v in pairs(ctld.spawnableCrates) do
+        for i=1, #ctld.spawnableCrates[k] do
+            if _unitID then
+                if ctld.spawnableCrates[k][i].unit == unitType then
+                    return ctld.spawnableCrates[k][i]
+                end
+            end
+        end
+    end
+    return nil
+end
 
+
+--[[    
+    {
+        "cratesRequired": 2,
+        "desc": "Humvee - TOW",
+        "repackableUnitGroupID": 15,
+        "side": 2,
+        "unit": "M1045 HMMWV TOW",
+        "weight": 1000.02
+    }
+
+]]--
+function ctld.repackVehicle(_repackableUnit, _PlayerTransportUnitName)
+    local TransportUnit = ctld.getTransportUnit(_PlayerTransportUnitName)
+    local spawnRefPoint = TransportUnit:getPoint()
+    if _repackableUnit then
+        --ici calculer le heading des spwan à effectuer
+        for i=1, _repackableUnit.cratesRequired do
+            local _point = mist.utils.makeVec3GL(spawnRefPoint.x+(i*5), spawnRefPoint.z, spawnRefPoint.y)
+            local _unitId = ctld.getNextUnitId()
+            local _name = string.format("%s #%i", _repackableUnit.desc, _unitId)
+            ctld.spawnCrateStatic(TransportUnit:getCountry(), _unitId, _point, _name, _repackableUnit.weight, TransportUnit:getCoalition(), TransportUnit:getHeading())
+        end
+
+        _repackableUnit.repackableUnitGroupID:destroy()     -- destroy unit repacked
+        return
+    end
 end
 
 function ctld.getNearbyUnits(_point, _radius) 
@@ -1986,7 +2030,7 @@ function ctld.getNearbyUnits(_point, _radius)
         local u = Unit.getByName(k)
         if u and u:isActive() then
             --local _dist = ctld.getDistance(u:getPoint(), _point)
-            local _dist = mist.utils.get2DDist(u:getPoin(), _point)
+            local _dist = mist.utils.get2DDist(u:getPoint(), _point)
             if _dist <= _radius then
                 table.insert(_units, u)
             end
@@ -5832,8 +5876,18 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload Vehicles"), _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"), _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
 
-                                if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
+                                if ctld.enableRepackingVehicles then
+                                    --missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Repack Vehicle"), _vehicleCommandsPath, ctld.repackVehicle, { _unitName })
+                                    local _RepackCommandsPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), _rootPath)
+                                    local repackableVehicles = ctld.getUnitsInRepackRadius(_unitName, ctld.maximumDistanceRepackableUnitsSearch)
+                                    if repackableVehicles then
+                                        for _, _vehicle in pairs(repackableVehicles) do
+                                            missionCommands.addCommandForGroup(_groupId, _vehicle.repackableUnitGroupID:getName(), _RepackCommandsPath, ctld.repackVehicle, { _vehicle, _unitName })
+                                        end
+                                    end
+                                end
 
+                                if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                     missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Unload FOB Crate"), _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
                                 end
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Check Cargo"), _vehicleCommandsPath, ctld.checkTroopStatus, { _unitName })
