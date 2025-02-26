@@ -2025,10 +2025,8 @@ function ctld.repackVehicle(_params)
             local _name = string.format("%s #%i", repackableUnit.desc, _unitId)
             ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, repackableUnit.weight, PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
         end
-        -- create a temporary logistic unit to be able to repack the vehicle
-        local dynamicLogisticUnitName = "dynLogisticName_" .. tostring(ctld.getNextDynamicLogisticUnitIndex())
-        ctld.logisticUnits[#ctld.logisticUnits+1] = dynamicLogisticUnitName
-        ctld.spawnStaticLogisticUnit({x = spawnRefPoint.x+5, z = spawnRefPoint.z+10}, dynamicLogisticUnitName, refCountry)
+        
+        ctld.addStaticLogisticUnit({x = spawnRefPoint.x+5, z = spawnRefPoint.z+10}, refCountry) -- create a temporary logistic unit to be able to repack the vehicle
         repackableUnit.vehicleId:destroy()     -- destroy repacked unit
         return
     end
@@ -2500,14 +2498,16 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
     end
 end
 -- ***************************************************************
-function ctld.spawnStaticLogisticUnit(_point, _name, _country)
+function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logistic unit to be able to repack the vehicle
+    local dynamicLogisticUnitName = "dynLogisticName_" .. tostring(ctld.getNextDynamicLogisticUnitIndex())
+    ctld.logisticUnits[#ctld.logisticUnits+1] = dynamicLogisticUnitName
     local LogUnit = {
         ["category"] = "Fortifications",
         ["shape_name"] = "H-Windsock_RW",
         ["type"] = "Windsock",
         ["y"] = _point.z,
         ["x"] = _point.x,
-        ["name"] = _name,
+        ["name"] = dynamicLogisticUnitName,
         ["canCargo"] = false,
         ["heading"] = 0,
     }
@@ -8169,7 +8169,6 @@ function ctld.eventHandler:onEvent(event)
 
     local function processHumanPlayer()
         ctld.logTrace("in the 'processHumanPlayer' function")
-trigger.action.outText("1 - in the 'processHumanPlayer' function /  unitName = "..unitName, 15)
         if mist.DBs.humansByName[unitName] then -- it's a human unit
             ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
             local _unit = Unit.getByName(unitName)
@@ -8196,9 +8195,7 @@ trigger.action.outText("1 - in the 'processHumanPlayer' function /  unitName = "
                     for _, _unitName in pairs(ctld.transportPilotNames) do
                         if _unitName == unitName then
                             ctld.logTrace("adding by transportPilotNames, unitName = %s", ctld.p(unitName))
-                            -- add transport radio menu
-trigger.action.outText("2 - in the 'processHumanPlayer' function", 15)
-                            ctld.addTransportF10MenuOptions(unitName)
+                            ctld.addTransportF10MenuOptions(unitName) -- add transport radio menu
                             break
                         end
                     end
