@@ -773,6 +773,7 @@ ctld.extractableGroups = {
 
 -- Use any of the predefined names or set your own ones
 -- When a logistic unit is destroyed, you will no longer be able to spawn crates
+ctld.dynamicLogisticUnitsIndex = 0  -- This is the unit that will be spawned first and then subsequent units will be from the next in the list
 ctld.logisticUnits = {
     "logistic1",
     "logistic2",
@@ -1581,7 +1582,11 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
 
     --  env.info("Units in zone ".._blueCount.." ".._redCount)
 end
-
+--***************************************************************
+function ctld.getNextDynamicLogisticUnitIndex()
+    ctld.dynamicLogisticUnitsIndex = ctld.dynamicLogisticUnitsIndex + 1
+    return ctld.dynamicLogisticUnitsIndex
+end
 
 -- Creates a radio beacon on a random UHF - VHF and HF/FM frequency for homing
 -- This WILL NOT WORK if you dont add beacon.ogg and beaconsilent.ogg to the mission!!!
@@ -1964,8 +1969,11 @@ end
 -- ***************************************************************
 --                  Repack vehicules crates functions 
 -- ***************************************************************
--- ctld.maximumDistanceRepackableUnitsSearch = 200
 function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
+    if _radius == nil then
+        _radius = ctld.maximumDistanceRepackableUnitsSearch
+    end
+
     local unit = ctld.getTransportUnit(_PlayerTransportUnitName)
     if unit == nil then
         return
@@ -1975,7 +1983,7 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
     local unitList = ctld.getNearbyUnits(point, _radius)
     local repackableUnits = {}
     for i=1, #unitList do
-        local repackableUnit = isRepackableUnit(unitList[i])
+        local repackableUnit = ctld.isRepackableUnit(unitList[i])
         if repackableUnit then
             repackableUnit["repackableUnitGroupID"] = unitList[i]:getGroup():getID()
             table.insert(repackableUnits,  mist.utils.deepCopy(repackableUnit))
@@ -1984,13 +1992,15 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
     return repackableUnits
 end
 -- ***************************************************************
-function isRepackableUnit(_unitID)
-    local unitType = _unitID:getTypeName()
+function ctld.isRepackableUnit(_unitId)
+    local unitType = _unitId:getTypeName()
     for k,v in pairs(ctld.spawnableCrates) do
         for i=1, #ctld.spawnableCrates[k] do
-            if _unitID then
+            if _unitId then
                 if ctld.spawnableCrates[k][i].unit == unitType then
-                    return ctld.spawnableCrates[k][i]
+                    local repackableUnit = mist.utils.deepCopy(ctld.spawnableCrates[k][i])
+                    repackableUnit["vehicleId"] = _unitId
+                    return repackableUnit
                 end
             end
         end
@@ -1998,42 +2008,32 @@ function isRepackableUnit(_unitID)
     return nil
 end
 -- ***************************************************************
---[[  _repackableUnit:  
-    {
-        "cratesRequired": 2,
-        "desc": "Humvee - TOW",
-        "repackableUnitGroupID": 15,
-        "side": 2,
-        "unit": "M1045 HMMWV TOW",
-        "weight": 1000.02
-    }
-
-    table.insert(menuEntries, { text = ctld.i18n_translate("repack ").._loadGroup.name, 
-                                groupId = _groupId, 
-                                RepackCommandsPath = _RepackCommandsPath, 
-                                menufunction = ctld.repackVehicle, 
-                                menuArgsTable = { _vehicle, _unitName }})
-
-]]--
-function ctld.repackVehicle(_repackableUnit, _PlayerTransportUnitName)
-ctld.logTrace(" ctld.repackVehicle._repackableUnit = %s", ctld.p(mist.utils.tableShow(_repackableUnit)))
-trigger.action.outText("_PlayerTransportUnitName = ".._PlayerTransportUnitName, 10)
-    local TransportUnit = ctld.getTransportUnit(_PlayerTransportUnitName)
-    local spawnRefPoint = _PlayerTransportUnitName:getPoint()
-    if _repackableUnit then
+function ctld.repackVehicle(_params)
+    local repackableUnit = _params[1]
+    local PlayerTransportUnitName = _params[2]
+    local PlayerTransportUnit = Unit.getByName(PlayerTransportUnitName)
+    ctld.logTrace(" ctld.repackVehicle.repackableUnit = %s", ctld.p(mist.utils.tableShow(repackableUnit)))
+    local TransportUnit = ctld.getTransportUnit(PlayerTransportUnitName)
+    local spawnRefPoint = PlayerTransportUnit:getPoint()
+    local refCountry = PlayerTransportUnit:getCountry()
+    if repackableUnit then
         --ici calculer le heading des spwan à effectuer
-        for i=1, _repackableUnit.cratesRequired do
-            local _point = mist.utils.makeVec3GL(spawnRefPoint.x+(i*5), spawnRefPoint.z, spawnRefPoint.y)
+        for i=1, repackableUnit.cratesRequired do
+            --local _point = mist.utils.makeVec3GL(spawnRefPoint.x+(i*5), spawnRefPoint.z, spawnRefPoint.y)
+            local _point = {x = spawnRefPoint.x+(i*5), z = spawnRefPoint.z}
             local _unitId = ctld.getNextUnitId()
-            local _name = string.format("%s #%i", _repackableUnit.desc, _unitId)
-            ctld.spawnCrateStatic(_PlayerTransportUnitName:getCountry(), _unitId, _point, _name, _repackableUnit.weight, _PlayerTransportUnitName:getCoalition(), _PlayerTransportUnitName:getHeading())
+            local _name = string.format("%s #%i", repackableUnit.desc, _unitId)
+            ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, repackableUnit.weight, PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
         end
-
-        _repackableUnit.repackableUnitGroupID:destroy()     -- destroy unit repacked
+        -- create a temporary logistic unit to be able to repack the vehicle
+        local dynamicLogisticUnitName = "dynLogisticName_" .. tostring(ctld.getNextDynamicLogisticUnitIndex())
+        ctld.logisticUnits[#ctld.logisticUnits+1] = dynamicLogisticUnitName
+        ctld.spawnStaticLogisticUnit({x = spawnRefPoint.x+5, z = spawnRefPoint.z+10}, dynamicLogisticUnitName, refCountry)
+        repackableUnit.vehicleId:destroy()     -- destroy repacked unit
         return
     end
 end
-
+-- ***************************************************************
 function ctld.getNearbyUnits(_point, _radius) 
     local _units = {} 
     local _unitList = mist.DBs.unitsByName
@@ -2302,7 +2302,6 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
 
         _spawnedCrate = Unit.getByName(_name)
     else
-
         if _model_type ~= nil then
             _crate = mist.utils.deepCopy(ctld.spawnableCratesModels[_model_type])
         elseif ctld.slingLoad then
@@ -2500,7 +2499,23 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
         env.error(string.format("CTLD ERROR: %s", _err))
     end
 end
-
+-- ***************************************************************
+function ctld.spawnStaticLogisticUnit(_point, _name, _country)
+    local LogUnit = {
+        ["category"] = "Fortifications",
+        ["shape_name"] = "H-Windsock_RW",
+        ["type"] = "Windsock",
+        ["y"] = _point.z,
+        ["x"] = _point.x,
+        ["name"] = _name,
+        ["canCargo"] = false,
+        ["heading"] = 0,
+    }
+    LogUnit["country"] = _country
+    mist.dynAddStatic(LogUnit)
+    return StaticObject.getByName(LogUnit["name"])
+end
+--***************************************************************
 ctld.randomCrateSpacing = 12 -- meters
 function ctld.getPointAt12Oclock(_unit, _offset)
     return ctld.getPointAtDirection(_unit, _offset, 0)
@@ -5872,39 +5887,28 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 end
                                 missionCommands.addCommandForGroup(_groupId, _menu.text, menuPath, ctld.loadTroopsFromZone, { _unitName, true,_menu.group,false })
                             end
-
                             if ctld.unitCanCarryVehicles(_unit) then
                                 local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Vehicle / FOB Transport"), _rootPath)
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload Vehicles"), _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"), _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
                                 if ctld.enableRepackingVehicles then
-                                    --missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Repack Vehicle"), _vehicleCommandsPath, ctld.repackVehicle, { _unitName })
-                                    --local _RepackCommandsPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), _vehicleCommandsPath)
-                                    
- ctld.logTrace("FG_  menuEntries = %s", ctld.p(mist.utils.tableShow(menuEntries)))                    
                                     local repackableVehicles = ctld.getUnitsInRepackRadius(_unitName, ctld.maximumDistanceRepackableUnitsSearch)
                                     if repackableVehicles then
                                         local menuEntries = {}
                                         local RepackCommandsPath = mist.utils.deepCopy(_vehicleCommandsPath)
                                         RepackCommandsPath[#RepackCommandsPath+1] = ctld.i18n_translate("Repack Vehicles")
                                         for _, _vehicle in pairs(repackableVehicles) do
-                                            --missionCommands.addCommandForGroup(_groupId, _vehicle.repackableUnitGroupID:getName(), _RepackCommandsPath, ctld.repackVehicle, { _vehicle, _unitName })
-                                            -- table.insert(menuEntries, { text = ctld.i18n_translate("repack ").._vehicle.unit, 
-                                            --                             groupId = _groupId, 
-                                            --                             subMenuPath = RepackCommandsPath, 
-                                            --                             menufunction = ctld.repackVehicle, 
-                                            --                             menuArgsTable = {repackableVehicles, _unitName} })
-                                            menuEntries[#menuEntries+1] = { text = ctld.i18n_translate("repack ").._vehicle.unit, 
+                                            table.insert(menuEntries, { text = ctld.i18n_translate("repack ").._vehicle.unit, 
                                                                         groupId = _groupId, 
                                                                         subMenuPath = RepackCommandsPath, 
-                                                                        menufunction = ctld.repackVehicle, 
-                                                                        menuArgsTable = {repackableVehicles, _unitName} }
+                                                                        menuFunction = ctld.repackVehicle, 
+                                                                        menuArgsTable = {_vehicle, _unitName} })
                                         end
-                                        local RepackCommandsPath = missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), _vehicleCommandsPath, ctld.buildPaginatedMenu, menuEntries)
+                                        local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), _vehicleCommandsPath)
 ctld.logTrace("FG_  menuEntries = %s", ctld.p(mist.utils.tableShow(menuEntries)))
+                                        ctld.buildPaginatedMenu(menuEntries)
                                     end
                                 end
-
                                 if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                     missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Unload FOB Crate"), _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
                                 end
@@ -6024,41 +6028,19 @@ ctld.logTrace("FG_  menuEntries = %s", ctld.p(mist.utils.tableShow(menuEntries))
         ctld.logError(string.format("Error adding f10 to transport: %s", error))
     end
 end
---[[]    
-[1]["groupId"] = 1,
-[1]["subMenuPath"] = table: 00000135F7959278         {
-    [1]["subMenuPath"][1] = "CTLD",
-    [1]["subMenuPath"][2] = "Vehicle / FOB Transport",
-    [1]["subMenuPath"][3] = "Repack Vehicles",
-    },
-[1]["text"] = "repack M1045 HMMWV TOW",
-[1]["menufunction"] = "function: 0000013692E51F28, defined in (2018-2035)",
-[1]["menuArgsTable"] = table: 00000135F7959378         {
-    [1]["menuArgsTable"][1] = table: 00000135F79590F8             {
-        [1]["menuArgsTable"][1][1] = table: 00000135F79591B8                 {
-            [1]["menuArgsTable"][1][1]["repackableUnitGroupID"] = 3,
-            [1]["menuArgsTable"][1][1]["side"] = 2,
-            [1]["menuArgsTable"][1][1]["weight"] = 1000.02,
-            [1]["menuArgsTable"][1][1]["desc"] = "Humvee - TOW",
-            [1]["menuArgsTable"][1][1]["cratesRequired"] = 2,
-            [1]["menuArgsTable"][1][1]["unit"] = "M1045 HMMWV TOW",
-            },
-        },
-    [1]["menuArgsTable"][2] = "helicargo1",]]--
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
     ctld.logTrace("ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
     local itemNbSubmenu = 0
     for i, menu in ipairs(_menuEntries) do
         --ctld.logTrace("ctld.buildPaginatedMenu.menu = [%s]", ctld.p(mist.utils.tableShow(menu)))
-        ctld.logTrace("ctld.buildPaginatedMenu.menu = [%s]", ctld.p(menu))
+ctld.logTrace("ctld.buildPaginatedMenu. mist.utils.tableShow(menu) = [%s]", mist.utils.tableShow(menu))
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
         if itemNbSubmenu == 10 and i < #_menuEntries then -- page limit reached
             menu.subMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
             itemNbSubmenu = 1
         end
-ctld.logTrace("ctld.buildPaginatedMenu.type(menu.menuFunction) = [%s]", ctld.p(type(menu.menuFunction)))
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
     end
 end
