@@ -41,8 +41,8 @@ ctld.Id = "CTLD - "
 ctld.Version = "1.4.0"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
-ctld.Debug = false
-ctld.Trace = false
+ctld.Debug = true
+ctld.Trace = true
 
 ctld.dontInitialize = false -- if true, ctld.initialize() will not run; instead, you'll have to run it from your own code - it's useful when you want to override some functions/parameters before the initialization takes place
 
@@ -793,6 +793,7 @@ ctld.logisticUnits = {
 ctld.vehicleTransportEnabled = {
     "76MD", -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
     "Hercules",
+    "UH-1H",
 }
 
 -- ************** Units able to use DCS dynamic cargo system ******************
@@ -1960,7 +1961,10 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point,_hdg)
 
 end
 
---ctld.maximumDistanceRepackableUnitsSearch = 200
+-- ***************************************************************
+--                  Repack vehicules crates functions 
+-- ***************************************************************
+-- ctld.maximumDistanceRepackableUnitsSearch = 200
 function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
     local unit = ctld.getTransportUnit(_PlayerTransportUnitName)
     if unit == nil then
@@ -1979,7 +1983,7 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
     end
     return repackableUnits
 end
-
+-- ***************************************************************
 function isRepackableUnit(_unitID)
     local unitType = _unitID:getTypeName()
     for k,v in pairs(ctld.spawnableCrates) do
@@ -1993,9 +1997,8 @@ function isRepackableUnit(_unitID)
     end
     return nil
 end
-
-
---[[    
+-- ***************************************************************
+--[[  _repackableUnit:  
     {
         "cratesRequired": 2,
         "desc": "Humvee - TOW",
@@ -2005,17 +2008,25 @@ end
         "weight": 1000.02
     }
 
+    table.insert(menuEntries, { text = ctld.i18n_translate("repack ").._loadGroup.name, 
+                                groupId = _groupId, 
+                                RepackCommandsPath = _RepackCommandsPath, 
+                                menufunction = ctld.repackVehicle, 
+                                menuArgsTable = { _vehicle, _unitName }})
+
 ]]--
 function ctld.repackVehicle(_repackableUnit, _PlayerTransportUnitName)
+ctld.logTrace(" ctld.repackVehicle._repackableUnit = %s", ctld.p(mist.utils.tableShow(_repackableUnit)))
+trigger.action.outText("_PlayerTransportUnitName = ".._PlayerTransportUnitName, 10)
     local TransportUnit = ctld.getTransportUnit(_PlayerTransportUnitName)
-    local spawnRefPoint = TransportUnit:getPoint()
+    local spawnRefPoint = _PlayerTransportUnitName:getPoint()
     if _repackableUnit then
         --ici calculer le heading des spwan à effectuer
         for i=1, _repackableUnit.cratesRequired do
             local _point = mist.utils.makeVec3GL(spawnRefPoint.x+(i*5), spawnRefPoint.z, spawnRefPoint.y)
             local _unitId = ctld.getNextUnitId()
             local _name = string.format("%s #%i", _repackableUnit.desc, _unitId)
-            ctld.spawnCrateStatic(TransportUnit:getCountry(), _unitId, _point, _name, _repackableUnit.weight, TransportUnit:getCoalition(), TransportUnit:getHeading())
+            ctld.spawnCrateStatic(_PlayerTransportUnitName:getCountry(), _unitId, _point, _name, _repackableUnit.weight, _PlayerTransportUnitName:getCoalition(), _PlayerTransportUnitName:getHeading())
         end
 
         _repackableUnit.repackableUnitGroupID:destroy()     -- destroy unit repacked
@@ -2249,7 +2260,7 @@ function ctld.getTransportUnit(_unitName)
 
     local transportUnitObject = Unit.getByName(_unitName)
 
-    if _hetransportUnitObjectli ~= nil and transportUnitObject:isActive() and transportUnitObject:getLife() > 0 then
+    if transportUnitObject ~= nil and transportUnitObject:isActive() and transportUnitObject:getLife() > 0 then
         return transportUnitObject
     end
 
@@ -5819,32 +5830,25 @@ end
 -- Adds menuitem to a human unit
 function ctld.addTransportF10MenuOptions(_unitName)
     ctld.logDebug("ctld.addTransportF10MenuOptions(_unitName=[%s])", ctld.p(_unitName))
-
     local status, error = pcall(function()
 
         local _unit = ctld.getTransportUnit(_unitName)
         ctld.logTrace("_unit = %s", ctld.p(_unit))
-        if _unit then
+
+            if _unit then
             local _unitTypename = _unit:getTypeName()
                 local _groupId = ctld.getGroupId(_unit)
-
                 if _groupId then
                     ctld.logTrace("_groupId = %s", ctld.p(_groupId))
                     ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
                     if ctld.addedTo[tostring(_groupId)] == nil then
                         ctld.logTrace("adding CTLD menu for _groupId = %s", ctld.p(_groupId))
                         local _rootPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("CTLD"))
-
                         local _unitActions = ctld.getUnitActions(_unitTypename)
-
                         missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Check Cargo"), _rootPath, ctld.checkTroopStatus, { _unitName })
-
                         if _unitActions.troops then
-
                             local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Troop Transport"), _rootPath)
-
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload / Extract Troops"), _troopCommandsPath, ctld.unloadExtractTroops, { _unitName })
-
 
                             -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
                             local _transportLimit = ctld.getTransportLimit(_unitTypename)
@@ -5870,20 +5874,34 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             end
 
                             if ctld.unitCanCarryVehicles(_unit) then
-
                                 local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Vehicle / FOB Transport"), _rootPath)
-
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload Vehicles"), _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"), _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false,"",true })
-
                                 if ctld.enableRepackingVehicles then
                                     --missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Repack Vehicle"), _vehicleCommandsPath, ctld.repackVehicle, { _unitName })
-                                    local _RepackCommandsPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), _rootPath)
+                                    --local _RepackCommandsPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), _vehicleCommandsPath)
+                                    
+ ctld.logTrace("FG_  menuEntries = %s", ctld.p(mist.utils.tableShow(menuEntries)))                    
                                     local repackableVehicles = ctld.getUnitsInRepackRadius(_unitName, ctld.maximumDistanceRepackableUnitsSearch)
                                     if repackableVehicles then
+                                        local menuEntries = {}
+                                        local RepackCommandsPath = mist.utils.deepCopy(_vehicleCommandsPath)
+                                        RepackCommandsPath[#RepackCommandsPath+1] = ctld.i18n_translate("Repack Vehicles")
                                         for _, _vehicle in pairs(repackableVehicles) do
-                                            missionCommands.addCommandForGroup(_groupId, _vehicle.repackableUnitGroupID:getName(), _RepackCommandsPath, ctld.repackVehicle, { _vehicle, _unitName })
+                                            --missionCommands.addCommandForGroup(_groupId, _vehicle.repackableUnitGroupID:getName(), _RepackCommandsPath, ctld.repackVehicle, { _vehicle, _unitName })
+                                            -- table.insert(menuEntries, { text = ctld.i18n_translate("repack ").._vehicle.unit, 
+                                            --                             groupId = _groupId, 
+                                            --                             subMenuPath = RepackCommandsPath, 
+                                            --                             menufunction = ctld.repackVehicle, 
+                                            --                             menuArgsTable = {repackableVehicles, _unitName} })
+                                            menuEntries[#menuEntries+1] = { text = ctld.i18n_translate("repack ").._vehicle.unit, 
+                                                                        groupId = _groupId, 
+                                                                        subMenuPath = RepackCommandsPath, 
+                                                                        menufunction = ctld.repackVehicle, 
+                                                                        menuArgsTable = {repackableVehicles, _unitName} }
                                         end
+                                        local RepackCommandsPath = missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), _vehicleCommandsPath, ctld.buildPaginatedMenu, menuEntries)
+ctld.logTrace("FG_  menuEntries = %s", ctld.p(mist.utils.tableShow(menuEntries)))
                                     end
                                 end
 
@@ -5892,7 +5910,6 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 end
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Check Cargo"), _vehicleCommandsPath, ctld.checkTroopStatus, { _unitName })
                             end
-
                         end
 
                         if ctld.enableCrates and _unitActions.crates then
@@ -6007,7 +6024,45 @@ function ctld.addTransportF10MenuOptions(_unitName)
         ctld.logError(string.format("Error adding f10 to transport: %s", error))
     end
 end
-
+--[[]    
+[1]["groupId"] = 1,
+[1]["subMenuPath"] = table: 00000135F7959278         {
+    [1]["subMenuPath"][1] = "CTLD",
+    [1]["subMenuPath"][2] = "Vehicle / FOB Transport",
+    [1]["subMenuPath"][3] = "Repack Vehicles",
+    },
+[1]["text"] = "repack M1045 HMMWV TOW",
+[1]["menufunction"] = "function: 0000013692E51F28, defined in (2018-2035)",
+[1]["menuArgsTable"] = table: 00000135F7959378         {
+    [1]["menuArgsTable"][1] = table: 00000135F79590F8             {
+        [1]["menuArgsTable"][1][1] = table: 00000135F79591B8                 {
+            [1]["menuArgsTable"][1][1]["repackableUnitGroupID"] = 3,
+            [1]["menuArgsTable"][1][1]["side"] = 2,
+            [1]["menuArgsTable"][1][1]["weight"] = 1000.02,
+            [1]["menuArgsTable"][1][1]["desc"] = "Humvee - TOW",
+            [1]["menuArgsTable"][1][1]["cratesRequired"] = 2,
+            [1]["menuArgsTable"][1][1]["unit"] = "M1045 HMMWV TOW",
+            },
+        },
+    [1]["menuArgsTable"][2] = "helicargo1",]]--
+--******************************************************************************************************
+function ctld.buildPaginatedMenu(_menuEntries)
+    ctld.logTrace("ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
+    local itemNbSubmenu = 0
+    for i, menu in ipairs(_menuEntries) do
+        --ctld.logTrace("ctld.buildPaginatedMenu.menu = [%s]", ctld.p(mist.utils.tableShow(menu)))
+        ctld.logTrace("ctld.buildPaginatedMenu.menu = [%s]", ctld.p(menu))
+        -- add the submenu item
+        itemNbSubmenu = itemNbSubmenu + 1
+        if itemNbSubmenu == 10 and i < #_menuEntries then -- page limit reached
+            menu.subMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
+            itemNbSubmenu = 1
+        end
+ctld.logTrace("ctld.buildPaginatedMenu.type(menu.menuFunction) = [%s]", ctld.p(type(menu.menuFunction)))
+        missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
+    end
+end
+--******************************************************************************************************
 function ctld.addOtherF10MenuOptions()
     ctld.logDebug("ctld.addOtherF10MenuOptions")
     -- reschedule every 10 seconds
@@ -8019,16 +8074,13 @@ function ctld.initialize()
     timer.scheduleFunction(ctld.checkTransportStatus, nil, timer.getTime() + 5)
 
     timer.scheduleFunction(function()
-
-        timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
-        timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
-        timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 5)
-
-        if ctld.enableCrates == true and ctld.hoverPickup == true then
-            timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
-        end
-
-    end,nil, timer.getTime()+1 )
+                                timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
+                                timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
+                                timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 5)
+                                if ctld.enableCrates == true and ctld.hoverPickup == true then
+                                    timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
+                                end
+                            end,nil, timer.getTime()+1 )
 
     --event handler for deaths
     --world.addEventHandler(ctld.eventHandler)
@@ -8098,7 +8150,6 @@ function ctld.initialize()
     -- register event handler
     ctld.logInfo("registering event handler")
     world.addEventHandler(ctld.eventHandler)
-
     env.info("CTLD READY")
 end
 
@@ -8136,6 +8187,7 @@ function ctld.eventHandler:onEvent(event)
 
     local function processHumanPlayer()
         ctld.logTrace("in the 'processHumanPlayer' function")
+trigger.action.outText("1 - in the 'processHumanPlayer' function /  unitName = "..unitName, 15)
         if mist.DBs.humansByName[unitName] then -- it's a human unit
             ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
             local _unit = Unit.getByName(unitName)
@@ -8163,6 +8215,7 @@ function ctld.eventHandler:onEvent(event)
                         if _unitName == unitName then
                             ctld.logTrace("adding by transportPilotNames, unitName = %s", ctld.p(unitName))
                             -- add transport radio menu
+trigger.action.outText("2 - in the 'processHumanPlayer' function", 15)
                             ctld.addTransportF10MenuOptions(unitName)
                             break
                         end
