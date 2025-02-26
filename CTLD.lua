@@ -2021,6 +2021,7 @@ function ctld.repackVehicle(_params)
         for i=1, repackableUnit.cratesRequired do
             --local _point = mist.utils.makeVec3GL(spawnRefPoint.x+(i*5), spawnRefPoint.z, spawnRefPoint.y)
             local _point = {x = spawnRefPoint.x+(i*5), z = spawnRefPoint.z}
+            -- see to spawn the crate at random position heading the transport unit with ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
             local _unitId = ctld.getNextUnitId()
             local _name = string.format("%s #%i", repackableUnit.desc, _unitId)
             ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, repackableUnit.weight, PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
@@ -2047,7 +2048,51 @@ function ctld.getNearbyUnits(_point, _radius)
     end
     return _units
 end
-
+-- ***************************************************************
+function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logistic unit to be able to repack the vehicle
+    local dynamicLogisticUnitName = "%dynLogisticName_" .. tostring(ctld.getNextDynamicLogisticUnitIndex())
+    ctld.logisticUnits[#ctld.logisticUnits+1] = dynamicLogisticUnitName
+    local LogUnit = {
+        ["category"] = "Fortifications",
+        ["shape_name"] = "H-Windsock_RW",
+        ["type"] = "Windsock",
+        ["y"] = _point.z,
+        ["x"] = _point.x,
+        ["name"] = dynamicLogisticUnitName,
+        ["canCargo"] = false,
+        ["heading"] = 0,
+    }
+    LogUnit["country"] = _country
+    mist.dynAddStatic(LogUnit)
+    return StaticObject.getByName(LogUnit["name"])
+end
+-- ***************************************************************
+function ctld.updateDynamicLogisticUnitsZones()      -- remove Dynamic Logistic Units if no statics units (crates) are in the zone
+    local _units = {}
+    for i, logUnit in ipairs(ctld.logisticUnits) do
+        if string.sub(phrase, 1, 17) == "%dynLogisticName_" then        -- check if the unit is a dynamic logistic unit
+            local unitsInLogisticUnitZone = ctld.getUnitsInLogisticZone(logUnit)
+            if #unitsInLogisticUnitZone == 0 then
+                local _logUnit = StaticObject.getByName(logUnit)
+                if _logUnit then
+                    _logUnit:destroy()      -- destroy the  dynamic Logistic unit object from map
+                    ctld.logisticUnits[i] = nil -- remove the dynamic Logistic unit from the list
+                end
+            end
+        end
+    end
+    return 5    -- reschedule the function in 5 second
+end
+-- ***************************************************************
+function ctld.getUnitsInLogisticZone(_logisticUnitName)
+    local _unit = StaticObject.getByName(_logisticUnitName)
+    if _unit then
+        local _point = _unit:getPoint()
+        local _unitList = ctld.getNearbyUnits(_point, ctld.maximumDistanceLogistic)
+        return _unitList
+    end
+    return {}
+end
 
 -- ***************************************************************
 -- **************** BE CAREFUL BELOW HERE ************************
@@ -2497,24 +2542,6 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
         env.error(string.format("CTLD ERROR: %s", _err))
     end
 end
--- ***************************************************************
-function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logistic unit to be able to repack the vehicle
-    local dynamicLogisticUnitName = "dynLogisticName_" .. tostring(ctld.getNextDynamicLogisticUnitIndex())
-    ctld.logisticUnits[#ctld.logisticUnits+1] = dynamicLogisticUnitName
-    local LogUnit = {
-        ["category"] = "Fortifications",
-        ["shape_name"] = "H-Windsock_RW",
-        ["type"] = "Windsock",
-        ["y"] = _point.z,
-        ["x"] = _point.x,
-        ["name"] = dynamicLogisticUnitName,
-        ["canCargo"] = false,
-        ["heading"] = 0,
-    }
-    LogUnit["country"] = _country
-    mist.dynAddStatic(LogUnit)
-    return StaticObject.getByName(LogUnit["name"])
-end
 --***************************************************************
 ctld.randomCrateSpacing = 12 -- meters
 function ctld.getPointAt12Oclock(_unit, _offset)
@@ -2533,7 +2560,8 @@ function ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
     ctld.logTrace("_randomOffsetX = %s", ctld.p(_randomOffsetX))
     ctld.logTrace("_randomOffsetZ = %s", ctld.p(_randomOffsetZ))
     local _position = _unit:getPosition()
-    local _angle = math.atan2(_position.x.z, _position.x.x) + _directionInRadian
+    --local _angle = math.atan2(_position.x.z, _position.x.x) + _directionInRadian
+    local _angle = math.atan(_position.x.z, _position.x.x) + _directionInRadian
     local _xOffset = math.cos(_angle) * _offset + _randomOffsetX
     local _zOffset = math.sin(_angle) * _offset + _randomOffsetZ
 
@@ -8059,6 +8087,7 @@ function ctld.initialize()
                                 timer.scheduleFunction(ctld.refreshRadioBeacons, nil, timer.getTime() + 5)
                                 timer.scheduleFunction(ctld.refreshSmoke, nil, timer.getTime() + 5)
                                 timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 5)
+                                timer.scheduleFunction(ctld.updateDynamicLogisticUnitsZones, nil, timer.getTime() + 5)
                                 if ctld.enableCrates == true and ctld.hoverPickup == true then
                                     timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
                                 end
