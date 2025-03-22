@@ -2031,6 +2031,7 @@ function ctld.isRepackableUnit(_unitId)
 end
 -- ***************************************************************
 function ctld.repackVehicleRequest(_params)     -- update rrs table 'repackRequestsStack' with the request
+    
     --[[
 local repackableUnit = _params[1]
     local PlayerTransportUnitName = _params[2]
@@ -2040,6 +2041,7 @@ local repackableUnit = _params[1]
     local refCountry = PlayerTransportUnit:getCountry()
 ]]--
     ctld.repackRequestsStack[#ctld.repackRequestsStack+1] = _params
+    ctld.logTrace("FG_  ctld.repackVehicleRequest = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
 end
 -- ***************************************************************
 function ctld.repackVehicle(_params,t)   -- scan rrs table 'repackRequestsStack' to process each request
@@ -6135,7 +6137,7 @@ function ctld.buildPaginatedMenu(_menuEntries)
     local nextSubMenuPath = ""
     local itemNbSubmenu = 0
     for i, menu in ipairs(_menuEntries) do
-        ctld.logTrace("FG ctld.buildPaginatedMenu. [%s] mist.utils.tableShow(menu) = [%s]", i, mist.utils.tableShow(menu))
+        --ctld.logTrace("FG ctld.buildPaginatedMenu. [%s] mist.utils.tableShow(menu) = [%s]", i, mist.utils.tableShow(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
             menu.subMenuPath = nextSubMenuPath
         end
