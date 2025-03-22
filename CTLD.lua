@@ -1969,6 +1969,8 @@ end
 -- ***************************************************************
 --                  Repack vehicules crates functions 
 -- ***************************************************************
+ctld.repackRequestStack = {} -- table to store the repack request
+
 function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
     if _radius == nil then
         _radius = ctld.maximumDistanceRepackableUnitsSearch
@@ -1979,8 +1981,9 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
         return
     end
 
-    local point    = unit:getPoint()
-    local unitList = ctld.getNearbyUnits(point, _radius)
+    local playerCoalition   = unit:getCoalition()
+    local point           = unit:getPoint()
+    local unitList        = ctld.getNearbyUnits(point, _radius, playerCoalition)
     local repackableUnits = {}
     for i=1, #unitList do
         local repackableUnit = ctld.isRepackableUnit(unitList[i])
@@ -1990,6 +1993,25 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
         end
     end
     return repackableUnits
+end
+-- ***************************************************************
+function ctld.getNearbyUnits(_point, _radius, _coalition) 
+    if _coalition == nil then
+        _coalition = 4  -- all coalitions
+    end
+    local _units = {} 
+    local _unitList = mist.DBs.unitsByName
+    for k, _unit in pairs(mist.DBs.unitsByName) do
+        local u = Unit.getByName(k)
+        if u and u:isActive() and (_coalition == 4 or u:getCoalition() == _coalition) then
+            --local _dist = ctld.getDistance(u:getPoint(), _point)
+            local _dist = mist.utils.get2DDist(u:getPoint(), _point)
+            if _dist <= _radius then
+                table.insert(_units, u)
+            end
+        end
+    end
+    return _units
 end
 -- ***************************************************************
 function ctld.isRepackableUnit(_unitId)
@@ -2008,7 +2030,64 @@ function ctld.isRepackableUnit(_unitId)
     return nil
 end
 -- ***************************************************************
-function ctld.repackVehicle(_params)
+function ctld.repackVehicleRequest(_params)     -- update rrs table 'repackRequestsStack' with the request
+    local repackableUnit = _params[1]
+    local PlayerTransportUnitName = _params[2]
+    local PlayerTransportUnit = Unit.getByName(PlayerTransportUnitName)
+    local TransportUnit = ctld.getTransportUnit(PlayerTransportUnitName)
+    local spawnRefPoint = PlayerTransportUnit:getPoint()
+    local refCountry = PlayerTransportUnit:getCountry()
+
+    ctld.repackRequestsStack[#ctld.repackRequestsStack+1] = _params
+
+    --[[
+    if repackableUnit then
+        local _point = {x = spawnRefPoint.x+5, z = spawnRefPoint.z}
+        local _unitId = ctld.getNextUnitId()
+        local _name = string.format("%s #%i", repackableUnit.desc, _unitId)
+        ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, repackableUnit.weight, PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
+        ctld.addStaticLogisticUnit({x = spawnRefPoint.x+5, z = spawnRefPoint.z+10}, refCountry) -- create a temporary logistic unit to be able to repack the vehicle
+        return
+    end ]]--
+
+end
+-- ***************************************************************
+function ctld.repackVehicle(_params,t)   -- scan rrs table 'repackRequestsStack' to process each request
+    if t == nil then
+        t =  timer.getTime()
+    end
+
+    for ii, v in ipairs(ctld.repackRequestsStack) do
+        local repackableUnit = v[1]
+        local PlayerTransportUnitName = v[2]
+        local PlayerTransportUnit = Unit.getByName(PlayerTransportUnitName)
+        ctld.logTrace(" ctld.repackVehicle.repackableUnit = %s", ctld.p(mist.utils.tableShow(repackableUnit)))
+        local TransportUnit = ctld.getTransportUnit(PlayerTransportUnitName)
+        local spawnRefPoint = PlayerTransportUnit:getPoint()
+        local refCountry = PlayerTransportUnit:getCountry()
+        if repackableUnit then 
+            if repackableUnit:isExist() then
+                --ici calculer le heading des spwans à effectuer
+                for i=1, repackableUnit.cratesRequired do
+                    local _point = {x = spawnRefPoint.x+(i*5), z = spawnRefPoint.z}
+                    -- see to spawn the crate at random position heading the transport unit with ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
+                    local _unitId = ctld.getNextUnitId()
+                    local _name = string.format("%s #%i", repackableUnit.desc, _unitId)
+                    ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, repackableUnit.weight, PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
+                end
+                
+                if ctld.isUnitInALogisticZone(repackableUnit) == nil then
+                    ctld.addStaticLogisticUnit({x = spawnRefPoint.x+5, z = spawnRefPoint.z+10}, refCountry) -- create a temporary logistic unit to be able to repack the vehicle
+                end
+                repackableUnit.vehicleId:destroy()     -- destroy repacked unit
+            end
+            ctld.repackRequestsStack[ii] = nil
+        end
+    end
+    return 3    -- reschedule the function in 3 seconds
+end
+--[[ ***************************************************************
+function ctld.repackVehicle_old(_params)
     local repackableUnit = _params[1]
     local PlayerTransportUnitName = _params[2]
     local PlayerTransportUnit = Unit.getByName(PlayerTransportUnitName)
@@ -2031,23 +2110,7 @@ function ctld.repackVehicle(_params)
         repackableUnit.vehicleId:destroy()     -- destroy repacked unit
         return
     end
-end
--- ***************************************************************
-function ctld.getNearbyUnits(_point, _radius) 
-    local _units = {} 
-    local _unitList = mist.DBs.unitsByName
-    for k, _unit in pairs(mist.DBs.unitsByName) do
-        local u = Unit.getByName(k)
-        if u and u:isActive() then
-            --local _dist = ctld.getDistance(u:getPoint(), _point)
-            local _dist = mist.utils.get2DDist(u:getPoint(), _point)
-            if _dist <= _radius then
-                table.insert(_units, u)
-            end
-        end
-    end
-    return _units
-end
+end ]]--
 -- ***************************************************************
 function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logistic unit to be able to repack the vehicle
     local dynamicLogisticUnitName = "%dynLogisticName_" .. tostring(ctld.getNextDynamicLogisticUnitIndex())
@@ -2070,7 +2133,7 @@ end
 function ctld.updateDynamicLogisticUnitsZones()      -- remove Dynamic Logistic Units if no statics units (crates) are in the zone
     local _units = {}
     for i, logUnit in ipairs(ctld.logisticUnits) do
-        if string.sub(phrase, 1, 17) == "%dynLogisticName_" then        -- check if the unit is a dynamic logistic unit
+        if string.sub(logUnit, 1, 17) == "%dynLogisticName_" then        -- check if the unit is a dynamic logistic unit
             local unitsInLogisticUnitZone = ctld.getUnitsInLogisticZone(logUnit)
             if #unitsInLogisticUnitZone == 0 then
                 local _logUnit = StaticObject.getByName(logUnit)
@@ -2084,14 +2147,34 @@ function ctld.updateDynamicLogisticUnitsZones()      -- remove Dynamic Logistic 
     return 5    -- reschedule the function in 5 second
 end
 -- ***************************************************************
-function ctld.getUnitsInLogisticZone(_logisticUnitName)
+function ctld.getUnitsInLogisticZone(_logisticUnitName, _coalition)
     local _unit = StaticObject.getByName(_logisticUnitName)
     if _unit then
         local _point = _unit:getPoint()
-        local _unitList = ctld.getNearbyUnits(_point, ctld.maximumDistanceLogistic)
+        local _unitList = ctld.getNearbyUnits(_point, ctld.maximumDistanceLogistic, _coalition)
         return _unitList
     end
     return {}
+end
+-- ***************************************************************
+function ctld.isUnitInNamedLogisticZone(_unit, _logisticUnitName) -- check if a unit is in the named logistic zone
+    local unitPoint = _unit:getPoint()
+    local logisticUnitPoint = StaticObject.getByName(_logisticUnitName):getPoint()
+    
+    local _dist = ctld.getDistance(unitPoint, logisticUnitPoint)
+    if _dist <= ctld.maximumDistanceLogistic then
+        return true
+    end
+    return false
+end
+-- ***************************************************************
+function ctld.isUnitInALogisticZone(_unit) -- check if a unit is in a logistic zone if true then return the logisticUnitName of the zone
+    for i, logUnit in ipairs(ctld.logisticUnits) do
+        if ctld.isUnitInNamedLogisticZone(_unit, logUnit) then
+            return logUnit
+        end
+    end
+    return nil
 end
 
 -- ***************************************************************
@@ -5929,7 +6012,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                             table.insert(menuEntries, { text = ctld.i18n_translate("repack ").._vehicle.unit, 
                                                                         groupId = _groupId, 
                                                                         subMenuPath = RepackCommandsPath, 
-                                                                        menuFunction = ctld.repackVehicle, 
+                                                                        menuFunction = ctld.repackVehicleRequest, 
                                                                         menuArgsTable = {_vehicle, _unitName} })
                                         end
                                         local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), _vehicleCommandsPath)
@@ -6061,8 +6144,7 @@ function ctld.buildPaginatedMenu(_menuEntries)
     ctld.logTrace("ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
     local itemNbSubmenu = 0
     for i, menu in ipairs(_menuEntries) do
-        --ctld.logTrace("ctld.buildPaginatedMenu.menu = [%s]", ctld.p(mist.utils.tableShow(menu)))
-ctld.logTrace("ctld.buildPaginatedMenu. mist.utils.tableShow(menu) = [%s]", mist.utils.tableShow(menu))
+        ctld.logTrace("ctld.buildPaginatedMenu. mist.utils.tableShow(menu) = [%s]", mist.utils.tableShow(menu))
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
         if itemNbSubmenu == 10 and i < #_menuEntries then -- page limit reached
@@ -8091,6 +8173,9 @@ function ctld.initialize()
                                 if ctld.enableCrates == true and ctld.hoverPickup == true then
                                     timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
                                 end
+                                if ctld.enableRepackingVehicles == true then
+                                    timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
+                                end   
                             end,nil, timer.getTime()+1 )
 
     --event handler for deaths
