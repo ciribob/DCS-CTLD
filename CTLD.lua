@@ -1969,7 +1969,7 @@ end
 -- ***************************************************************
 --                  Repack vehicules crates functions 
 -- ***************************************************************
-ctld.repackRequestStack = {} -- table to store the repack request
+ctld.repackRequestsStack = {} -- table to store the repack request
 
 function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
     if _radius == nil then
@@ -2031,25 +2031,15 @@ function ctld.isRepackableUnit(_unitId)
 end
 -- ***************************************************************
 function ctld.repackVehicleRequest(_params)     -- update rrs table 'repackRequestsStack' with the request
-    local repackableUnit = _params[1]
+    --[[
+local repackableUnit = _params[1]
     local PlayerTransportUnitName = _params[2]
     local PlayerTransportUnit = Unit.getByName(PlayerTransportUnitName)
     local TransportUnit = ctld.getTransportUnit(PlayerTransportUnitName)
     local spawnRefPoint = PlayerTransportUnit:getPoint()
     local refCountry = PlayerTransportUnit:getCountry()
-
+]]--
     ctld.repackRequestsStack[#ctld.repackRequestsStack+1] = _params
-
-    --[[
-    if repackableUnit then
-        local _point = {x = spawnRefPoint.x+5, z = spawnRefPoint.z}
-        local _unitId = ctld.getNextUnitId()
-        local _name = string.format("%s #%i", repackableUnit.desc, _unitId)
-        ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, repackableUnit.weight, PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
-        ctld.addStaticLogisticUnit({x = spawnRefPoint.x+5, z = spawnRefPoint.z+10}, refCountry) -- create a temporary logistic unit to be able to repack the vehicle
-        return
-    end ]]--
-
 end
 -- ***************************************************************
 function ctld.repackVehicle(_params,t)   -- scan rrs table 'repackRequestsStack' to process each request
