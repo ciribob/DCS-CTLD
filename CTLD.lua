@@ -6131,14 +6131,19 @@ ctld.logTrace("FG_  menuEntries = %s", ctld.p(mist.utils.tableShow(menuEntries))
 end
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    ctld.logTrace("ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
+    ctld.logTrace("FG_ ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
+    local nextSubMenuPath = ""
     local itemNbSubmenu = 0
     for i, menu in ipairs(_menuEntries) do
         ctld.logTrace("ctld.buildPaginatedMenu. mist.utils.tableShow(menu) = [%s]", mist.utils.tableShow(menu))
+        if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
+            menu.subMenuPath = nextSubMenuPath
+        end
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
         if itemNbSubmenu == 10 and i < #_menuEntries then -- page limit reached
             menu.subMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
+            nextSubMenuPath = menu.subMenuPath
             itemNbSubmenu = 1
         end
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
