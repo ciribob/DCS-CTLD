@@ -6135,7 +6135,7 @@ function ctld.buildPaginatedMenu(_menuEntries)
     local nextSubMenuPath = ""
     local itemNbSubmenu = 0
     for i, menu in ipairs(_menuEntries) do
-        ctld.logTrace("ctld.buildPaginatedMenu. mist.utils.tableShow(menu) = [%s]", mist.utils.tableShow(menu))
+        ctld.logTrace("FG ctld.buildPaginatedMenu. [%s] mist.utils.tableShow(menu) = [%s]", i, mist.utils.tableShow(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
             menu.subMenuPath = nextSubMenuPath
         end
