@@ -2048,7 +2048,7 @@ function ctld.repackVehicleRequest(_params)     -- update rrs table 'repackReque
     ctld.logTrace("FG_  ctld.repackVehicleRequest = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
 end
 -- ***************************************************************
-function ctld.repackVehicle(_params,t)   -- scan rrs table 'repackRequestsStack' to process each request
+function ctld.repackVehicle(_params, t)   -- scan rrs table 'repackRequestsStack' to process each request
     trigger.action.outText("Repacking vehicle...", 10)
     if t == nil then
         t =  timer.getTime()
@@ -2083,7 +2083,11 @@ function ctld.repackVehicle(_params,t)   -- scan rrs table 'repackRequestsStack'
             ctld.repackRequestsStack[ii] = nil
         end
 	end
-    return 3    -- reschedule the function in 3 seconds
+    if ctld.enableRepackingVehicles == true then
+        return t + 3    -- reschedule the function in 3 seconds
+    else    
+        return nil      --stop scheduling
+    end
 end
 --[[ ***************************************************************
 function ctld.repackVehicle_old(_params)
