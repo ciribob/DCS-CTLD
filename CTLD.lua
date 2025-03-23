@@ -1981,14 +1981,13 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
         return
     end
 
-    local playerCoalition   = unit:getCoalition()
-    local point           = unit:getPoint()
-    local unitList        = ctld.getNearbyUnits(point, _radius, playerCoalition)
+    local unitsNamesList  = ctld.getNearbyUnits(unit:getPoint(), _radius, unit:getCoalition())
     local repackableUnits = {}
-    for i=1, #unitList do
-        local repackableUnit = ctld.isRepackableUnit(unitList[i])
+    for i=1, #unitsNamesList do
+        local unitObject     = Unit.getByName(unitsNamesList[i])
+        local repackableUnit = ctld.isRepackableUnit(unitsNamesList[i])
         if repackableUnit then
-            repackableUnit["repackableUnitGroupID"] = unitList[i]:getGroup():getID()
+            repackableUnit["repackableUnitGroupID"] = unitObject:getGroup():getID()
             table.insert(repackableUnits,  mist.utils.deepCopy(repackableUnit))
         end
     end
@@ -2007,22 +2006,36 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
             --local _dist = ctld.getDistance(u:getPoint(), _point)
             local _dist = mist.utils.get2DDist(u:getPoint(), _point)
             if _dist <= _radius then
-                table.insert(_units, u)
+                table.insert(_units, k)     -- insert nearby unitName 
             end
         end
     end
     return _units
 end
 -- ***************************************************************
-function ctld.isRepackableUnit(_unitId)
-    local unitType = _unitId:getTypeName()
+function ctld.isRepackableUnit(_unitName)
+    local unitObject = Unit.getByName(_unitName)
+    local unitType   = unitObject:getTypeName()
     for k,v in pairs(ctld.spawnableCrates) do
         for i=1, #ctld.spawnableCrates[k] do
-            if _unitId then
+            if _unitName then
                 if ctld.spawnableCrates[k][i].unit == unitType then
                     local repackableUnit = mist.utils.deepCopy(ctld.spawnableCrates[k][i])
-                    repackableUnit["vehicleId"] = _unitId
+                    repackableUnit["repackableUnitName"] = _unitName
                     return repackableUnit
+                end
+            end
+        end
+    end
+    return nil
+end
+-- ***************************************************************
+function ctld.getCrateDesc(_crateWeight)
+    for k,v in pairs(ctld.spawnableCrates) do
+        for i=1, #ctld.spawnableCrates[k] do
+            if _crateWeight then
+                if ctld.spawnableCrates[k][i].weight == _crateWeight then
+                    return ctld.spawnableCrates[k][i]
                 end
             end
         end
@@ -2035,7 +2048,7 @@ function ctld.repackVehicleRequest(_params)     -- update rrs table 'repackReque
     --[[
 local repackableUnit = _params[1]
     local PlayerTransportUnitName = _params[2]
-    local PlayerTransportUnit = Unit.getByName(PlayerTransportUnitName)
+    local PlayerTransportUnit = Unit.getByName(PlayerTransportUnitName) 
     local TransportUnit = ctld.getTransportUnit(PlayerTransportUnitName)
     local spawnRefPoint = PlayerTransportUnit:getPoint()
     local refCountry = PlayerTransportUnit:getCountry()
@@ -2048,7 +2061,7 @@ function ctld.repackVehicle(_params,t)   -- scan rrs table 'repackRequestsStack'
     if t == nil then
         t =  timer.getTime()
     end
-
+    ctld.logTrace("FG_  ctld.repackVehicle = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
     for ii, v in ipairs(ctld.repackRequestsStack) do
         local repackableUnit = v[1]
         local PlayerTransportUnitName = v[2]
@@ -2149,7 +2162,12 @@ function ctld.getUnitsInLogisticZone(_logisticUnitName, _coalition)
     return {}
 end
 -- ***************************************************************
-function ctld.isUnitInNamedLogisticZone(_unit, _logisticUnitName) -- check if a unit is in the named logistic zone
+function ctld.isUnitInNamedLogisticZone(_unitName, _logisticUnitName) -- check if a unit is in the named logistic zone
+    trigger.action.outText('ctld.isUnitInNamedLogisticZone._logisticUnitName = ',tostring(_logisticUnitName), 10)
+    local _unit = Unit.getByName(_unitName)
+    if _unit == nil then
+        return false
+    end
     local unitPoint = _unit:getPoint()
     local logisticUnitPoint = StaticObject.getByName(_logisticUnitName):getPoint()
     
@@ -2160,9 +2178,9 @@ function ctld.isUnitInNamedLogisticZone(_unit, _logisticUnitName) -- check if a 
     return false
 end
 -- ***************************************************************
-function ctld.isUnitInALogisticZone(_unit) -- check if a unit is in a logistic zone if true then return the logisticUnitName of the zone
+function ctld.isUnitInALogisticZone(_unitName) -- check if a unit is in a logistic zone if true then return the logisticUnitName of the zone
     for i, logUnit in ipairs(ctld.logisticUnits) do
-        if ctld.isUnitInNamedLogisticZone(_unit, logUnit) then
+        if ctld.isUnitInNamedLogisticZone(_unitName, logUnit) then
             return logUnit
         end
     end
