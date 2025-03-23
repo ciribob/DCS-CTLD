@@ -6017,22 +6017,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 end
 
                                 if ctld.enableRepackingVehicles then
-                                    -- local repackableVehicles = ctld.getUnitsInRepackRadius(_unitName, ctld.maximumDistanceRepackableUnitsSearch)
-                                    -- if repackableVehicles then
-                                    --     local menuEntries = {}
-                                    -- local RepackCommandsPath = mist.utils.deepCopy(_vehicleCommandsPath)
-                                    -- RepackCommandsPath[#RepackCommandsPath+1] = ctld.i18n_translate("Repack Vehicles")
-                                        
-                                    --     for _, _vehicle in pairs(repackableVehicles) do
-                                    --         table.insert(menuEntries, { text = ctld.i18n_translate("repack ").._vehicle.unit, 
-                                    --                                     groupId = _groupId, 
-                                    --                                     subMenuPath = RepackCommandsPath, 
-                                    --                                     menuFunction = ctld.repackVehicleRequest, 
-                                    --                                     menuArgsTable = {_vehicle, _unitName} })
-                                    --     end
-                                    --     local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), _vehicleCommandsPath)
-                                    --     ctld.buildPaginatedMenu(menuEntries)
-                                    -- end
+                                    ctld.updateRepackMenu(_unitName)
                                 end
                                 if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                     missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Unload FOB Crate"), _vehicleCommandsPath, ctld.loadUnloadFOBCrate, { _unitName, false })
