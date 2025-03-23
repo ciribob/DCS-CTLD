@@ -6164,6 +6164,8 @@ function ctld.buildPaginatedMenu(_menuEntries)
             nextSubMenuPath = menu.subMenuPath
             itemNbSubmenu = 1
         end
+        menu.menuArgsTable.subMenuPath      = menu.subMenuPath
+        menu.menuArgsTable.subMenuLineIndex = menu.itemNbSubmenu
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
     end
 end
