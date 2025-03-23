@@ -6185,7 +6185,7 @@ function ctld.updateRepackMenu(_playerUnitName)
                 local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
                 if repackableVehicles then
                     
-                    missionCommands.removeItemForGroup(1, ctld.vehicleCommandsPath)
+                    missionCommands.removeItemForGroup(1, ctld.vehicleCommandsPath) -- remove the old menu
                     local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath)
                     
                     local menuEntries = {}
