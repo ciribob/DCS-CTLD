@@ -2049,6 +2049,7 @@ function ctld.repackVehicleRequest(_params)     -- update rrs table 'repackReque
 end
 -- ***************************************************************
 function ctld.repackVehicle(_params,t)   -- scan rrs table 'repackRequestsStack' to process each request
+    trigger.action.outText("Repacking vehicle...", 10)
     if t == nil then
         t =  timer.getTime()
     end
