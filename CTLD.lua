@@ -2059,7 +2059,7 @@ function ctld.repackVehicle(_params, t)   -- scan rrs table 'repackRequestsStack
         local crateWeight         = v[1].weight
         local repackableUnit      = Unit.getByName(repackableUnitName)
         
-        local PlayerTransportUnit = Unit.getByName(v[2][1])
+        local PlayerTransportUnit = Unit.getByName(v[2])
         local TransportUnit       = ctld.getTransportUnit(PlayerTransportUnitName)
         local spawnRefPoint       = PlayerTransportUnit:getPoint()
         local refCountry          = PlayerTransportUnit:getCountry()
