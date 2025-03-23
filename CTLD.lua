@@ -2163,7 +2163,7 @@ function ctld.getUnitsInLogisticZone(_logisticUnitName, _coalition)
 end
 -- ***************************************************************
 function ctld.isUnitInNamedLogisticZone(_unitName, _logisticUnitName) -- check if a unit is in the named logistic zone
-    trigger.action.outText('ctld.isUnitInNamedLogisticZone._logisticUnitName = ',tostring(_logisticUnitName), 10)
+    trigger.action.outText('ctld.isUnitInNamedLogisticZone._logisticUnitName = '..tostring(_logisticUnitName), 10)
     local _unit = Unit.getByName(_unitName)
     if _unit == nil then
         return false
