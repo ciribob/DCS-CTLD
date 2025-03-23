@@ -2058,10 +2058,11 @@ function ctld.repackVehicle(_params,t)   -- scan rrs table 'repackRequestsStack'
         local repackableUnitName  = v[1].repackableUnitName
         local crateWeight         = v[1].weight
         local repackableUnit      = Unit.getByName(repackableUnitName)
+        
         local PlayerTransportUnit = Unit.getByName(v[2][1])
-        local TransportUnit = ctld.getTransportUnit(PlayerTransportUnitName)
-        local spawnRefPoint = PlayerTransportUnit:getPoint()
-        local refCountry    = PlayerTransportUnit:getCountry()
+        local TransportUnit       = ctld.getTransportUnit(PlayerTransportUnitName)
+        local spawnRefPoint       = PlayerTransportUnit:getPoint()
+        local refCountry          = PlayerTransportUnit:getCountry()
     
     	if repackableUnit then 
             if repackableUnit:isExist() then
@@ -2081,7 +2082,6 @@ function ctld.repackVehicle(_params,t)   -- scan rrs table 'repackRequestsStack'
             end
             ctld.repackRequestsStack[ii] = nil
         end
-
 	end
     return 3    -- reschedule the function in 3 seconds
 end
