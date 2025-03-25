@@ -2045,7 +2045,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
             end
             ctld.repackRequestsStack[ii] = nil
         end
-        ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
+        --ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
     end
     if ctld.enableRepackingVehicles == true then
         return t + 3         -- reschedule the function in 3 seconds
