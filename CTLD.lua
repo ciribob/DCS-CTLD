@@ -6117,7 +6117,7 @@ function ctld.addJTACRadioCommand(_side)
             if _groupId then
                 local newGroup = false
                 if ctld.jtacRadioAdded[tostring(_groupId)] == nil then
-                    ctld.logDebug("ctld.addJTACRadioCommand - adding JTAC radio menu for unit [%s]",
+                    --ctld.logDebug("ctld.addJTACRadioCommand - adding JTAC radio menu for unit [%s]",
                         ctld.p(_playerUnit:getName()))
                     newGroup = true
                     local JTACpath = missionCommands.addSubMenuForGroup(_groupId, ctld.jtacMenuName)
@@ -7664,7 +7664,7 @@ function ctld.addReconRadioCommand(_side) -- _side = 1 or 2 (red    or blue)
                     local _groupId = ctld.getGroupId(_playerUnit)
                     if _groupId then
                         if ctld.reconRadioAdded[tostring(_groupId)] == nil then
-                            ctld.logDebug("ctld.addReconRadioCommand - adding RECON radio menu for unit [%s]",
+                            --ctld.logDebug("ctld.addReconRadioCommand - adding RECON radio menu for unit [%s]",
                                 ctld.p(_playerUnit:getName()))
                             local RECONpath = missionCommands.addSubMenuForGroup(_groupId, ctld.reconMenuName)
                             missionCommands.addCommandForGroup(_groupId,
