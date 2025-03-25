@@ -6024,7 +6024,7 @@ end
 
 --******************************************************************************************************
 function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each transport unit
-    ctld.logTrace("FG_    ctld.repackVehicleRequest = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
+    ctld.logTrace("FG_    ctld.autoUpdateRepackMenu.ctld.transportPilotNames = %s", ctld.p(mist.utils.tableShow(ctld.transportPilotNames)))
     if t == nil then t = timer.getTime() end
     if ctld.enableRepackingVehicles then
         for _, _unitName in pairs(ctld.transportPilotNames) do
