@@ -5768,7 +5768,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
             local _groupId = ctld.getGroupId(_unit)
             if _groupId then
                 ctld.logTrace("_groupId = %s", ctld.p(_groupId))
-                ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
+                ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo[tostring(_groupId)]))
                 if ctld.addedTo[tostring(_groupId)] == nil then
                     ctld.logTrace("adding CTLD menu for _groupId = %s", ctld.p(_groupId))
                     local _rootPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("CTLD"))
@@ -7663,8 +7663,7 @@ function ctld.addReconRadioCommand(_side) -- _side = 1 or 2 (red    or blue)
                     local _groupId = ctld.getGroupId(_playerUnit)
                     if _groupId then
                         if ctld.reconRadioAdded[tostring(_groupId)] == nil then
-                            --ctld.logDebug("ctld.addReconRadioCommand - adding RECON radio menu for unit [%s]",
-                                ctld.p(_playerUnit:getName()))
+                            --ctld.logDebug("ctld.addReconRadioCommand - adding RECON radio menu for unit [%s]", ctld.p(_playerUnit:getName()))
                             local RECONpath = missionCommands.addSubMenuForGroup(_groupId, ctld.reconMenuName)
                             missionCommands.addCommandForGroup(_groupId,
                                 ctld.i18n_translate("Show targets in LOS (refresh)"), RECONpath,
@@ -8080,7 +8079,7 @@ function ctld.initialize()
         end
         if ctld.enableRepackingVehicles == true then
             --timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
-            timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
+            --timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
     end, nil, timer.getTime() + 1)
 
