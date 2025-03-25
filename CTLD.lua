@@ -2033,7 +2033,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerPoint = PlayerTransportUnit:getPoint()
                 local offset = 5
                 local randomHeading = ctld.RandomReal(_playerHeading - math.pi/4, _playerHeading + math.pi/4)
-                for i = 1, v[1].cratesRequired - 1 do
+                for i = 1, v[1].cratesRequired do
                     -- see to spawn the crate at random position heading the transport unnit
                     local _unitId = ctld.getNextUnitId()
                     local _name = string.format("%s_%i", v[1].desc, _unitId)
