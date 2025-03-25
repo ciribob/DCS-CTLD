@@ -2029,8 +2029,8 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
         if repackableUnit then
             if repackableUnit:isExist() then
                 --ici calculer le heading des spwans à effectuer
-                for i = 1, v[1].cratesRequired do
-                    local _point = { x = spawnRefPoint.x + (i * 5), z = spawnRefPoint.z }
+                for i = 0, v[1].cratesRequired - 1 do
+                    local _point = { x = spawnRefPoint.x + 5 + (i * 3), z = spawnRefPoint.z }
                     -- see to spawn the crate at random position heading the transport unit with ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
                     local _unitId = ctld.getNextUnitId()
                     local _name = string.format("%s_%i", v[1].desc, _unitId)
@@ -2113,7 +2113,7 @@ function ctld.updateDynamicLogisticUnitsZones() -- remove Dynamic Logistic Units
             end
         end
     end
-    return 5     -- reschedule the function in 5 second
+    return 5     -- reschedule the function in 5 seconds
 end
 
 -- ***************************************************************
