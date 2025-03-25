@@ -6023,8 +6023,9 @@ function ctld.updateRepackMenu(_playerUnitName)
 end
 
 --******************************************************************************************************
-function ctld.autoUpdateRepackMenu() -- auto update repack menus for each transport unit
-    --timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
+function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each transport unit
+    ctld.logTrace("FG_    ctld.repackVehicleRequest = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
+    if t == nil then t = timer.getTime() end
     if ctld.enableRepackingVehicles then
         for _, _unitName in pairs(ctld.transportPilotNames) do
             local status, error = pcall(
@@ -6048,6 +6049,7 @@ function ctld.autoUpdateRepackMenu() -- auto update repack menus for each transp
             end
         end
     end
+    return t + 3   -- reschedule every 3 seconds
 end
 
 --******************************************************************************************************
