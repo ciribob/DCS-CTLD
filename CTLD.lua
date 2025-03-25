@@ -2129,7 +2129,7 @@ end
 
 -- ***************************************************************
 function ctld.isUnitInNamedLogisticZone(_unitName, _logisticUnitName) -- check if a unit is in the named logistic zone
-    trigger.action.outText('ctld.isUnitInNamedLogisticZone._logisticUnitName = ' .. tostring(_logisticUnitName), 10)
+    --ctld.logTrace("FG_    ctld.isUnitInNamedLogisticZone._logisticUnitName = %s", ctld.p(_logisticUnitName))
     local _unit = Unit.getByName(_unitName)
     if _unit == nil then
         return false
@@ -2147,6 +2147,7 @@ end
 
 -- ***************************************************************
 function ctld.isUnitInALogisticZone(_unitName) -- check if a unit is in a logistic zone if true then return the logisticUnitName of the zone
+    --ctld.logTrace("FG_    ctld.isUnitInALogisticZone._unitName = %s", ctld.p(_unitName))
     for i, logUnit in ipairs(ctld.logisticUnits) do
         if ctld.isUnitInNamedLogisticZone(_unitName, logUnit) then
             return logUnit
