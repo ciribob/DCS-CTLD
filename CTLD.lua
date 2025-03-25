@@ -2014,7 +2014,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
     if t == nil then
         t = timer.getTime()
     end
-    ctld.logTrace("FG_    ctld.repackVehicle = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
+    --ctld.logTrace("FG_    ctld.repackVehicle = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
     for ii, v in ipairs(ctld.repackRequestsStack) do
         local repackableUnitName  = v[1].repackableUnitName
         local crateWeight         = v[1].weight
@@ -5819,7 +5819,8 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             end
 
                             if ctld.enableRepackingVehicles then
-trigger.action.outText("5822: F10 menu if ctld.unitCanCarryVehicles".._unit, 10)
+ctld.logTrace("ctld.unitCanCarryVehicles %s", _unitName)
+trigger.action.outText("5822: F10 menu if ctld.unitCanCarryVehicles".._unitName, 10)
                                 ctld.updateRepackMenu(_unitName)
                             end
                             if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
