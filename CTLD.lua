@@ -2032,10 +2032,9 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local _playerHeading = mist.getHeading(PlayerTransportUnit)
                 local _offset = 5
                 trigger.action.outText("heading = " .. _playerHeading, 5)
-                local refPoint = ctld.getPointAtDirection(PlayerTransportUnit, _offset, ctld.randomValueBetweenMinAndMax(_playerHeading - math.pi/4, _playerHeading + math.pi/4))
+                local refPoint = ctld.getPointAtDirection(PlayerTransportUnit, _offset, ctld.random(_playerHeading - math.pi/4, _playerHeading + math.pi/4))
                 for i = 0, v[1].cratesRequired - 1 do
                     --local _point = { x = spawnRefPoint.x + 5 + (i * 3), z = spawnRefPoint.z }
-                    --local refPoint = ctld.getPointAtDirection(PlayerTransportUnit, _offset, ctld.randomValueBetweenMinAndMax(_playerHeading - math.pi/4, _playerHeading + math.pi/4))
                     local _point = { x = refPoint.x + 5 + (i * _offset), z = refPoint.z }
                     
                     -- see to spawn the crate at random position heading the transport unit with ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
@@ -8270,11 +8269,6 @@ end
 
 -- initialize the random number generator to make it almost random
 math.random(); math.random(); math.random()
-function ctld.randomValueBetweenMinAndMax(mini, maxi)
-    local aleatoire = math.random() -- math.random() génèrate ua random value between 0 eand 1
-    local resultat = mini + aleatoire * (maxi - mini)  -- Scales the random number to the interval [min, max]
-    return resultat
-  end
 
 --- Enable/Disable error boxes displayed on screen.
 env.setErrorMessageBoxEnabled(false)
