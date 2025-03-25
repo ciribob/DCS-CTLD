@@ -5995,6 +5995,7 @@ end
 
 --******************************************************************************************************
 function ctld.updateRepackMenu(_playerUnitName)
+    ctld.logTrace("FG_ ctld.updateRepackMenu = [%s]", ctld.p(_playerUnitName))
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
         local _unitTypename = playerUnit:getTypeName()
@@ -6056,7 +6057,7 @@ end
 
 --******************************************************************************************************
 function ctld.addOtherF10MenuOptions()
-    ctld.logDebug("ctld.addOtherF10MenuOptions")
+    --ctld.logDebug("ctld.addOtherF10MenuOptions")
     -- reschedule every 10 seconds
     timer.scheduleFunction(ctld.addOtherF10MenuOptions, nil, timer.getTime() + 10)
     local status, error = pcall(function()
@@ -6094,7 +6095,7 @@ function ctld.addRadioListCommand(_side)
             local _groupId = ctld.getGroupId(_playerUnit)
 
             if _groupId then
-                ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
+                --ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
                 if ctld.addedTo[tostring(_groupId)] == nil then
                     ctld.logTrace("adding List Radio Beacons for _groupId = %s", ctld.p(_groupId))
                     missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Radio Beacons"), nil,
