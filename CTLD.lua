@@ -2004,13 +2004,13 @@ end
 
 -- ***************************************************************
 function ctld.repackVehicleRequest(_params) -- update rrs table 'repackRequestsStack' with the request
+    --ctld.logTrace("FG_    ctld.repackVehicleRequest")
     ctld.repackRequestsStack[#ctld.repackRequestsStack + 1] = _params
-    ctld.logTrace("FG_    ctld.repackVehicleRequest = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
 end
 
 -- ***************************************************************
 function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' to process each request
-    trigger.action.outText("Repacking vehicle...", 10)
+    --ctld.logTrace("FG_    ctld.repackVehicle")
     if t == nil then
         t = timer.getTime()
     end
@@ -5966,7 +5966,7 @@ end
 
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    ctld.logTrace("FG_ ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
+    --ctld.logTrace("FG_ ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
     local nextSubMenuPath = ""
     local itemNbSubmenu = 0
     for i, menu in ipairs(_menuEntries) do
@@ -6023,7 +6023,7 @@ end
 
 --******************************************************************************************************
 function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each transport unit
-    ctld.logTrace("FG_    ctld.autoUpdateRepackMenu.ctld.transportPilotNames = %s", ctld.p(mist.utils.tableShow(ctld.transportPilotNames)))
+    --ctld.logTrace("FG_    ctld.autoUpdateRepackMenu.ctld.transportPilotNames = %s", ctld.p(mist.utils.tableShow(ctld.transportPilotNames)))
     if t == nil then t = timer.getTime() end
     if ctld.enableRepackingVehicles then
         for _, _unitName in pairs(ctld.transportPilotNames) do
