@@ -6117,8 +6117,7 @@ function ctld.addJTACRadioCommand(_side)
             if _groupId then
                 local newGroup = false
                 if ctld.jtacRadioAdded[tostring(_groupId)] == nil then
-                    --ctld.logDebug("ctld.addJTACRadioCommand - adding JTAC radio menu for unit [%s]",
-                        ctld.p(_playerUnit:getName()))
+                    --ctld.logDebug("ctld.addJTACRadioCommand - adding JTAC radio menu for unit [%s]", ctld.p(_playerUnit:getName()))
                     newGroup = true
                     local JTACpath = missionCommands.addSubMenuForGroup(_groupId, ctld.jtacMenuName)
                     missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("JTAC Status"), JTACpath,
