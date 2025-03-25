@@ -2037,7 +2037,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     -- see to spawn the crate at random position heading the transport unnit
                     local _unitId = ctld.getNextUnitId()
                     local _name = string.format("%s_%i", v[1].desc, _unitId)
-                    local relativePoint = ctld.getRelativePoint(playerPoint, 10 + i * offset, randomHeading)
+                    local relativePoint = ctld.getRelativePoint(playerPoint, 7 + i * offset, randomHeading) -- 7 meters from the transport unit
                     ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, relativePoint, _name, crateWeight,
                                           PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
                 end
