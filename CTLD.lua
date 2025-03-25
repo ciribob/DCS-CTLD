@@ -2022,23 +2022,22 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
 
         local playerUnitName      = v[2]
         local PlayerTransportUnit = Unit.getByName(playerUnitName)
-        local TransportUnit       = ctld.getTransportUnit(PlayerTransportUnitName)
+        local TransportUnit       = ctld.getTransportUnit(playerUnitName)
         local spawnRefPoint       = PlayerTransportUnit:getPoint()
         local refCountry          = PlayerTransportUnit:getCountry()
 
         if repackableUnit then
             if repackableUnit:isExist() then
-                --ici calculer le heading des spwans à effectuer
+                -- calculate the heading of the spawns to be carried out
                 local _playerHeading = mist.getHeading(PlayerTransportUnit)
                 local playerPoint = PlayerTransportUnit:getPoint()
                 local offset = 5
-                --local refPoint = ctld.getPointAtDirection(PlayerTransportUnit, offset, ctld.random(_playerHeading - math.pi/4, _playerHeading + math.pi/4))
-                local randomHeading = RandomReal(_playerHeading - math.pi/4, _playerHeading + math.pi/4)
-                for i = 0, v[1].cratesRequired - 1 do
-                    -- see to spawn the crate at random position heading the transport unit with ctld.getPointAtDirection(_unit, offset, _directionInRadian)
+                local randomHeading = ctld.RandomReal(_playerHeading - math.pi/4, _playerHeading + math.pi/4)
+                for i = 1, v[1].cratesRequired - 1 do
+                    -- see to spawn the crate at random position heading the transport unnit
                     local _unitId = ctld.getNextUnitId()
                     local _name = string.format("%s_%i", v[1].desc, _unitId)
-                    local relativePoint = ctld.getRelativePoint(playerPoint, i * offset, randomHeading)
+                    local relativePoint = ctld.getRelativePoint(playerPoint, 10 + i * offset, randomHeading)
                     ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, relativePoint, _name, crateWeight,
                                           PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
                 end
@@ -2059,31 +2058,6 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
     end
 end
 
---[[ ***************************************************************
-function ctld.repackVehicle_old(_params)
-        local repackableUnit = _params[1]
-        local PlayerTransportUnitName = _params[2]
-        local PlayerTransportUnit = Unit.getByName(PlayerTransportUnitName)
-        ctld.logTrace(" ctld.repackVehicle.repackableUnit = %s", ctld.p(mist.utils.tableShow(repackableUnit)))
-        local TransportUnit = ctld.getTransportUnit(PlayerTransportUnitName)
-        local spawnRefPoint = PlayerTransportUnit:getPoint()
-        local refCountry = PlayerTransportUnit:getCountry()
-        if repackableUnit then
-                --ici calculer le heading des spwan à effectuer
-                for i=1, repackableUnit.cratesRequired do
-                        --local _point = mist.utils.makeVec3GL(spawnRefPoint.x+(i*5), spawnRefPoint.z, spawnRefPoint.y)
-                        local _point = {x = spawnRefPoint.x+(i*5), z = spawnRefPoint.z}
-                        -- see to spawn the crate at random position heading the transport unit with ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
-                        local _unitId = ctld.getNextUnitId()
-                        local _name = string.format("%s #%i", repackableUnit.desc, _unitId)
-                        ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, repackableUnit.weight, PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
-                end
-
-                ctld.addStaticLogisticUnit({x = spawnRefPoint.x+5, z = spawnRefPoint.z+10}, refCountry) -- create a temporary logistic unit to be able to repack the vehicle
-                repackableUnit.vehicleId:destroy()         -- destroy repacked unit
-                return
-        end
-end ]]                                                --
 -- ***************************************************************
 function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logistic unit to be able to repack the vehicle
     local dynamicLogisticUnitName = "%dynLogisticName_" .. tostring(ctld.getNextDynamicLogisticUnitIndex())
@@ -2627,7 +2601,7 @@ function ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
     return { x = _point.x + _xOffset, z = _point.z + _zOffset, y = _point.y }
 end
 
-function ctld.getRelativePoint(_refPointXZTable, _distance, _angle_radians)  -- return coord point at distance and angle from _refPoint
+function ctld.getRelativePoint(_refPointXZTable, _distance, _angle_radians)  -- return coord point at distance and angle from _refPointXZTable
     local relativePoint = {}
     relativePoint.x = _refPointXZTable.x + _distance * math.cos(_angle_radians)
     if _refPointXZTable.z == nil then
