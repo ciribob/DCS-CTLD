@@ -2029,13 +2029,19 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
         if repackableUnit then
             if repackableUnit:isExist() then
                 --ici calculer le heading des spwans à effectuer
+                local _playerHeading = mist.getHeading(PlayerTransportUnit)
+                local _offset = 5
+                local refPoint = ctld.getPointAtDirection(PlayerTransportUnit, _offset, ctld.randomValueBetweenMinAndMax(_playerHeading - math.pi(), _playerHeading + math.pi()))
                 for i = 0, v[1].cratesRequired - 1 do
-                    local _point = { x = spawnRefPoint.x + 5 + (i * 3), z = spawnRefPoint.z }
+                    --local _point = { x = spawnRefPoint.x + 5 + (i * 3), z = spawnRefPoint.z }
+                    local _point = { x = refPoint.x + 5 + (i * _offset), z = refPoint.z }
+                    local refPoint = ctld.getPointAtDirection(PlayerTransportUnit, _offset, ctld.randomValueBetweenMinAndMax(_playerHeading - math.pi(), _playerHeading + math.pi()))
+
                     -- see to spawn the crate at random position heading the transport unit with ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
                     local _unitId = ctld.getNextUnitId()
                     local _name = string.format("%s_%i", v[1].desc, _unitId)
                     ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, crateWeight,
-                        PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
+                                          PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
                 end
 
                 if ctld.isUnitInALogisticZone(repackableUnitName) == nil then
@@ -5497,7 +5503,6 @@ function ctld.inLogisticsZone(_heli)
         if _logistic ~= nil and _logistic:getCoalition() == _heli:getCoalition() and _logistic:getLife() > 0 then
             --get distance
             local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
-            ctld.logDebug("_dist = %s", ctld.p(_dist))
             if _dist <= ctld.maximumDistanceLogistic then
                 return true
             end
@@ -8264,6 +8269,11 @@ end
 
 -- initialize the random number generator to make it almost random
 math.random(); math.random(); math.random()
+function ctld.randomValueBetweenMinAndMax(mini, maxi)
+    local aleatoire = math.random() -- math.random() génèrate ua random value between 0 eand 1
+    local resultat = mini + aleatoire * (maxi - mini)  -- Scales the random number to the interval [min, max]
+    return resultat
+  end
 
 --- Enable/Disable error boxes displayed on screen.
 env.setErrorMessageBoxEnabled(false)
