@@ -5819,6 +5819,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             end
 
                             if ctld.enableRepackingVehicles then
+trigger.action.outText("5822: F10 menu if ctld.unitCanCarryVehicles".._unit, 10)
                                 ctld.updateRepackMenu(_unitName)
                             end
                             if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
@@ -8077,7 +8078,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
+            --timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
     end, nil, timer.getTime() + 1)
