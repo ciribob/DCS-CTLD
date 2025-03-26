@@ -1922,6 +1922,20 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point, _hdg)
     ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight, _side, _hdg)
 end
 
+function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
+	if Unit.getByName(_unitName) then
+		local unitBoundingBox = Unit.getByName(_unitName):getDesc().box
+		local deltaX = box.max.x - box.min.x
+		local deltaZ = box.max.z - box.min.z
+		if deltaX > deltaZ then
+			return deltaX/2
+		else
+			return deltaZ/2
+		end
+	end
+	return nil
+end
+
 -- ***************************************************************
 --                                    Repack vehicules crates functions
 -- ***************************************************************
@@ -2037,7 +2051,8 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     -- see to spawn the crate at random position heading the transport unnit
                     local _unitId = ctld.getNextUnitId()
                     local _name = string.format("%s_%i", v[1].desc, _unitId)
-                    local relativePoint = ctld.getRelativePoint(playerPoint, 7 + i * offset, randomHeading) -- 7 meters from the transport unit
+                    local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName)
+                    local relativePoint = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
                     ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, relativePoint, _name, crateWeight,
                                           PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
                 end
