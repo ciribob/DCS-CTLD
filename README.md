@@ -50,6 +50,7 @@ This script is a rewrite of some of the functionality of the original Complete C
   * [Simulated Sling Loading](#simulated-sling-loading)
   * [Real Sling Loading](#real-sling-loading)
 * [Crate Unpacking](#crate-unpacking)
+* [Crate Repacking](#crate-repacking)
 * [Forward Operating Base (FOB) Construction](#forward-operating-base-fob-construction)
 * [Radio Beacon Deployment](#radio-beacon-deployment)
   * [A10\-C UHF ADF Radio Setup](#a10-c-uhf-adf-radio-setup)
@@ -1005,6 +1006,11 @@ Rearming:
 **Note: Once unpacked a crate will not disappear from the field or the F6 Menu, but will disappear from the F10 Nearby Crates list. There is currently no way to remove crates due to a DCS Bug AFAIK. This can make picking the right crate tricky, but by using the F10 List crates option, you can keep readjusting your position until you are close to the crate that you want and then it's trial and error, using the F6 menu to pick the right crate for sling loading. **
 
 You can also repair a partially destroyed HAWK / BUK or KUB system by dropping a repair crate next to it and unpacking. A repair crate will also re-arm the system.
+
+## Crate Repacking
+The F10 menu allows you to repack units with associated crate types in the "ctld.spawnableCrates" table.
+Simply land near the unit you wish to repack and select it from the list presented by the "CTLD//Vehicle/FOB transport...//Repack Vehicles" menu.
+If repacking is possible, a logistics zone is automatically created around your aircraft to allow you to load and handle the produced crates.
 
 ## Forward Operating Base (FOB) Construction
 FOBs can be built by loading special FOB crates from a **Logistics** unit into a C-130 or other large aircraft configured in the script. To load the crate use the F10 - Troop Commands Menu. The idea behind FOBs is to make player vs player missions even more dynamic as these can be deployed in most locations. Once destroyed the FOB can no longer be used.
