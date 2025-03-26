@@ -1925,8 +1925,8 @@ end
 function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
 	if Unit.getByName(_unitName) then
 		local unitBoundingBox = Unit.getByName(_unitName):getDesc().box
-		local deltaX = box.max.x - box.min.x
-		local deltaZ = box.max.z - box.min.z
+		local deltaX = unitBoundingBox.max.x - unitBoundingBox.min.x
+		local deltaZ = unitBoundingBox.max.z - unitBoundingBox.min.z
 		if deltaX > deltaZ then
 			return deltaX/2
 		else
@@ -2052,6 +2052,10 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     local _unitId = ctld.getNextUnitId()
                     local _name = string.format("%s_%i", v[1].desc, _unitId)
                     local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName)
+                    if secureDistance == nil then
+                        secureDistance = 7
+                    end
+                    
                     local relativePoint = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
                     ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, relativePoint, _name, crateWeight,
                                           PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
