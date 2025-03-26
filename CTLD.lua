@@ -1937,20 +1937,6 @@ function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between 
 	end
 	return nil
 end
---[[
-function ctld.getSecureDistanceFromUnit_old(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
-	if Unit.getByName(_unitName) then
-		local unitBoundingBox = Unit.getByName(_unitName):getDesc().box
-		local deltaX = unitBoundingBox.max.x - unitBoundingBox.min.x
-		local deltaZ = unitBoundingBox.max.z - unitBoundingBox.min.z
-		if deltaX > deltaZ then
-			return deltaX/2
-		else
-			return deltaZ/2
-		end
-	end
-	return nil
-end ]]--
 
 -- ***************************************************************
 --               Repack vehicules crates functions
