@@ -1,4 +1,4 @@
---[[toto
+--[[
         Combat Troop and Logistics Drop
 
         Allows Huey, Mi-8 and C130 to transport troops internally and Helicopters to transport Logistic / Vehicle units to the field via sling-loads
@@ -5823,9 +5823,10 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
                                 _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
 
-                            if ctld.vehicleCommandsPath == nil then
-                                ctld.vehicleCommandsPath = mist.utils.deepCopy(_vehicleCommandsPath)
-                            end
+                                if ctld.vehicleCommandsPath[_unitName] == nil then
+                                    ctld.vehicleCommandsPath[_unitName] = {}
+                                    ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
+                                end
 
                             if ctld.enableRepackingVehicles then
                                 ctld.updateRepackMenu(_unitName)
@@ -6010,12 +6011,11 @@ function ctld.updateRepackMenu(_playerUnitName)
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName,
                 ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
-                --ctld.logTrace("FG_    ctld.updateRepackMenu.ctld.vehicleCommandsPath = %s", ctld.p(ctld.vehicleCommandsPath))
-    			local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath)
+                local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
                 RepackCommandsPath[#RepackCommandsPath + 1] = ctld.i18n_translate("Repack Vehicles")
                 --ctld.logTrace("FG_    ctld.updateRepackMenu.RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
                 missionCommands.removeItemForGroup(1, RepackCommandsPath) -- remove the old repack menu
-                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath)
+                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
                 for _, _vehicle in pairs(repackableVehicles) do
                     table.insert(menuEntries, {
@@ -7894,7 +7894,7 @@ function ctld.initialize()
     ctld.hoverStatus = {}                  -- tracks status of a helis hover above a crate
 
     ctld.callbacks = {}                    -- function callback
-
+    ctld.vehicleCommandsPath = {}          -- Vehicles commands path for each playerTransportUnit
 
     -- Remove intransit troops when heli / cargo plane dies
     --ctld.eventHandler = {}
