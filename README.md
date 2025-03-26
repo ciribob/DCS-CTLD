@@ -1008,7 +1008,7 @@ Rearming:
 You can also repair a partially destroyed HAWK / BUK or KUB system by dropping a repair crate next to it and unpacking. A repair crate will also re-arm the system.
 
 ## Crate Repacking
-The F10 menu allows you to repack units with associated crate types in the "ctld.spawnableCrates" table.
+The F10 menu allows you to repack units having associated crate types in the "ctld.spawnableCrates" table.
 Simply land near the unit you wish to repack and select it from the list presented by the "CTLD//Vehicle/FOB transport...//Repack Vehicles" menu.
 If repacking is possible, a logistics zone is automatically created around your aircraft to allow you to load and handle the produced crates.
 
