@@ -1925,6 +1925,22 @@ end
 function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
 	if Unit.getByName(_unitName) then
 		local unitBoundingBox = Unit.getByName(_unitName):getDesc().box
+		local widht  = unitBoundingBox.max.x - unitBoundingBox.min.x
+		local longer = unitBoundingBox.max.z - unitBoundingBox.min.z
+		local hight  = unitBoundingBox.max.y - unitBoundingBox.min.y
+		
+		-- distanceFromCenterToCorner = 1/2√(l² + w² + h²)
+		local squaresSum                 = longer^2 + widht^2 + hight^2	-- sum of squares
+		local squareRoots                = math.sqrt(squaresSum)        -- square roots
+		local distanceFromCenterToCorner = squareRoots / 2              -- Calculating distance (half square root)
+		return distanceFromCenterToCorner
+	end
+	return nil
+end
+--[[
+function ctld.getSecureDistanceFromUnit_old(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
+	if Unit.getByName(_unitName) then
+		local unitBoundingBox = Unit.getByName(_unitName):getDesc().box
 		local deltaX = unitBoundingBox.max.x - unitBoundingBox.min.x
 		local deltaZ = unitBoundingBox.max.z - unitBoundingBox.min.z
 		if deltaX > deltaZ then
@@ -1934,10 +1950,10 @@ function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between 
 		end
 	end
 	return nil
-end
+end ]]--
 
 -- ***************************************************************
---                                    Repack vehicules crates functions
+--               Repack vehicules crates functions
 -- ***************************************************************
 ctld.repackRequestsStack = {} -- table to store the repack request
 
