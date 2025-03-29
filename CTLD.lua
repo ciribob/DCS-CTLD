@@ -5980,26 +5980,26 @@ end
 
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    --ctld.logTrace("FG_ ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
+    ctld.logTrace("FG_ ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
     local nextSubMenuPath = ""
     local itemNbSubmenu = 0
     for i, menu in ipairs(_menuEntries) do
-        --ctld.logTrace("FG ctld.buildPaginatedMenu. [%s] mist.utils.tableShow(menu) = [%s]", i, mist.utils.tableShow(menu))
+        ctld.logTrace("FG ctld.buildPaginatedMenu.boucle[%s].menu =  %s", i, ctld.p(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
             menu.subMenuPath = nextSubMenuPath
         end
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
-        if itemNbSubmenu == 10 and i < #_menuEntries then     -- page limit reached
-            menu.subMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"),
-                menu.subMenuPath)
+        if itemNbSubmenu == 11 and i < #_menuEntries then     -- page limit reached
+            menu.subMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
             nextSubMenuPath = menu.subMenuPath
             itemNbSubmenu = 1
         end
         menu.menuArgsTable.subMenuPath      = menu.subMenuPath
         menu.menuArgsTable.subMenuLineIndex = menu.itemNbSubmenu
-        missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction,
-            menu.menuArgsTable)
+        ctld.logTrace("FG ctld.buildPaginatedMenu.boucle[%s].menu.subMenuPath =  %s", i, ctld.p(menu.subMenuPath))
+
+        --missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
     end
 end
 
