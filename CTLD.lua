@@ -809,6 +809,7 @@ ctld.vehicleTransportEnabled = {
     "76MD",     -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
     "Hercules",
     "UH-1H",
+    "Mi-8MT",
     "CH-47Fbl1",
 }
 
