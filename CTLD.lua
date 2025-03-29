@@ -2032,7 +2032,8 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
     if t == nil then
         t = timer.getTime()
     end
-    --ctld.logTrace("FG_    ctld.repackVehicle = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
+    ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
+    ctld.logTrace("FG_    ctld.repackVehicle._params = %s", ctld.p(mist.utils.tableShow(_params)))
     for ii, v in ipairs(ctld.repackRequestsStack) do
         local repackableUnitName  = v[1].repackableUnitName
         local crateWeight         = v[1].weight
