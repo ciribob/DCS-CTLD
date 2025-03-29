@@ -8192,11 +8192,14 @@ function ctld.eventHandler:onEvent(event)
         return
     end
 
-    local function processHumanPlayer()
+    local function processHumanPlayer(mistDBsHumansByName)
         ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- unitName = %s", ctld.p(unitName))
         ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- mist.DBs.humansByName[unitName] = %s", ctld.p(mist.DBs.humansByName[unitName]))
         ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- mist.DBs.humansByName = %s", ctld.p(mist.DBs.humansByName))
-        if mist.DBs.humansByName[unitName] then         -- it's a human unit
+        ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- mistDBsHumansByName[unitName] = %s", ctld.p(mistDBsHumansByName[unitName]))
+        ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- mistDBsHumansByName = %s", ctld.p(mistDBsHumansByName))
+        --if mist.DBs.humansByName[unitName] then         -- it's a human unit
+        if mistDBsHumansByName[unitName] then         -- it's a human unit
             ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
             local _unit = Unit.getByName(unitName)
             if _unit ~= nil then
@@ -8237,11 +8240,11 @@ function ctld.eventHandler:onEvent(event)
         ctld.logTrace("give MiST some time to handle the BIRTH event too")
         timer.scheduleFunction(function()
             ctld.logTrace("calling the 'processHumanPlayer' function in a timer")
-            processHumanPlayer()
+            processHumanPlayer(mist.DBs.humansByName)
         end, nil, timer.getTime() + 0.5)
     else
         ctld.logTrace("calling the 'processHumanPlayer' function immediately")
-        processHumanPlayer()
+        processHumanPlayer(mist.DBs.humansByName)
     end
 end
 
