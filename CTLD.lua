@@ -2065,7 +2065,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 end
 
                 if ctld.isUnitInALogisticZone(repackableUnitName) == nil then
-                    ctld.addStaticLogisticUnit({ x = spawnRefPoint.x + 5, z = spawnRefPoint.z + 10 }, refCountry)               -- create a temporary logistic unit to be able to repack the vehicle
+                    --ctld.addStaticLogisticUnit({ x = spawnRefPoint.x + 5, z = spawnRefPoint.z + 10 }, refCountry)               -- create a temporary logistic unit to be able to repack the vehicle
                 end
                 repackableUnit:destroy()                                                                                        -- destroy repacked unit
             end
