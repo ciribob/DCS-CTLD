@@ -8193,7 +8193,7 @@ function ctld.eventHandler:onEvent(event)
     end
 
     local function processHumanPlayer()
-        ctld.logTrace("in the 'processHumanPlayer' function")
+        ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- unitName = %s", unitName)
         if mist.DBs.humansByName[unitName] then         -- it's a human unit
             ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
             local _unit = Unit.getByName(unitName)
