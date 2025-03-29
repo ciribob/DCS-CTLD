@@ -18,7 +18,7 @@ ctld.i18n = {}
 
 --========  FRENCH - FRANCAIS =====================================================================================
 ctld.i18n["fr"] = {}
-ctld.i18n["fr"].translation_version = "1.4" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["fr"].translation_version = "1.5" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="fr";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
