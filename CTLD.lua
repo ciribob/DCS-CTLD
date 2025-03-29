@@ -2073,7 +2073,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
             end
             ctld.repackRequestsStack[ii] = nil
         end
-        ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
+        --ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
     end
     if ctld.enableRepackingVehicles == true then
         return t + 3         -- reschedule the function in 3 seconds
@@ -5826,8 +5826,8 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
                                 _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
 
-                            if ctld.vehicleCommandsPath == nil then
-                                ctld.vehicleCommandsPath = mist.utils.deepCopy(_vehicleCommandsPath)
+                            if ctld.vehicleCommandsPath[_unitName] == nil then
+                                ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
                             end
 
                             if ctld.enableRepackingVehicles then
@@ -6005,26 +6005,26 @@ end
 
 --******************************************************************************************************
 function ctld.updateRepackMenu(_playerUnitName)
+    ctld.logTrace("FG_    ctld.updateRepackMenu._playerUnitName = %s", ctld.p(_playerUnitName))
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
         local _unitTypename = playerUnit:getTypeName()
         local _groupId      = ctld.getGroupId(playerUnit)
         if ctld.enableRepackingVehicles then
-            local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName,
-                ctld.maximumDistanceRepackableUnitsSearch)
+            local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
-                --ctld.logTrace("FG_    ctld.updateRepackMenu.ctld.vehicleCommandsPath = %s", ctld.p(ctld.vehicleCommandsPath))
-    			local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath)
+                ctld.logTrace("FG_    ctld.updateRepackMenu.ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
+    			local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
                 RepackCommandsPath[#RepackCommandsPath + 1] = ctld.i18n_translate("Repack Vehicles")
-                --ctld.logTrace("FG_    ctld.updateRepackMenu.RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
+                ctld.logTrace("FG_    ctld.updateRepackMenu.RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
                 missionCommands.removeItemForGroup(1, RepackCommandsPath) -- remove the old repack menu
-                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath)
+                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
                 for _, _vehicle in pairs(repackableVehicles) do
                     table.insert(menuEntries, {
                         text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
                         groupId       = _groupId,
-                        subMenuPath   = RepackCommandsPath,
+                        subMenuPath   = RepackmenuPath,
                         menuFunction  = ctld.repackVehicleRequest,
                         menuArgsTable = { _vehicle, _playerUnitName }
                     })
@@ -6037,26 +6037,27 @@ end
 
 --******************************************************************************************************
 function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each transport unit
-    ctld.logTrace("FG_    ctld.autoUpdateRepackMenu.ctld.transportPilotNames = %s", ctld.p(mist.utils.tableShow(ctld.transportPilotNames)))
+    --ctld.logTrace("FG_    ctld.autoUpdateRepackMenu.ctld.transportPilotNames = %s", ctld.p(mist.utils.tableShow(ctld.transportPilotNames)))
     if t == nil then t = timer.getTime() end
     if ctld.enableRepackingVehicles then
         for _, _unitName in pairs(ctld.transportPilotNames) do
             local status, error = pcall(
-                function()
-                    local _unit = ctld.getTransportUnit(_unitName)
-                    if _unit then
-                        -- if transport unit landed => update repack menus
-                        if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and mist.vec.mag(_unit:getVelocity()) < 0.1)) then
-                            local _unitTypename = _unit:getTypeName()
-                            local _groupId = ctld.getGroupId(_unit)
-                            if _groupId then
-                                if ctld.addedTo[tostring(_groupId)] ~= nil then
-                                    ctld.updateRepackMenu(_unitName)
-                                end
-                            end
-                        end
-                    end
-                end)
+                                    function()
+                                        local _unit = ctld.getTransportUnit(_unitName)
+                                        if _unit then
+                                            -- if transport unit landed => update repack menus
+                                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and mist.vec.mag(_unit:getVelocity()) < 0.1)) then
+                                                local _unitTypename = _unit:getTypeName()
+                                                local _groupId = ctld.getGroupId(_unit)
+                                                if _groupId then
+                                                    if ctld.addedTo[tostring(_groupId)] ~= nil then
+                                                        ctld.logTrace("FG_    ctld.autoUpdateRepackMenu call ctld.updateRepackMenu ofr = %s", ctld.p(_unitName))
+                                                        ctld.updateRepackMenu(_unitName)
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end)
             if (not status) then
                 env.error(string.format("Error in ctld.autoUpdateRepackMenu : %s", error), false)
             end
@@ -7893,11 +7894,11 @@ function ctld.initialize()
 
     ctld.extractZones = {}                 -- stored extract zones
 
-    ctld.missionEditorCargoCrates = {}     --crates added by mission editor for triggering cratesinzone
+    ctld.missionEditorCargoCrates = {}     -- crates added by mission editor for triggering cratesinzone
     ctld.hoverStatus = {}                  -- tracks status of a helis hover above a crate
 
     ctld.callbacks = {}                    -- function callback
-
+    ctld.vehicleCommandsPath = {}          -- memory of F10 c=CTLD menu path bay unitNames
 
     -- Remove intransit troops when heli / cargo plane dies
     --ctld.eventHandler = {}
@@ -8194,8 +8195,7 @@ function ctld.eventHandler:onEvent(event)
 
     local function processHumanPlayer()
         ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- unitName = %s", ctld.p(unitName))
-        ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- mist.DBs.humansByName[unitName] = %s", ctld.p(mist.DBs.humansByName[unitName]))
-        ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- mist.DBs.humansByName = %s", ctld.p(mist.DBs.humansByName))
+        --ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- mist.DBs.humansByName[unitName] = %s", ctld.p(mist.DBs.humansByName[unitName]))
         if mist.DBs.humansByName[unitName] then         -- it's a human unit
             ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
             local _unit = Unit.getByName(unitName)
@@ -8209,7 +8209,6 @@ function ctld.eventHandler:onEvent(event)
                 -- Allow units to CTLD by aircraft type and not by pilot name
                 if ctld.addPlayerAircraftByType then
                     for _, aircraftType in pairs(ctld.aircraftTypeTable) do
-                        ctld.logTrace("FG_ XXXXXXXXXXXXXXXXXXX  aircraftType == playerTypeName XXXXXXXXXXXXXXXXXXXXXXXX %s - %s", ctld.p(aircraftType), ctld.p(playerTypeName))
                         if aircraftType == playerTypeName and ctld.isValueInIpairTable(ctld.transportPilotNames, unitName) == false then
                             ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
                             -- add transport unit to the list
