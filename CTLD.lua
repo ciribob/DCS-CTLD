@@ -8210,7 +8210,7 @@ function ctld.eventHandler:onEvent(event)
                 if ctld.addPlayerAircraftByType then
                     for _, aircraftType in pairs(ctld.aircraftTypeTable) do
                         ctld.logTrace("FG_ XXXXXXXXXXXXXXXXXXX  aircraftType == playerTypeName XXXXXXXXXXXXXXXXXXXXXXXX %s - %s", ctld.p(aircraftType), ctld.p(playerTypeName))
-                        if aircraftType == playerTypeName then
+                        if aircraftType == playerTypeName and ctld.isValueInIpairTable(ctld.transportPilotNames, unitName) == false then
                             ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
                             -- add transport unit to the list
                             table.insert(ctld.transportPilotNames, unitName)
@@ -8238,7 +8238,7 @@ function ctld.eventHandler:onEvent(event)
         timer.scheduleFunction(function()
             ctld.logTrace("calling the 'processHumanPlayer' function in a timer")
             processHumanPlayer()
-        end, nil, timer.getTime() + 1)
+        end, nil, timer.getTime() + 1.5)
     else
         ctld.logTrace("calling the 'processHumanPlayer' function immediately")
         processHumanPlayer()
@@ -8286,6 +8286,16 @@ function ctld.RandomReal(mini, maxi)
     local result = mini + rand * (maxi - mini)	--	scale the random value between [mini, maxi]
     return result
 end
+
+-- Tools
+function ctld.isValueInIpairTable(tab, value)
+    for i, v in ipairs(tab) do
+      if v == value then
+        return true -- La valeur existe
+      end
+    end
+    return false -- La valeur n'existe pas
+  end
 
 --- Enable/Disable error boxes displayed on screen.
 env.setErrorMessageBoxEnabled(false)
