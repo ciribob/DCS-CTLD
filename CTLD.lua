@@ -809,6 +809,7 @@ ctld.vehicleTransportEnabled = {
     "76MD",     -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
     "Hercules",
     "UH-1H",
+    "CH-47Fbl1",
 }
 
 -- ************** Units able to use DCS dynamic cargo system ******************
@@ -816,7 +817,7 @@ ctld.vehicleTransportEnabled = {
 -- Units listed here will spawn a cargo static that can be loaded with the standard DCS cargo system
 -- We will also use this to make modifications to the menu and other checks and messages
 ctld.dynamicCargoUnits = {
-    "CH-47Fbl1",
+   -- "CH-47Fbl1",
 }
 
 -- ************** Maximum Units SETUP for UNITS ******************
