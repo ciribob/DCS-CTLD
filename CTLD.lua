@@ -6037,7 +6037,7 @@ end
 
 --******************************************************************************************************
 function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each transport unit
-    --ctld.logTrace("FG_    ctld.autoUpdateRepackMenu.ctld.transportPilotNames = %s", ctld.p(mist.utils.tableShow(ctld.transportPilotNames)))
+    ctld.logTrace("FG_    ctld.autoUpdateRepackMenu.ctld.transportPilotNames = %s", ctld.p(mist.utils.tableShow(ctld.transportPilotNames)))
     if t == nil then t = timer.getTime() end
     if ctld.enableRepackingVehicles then
         for _, _unitName in pairs(ctld.transportPilotNames) do
@@ -8088,7 +8088,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            --timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
+            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
     end, nil, timer.getTime() + 1)
@@ -8207,6 +8207,7 @@ function ctld.eventHandler:onEvent(event)
                 -- Allow units to CTLD by aircraft type and not by pilot name
                 if ctld.addPlayerAircraftByType then
                     for _, aircraftType in pairs(ctld.aircraftTypeTable) do
+                        ctld.logTrace("FG_ XXXXXXXXXXXXXXXXXXX  aircraftType == playerTypeName XXXXXXXXXXXXXXXXXXXXXXXX %s - %s", ctld.p(aircraftType), ctld.p(playerTypeName))
                         if aircraftType == playerTypeName then
                             ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
                             -- add transport unit to the list
