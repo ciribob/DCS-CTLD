@@ -6020,6 +6020,7 @@ function ctld.updateRepackMenu(_playerUnitName)
                 missionCommands.removeItemForGroup(1, RepackCommandsPath) -- remove the old repack menu
                 local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
+                ctld.logTrace("FG_    ctld.updateRepackMenu.RepackmenuPath = %s", ctld.p(RepackmenuPath))
                 for _, _vehicle in pairs(repackableVehicles) do
                     table.insert(menuEntries, {
                         text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
