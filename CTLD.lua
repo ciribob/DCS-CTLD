@@ -2064,9 +2064,9 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                                           PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
                 end
 
-                if ctld.isUnitInALogisticZone(repackableUnitName) == nil then
+                --if ctld.isUnitInALogisticZone(repackableUnitName) == nil then
                     --ctld.addStaticLogisticUnit({ x = spawnRefPoint.x + 5, z = spawnRefPoint.z + 10 }, refCountry)               -- create a temporary logistic unit to be able to repack the vehicle
-                end
+                --end
                 repackableUnit:destroy()                                                                                        -- destroy repacked unit
             end
             ctld.repackRequestsStack[ii] = nil
