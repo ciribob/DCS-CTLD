@@ -1028,13 +1028,13 @@ ctld.spawnableCrates = {
 
         --- BLUE
         { weight = 1000.01,                                desc = ctld.i18n_translate("Humvee - MG"),                      unit = "M1043 HMMWV Armament", side = 2 }, --careful with the names as the script matches the desc to JTAC types
-        { weight = 1000.02,                                desc = ctld.i18n_translate("Humvee - TOW"),                     unit = "M1045 HMMWV TOW",      side = 2, cratesRequired = 1 },
-        { multiple = { 1000.02, 1000.02 },                 desc = ctld.i18n_translate("Humvee - TOW - All crates"),        side = 1 },
+        { weight = 1000.02,                                desc = ctld.i18n_translate("Humvee - TOW"),                     unit = "M1045 HMMWV TOW",      side = 2, cratesRequired = 2 },
+        { multiple = { 1000.02, 1000.02 },                 desc = ctld.i18n_translate("Humvee - TOW - All crates"),        side = 2 },
         { weight = 1000.03,                                desc = ctld.i18n_translate("Light Tank - MRAP"),                unit = "MaxxPro_MRAP",         side = 2, cratesRequired = 2 },
         { multiple = { 1000.03, 1000.03 },                 desc = ctld.i18n_translate("Light Tank - MRAP - All crates"),   side = 2 },
         { weight = 1000.04,                                desc = ctld.i18n_translate("Med Tank - LAV-25"),                unit = "LAV-25",               side = 2, cratesRequired = 3 },
         { multiple = { 1000.04, 1000.04, 1000.04 },        desc = ctld.i18n_translate("Med Tank - LAV-25 - All crates"),   side = 2 },
-        { weight = 1000.05,                                desc = ctld.i18n_translate("Heavy Tank - Abrams"),              unit = "M-1 Abrams",         side = 2, cratesRequired = 4 },
+        { weight = 1000.05,                                desc = ctld.i18n_translate("Heavy Tank - Abrams"),              unit = "M1A2C_SEP_V3",         side = 2, cratesRequired = 4 },
         { multiple = { 1000.05, 1000.05, 1000.05, 1000.05 }, desc = ctld.i18n_translate("Heavy Tank - Abrams - All crates"), side = 2 },
 
         --- RED
@@ -1935,7 +1935,7 @@ function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between 
 		local distanceFromCenterToCorner = squareRoots / 2              -- Calculating distance (half square root)
 		return distanceFromCenterToCorner
 	end
-	return nil
+	return nil_old
 end
 
 -- ***************************************************************
@@ -2064,7 +2064,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 end
 
                 if ctld.isUnitInALogisticZone(repackableUnitName) == nil then
-                    --ctld.addStaticLogisticUnit({ x = spawnRefPoint.x + 5, z = spawnRefPoint.z + 10 }, refCountry)               -- create a temporary logistic unit to be able to repack the vehicle
+                    ctld.addStaticLogisticUnit({ x = spawnRefPoint.x + 5, z = spawnRefPoint.z + 10 }, refCountry)               -- create a temporary logistic unit to be able to repack the vehicle
                 end
                 repackableUnit:destroy()                                                                                        -- destroy repacked unit
             end
@@ -5823,10 +5823,9 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
                                 _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
 
-                                if ctld.vehicleCommandsPath[_unitName] == nil then
-                                    ctld.vehicleCommandsPath[_unitName] = {}
-                                    ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
-                                end
+                            if ctld.vehicleCommandsPath == nil then
+                                ctld.vehicleCommandsPath = mist.utils.deepCopy(_vehicleCommandsPath)
+                            end
 
                             if ctld.enableRepackingVehicles then
                                 ctld.updateRepackMenu(_unitName)
@@ -6011,11 +6010,12 @@ function ctld.updateRepackMenu(_playerUnitName)
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName,
                 ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
-                local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
+                --ctld.logTrace("FG_    ctld.updateRepackMenu.ctld.vehicleCommandsPath = %s", ctld.p(ctld.vehicleCommandsPath))
+    			local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath)
                 RepackCommandsPath[#RepackCommandsPath + 1] = ctld.i18n_translate("Repack Vehicles")
                 --ctld.logTrace("FG_    ctld.updateRepackMenu.RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
                 missionCommands.removeItemForGroup(1, RepackCommandsPath) -- remove the old repack menu
-                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
+                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath)
                 local menuEntries = {}
                 for _, _vehicle in pairs(repackableVehicles) do
                     table.insert(menuEntries, {
@@ -7894,7 +7894,7 @@ function ctld.initialize()
     ctld.hoverStatus = {}                  -- tracks status of a helis hover above a crate
 
     ctld.callbacks = {}                    -- function callback
-    ctld.vehicleCommandsPath = {}          -- Vehicles commands path for each playerTransportUnit
+
 
     -- Remove intransit troops when heli / cargo plane dies
     --ctld.eventHandler = {}
