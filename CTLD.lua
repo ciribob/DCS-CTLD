@@ -8088,7 +8088,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
+            --timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
     end, nil, timer.getTime() + 1)
