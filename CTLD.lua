@@ -8238,10 +8238,10 @@ function ctld.eventHandler:onEvent(event)
     if not mist.DBs.humansByName[unitName] then
         -- give a few milliseconds for MiST to handle the BIRTH event too
         ctld.logTrace("give MiST some time to handle the BIRTH event too")
-        timer.scheduleFunction(function()
+        timer.scheduleFunction(function(mistDBsHumansByName, t)
             ctld.logTrace("calling the 'processHumanPlayer' function in a timer")
-            processHumanPlayer(mist.DBs.humansByName)
-        end, nil, timer.getTime() + 0.5)
+            processHumanPlayer(mistDBsHumansByName)
+        end, {mist.DBs.humansByName}, timer.getTime() + 0.5)
     else
         ctld.logTrace("calling the 'processHumanPlayer' function immediately")
         processHumanPlayer(mist.DBs.humansByName)
