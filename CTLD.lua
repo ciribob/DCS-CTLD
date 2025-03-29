@@ -1036,7 +1036,7 @@ ctld.spawnableCrates = {
         { multiple = { 1000.03, 1000.03 },                 desc = ctld.i18n_translate("Light Tank - MRAP - All crates"),   side = 2 },
         { weight = 1000.04,                                desc = ctld.i18n_translate("Med Tank - LAV-25"),                unit = "LAV-25",               side = 2, cratesRequired = 3 },
         { multiple = { 1000.04, 1000.04, 1000.04 },        desc = ctld.i18n_translate("Med Tank - LAV-25 - All crates"),   side = 2 },
-        { weight = 1000.05,                                desc = ctld.i18n_translate("Heavy Tank - Abrams"),              unit = "M1A2C_SEP_V3",         side = 2, cratesRequired = 4 },
+        { weight = 1000.05,                                desc = ctld.i18n_translate("Heavy Tank - Abrams"),              unit = "M-1 Abrams",         side = 2, cratesRequired = 4 },
         { multiple = { 1000.05, 1000.05, 1000.05, 1000.05 }, desc = ctld.i18n_translate("Heavy Tank - Abrams - All crates"), side = 2 },
 
         --- RED
