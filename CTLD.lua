@@ -5831,7 +5831,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             end
 
                             if ctld.enableRepackingVehicles then
-                                --ctld.updateRepackMenu(_unitName)
+                                ctld.updateRepackMenu(_unitName)
                             end
                             if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                 missionCommands.addCommandForGroup(_groupId,
@@ -6059,7 +6059,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                                                 if _groupId then
                                                     if ctld.addedTo[tostring(_groupId)] ~= nil then
                                                         ctld.logTrace("FG_    ctld.autoUpdateRepackMenu call ctld.updateRepackMenu ofr = %s", ctld.p(_unitName))
-                                                        --ctld.updateRepackMenu(_unitName)
+                                                        ctld.updateRepackMenu(_unitName)
                                                     end
                                                 end
                                             end
@@ -8096,7 +8096,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            --timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
+            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
     end, nil, timer.getTime() + 1)
