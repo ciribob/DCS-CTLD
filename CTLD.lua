@@ -5982,7 +5982,7 @@ end
 function ctld.buildPaginatedMenu(_menuEntries)
     ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
     local nextSubMenuPath = ""
-    local itemNbSubmenu = 0
+    local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
         ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
@@ -5991,16 +5991,12 @@ function ctld.buildPaginatedMenu(_menuEntries)
         end
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
-        if itemNbSubmenu == 10 then
+        if itemNbSubmenu == 10 and i < #_menuEntries then     -- page limit reached
             ctld.logTrace("FG_ boucle[%s].menu.subMenuPath avant =  %s", i, ctld.p(menu.subMenuPath))
             menu.subMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
             nextSubMenuPath = menu.subMenuPath
             ctld.logTrace("FG_ boucle[%s].menu.subMenuPath apres =  %s", i, ctld.p(menu.subMenuPath))
-            if i == #_menuEntries then     -- page limit reached
-                itemNbSubmenu = 10
-            else
-                itemNbSubmenu = 1
-            end
+            itemNbSubmenu = 1
         end
         menu.menuArgsTable.subMenuPath      = menu.subMenuPath
         menu.menuArgsTable.subMenuLineIndex = menu.itemNbSubmenu
