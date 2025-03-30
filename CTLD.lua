@@ -2032,8 +2032,8 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
     if t == nil then
         t = timer.getTime()
     end
-    ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
-    ctld.logTrace("FG_    ctld.repackVehicle._params = %s", ctld.p(mist.utils.tableShow(_params)))
+    --ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
+    --ctld.logTrace("FG_    ctld.repackVehicle._params = %s", ctld.p(mist.utils.tableShow(_params)))
     for ii, v in ipairs(ctld.repackRequestsStack) do
         local repackableUnitName  = v[1].repackableUnitName
         local crateWeight         = v[1].weight
@@ -5831,7 +5831,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             end
 
                             if ctld.enableRepackingVehicles then
-                                ctld.updateRepackMenu(_unitName)
+                                --ctld.updateRepackMenu(_unitName)
                             end
                             if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                 missionCommands.addCommandForGroup(_groupId,
@@ -5980,32 +5980,38 @@ end
 
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    ctld.logTrace("FG_ ctld.buildPaginatedMenu._menuEntries = [%s]", ctld.p(_menuEntries))
+    ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
     local nextSubMenuPath = ""
     local itemNbSubmenu = 0
     for i, menu in ipairs(_menuEntries) do
-        ctld.logTrace("FG ctld.buildPaginatedMenu.boucle[%s].menu =  %s", i, ctld.p(menu))
+        ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
+            ctld.logTrace("FG_ boucle[%s].nextSubMenuPath =  %s", i, ctld.p(nextSubMenuPath))
             menu.subMenuPath = nextSubMenuPath
         end
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
-        if itemNbSubmenu == 11 and i < #_menuEntries then     -- page limit reached
+        if itemNbSubmenu == 10 then
+            ctld.logTrace("FG_ boucle[%s].menu.subMenuPath avant =  %s", i, ctld.p(menu.subMenuPath))
             menu.subMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
             nextSubMenuPath = menu.subMenuPath
-            itemNbSubmenu = 1
+            ctld.logTrace("FG_ boucle[%s].menu.subMenuPath apres =  %s", i, ctld.p(menu.subMenuPath))
+            if i == #_menuEntries then     -- page limit reached
+                itemNbSubmenu = 10
+            else
+                itemNbSubmenu = 1
+            end
         end
         menu.menuArgsTable.subMenuPath      = menu.subMenuPath
         menu.menuArgsTable.subMenuLineIndex = menu.itemNbSubmenu
-        ctld.logTrace("FG ctld.buildPaginatedMenu.boucle[%s].menu.subMenuPath =  %s", i, ctld.p(menu.subMenuPath))
-
-        --missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
+        ctld.logTrace("FG_ boucle[%s].menu.subMenuPath =  %s", i, ctld.p(menu.subMenuPath))
+        missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
     end
 end
 
 --******************************************************************************************************
 function ctld.updateRepackMenu(_playerUnitName)
-    ctld.logTrace("FG_    ctld.updateRepackMenu._playerUnitName = %s", ctld.p(_playerUnitName))
+    ctld.logTrace("FG_ _playerUnitName = %s", ctld.p(_playerUnitName))
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
         local _unitTypename = playerUnit:getTypeName()
@@ -6013,14 +6019,14 @@ function ctld.updateRepackMenu(_playerUnitName)
         if ctld.enableRepackingVehicles then
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
-                ctld.logTrace("FG_    ctld.updateRepackMenu.ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
+                ctld.logTrace("FG__ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
     			local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
                 RepackCommandsPath[#RepackCommandsPath + 1] = ctld.i18n_translate("Repack Vehicles")
-                ctld.logTrace("FG_    ctld.updateRepackMenu.RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
-                missionCommands.removeItemForGroup(1, RepackCommandsPath) -- remove the old repack menu
+                --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
+                missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove the old repack menu
                 local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
-                ctld.logTrace("FG_    ctld.updateRepackMenu.RepackmenuPath = %s", ctld.p(RepackmenuPath))
+                --ctld.logTrace("FG_ RepackmenuPath = %s", ctld.p(RepackmenuPath))
                 for _, _vehicle in pairs(repackableVehicles) do
                     table.insert(menuEntries, {
                         text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
@@ -6053,7 +6059,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                                                 if _groupId then
                                                     if ctld.addedTo[tostring(_groupId)] ~= nil then
                                                         ctld.logTrace("FG_    ctld.autoUpdateRepackMenu call ctld.updateRepackMenu ofr = %s", ctld.p(_unitName))
-                                                        ctld.updateRepackMenu(_unitName)
+                                                        --ctld.updateRepackMenu(_unitName)
                                                     end
                                                 end
                                             end
@@ -8090,7 +8096,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
+            --timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
     end, nil, timer.getTime() + 1)
