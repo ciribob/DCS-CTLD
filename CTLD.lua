@@ -1977,12 +1977,16 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     local _unitList = mist.DBs.unitsByName
     for k, _unit in pairs(mist.DBs.unitsByName) do
         local u = Unit.getByName(k)
-        if u and u:isActive() and (_coalition == 4 or u:getCoalition() == _coalition) then
-            --local _dist = ctld.getDistance(u:getPoint(), _point)
-            local _dist = mist.utils.get2DDist(u:getPoint(), _point)
-            if _dist <= _radius then
-                table.insert(_units, k)                 -- insert nearby unitName
+        if u then
+            if u:isActive() and (_coalition == 4 or u:getCoalition() == _coalition) then
+                --local _dist = ctld.getDistance(u:getPoint(), _point)
+                local _dist = mist.utils.get2DDist(u:getPoint(), _point)
+                if _dist <= _radius then
+                    table.insert(_units, k)                 -- insert nearby unitName
+                end
             end
+        else
+            ctld.logTrace("FG_    unitName(k) = %s", ctld.p(k))
         end
     end
     return _units
