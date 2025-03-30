@@ -2073,7 +2073,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
             end
             ctld.repackRequestsStack[ii] = nil
         end
-        --ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
+        ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
     end
     if ctld.enableRepackingVehicles == true then
         return t + 3         -- reschedule the function in 3 seconds
@@ -5863,15 +5863,14 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
                                 -- add the submenu item
                                 itemNbMain = itemNbMain + 1
-                                if itemNbMain == 10 and _i < #crateCategories then                                         -- page limit reached
+                                if itemNbMain == 10 and _i < #crateCategories then    -- page limit reached
                                     _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId,
                                         ctld.i18n_translate("Next page"), _cratesMenuPath)
                                     itemNbMain = 1
                                 end
                                 local itemNbSubmenu = 0
                                 local menuEntries = {}
-                                local _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName,
-                                    _cratesMenuPath)
+                                local _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratesMenuPath)
                                 for _, _crate in pairs(_crates) do
                                     ctld.logTrace("_crate = [%s]", ctld.p(_crate))
                                     if not (_crate.multiple) or ctld.enableAllCrates then
@@ -5899,7 +5898,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                     ctld.logTrace("_menu = [%s]", ctld.p(_menu))
                                     -- add the submenu item
                                     itemNbSubmenu = itemNbSubmenu + 1
-                                    if itemNbSubmenu == 10 and _i < #menuEntries then                                             -- page limit reached
+                                    if itemNbSubmenu == 10 and _i < #menuEntries then     -- page limit reached
                                         _subMenuPath = missionCommands.addSubMenuForGroup(_groupId,
                                             ctld.i18n_translate("Next page"), _subMenuPath)
                                         itemNbSubmenu = 1
@@ -6015,11 +6014,11 @@ function ctld.updateRepackMenu(_playerUnitName)
         if ctld.enableRepackingVehicles then
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
-                ctld.logTrace("FG__ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
+                ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
     			local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
                 RepackCommandsPath[#RepackCommandsPath + 1] = ctld.i18n_translate("Repack Vehicles")
                 --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
-                missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove the old repack menu
+                missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
                 local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
                 --ctld.logTrace("FG_ RepackmenuPath = %s", ctld.p(RepackmenuPath))
