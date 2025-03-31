@@ -1989,7 +1989,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
         end
     end
     
-    table.sort(unitsByDistance, function(a,b) return a.dist < b.dist end)   -- sort the table by distance
+    table.sort(unitsByDistance, function(a,b) return a.dist < b.dist end)   -- sort the table by distance (the nearest first)
     for i, v in ipairs(unitsByDistance) do
         table.insert(_units, v.unit)                 -- insert nearby unitName
     end
