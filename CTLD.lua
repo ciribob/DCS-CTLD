@@ -1924,20 +1924,29 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point, _hdg)
     ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight, _side, _hdg)
 end
 
-function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
+-- ***************************************************************
+function ctld.getUnitDimensions(_unitName)	-- return unit dimùension (widht,longer,hight) 
 	if Unit.getByName(_unitName) then
+        local dimensions = {}
 		local unitBoundingBox = Unit.getByName(_unitName):getDesc().box
-		local widht  = unitBoundingBox.max.x - unitBoundingBox.min.x
-		local longer = unitBoundingBox.max.z - unitBoundingBox.min.z
-		local hight  = unitBoundingBox.max.y - unitBoundingBox.min.y
-		
+		dimensions.widht  = unitBoundingBox.max.x - unitBoundingBox.min.x
+		dimensions.longer = unitBoundingBox.max.z - unitBoundingBox.min.z
+		dimensions.hight  = unitBoundingBox.max.y - unitBoundingBox.min.y
+        return dimensions
+    end
+end
+
+-- ***************************************************************
+function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
+    if Unit.getByName(_unitName) then
+        local dim = ctld.getUnitDimensions(_unitName)
+	
 		-- distanceFromCenterToCorner = 1/2√(l² + w² + h²)
-		local squaresSum                 = longer^2 + widht^2 + hight^2	-- sum of squares
-		local squareRoots                = math.sqrt(squaresSum)        -- square roots
-		local distanceFromCenterToCorner = squareRoots / 2              -- Calculating distance (half square root)
-		return distanceFromCenterToCorner
+		local squaresSum                 = dim.longer^2 + dim.widht^2 + dim.hight^2	-- sum of squares
+		local distanceFromCenterToCorner = math.sqrt(squaresSum)  / 2              -- Calculating distance (half square root)
+        return distanceFromCenterToCorner
 	end
-	return nil_old
+	return nil
 end
 
 -- ***************************************************************
@@ -1983,7 +1992,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
             --local _dist = ctld.getDistance(u:getPoint(), _point)
             local _dist = mist.utils.get2DDist(u:getPoint(), _point)
             if _dist <= _radius then
-                unitsByDistance[cpt] = {id =c pt, dist = _dist, unit = _unitName}
+                unitsByDistance[cpt] = {id =cpt, dist = _dist, unit = _unitName}
                 cpt = cpt + 1
             end
         end
