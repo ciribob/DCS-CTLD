@@ -1973,17 +1973,25 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     if _coalition == nil then
         _coalition = 4         -- all coalitions
     end
+    local unitsByDistance = {}
+    local cpt = 1
     local _units = {}
     local _unitList = mist.DBs.unitsByName
-    for k, _unit in pairs(mist.DBs.unitsByName) do
+    for _unitName, _unit in pairs(mist.DBs.unitsByName) do
         local u = Unit.getByName(k)
         if u and u:isActive() and (_coalition == 4 or u:getCoalition() == _coalition) then
             --local _dist = ctld.getDistance(u:getPoint(), _point)
             local _dist = mist.utils.get2DDist(u:getPoint(), _point)
             if _dist <= _radius then
-                table.insert(_units, k)                 -- insert nearby unitName
+                unitsByDistance[cpt] = {id =c pt, dist = _dist, unit = _unitName}
+                cpt = cpt + 1
             end
         end
+    end
+    
+    table.sort(unitsByDistance, function(a,b) return a.dist < b.dist end)   -- sort the table by distance
+    for i, v in ipairs(unitsByDistance) do
+        table.insert(_units, v.unit)                 -- insert nearby unitName
     end
     return _units
 end
@@ -5006,8 +5014,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
         local _spreadMult = 1
         for _i, _pos in ipairs(_positions) do
             local _unitId = ctld.getNextUnitId()
-            local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i],
-                _unitId) }
+            local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
 
             if _hdgs and _hdgs[_i] then
                 _hdg = _hdgs[_i]
@@ -5164,7 +5171,7 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
         local _pos = _point
 
         --try to spawn at 6 oclock to us
-        local _angle = math.atan2(_pos.z, _pos.x)
+        local _angle   = math.atan(_pos.z, _pos.x)
         local _xOffset = math.cos(_angle) * -30
         local _yOffset = math.sin(_angle) * -30
 
