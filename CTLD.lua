@@ -1987,7 +1987,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     local _units = {}
     local _unitList = mist.DBs.unitsByName
     for _unitName, _unit in pairs(mist.DBs.unitsByName) do
-        local u = Unit.getByName(k)
+        local u = Unit.getByName(_unitName)
         if u and u:isActive() and (_coalition == 4 or u:getCoalition() == _coalition) then
             --local _dist = ctld.getDistance(u:getPoint(), _point)
             local _dist = mist.utils.get2DDist(u:getPoint(), _point)
