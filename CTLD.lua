@@ -3893,6 +3893,7 @@ function ctld.getCrateObject(_name)
 end
 
 function ctld.unpackCrates(_arguments)
+    ctld.logTrace("_arguments =  %s", ctld.p(_arguments))
     local _status, _err = pcall(function(_args)
         local _heli = ctld.getTransportUnit(_args[1])
 
@@ -3904,7 +3905,6 @@ function ctld.unpackCrates(_arguments)
             if ctld.inLogisticsZone(_heli) == true or ctld.farEnoughFromLogisticZone(_heli) == false then
                 ctld.displayMessageToGroup(_heli,
                     ctld.i18n_translate("You can't unpack that here! Take it to where it's needed!"), 20)
-
                 return
             end
 
@@ -3941,6 +3941,7 @@ function ctld.unpackCrates(_arguments)
 
                     return
                 else
+                    ctld.logTrace("single crate =  %s", ctld.p(_arguments))
                     -- single crate
                     local _cratePoint = _crate.crateUnit:getPoint()
                     local _crateName = _crate.crateUnit:getName()
@@ -3950,10 +3951,11 @@ function ctld.unpackCrates(_arguments)
                     --    if ctld.slingLoad == false then
                     _crate.crateUnit:destroy()
                     -- end
-
+                    ctld.logTrace("_crate =  %s", ctld.p(_crate))
                     local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit },
                         { _crateHdg })
-
+                        ctld.logTrace("_spawnedGroups =  %s", ctld.p(_arg_spawnedGroupsuments))
+                    
                     if _heli:getCoalition() == 1 then
                         ctld.spawnedCratesRED[_crateName] = nil
                     else
@@ -4998,6 +5000,11 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 end
 
 function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
+    ctld.logTrace("_heli      =  %s", ctld.p(_heli))
+    ctld.logTrace("_positions =  %s", ctld.p(_positions))
+    ctld.logTrace("_types     =  %s", ctld.p(_types))
+    ctld.logTrace("_hdgs      =  %s", ctld.p(_hdgs))
+
     local _id = ctld.getNextGroupId()
     local _groupName = _types[1] .. "    #" .. _id
     local _side = _heli:getCoalition()
@@ -5023,7 +5030,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
         for _i, _pos in ipairs(_positions) do
             local _unitId = ctld.getNextUnitId()
             local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
-
+            ctld.logTrace("Group._details =  %s", ctld.p(_details))
             if _hdgs and _hdgs[_i] then
                 _hdg = _hdgs[_i]
             end
@@ -5143,6 +5150,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
     end
 
     _group.country = _heli:getCountry()
+    ctld.logTrace("mist.dynAdd(")
     local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
     return _spawnedGroup
 end
@@ -6014,7 +6022,7 @@ function ctld.buildPaginatedMenu(_menuEntries)
     for i, menu in ipairs(_menuEntries) do
         --ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
-            ctld.logTrace("FG_ boucle[%s].nextSubMenuPath =  %s", i, ctld.p(nextSubMenuPath))
+            --ctld.logTrace("FG_ boucle[%s].nextSubMenuPath =  %s", i, ctld.p(nextSubMenuPath))
             menu.subMenuPath = nextSubMenuPath
         end
         -- add the submenu item
@@ -6035,7 +6043,7 @@ end
 
 --******************************************************************************************************
 function ctld.updateRepackMenu(_playerUnitName)
-    ctld.logTrace("FG_ _playerUnitName = %s", ctld.p(_playerUnitName))
+    --ctld.logTrace("FG_ _playerUnitName = %s", ctld.p(_playerUnitName))
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
         local _unitTypename = playerUnit:getTypeName()
@@ -6043,7 +6051,7 @@ function ctld.updateRepackMenu(_playerUnitName)
         if ctld.enableRepackingVehicles then
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
-                ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
+                --ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
                 local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
                 RepackCommandsPath[#RepackCommandsPath + 1] = ctld.i18n_translate("Repack Vehicles")
                 --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
@@ -6081,7 +6089,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                                                 local _groupId = ctld.getGroupId(_unit)
                                                 if _groupId then
                                                     if ctld.addedTo[tostring(_groupId)] ~= nil then
-                                                        ctld.logTrace("FG_    ctld.autoUpdateRepackMenu call ctld.updateRepackMenu for = %s", ctld.p(_unitName))
+                                                        --ctld.logTrace("FG_    ctld.autoUpdateRepackMenu call ctld.updateRepackMenu for = %s", ctld.p(_unitName))
                                                         ctld.updateRepackMenu(_unitName)
                                                     end
                                                 end
