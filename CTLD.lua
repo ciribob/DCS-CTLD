@@ -5841,8 +5841,10 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
                                 _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
-
+                                ctld.logDebug("PASS..1", ctld.p(_unitName))
+    
                             if ctld.vehicleCommandsPath[_unitName] == nil then
+                                ctld.logDebug("PASS..2", ctld.p(_unitName))
                                 ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
                             end
 
