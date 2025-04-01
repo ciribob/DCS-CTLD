@@ -1896,8 +1896,8 @@ end
 --
 -- Weights can be found in the ctld.spawnableCrates list
 -- Points can be made by hand or obtained from a Unit position by Unit.getByName("PilotName"):getPoint()
--- e.g. ctld.spawnCrateAtZone("red", 500,{x=1,y=2,z=3}) -- spawn a humvee at triggerzone 1 for red side at a specified point
--- e.g. ctld.spawnCrateAtZone("blue", 505,{x=1,y=2,z=3}) -- spawn a tow humvee at triggerzone1 for blue side at a specified point
+-- e.g. ctld.spawnCrateAtPoint("red", 500,{x=1,y=2,z=3}) -- spawn a humvee at triggerzone 1 for red side at a specified point
+-- e.g. ctld.spawnCrateAtPoint("blue", 505,{x=1,y=2,z=3}) -- spawn a tow humvee at triggerzone1 for blue side at a specified point
 --
 --
 function ctld.spawnCrateAtPoint(_side, _weight, _point, _hdg)
@@ -1924,20 +1924,29 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point, _hdg)
     ctld.spawnCrateStatic(_country, _unitId, _point, _name, _crateType.weight, _side, _hdg)
 end
 
-function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
+-- ***************************************************************
+function ctld.getUnitDimensions(_unitName)	-- return unit dimùension (widht,longer,hight) 
 	if Unit.getByName(_unitName) then
+        local dimensions = {}
 		local unitBoundingBox = Unit.getByName(_unitName):getDesc().box
-		local widht  = unitBoundingBox.max.x - unitBoundingBox.min.x
-		local longer = unitBoundingBox.max.z - unitBoundingBox.min.z
-		local hight  = unitBoundingBox.max.y - unitBoundingBox.min.y
-		
+		dimensions.widht  = unitBoundingBox.max.x - unitBoundingBox.min.x
+		dimensions.longer = unitBoundingBox.max.z - unitBoundingBox.min.z
+		dimensions.hight  = unitBoundingBox.max.y - unitBoundingBox.min.y
+        return dimensions
+    end
+end
+
+-- ***************************************************************
+function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
+    if Unit.getByName(_unitName) then
+        local dim = ctld.getUnitDimensions(_unitName)
+	
 		-- distanceFromCenterToCorner = 1/2√(l² + w² + h²)
-		local squaresSum                 = longer^2 + widht^2 + hight^2	-- sum of squares
-		local squareRoots                = math.sqrt(squaresSum)        -- square roots
-		local distanceFromCenterToCorner = squareRoots / 2              -- Calculating distance (half square root)
-		return distanceFromCenterToCorner
+		local squaresSum                 = dim.longer^2 + dim.widht^2 + dim.hight^2	-- sum of squares
+		local distanceFromCenterToCorner = math.sqrt(squaresSum)  / 2              -- Calculating distance (half square root)
+        return distanceFromCenterToCorner
 	end
-	return nil_old
+	return nil
 end
 
 -- ***************************************************************
@@ -1973,6 +1982,8 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     if _coalition == nil then
         _coalition = 4         -- all coalitions
     end
+    local unitsByDistance = {}
+    local cpt = 1
     local _units = {}
     local _unitList = mist.DBs.unitsByName
     for k, _unit in pairs(mist.DBs.unitsByName) do
@@ -1988,6 +1999,11 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
         else
             ctld.logTrace("FG_    unitName(k) = %s", ctld.p(k))
         end
+    end
+    
+    table.sort(unitsByDistance, function(a,b) return a.dist < b.dist end)   -- sort the table by distance (the nearest first)
+    for i, v in ipairs(unitsByDistance) do
+        table.insert(_units, v.unit)                 -- insert nearby unitName
     end
     return _units
 end
@@ -2066,13 +2082,16 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     end
                     
                     local relativePoint = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
-                    ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, relativePoint, _name, crateWeight,
-                                          PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
+                    if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
+                        ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, relativePoint, _name, crateWeight,
+                                              PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, true))
+                    else
+                        local _point = ctld.getPointAt6Oclock(PlayerTransportUnit, 15)
+                        ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, crateWeight,
+                                            PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit, "dynamic"))
+                    end
                 end
 
-                --if ctld.isUnitInALogisticZone(repackableUnitName) == nil then
-                    --ctld.addStaticLogisticUnit({ x = spawnRefPoint.x + 5, z = spawnRefPoint.z + 10 }, refCountry)               -- create a temporary logistic unit to be able to repack the vehicle
-                --end
                 repackableUnit:destroy()                                                                                        -- destroy repacked unit
             end
             ctld.repackRequestsStack[ii] = nil
@@ -2087,7 +2106,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
 end
 
 -- ***************************************************************
-function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logistic unit to be able to repack the vehicle
+function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logistic unit with a Windsock object
     local dynamicLogisticUnitName = "%dynLogisticName_" .. tostring(ctld.getNextDynamicLogisticUnitIndex())
     ctld.logisticUnits[#ctld.logisticUnits + 1] = dynamicLogisticUnitName
     local LogUnit = {
@@ -2507,7 +2526,6 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
     local _status, _err = pcall(function(_args)
         -- use the cargo weight to guess the type of unit as no way to add description :(
         local _crateType = ctld.crateLookupTable[tostring(_args[2])]
-
         local _heli = ctld.getTransportUnit(_args[1])
         if not _heli then
             return
@@ -2535,7 +2553,6 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
             if ctld.inLogisticsZone(_heli) == false then
                 ctld.displayMessageToGroup(_heli,
                     ctld.i18n_translate("You are not close enough to friendly logistics to get a crate!"), 10)
-
                 return
             end
 
@@ -2604,7 +2621,7 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 end
 
 --***************************************************************
-ctld.randomCrateSpacing = 12 -- meters
+ctld.randomCrateSpacing = 20 -- meters
 function ctld.getPointAt12Oclock(_unit, _offset)
     return ctld.getPointAtDirection(_unit, _offset, 0)
 end
@@ -2615,16 +2632,15 @@ end
 
 function ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
     ctld.logTrace("_offset = %s", ctld.p(_offset))
-    local _randomOffsetX = math.random(ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
+    local _SecureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_unit:getName())
+    local _randomOffsetX = math.random(_SecureDistanceFromUnit, ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
     local _randomOffsetZ = math.random(0, ctld.randomCrateSpacing)
     ctld.logTrace("_randomOffsetX = %s", ctld.p(_randomOffsetX))
     ctld.logTrace("_randomOffsetZ = %s", ctld.p(_randomOffsetZ))
     local _position = _unit:getPosition()
-    --local _angle = math.atan2(_position.x.z, _position.x.x) + _directionInRadian
     local _angle = math.atan(_position.x.z, _position.x.x) + _directionInRadian
-    local _xOffset = math.cos(_angle) * _offset + _randomOffsetX
-    local _zOffset = math.sin(_angle) * _offset + _randomOffsetZ
-
+    local _xOffset = math.cos(_angle) * (_offset + _randomOffsetX)
+    local _zOffset = math.sin(_angle) * (_offset + _randomOffsetZ)
     local _point = _unit:getPoint()
     return { x = _point.x + _xOffset, z = _point.z + _zOffset, y = _point.y }
 end
@@ -5009,8 +5025,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
         local _spreadMult = 1
         for _i, _pos in ipairs(_positions) do
             local _unitId = ctld.getNextUnitId()
-            local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i],
-                _unitId) }
+            local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
 
             if _hdgs and _hdgs[_i] then
                 _hdg = _hdgs[_i]
@@ -5167,7 +5182,7 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
         local _pos = _point
 
         --try to spawn at 6 oclock to us
-        local _angle = math.atan2(_pos.z, _pos.x)
+        local _angle   = math.atan(_pos.z, _pos.x)
         local _xOffset = math.cos(_angle) * -30
         local _yOffset = math.sin(_angle) * -30
 
@@ -5829,8 +5844,10 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
                                 _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
-
+                                ctld.logDebug("PASS..1", ctld.p(_unitName))
+    
                             if ctld.vehicleCommandsPath[_unitName] == nil then
+                                ctld.logDebug("PASS..2", ctld.p(_unitName))
                                 ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
                             end
 
@@ -5911,9 +5928,20 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                         ctld.spawnCrate, { _unitName, _menu.crate.weight })
                                 end
                             end
+                            if ctld.unitDynamicCargoCapable(_unit) then
+                                if ctld.vehicleCommandsPath[_unitName] == nil then
+                                    ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_rootPath)
+                                end
+                                if ctld.enableRepackingVehicles then
+                                    ctld.updateRepackMenu(_unitName)
+                                end
+                                
+                            end
+                            
+        
                         end
                     end
-
+                    
                     if (ctld.enabledFOBBuilding or ctld.enableCrates) and _unitActions.crates then
                         local _crateCommands = missionCommands.addSubMenuForGroup(_groupId,
                             ctld.i18n_translate("CTLD Commands"), _rootPath)
@@ -6019,7 +6047,7 @@ function ctld.updateRepackMenu(_playerUnitName)
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
                 ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
-    			local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
+                local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
                 RepackCommandsPath[#RepackCommandsPath + 1] = ctld.i18n_translate("Repack Vehicles")
                 --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
                 missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
@@ -6027,13 +6055,12 @@ function ctld.updateRepackMenu(_playerUnitName)
                 local menuEntries = {}
                 --ctld.logTrace("FG_ RepackmenuPath = %s", ctld.p(RepackmenuPath))
                 for _, _vehicle in pairs(repackableVehicles) do
-                    table.insert(menuEntries, {
-                        text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
-                        groupId       = _groupId,
-                        subMenuPath   = RepackmenuPath,
-                        menuFunction  = ctld.repackVehicleRequest,
-                        menuArgsTable = { _vehicle, _playerUnitName }
-                    })
+                    table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
+                                                groupId       = _groupId,
+                                                subMenuPath   = RepackmenuPath,
+                                                menuFunction  = ctld.repackVehicleRequest,
+                                                menuArgsTable = { _vehicle, _playerUnitName }
+                                            })
                 end
                 ctld.buildPaginatedMenu(menuEntries)
             end
