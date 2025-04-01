@@ -2618,7 +2618,7 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 end
 
 --***************************************************************
-ctld.randomCrateSpacing = 12 -- meters
+ctld.randomCrateSpacing = 20 -- meters
 function ctld.getPointAt12Oclock(_unit, _offset)
     return ctld.getPointAtDirection(_unit, _offset, 0)
 end
@@ -2629,16 +2629,15 @@ end
 
 function ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
     ctld.logTrace("_offset = %s", ctld.p(_offset))
-    local _randomOffsetX = math.random(ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
+    local _SecureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_unit:getName())
+    local _randomOffsetX = math.random(_SecureDistanceFromUnit, ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
     local _randomOffsetZ = math.random(0, ctld.randomCrateSpacing)
     ctld.logTrace("_randomOffsetX = %s", ctld.p(_randomOffsetX))
     ctld.logTrace("_randomOffsetZ = %s", ctld.p(_randomOffsetZ))
     local _position = _unit:getPosition()
-    --local _angle = math.atan2(_position.x.z, _position.x.x) + _directionInRadian
     local _angle = math.atan(_position.x.z, _position.x.x) + _directionInRadian
-    local _xOffset = math.cos(_angle) * _offset + _randomOffsetX
-    local _zOffset = math.sin(_angle) * _offset + _randomOffsetZ
-
+    local _xOffset = math.cos(_angle) * (_offset + _randomOffsetX)
+    local _zOffset = math.sin(_angle) * (_offset + _randomOffsetZ)
     local _point = _unit:getPoint()
     return { x = _point.x + _xOffset, z = _point.z + _zOffset, y = _point.y }
 end
