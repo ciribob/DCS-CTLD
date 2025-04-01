@@ -1986,18 +1986,15 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     local cpt = 1
     local _units = {}
     local _unitList = mist.DBs.unitsByName
-    for k, _unit in pairs(mist.DBs.unitsByName) do
-        local u = Unit.getByName(k)
-        if u then
-            if u:isActive() and (_coalition == 4 or u:getCoalition() == _coalition) then
-                --local _dist = ctld.getDistance(u:getPoint(), _point)
-                local _dist = mist.utils.get2DDist(u:getPoint(), _point)
-                if _dist <= _radius then
-                    table.insert(_units, k)                 -- insert nearby unitName
-                end
+    for _unitName, _unit in pairs(mist.DBs.unitsByName) do
+        local u = Unit.getByName(_unitName)
+        if u and u:isActive() and (_coalition == 4 or u:getCoalition() == _coalition) then
+            --local _dist = ctld.getDistance(u:getPoint(), _point)
+            local _dist = mist.utils.get2DDist(u:getPoint(), _point)
+            if _dist <= _radius then
+                unitsByDistance[cpt] = {id =cpt, dist = _dist, unit = _unitName}
+                cpt = cpt + 1
             end
-        else
-            ctld.logTrace("FG_    unitName(k) = %s", ctld.p(k))
         end
     end
     
@@ -6084,7 +6081,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                                                 local _groupId = ctld.getGroupId(_unit)
                                                 if _groupId then
                                                     if ctld.addedTo[tostring(_groupId)] ~= nil then
-                                                        ctld.logTrace("FG_    ctld.autoUpdateRepackMenu call ctld.updateRepackMenu ofr = %s", ctld.p(_unitName))
+                                                        ctld.logTrace("FG_    ctld.autoUpdateRepackMenu call ctld.updateRepackMenu for = %s", ctld.p(_unitName))
                                                         ctld.updateRepackMenu(_unitName)
                                                     end
                                                 end
@@ -8233,6 +8230,7 @@ function ctld.eventHandler:onEvent(event)
             ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
             local _unit = Unit.getByName(unitName)
             if _unit ~= nil then
+                local _groupId = _unit:getGroup():getID()
                 -- assign transport pilot
                 ctld.logTrace("_unit = %s", ctld.p(_unit))
 
@@ -8242,13 +8240,15 @@ function ctld.eventHandler:onEvent(event)
                 -- Allow units to CTLD by aircraft type and not by pilot name
                 if ctld.addPlayerAircraftByType then
                     for _, aircraftType in pairs(ctld.aircraftTypeTable) do
-                        if aircraftType == playerTypeName and ctld.isValueInIpairTable(ctld.transportPilotNames, unitName) == false then
+                        if aircraftType == playerTypeName then
                             ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
-                            -- add transport unit to the list
-                            table.insert(ctld.transportPilotNames, unitName)
-                            -- add transport radio menu
-                            ctld.addTransportF10MenuOptions(unitName)
-                            break
+                            if ctld.isValueInIpairTable(ctld.transportPilotNames, unitName) == false then
+                                table.insert(ctld.transportPilotNames, unitName)  -- add transport unit to the list
+                            end
+                            if ctld.addedTo[tostring(_groupId)] == nil then  -- only if menu not already set up
+                                ctld.addTransportF10MenuOptions(unitName)    -- add transport radio menu
+                                break
+                            end
                         end
                     end
                 else
