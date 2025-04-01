@@ -1988,7 +1988,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     local _unitList = mist.DBs.unitsByName
     for _unitName, _unit in pairs(mist.DBs.unitsByName) do
         local u = Unit.getByName(_unitName)
-        if u and u:isActive() and (_coalition == 4 or u:getCoalition() == _coalition) then
+        if u and u:isExist() and (_coalition == 4 or u:getCoalition() == _coalition) then
             --local _dist = ctld.getDistance(u:getPoint(), _point)
             local _dist = mist.utils.get2DDist(u:getPoint(), _point)
             if _dist <= _radius then
@@ -6008,11 +6008,11 @@ end
 
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
+    --ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
     local nextSubMenuPath = ""
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
-        ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
+        --ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
             ctld.logTrace("FG_ boucle[%s].nextSubMenuPath =  %s", i, ctld.p(nextSubMenuPath))
             menu.subMenuPath = nextSubMenuPath
@@ -6020,15 +6020,15 @@ function ctld.buildPaginatedMenu(_menuEntries)
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
         if itemNbSubmenu == 10 and i < #_menuEntries then     -- page limit reached
-            ctld.logTrace("FG_ boucle[%s].menu.subMenuPath avant =  %s", i, ctld.p(menu.subMenuPath))
+            --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath avant =  %s", i, ctld.p(menu.subMenuPath))
             menu.subMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
             nextSubMenuPath = menu.subMenuPath
-            ctld.logTrace("FG_ boucle[%s].menu.subMenuPath apres =  %s", i, ctld.p(menu.subMenuPath))
+            --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath apres =  %s", i, ctld.p(menu.subMenuPath))
             itemNbSubmenu = 1
         end
         menu.menuArgsTable.subMenuPath      = menu.subMenuPath
         menu.menuArgsTable.subMenuLineIndex = menu.itemNbSubmenu
-        ctld.logTrace("FG_ boucle[%s].menu.subMenuPath =  %s", i, ctld.p(menu.subMenuPath))
+        --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath =  %s", i, ctld.p(menu.subMenuPath))
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
     end
 end
