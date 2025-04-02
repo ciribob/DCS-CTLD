@@ -4939,6 +4939,7 @@ function ctld.repairAASystem(_heli, _nearestCrate, _aaSystem)
 end
 
 function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
+    ctld.logTrace("FG_ ctld.unpackMultiCrate, _nearestCrate =  %s", ctld.p(_nearestCrate))
     -- unpack multi crate
     local _nearbyMultiCrates = {}
 
@@ -4998,6 +4999,8 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 end
 
 function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
+    ctld.logTrace("FG_ ctld.spawnCrateGroup _positions =  %s", ctld.p(_positions))
+   
     ctld.logTrace("_heli      =  %s", ctld.p(_heli))
     ctld.logTrace("_positions =  %s", ctld.p(_positions))
     ctld.logTrace("_types     =  %s", ctld.p(_types))
