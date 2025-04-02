@@ -1031,7 +1031,7 @@ ctld.spawnableCrates = {
         --- BLUE
         { weight = 1000.01,                                desc = ctld.i18n_translate("Humvee - MG"),                      unit = "M1043 HMMWV Armament", side = 2 }, --careful with the names as the script matches the desc to JTAC types
         { weight = 1000.02,                                desc = ctld.i18n_translate("Humvee - TOW"),                     unit = "M1045 HMMWV TOW",      side = 2, cratesRequired = 1 },
-        { multiple = { 1000.02},                           desc = ctld.i18n_translate("Humvee - TOW - All crates"),        side = 1 },
+        { multiple = { 1000.02},                           desc = ctld.i18n_translate("Humvee - TOW - All crates"),        side = 2 },
         { weight = 1000.03,                                desc = ctld.i18n_translate("Light Tank - MRAP"),                unit = "MaxxPro_MRAP",         side = 2, cratesRequired = 2 },
         { multiple = { 1000.03, 1000.03 },                 desc = ctld.i18n_translate("Light Tank - MRAP - All crates"),   side = 2 },
         { weight = 1000.04,                                desc = ctld.i18n_translate("Med Tank - LAV-25"),                unit = "LAV-25",               side = 2, cratesRequired = 3 },
