@@ -2049,7 +2049,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
     if t == nil then
         t = timer.getTime()
     end
-    ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
+    --ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
     --ctld.logTrace("FG_    ctld.repackVehicle._params = %s", ctld.p(mist.utils.tableShow(_params)))
     for ii, v in ipairs(ctld.repackRequestsStack) do
         local repackableUnitName  = v[1].repackableUnitName
@@ -2059,7 +2059,6 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
         local playerUnitName      = v[2]
         local PlayerTransportUnit = Unit.getByName(playerUnitName)
         local playerCoa           = PlayerTransportUnit:getCoalition()
-        local TransportUnit       = ctld.getTransportUnit(playerUnitName)
         local playerHeading       = mist.getHeading(PlayerTransportUnit)
         local refCountry          = PlayerTransportUnit:getCountry()
 
@@ -3892,7 +3891,7 @@ function ctld.getCrateObject(_name)
 end
 
 function ctld.unpackCrates(_arguments)
-    ctld.logTrace("_arguments =  %s", ctld.p(_arguments))
+    ctld.logTrace("FG_ _arguments =  %s", ctld.p(_arguments))
     local _status, _err = pcall(function(_args)
         local _heli = ctld.getTransportUnit(_args[1])
 
