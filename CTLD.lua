@@ -2049,7 +2049,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
     if t == nil then
         t = timer.getTime()
     end
-    --ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(mist.utils.tableShow(ctld.repackRequestsStack)))
+    ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
     --ctld.logTrace("FG_    ctld.repackVehicle._params = %s", ctld.p(mist.utils.tableShow(_params)))
     for ii, v in ipairs(ctld.repackRequestsStack) do
         local repackableUnitName  = v[1].repackableUnitName
@@ -2058,8 +2058,9 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
 
         local playerUnitName      = v[2]
         local PlayerTransportUnit = Unit.getByName(playerUnitName)
+        local playerCoa           = PlayerTransportUnit:getCoalition()
         local TransportUnit       = ctld.getTransportUnit(playerUnitName)
-        local spawnRefPoint       = PlayerTransportUnit:getPoint()
+        local playerHeading       = mist.getHeading(PlayerTransportUnit)
         local refCountry          = PlayerTransportUnit:getCountry()
 
         if repackableUnit then
@@ -2069,7 +2070,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerPoint = PlayerTransportUnit:getPoint()
                 local offset = 5
                 local randomHeading = ctld.RandomReal(_playerHeading - math.pi/4, _playerHeading + math.pi/4)
-                for i = 1, v[1].cratesRequired do
+                for i = 1, v[1].cratesRequired or 1 do
                     -- see to spawn the crate at random position heading the transport unnit
                     local _unitId = ctld.getNextUnitId()
                     local _name = string.format("%s_%i", v[1].desc, _unitId)
@@ -2079,13 +2080,11 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     end
                     
                     local relativePoint = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
-                    local _point = ctld.getPointAt6Oclock(PlayerTransportUnit, 15)
+                    local _point        = ctld.getPointAt6Oclock(PlayerTransportUnit, 15)
                     if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
-                        ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, relativePoint, _name, crateWeight,
-                                              PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit), nil)
+                        ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
                     else 
-                        ctld.spawnCrateStatic(PlayerTransportUnit:getCountry(), _unitId, _point, _name, crateWeight,
-                                            PlayerTransportUnit:getCoalition(), mist.getHeading(PlayerTransportUnit), "dynamic")
+                        ctld.spawnCrateStatic(refCountry, _unitId, _point, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
                 end
 
