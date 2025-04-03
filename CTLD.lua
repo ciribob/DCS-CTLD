@@ -6015,13 +6015,13 @@ function ctld.buildPaginatedMenu(_menuEntries)
         itemNbSubmenu = itemNbSubmenu + 1
         if itemNbSubmenu == 10 and i < #_menuEntries then     -- page limit reached
             --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath avant =  %s", i, ctld.p(menu.subMenuPath))
-            menu.subMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
-            nextSubMenuPath = menu.subMenuPath
+            nextSubMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
+            menu.subMenuPath = mist.utils.deepCopy(nextSubMenuPath)
             --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath apres =  %s", i, ctld.p(menu.subMenuPath))
             itemNbSubmenu = 1
         end
-        menu.menuArgsTable.subMenuPath      = menu.subMenuPath
-        menu.menuArgsTable.subMenuLineIndex = menu.itemNbSubmenu
+        menu.menuArgsTable[1].subMenuPath      = mist.utils.deepCopy(menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
+        menu.menuArgsTable[1].subMenuLineIndex = itemNbSubmenu
         ctld.logTrace("FG_ boucle[%s]  ctld.buildPaginatedMenu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
     end
@@ -6052,7 +6052,7 @@ function ctld.updateRepackMenu(_playerUnitName)
                                                 groupId       = _groupId,
                                                 subMenuPath   = RepackmenuPath,
                                                 menuFunction  = ctld.repackVehicleRequest,
-                                                menuArgsTable = { _vehicle}
+                                                menuArgsTable = {_vehicle}
                                             })
                 end
                 ctld.logTrace("FG_ menuEntries = %s", ctld.p(menuEntries))
