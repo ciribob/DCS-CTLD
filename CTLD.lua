@@ -3899,7 +3899,6 @@ function ctld.unpackCrates(_arguments)
             local _crates = ctld.getCratesAndDistance(_heli)
             local _crate = ctld.getClosestCrate(_heli, _crates)
 
-
             if ctld.inLogisticsZone(_heli) == true or ctld.farEnoughFromLogisticZone(_heli) == false then
                 ctld.displayMessageToGroup(_heli,
                     ctld.i18n_translate("You can't unpack that here! Take it to where it's needed!"), 20)
@@ -3942,17 +3941,16 @@ function ctld.unpackCrates(_arguments)
                     ctld.logTrace("single crate =  %s", ctld.p(_arguments))
                     -- single crate
                     local _cratePoint = _crate.crateUnit:getPoint()
-                    local _crateName = _crate.crateUnit:getName()
-                    local _crateHdg = mist.getHeading(_crate.crateUnit, true)
+                    local _crateName  = _crate.crateUnit:getName()
+                    local _crateHdg   = mist.getHeading(_crate.crateUnit, true)
 
                     --remove crate
                     --    if ctld.slingLoad == false then
                     _crate.crateUnit:destroy()
                     -- end
                     ctld.logTrace("_crate =  %s", ctld.p(_crate))
-                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit },
-                        { _crateHdg })
-                        ctld.logTrace("_spawnedGroups =  %s", ctld.p(_arg_spawnedGroupsuments))
+                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit }, { _crateHdg })
+                    ctld.logTrace("_spawnedGroups =  %s", ctld.p(_spawnedGroups))
                     
                     if _heli:getCoalition() == 1 then
                         ctld.spawnedCratesRED[_crateName] = nil
@@ -4999,8 +4997,6 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 end
 
 function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
-    ctld.logTrace("FG_ ctld.spawnCrateGroup _positions =  %s", ctld.p(_positions))
-   
     ctld.logTrace("_heli      =  %s", ctld.p(_heli))
     ctld.logTrace("_positions =  %s", ctld.p(_positions))
     ctld.logTrace("_types     =  %s", ctld.p(_types))
