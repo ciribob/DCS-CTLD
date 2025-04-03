@@ -2052,33 +2052,26 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
     --ctld.logTrace("FG_    ctld.repackVehicle._params = %s", ctld.p(mist.utils.tableShow(_params)))
     for ii, v in ipairs(ctld.repackRequestsStack) do
         local repackableUnitName  = v[1].repackableUnitName
-        local crateWeight         = v[1].weight
         local repackableUnit      = Unit.getByName(repackableUnitName)
-
-        local playerUnitName      = v[2]
-        local PlayerTransportUnit = Unit.getByName(playerUnitName)
-        local playerCoa           = PlayerTransportUnit:getCoalition()
-        local playerHeading       = mist.getHeading(PlayerTransportUnit)
-        local refCountry          = PlayerTransportUnit:getCountry()
-
+        local crateWeight         = v[1].weight
+        local playerUnitName      = v[1].playerUnitName
         if repackableUnit then
             if repackableUnit:isExist() then
+                local PlayerTransportUnit = Unit.getByName(playerUnitName)
+                local playerCoa           = PlayerTransportUnit:getCoalition()
+                local refCountry          = PlayerTransportUnit:getCountry()
                 -- calculate the heading of the spawns to be carried out
-                local _playerHeading = mist.getHeading(PlayerTransportUnit)
+                local playerHeading  = mist.getHeading(PlayerTransportUnit)
                 local playerPoint    = PlayerTransportUnit:getPoint()
                 local offset         = 5
-                local randomHeading = ctld.RandomReal(_playerHeading - math.pi/4, _playerHeading + math.pi/4)
+                local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
                 for i = 1, v[1].cratesRequired or 1 do
                     -- see to spawn the crate at random position heading the transport unnit
-                    local _unitId = ctld.getNextUnitId()
-                    local _name = string.format("%s_%i", v[1].desc, _unitId)
-                    local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName)
-                    if secureDistance == nil then
-                        secureDistance = 7
-                    end
-                    
-                    local relativePoint = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
-                    local _point        = ctld.getPointAt6Oclock(PlayerTransportUnit, 15)
+                    local _unitId        = ctld.getNextUnitId()
+                    local _name          = string.format("%s_%i", v[1].desc, _unitId)
+                    local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 7
+                    local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
+                    local _point         = ctld.getPointAt6Oclock(PlayerTransportUnit, 15)
                     if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
                     else 
@@ -2086,9 +2079,9 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     end
                 end
 
-                repackableUnit:destroy()                                                                                        -- destroy repacked unit
+                repackableUnit:destroy()              -- destroy repacked unit
             end
-            ctld.repackRequestsStack[ii] = nil
+            ctld.repackRequestsStack[ii] = nil        -- remove the request from the stacking table
         end
         ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
     end
@@ -6029,7 +6022,7 @@ function ctld.buildPaginatedMenu(_menuEntries)
         end
         menu.menuArgsTable.subMenuPath      = menu.subMenuPath
         menu.menuArgsTable.subMenuLineIndex = menu.itemNbSubmenu
-        --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath =  %s", i, ctld.p(menu.subMenuPath))
+        ctld.logTrace("FG_ boucle[%s]  ctld.buildPaginatedMenu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
     end
 end
@@ -6054,11 +6047,12 @@ function ctld.updateRepackMenu(_playerUnitName)
                 ctld.logTrace("FG_ ctld.updateRepackMenu.repackableVehicles = %s", ctld.p(repackableVehicles))
                 --for _, _vehicle in pairs(repackableVehicles) do
                 for i, _vehicle in ipairs(repackableVehicles) do
+                    _vehicle.playerUnitName = _playerUnitName
                     table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
                                                 groupId       = _groupId,
                                                 subMenuPath   = RepackmenuPath,
                                                 menuFunction  = ctld.repackVehicleRequest,
-                                                menuArgsTable = { _vehicle, _playerUnitName }
+                                                menuArgsTable = { _vehicle}
                                             })
                 end
                 ctld.logTrace("FG_ menuEntries = %s", ctld.p(menuEntries))
