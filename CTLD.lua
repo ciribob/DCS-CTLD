@@ -2039,17 +2039,16 @@ end
 
 -- ***************************************************************
 function ctld.repackVehicleRequest(_params) -- update rrs table 'repackRequestsStack' with the request
-    --ctld.logTrace("FG_    ctld.repackVehicleRequest")
+    ctld.logTrace("FG_    ctld.repackVehicleRequest._params = " .. ctld.p(_params))
     ctld.repackRequestsStack[#ctld.repackRequestsStack + 1] = _params
 end
 
 -- ***************************************************************
 function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' to process each request
-    --ctld.logTrace("FG_    ctld.repackVehicle")
     if t == nil then
         t = timer.getTime()
     end
-    --ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
+    ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
     --ctld.logTrace("FG_    ctld.repackVehicle._params = %s", ctld.p(mist.utils.tableShow(_params)))
     for ii, v in ipairs(ctld.repackRequestsStack) do
         local repackableUnitName  = v[1].repackableUnitName
@@ -5846,10 +5845,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
                                 _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
-                                ctld.logDebug("PASS..1", ctld.p(_unitName))
-    
                             if ctld.vehicleCommandsPath[_unitName] == nil then
-                                ctld.logDebug("PASS..2", ctld.p(_unitName))
                                 ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
                             end
 
@@ -6055,8 +6051,9 @@ function ctld.updateRepackMenu(_playerUnitName)
                 missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
                 local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
-                --ctld.logTrace("FG_ RepackmenuPath = %s", ctld.p(RepackmenuPath))
-                for _, _vehicle in pairs(repackableVehicles) do
+                ctld.logTrace("FG_ ctld.updateRepackMenu.repackableVehicles = %s", ctld.p(repackableVehicles))
+                --for _, _vehicle in pairs(repackableVehicles) do
+                for i, _vehicle in ipairs(repackableVehicles) do
                     table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
                                                 groupId       = _groupId,
                                                 subMenuPath   = RepackmenuPath,
@@ -6064,6 +6061,7 @@ function ctld.updateRepackMenu(_playerUnitName)
                                                 menuArgsTable = { _vehicle, _playerUnitName }
                                             })
                 end
+                ctld.logTrace("FG_ menuEntries = %s", ctld.p(menuEntries))
                 ctld.buildPaginatedMenu(menuEntries)
             end
         end
