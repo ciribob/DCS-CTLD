@@ -2065,8 +2065,8 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
             if repackableUnit:isExist() then
                 -- calculate the heading of the spawns to be carried out
                 local _playerHeading = mist.getHeading(PlayerTransportUnit)
-                local playerPoint = PlayerTransportUnit:getPoint()
-                local offset = 5
+                local playerPoint    = PlayerTransportUnit:getPoint()
+                local offset         = 5
                 local randomHeading = ctld.RandomReal(_playerHeading - math.pi/4, _playerHeading + math.pi/4)
                 for i = 1, v[1].cratesRequired or 1 do
                     -- see to spawn the crate at random position heading the transport unnit
@@ -6009,11 +6009,11 @@ end
 
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    --ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
+    ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
     local nextSubMenuPath = ""
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
-        --ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
+        ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
             --ctld.logTrace("FG_ boucle[%s].nextSubMenuPath =  %s", i, ctld.p(nextSubMenuPath))
             menu.subMenuPath = nextSubMenuPath
