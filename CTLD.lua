@@ -2045,16 +2045,21 @@ end
 
 -- ***************************************************************
 function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' to process each request
+    ctld.logTrace("FG_ XXXXXXXXXXXXXXXXXXXXXXXXXXX ctld.repackVehicle.ctld.repackRequestsStack XXXXXXXXXXXXXXXXXXXXXXXXXXX")
+    
     if t == nil then
         t = timer.getTime()
     end
+    if #ctld.repackRequestsStack ~= 0 then
     ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
+    end
     --ctld.logTrace("FG_    ctld.repackVehicle._params = %s", ctld.p(mist.utils.tableShow(_params)))
     for ii, v in ipairs(ctld.repackRequestsStack) do
-        local repackableUnitName  = v[1].repackableUnitName
+        ctld.logTrace("FG_    ctld.repackVehicle.v[%s] = %s", ii, ctld.p(v))
+        local repackableUnitName  = v.repackableUnitName
         local repackableUnit      = Unit.getByName(repackableUnitName)
-        local crateWeight         = v[1].weight
-        local playerUnitName      = v[1].playerUnitName
+        local crateWeight         = v.weight
+        local playerUnitName      = v.playerUnitName
         if repackableUnit then
             if repackableUnit:isExist() then
                 local PlayerTransportUnit = Unit.getByName(playerUnitName)
@@ -2065,10 +2070,10 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerPoint    = PlayerTransportUnit:getPoint()
                 local offset         = 5
                 local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
-                for i = 1, v[1].cratesRequired or 1 do
+                for i = 1, v.cratesRequired or 1 do
                     -- see to spawn the crate at random position heading the transport unnit
                     local _unitId        = ctld.getNextUnitId()
-                    local _name          = string.format("%s_%i", v[1].desc, _unitId)
+                    local _name          = string.format("%s_%i", v.desc, _unitId)
                     local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 7
                     local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
                     local _point         = ctld.getPointAt6Oclock(PlayerTransportUnit, 15)
@@ -6002,11 +6007,11 @@ end
 
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
+    --ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
     local nextSubMenuPath = ""
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
-        ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
+        --ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
             --ctld.logTrace("FG_ boucle[%s].nextSubMenuPath =  %s", i, ctld.p(nextSubMenuPath))
             menu.subMenuPath = nextSubMenuPath
@@ -6020,9 +6025,9 @@ function ctld.buildPaginatedMenu(_menuEntries)
             --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath apres =  %s", i, ctld.p(menu.subMenuPath))
             itemNbSubmenu = 1
         end
-        menu.menuArgsTable[1].subMenuPath      = mist.utils.deepCopy(menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
-        menu.menuArgsTable[1].subMenuLineIndex = itemNbSubmenu
-        ctld.logTrace("FG_ boucle[%s]  ctld.buildPaginatedMenu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
+        menu.menuArgsTable.subMenuPath      = mist.utils.deepCopy(menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
+        menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
+        --ctld.logTrace("FG_ boucle[%s]  ctld.buildPaginatedMenu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
     end
 end
@@ -6044,7 +6049,7 @@ function ctld.updateRepackMenu(_playerUnitName)
                 missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
                 local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
-                ctld.logTrace("FG_ ctld.updateRepackMenu.repackableVehicles = %s", ctld.p(repackableVehicles))
+                --ctld.logTrace("FG_ ctld.updateRepackMenu.repackableVehicles = %s", ctld.p(repackableVehicles))
                 --for _, _vehicle in pairs(repackableVehicles) do
                 for i, _vehicle in ipairs(repackableVehicles) do
                     _vehicle.playerUnitName = _playerUnitName
@@ -6052,10 +6057,10 @@ function ctld.updateRepackMenu(_playerUnitName)
                                                 groupId       = _groupId,
                                                 subMenuPath   = RepackmenuPath,
                                                 menuFunction  = ctld.repackVehicleRequest,
-                                                menuArgsTable = {_vehicle}
+                                                menuArgsTable = mist.utils.deepCopy(_vehicle)
                                             })
                 end
-                ctld.logTrace("FG_ menuEntries = %s", ctld.p(menuEntries))
+                --ctld.logTrace("FG_ menuEntries = %s", ctld.p(menuEntries))
                 ctld.buildPaginatedMenu(menuEntries)
             end
         end
