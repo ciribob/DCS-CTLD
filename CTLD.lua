@@ -1030,8 +1030,8 @@ ctld.spawnableCrates = {
 
         --- BLUE
         { weight = 1000.01,                                desc = ctld.i18n_translate("Humvee - MG"),                      unit = "M1043 HMMWV Armament", side = 2 }, --careful with the names as the script matches the desc to JTAC types
-        { weight = 1000.02,                                desc = ctld.i18n_translate("Humvee - TOW"),                     unit = "M1045 HMMWV TOW",      side = 2, cratesRequired = 1 },
-        { multiple = { 1000.02},                           desc = ctld.i18n_translate("Humvee - TOW - All crates"),        side = 2 },
+        { weight = 1000.02,                                desc = ctld.i18n_translate("Humvee - TOW"),                     unit = "M1045 HMMWV TOW",      side = 2, cratesRequired = 2 },
+        { multiple = { 1000.02,1000.02 },                           desc = ctld.i18n_translate("Humvee - TOW - All crates"),        side = 2 },
         { weight = 1000.03,                                desc = ctld.i18n_translate("Light Tank - MRAP"),                unit = "MaxxPro_MRAP",         side = 2, cratesRequired = 2 },
         { multiple = { 1000.03, 1000.03 },                 desc = ctld.i18n_translate("Light Tank - MRAP - All crates"),   side = 2 },
         { weight = 1000.04,                                desc = ctld.i18n_translate("Med Tank - LAV-25"),                unit = "LAV-25",               side = 2, cratesRequired = 3 },
@@ -3895,14 +3895,13 @@ function ctld.unpackCrates(_arguments)
         if _heli ~= nil and ctld.inAir(_heli) == false then
             local _crates = ctld.getCratesAndDistance(_heli)
             local _crate = ctld.getClosestCrate(_heli, _crates)
-
+            ctld.logTrace("FG_ ctld.unpackCrates._crate =  %s", ctld.p(_crate))
+    
             if ctld.inLogisticsZone(_heli) == true or ctld.farEnoughFromLogisticZone(_heli) == false then
                 ctld.displayMessageToGroup(_heli,
                     ctld.i18n_translate("You can't unpack that here! Take it to where it's needed!"), 20)
                 return
             end
-
-
 
             if _crate ~= nil and _crate.dist < 750
                 and (_crate.details.unit == "FOB" or _crate.details.unit == "FOB-SMALL") then
@@ -5512,7 +5511,7 @@ end
 
 -- are we near friendly logistics zone
 function ctld.inLogisticsZone(_heli)
-    ctld.logDebug("ctld.inLogisticsZone(), _heli = %s", ctld.p(_heli))
+    --ctld.logDebug("ctld.inLogisticsZone(), _heli = %s", ctld.p(_heli))
 
     if ctld.inAir(_heli) then
         return false
@@ -6028,7 +6027,7 @@ function ctld.buildPaginatedMenu(_menuEntries)
         menu.menuArgsTable.subMenuPath      = mist.utils.deepCopy(menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
         menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
         --ctld.logTrace("FG_ boucle[%s]  ctld.buildPaginatedMenu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
-        missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, menu.menuArgsTable)
+        missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, mist.utils.deepCopy(menu.menuArgsTable))
     end
 end
 
