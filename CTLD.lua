@@ -1926,26 +1926,17 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point, _hdg)
 end
 
 -- ***************************************************************
-function ctld.getUnitDimensions(_unitName)	-- return unit dimùension (widht,longer,hight) 
-	if Unit.getByName(_unitName) then
-        local dimensions = {}
-		local unitBoundingBox = Unit.getByName(_unitName):getDesc().box
-		dimensions.widht  = unitBoundingBox.max.x - unitBoundingBox.min.x
-		dimensions.longer = unitBoundingBox.max.z - unitBoundingBox.min.z
-		dimensions.hight  = unitBoundingBox.max.y - unitBoundingBox.min.y
-        return dimensions
-    end
-end
-
--- ***************************************************************
 function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
+    local rotorDiameter = 19    -- meters  -- õk for UH & CH47
     if Unit.getByName(_unitName) then
-        local dim = ctld.getUnitDimensions(_unitName)
-	
-		-- distanceFromCenterToCorner = 1/2√(l² + w² + h²)
-		local squaresSum                 = dim.longer^2 + dim.widht^2 + dim.hight^2	-- sum of squares
-		local distanceFromCenterToCorner = math.sqrt(squaresSum)  / 2              -- Calculating distance (half square root)
-        return distanceFromCenterToCorner
+        local unitUserBox = Unit.getByName(_unitName):getDesc().box
+        local SecureDistanceFromUnit = 0
+        if math.abs(unitUserBox.max.x) >= math.abs(unitUserBox.min.x) then
+            SecureDistanceFromUnit = math.abs(unitUserBox.max.x) + rotorDiameter
+        else
+            SecureDistanceFromUnit = math.abs(unitUserBox.min.x) + rotorDiameter
+        end
+		return SecureDistanceFromUnit
 	end
 	return nil
 end
@@ -2080,7 +2071,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                         local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
                     else 
-                        local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading+math.pi) -- 7 meters from the transport unit
+                        local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
                 end
