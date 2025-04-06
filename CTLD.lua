@@ -2060,19 +2060,22 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerHeading  = mist.getHeading(PlayerTransportUnit)
                 local playerPoint    = PlayerTransportUnit:getPoint()
                 local offset         = 5
+                if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
+                    local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
+                else
+                    local randomHeading  = ctld.RandomReal(playerHeading + math.pi - math.pi/4, playerHeading + math.pi + math.pi/4)
+                end
                 for i = 1, v.cratesRequired or 1 do
                     -- see to spawn the crate at random position heading the transport unnit
                     local _unitId        = ctld.getNextUnitId()
                     local _name          = string.format("%s_%i", v.desc, _unitId)
                     local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 10
                     if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
-                        local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
                         local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
                     else
-                        local randomHeading  = ctld.RandomReal(playerHeading + math.pi - math.pi/4, playerHeading + math.pi + math.pi/4)
                         local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
-                        ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading+math.pi, "dynamic")
+                        ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
                 end
 
