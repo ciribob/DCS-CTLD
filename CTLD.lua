@@ -4992,10 +4992,10 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 end
 
 function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
-    ctld.logTrace("_heli      =  %s", ctld.p(_heli))
-    ctld.logTrace("_positions =  %s", ctld.p(_positions))
-    ctld.logTrace("_types     =  %s", ctld.p(_types))
-    ctld.logTrace("_hdgs      =  %s", ctld.p(_hdgs))
+    -- ctld.logTrace("_heli      =  %s", ctld.p(_heli))
+    -- ctld.logTrace("_positions =  %s", ctld.p(_positions))
+    -- ctld.logTrace("_types     =  %s", ctld.p(_types))
+    -- ctld.logTrace("_hdgs      =  %s", ctld.p(_hdgs))
 
     local _id = ctld.getNextGroupId()
     local _groupName = _types[1] .. "    #" .. _id
@@ -5022,7 +5022,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
         for _i, _pos in ipairs(_positions) do
             local _unitId = ctld.getNextUnitId()
             local _details = { type = _types[_i], unitId = _unitId, name = string.format("Unpacked %s #%i", _types[_i], _unitId) }
-            ctld.logTrace("Group._details =  %s", ctld.p(_details))
+            --ctld.logTrace("Group._details =  %s", ctld.p(_details))
             if _hdgs and _hdgs[_i] then
                 _hdg = _hdgs[_i]
             end
@@ -5142,7 +5142,6 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
     end
 
     _group.country = _heli:getCountry()
-    ctld.logTrace("mist.dynAdd(")
     local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
     return _spawnedGroup
 end
@@ -5796,8 +5795,8 @@ function ctld.addTransportF10MenuOptions(_unitName)
             local _unitTypename = _unit:getTypeName()
             local _groupId = ctld.getGroupId(_unit)
             if _groupId then
-                ctld.logTrace("_groupId = %s", ctld.p(_groupId))
-                ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo[tostring(_groupId)]))
+                -- ctld.logTrace("_groupId = %s", ctld.p(_groupId))
+                -- ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo[tostring(_groupId)]))
                 if ctld.addedTo[tostring(_groupId)] == nil then
                     ctld.logTrace("adding CTLD menu for _groupId = %s", ctld.p(_groupId))
                     local _rootPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("CTLD"))
