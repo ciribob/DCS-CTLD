@@ -2077,7 +2077,8 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
                     local _point         = ctld.getPointAt6Oclock(PlayerTransportUnit, 15)
                     if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
-                        ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
+                        --ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
+                        ctld.spawnCrateStatic(refCountry, _unitId, _point, _name, crateWeight, playerCoa, playerHeading, nil)
                     else 
                         ctld.spawnCrateStatic(refCountry, _unitId, _point, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
