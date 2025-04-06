@@ -2045,15 +2045,14 @@ end
 
 -- ***************************************************************
 function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' to process each request
-    ctld.logTrace("FG_ XXXXXXXXXXXXXXXXXXXXXXXXXXX ctld.repackVehicle.ctld.repackRequestsStack XXXXXXXXXXXXXXXXXXXXXXXXXXX")
+    --ctld.logTrace("FG_ XXXXXXXXXXXXXXXXXXXXXXXXXXX ctld.repackVehicle.ctld.repackRequestsStack XXXXXXXXXXXXXXXXXXXXXXXXXXX")
     
     if t == nil then
         t = timer.getTime()
     end
-    if #ctld.repackRequestsStack ~= 0 then
-    ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
-    end
-    --ctld.logTrace("FG_    ctld.repackVehicle._params = %s", ctld.p(mist.utils.tableShow(_params)))
+    -- if #ctld.repackRequestsStack ~= 0 then
+    -- ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
+    -- end
     for ii, v in ipairs(ctld.repackRequestsStack) do
         ctld.logTrace("FG_    ctld.repackVehicle.v[%s] = %s", ii, ctld.p(v))
         local repackableUnitName  = v.repackableUnitName
@@ -2623,12 +2622,12 @@ function ctld.getPointAt6Oclock(_unit, _offset)
 end
 
 function ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
-    ctld.logTrace("_offset = %s", ctld.p(_offset))
+    --ctld.logTrace("_offset = %s", ctld.p(_offset))
     local _SecureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_unit:getName())
     local _randomOffsetX = math.random(_SecureDistanceFromUnit, ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
     local _randomOffsetZ = math.random(0, ctld.randomCrateSpacing)
-    ctld.logTrace("_randomOffsetX = %s", ctld.p(_randomOffsetX))
-    ctld.logTrace("_randomOffsetZ = %s", ctld.p(_randomOffsetZ))
+    --ctld.logTrace("_randomOffsetX = %s", ctld.p(_randomOffsetX))
+    --ctld.logTrace("_randomOffsetZ = %s", ctld.p(_randomOffsetZ))
     local _position = _unit:getPosition()
     local _angle = math.atan(_position.x.z, _position.x.x) + _directionInRadian
     local _xOffset = math.cos(_angle) * (_offset + _randomOffsetX)
@@ -5666,7 +5665,7 @@ function ctld.unitDynamicCargoCapable(_unit)
     local result = cache[_type]
     if result == nil then
         result = false
-        ctld.logDebug("ctld.unitDynamicCargoCapable(_type=[%s])", ctld.p(_type))
+        --ctld.logDebug("ctld.unitDynamicCargoCapable(_type=[%s])", ctld.p(_type))
         for _, _name in ipairs(ctld.dynamicCargoUnits) do
             local _nameLower = string.lower(_name)
             if string.find(_type, _nameLower, 1, true) then             --string.match does not work with patterns containing '-' as it is a magic character
@@ -5675,7 +5674,6 @@ function ctld.unitDynamicCargoCapable(_unit)
             end
         end
         cache[_type] = result
-        ctld.logDebug("result=[%s]", ctld.p(result))
     end
     return result
 end
@@ -8120,7 +8118,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
+            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 5)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
     end, nil, timer.getTime() + 1)
