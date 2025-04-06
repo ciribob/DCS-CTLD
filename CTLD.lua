@@ -2039,7 +2039,7 @@ end
 
 -- ***************************************************************
 function ctld.repackVehicleRequest(_params) -- update rrs table 'repackRequestsStack' with the request
-    ctld.logTrace("FG_    ctld.repackVehicleRequest._params = " .. ctld.p(_params))
+    --ctld.logTrace("FG_    ctld.repackVehicleRequest._params = " .. ctld.p(_params))
     ctld.repackRequestsStack[#ctld.repackRequestsStack + 1] = _params
 end
 
@@ -2054,7 +2054,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
     -- ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
     -- end
     for ii, v in ipairs(ctld.repackRequestsStack) do
-        ctld.logTrace("FG_    ctld.repackVehicle.v[%s] = %s", ii, ctld.p(v))
+        --ctld.logTrace("FG_    ctld.repackVehicle.v[%s] = %s", ii, ctld.p(v))
         local repackableUnitName  = v.repackableUnitName
         local repackableUnit      = Unit.getByName(repackableUnitName)
         local crateWeight         = v.weight
