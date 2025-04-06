@@ -808,7 +808,7 @@ ctld.logisticUnits = {
 ctld.vehicleTransportEnabled = {
     "76MD",     -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
     "Hercules",
-    --"UH-1H",
+    "UH-1H",
     "Mi-8MT",
     --"CH-47Fbl1",
 }
@@ -819,7 +819,7 @@ ctld.vehicleTransportEnabled = {
 -- We will also use this to make modifications to the menu and other checks and messages
 ctld.dynamicCargoUnits = {
    "CH-47Fbl1",
-   "UH-1H",
+   --"UH-1H",
 }
 
 -- ************** Maximum Units SETUP for UNITS ******************
@@ -2659,7 +2659,7 @@ function ctld.getRelativePoint(_refPointXZTable, _distance, _angle_radians)  -- 
     local relativePoint = {}
     relativePoint.x = _refPointXZTable.x + _distance * math.cos(_angle_radians)
     if _refPointXZTable.z == nil then
-        relativePoint.y = _refPointXZTable.y + _distance * math.sin(_angle_radians)    
+        relativePoint.y = _refPointXZTable.y + _distance * math.sin(_angle_radians)
     else
         relativePoint.z = _refPointXZTable.z + _distance * math.sin(_angle_radians)
     end
@@ -3954,7 +3954,11 @@ function ctld.unpackCrates(_arguments)
                 else
                     ctld.logTrace("single crate =  %s", ctld.p(_arguments))
                     -- single crate
-                    local _cratePoint = _crate.crateUnit:getPoint()
+                    --local _cratePoint = _crate.crateUnit:getPoint()
+                    local _point = ctld.getPointInFrontSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
+                    if ctld.unitDynamicCargoCapable(_heli) == true then
+                        _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
+                    end
                     local _crateName  = _crate.crateUnit:getName()
                     local _crateHdg   = mist.getHeading(_crate.crateUnit, true)
 
@@ -3963,7 +3967,7 @@ function ctld.unpackCrates(_arguments)
                     _crate.crateUnit:destroy()
                     -- end
                     ctld.logTrace("_crate =  %s", ctld.p(_crate))
-                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit }, { _crateHdg })
+                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _point }, { _crate.details.unit }, { _crateHdg })
                     ctld.logTrace("_spawnedGroups =  %s", ctld.p(_spawnedGroups))
                     
                     if _heli:getCoalition() == 1 then
@@ -4959,7 +4963,6 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
         if _nearbyCrate.dist < 300 then
             if _nearbyCrate.details.unit == _nearestCrate.details.unit then
                 table.insert(_nearbyMultiCrates, _nearbyCrate)
-
                 if #_nearbyMultiCrates == _nearestCrate.details.cratesRequired then
                     break
                 end
@@ -4970,10 +4973,14 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
     --- check crate count
     if #_nearbyMultiCrates == _nearestCrate.details.cratesRequired then
         --local _point    = _nearestCrate.crateUnit:getPoint()
-        local _point    = _heli:getPoint()
-        local secureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_heli:getName())
-
-        _point.x = _point.x + secureDistanceFromUnit
+        --local _point    = _heli:getPoint()
+        --local secureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_heli:getName())
+        --_point.x = _point.x + secureDistanceFromUnit
+        local _point = ctld.getPointInFrontSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
+        if ctld.unitDynamicCargoCapable(_heli) == true then
+            _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
+        end
+        
         local _crateHdg = mist.getHeading(_nearestCrate.crateUnit, true)
 
         -- destroy crates
@@ -6026,7 +6033,7 @@ end
 
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
+    --ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
     local nextSubMenuPath = ""
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
