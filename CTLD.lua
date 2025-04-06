@@ -2583,7 +2583,7 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 
             if ctld.unitDynamicCargoCapable(_heli) then
                 _model_type = "dynamic"
-                _point = ctld.getPointAt6Oclock(_heli, 15)
+                _point = ctld.getPointAt6Oclock(_heli, 30)
                 _position = "6"
             end
 
@@ -4950,7 +4950,10 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 
     --- check crate count
     if #_nearbyMultiCrates == _nearestCrate.details.cratesRequired then
-        local _point = _nearestCrate.crateUnit:getPoint()
+        --local _point    = _nearestCrate.crateUnit:getPoint()
+        local _point    = _heli:getPoint()
+        local secureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_heli:getName())
+        _point.x = _point.x + secureDistanceFromUnit
         local _crateHdg = mist.getHeading(_nearestCrate.crateUnit, true)
 
         -- destroy crates
