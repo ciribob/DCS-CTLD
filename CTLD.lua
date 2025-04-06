@@ -2069,11 +2069,11 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     local _unitId        = ctld.getNextUnitId()
                     local _name          = string.format("%s_%i", v.desc, _unitId)
                     local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 10
+                    local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
+                        
                     if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
-                        local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
                     else
-                        local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
                 end
@@ -2616,18 +2616,42 @@ function ctld.getPointAt6Oclock(_unit, _offset)
     return ctld.getPointAtDirection(_unit, _offset, math.pi)
 end
 
+function ctld.getPointInFrontSector(_unit, _offset)
+    if _unit then
+        local playerHeading = mist.getHeading(_unit)
+        local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
+        if _offset == nil then
+            _offset = 30
+        end
+        return ctld.getPointAtDirection(_unit, _offset, randomHeading)
+    end
+end
+
+function  ctld.getPointInRearSector(_unit, _offset)
+    if _unit then
+        local playerHeading = mist.getHeading(_unit)
+        local randomHeading  = ctld.RandomReal(playerHeading + math.pi - math.pi/4, playerHeading + math.pi + math.pi/4)
+        if _offset == nil then
+            _offset = 30
+        end
+        return ctld.getPointAtDirection(_unit, _offset, randomHeading)
+    end
+end
+
 function ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
+    if _offset == nil then
+        _offset = ctld.getSecureDistanceFromUnit(_unit:getName())
+    end
     --ctld.logTrace("_offset = %s", ctld.p(_offset))
-    local _SecureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_unit:getName())
-    local _randomOffsetX = math.random(_SecureDistanceFromUnit, ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
+    local _randomOffsetX = math.random(0, ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
     local _randomOffsetZ = math.random(0, ctld.randomCrateSpacing)
     --ctld.logTrace("_randomOffsetX = %s", ctld.p(_randomOffsetX))
     --ctld.logTrace("_randomOffsetZ = %s", ctld.p(_randomOffsetZ))
     local _position = _unit:getPosition()
-    local _angle = math.atan(_position.x.z, _position.x.x) + _directionInRadian
-    local _xOffset = math.cos(_angle) * (_offset + _randomOffsetX)
-    local _zOffset = math.sin(_angle) * (_offset + _randomOffsetZ)
-    local _point = _unit:getPoint()
+    local _angle    = math.atan(_position.x.z, _position.x.x) + _directionInRadian
+    local _xOffset  = math.cos(_angle) * (_offset + _randomOffsetX)
+    local _zOffset  = math.sin(_angle) * (_offset + _randomOffsetZ)
+    local _point    = _unit:getPoint()
     return { x = _point.x + _xOffset, z = _point.z + _zOffset, y = _point.y }
 end
 
@@ -4948,6 +4972,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
         --local _point    = _nearestCrate.crateUnit:getPoint()
         local _point    = _heli:getPoint()
         local secureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_heli:getName())
+
         _point.x = _point.x + secureDistanceFromUnit
         local _crateHdg = mist.getHeading(_nearestCrate.crateUnit, true)
 
@@ -6001,14 +6026,14 @@ end
 
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    --ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
+    ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
     local nextSubMenuPath = ""
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
         --ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
             --ctld.logTrace("FG_ boucle[%s].nextSubMenuPath =  %s", i, ctld.p(nextSubMenuPath))
-            menu.subMenuPath = nextSubMenuPath
+            menu.subMenuPath = mist.utils.deepCopy(nextSubMenuPath)
         end
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
