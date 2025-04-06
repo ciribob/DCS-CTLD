@@ -2060,10 +2060,9 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerHeading  = mist.getHeading(PlayerTransportUnit)
                 local playerPoint    = PlayerTransportUnit:getPoint()
                 local offset         = 5
-                if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
-                    local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
-                else
-                    local randomHeading  = ctld.RandomReal(playerHeading + math.pi - math.pi/4, playerHeading + math.pi + math.pi/4)
+                local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
+                if ctld.unitDynamicCargoCapable(PlayerTransportUnit) ~= false then
+                    randomHeading  = ctld.RandomReal(playerHeading + math.pi - math.pi/4, playerHeading + math.pi + math.pi/4)
                 end
                 for i = 1, v.cratesRequired or 1 do
                     -- see to spawn the crate at random position heading the transport unnit
