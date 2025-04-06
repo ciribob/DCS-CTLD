@@ -808,7 +808,7 @@ ctld.logisticUnits = {
 ctld.vehicleTransportEnabled = {
     "76MD",     -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
     "Hercules",
-    "UH-1H",
+    --"UH-1H",
     "Mi-8MT",
     --"CH-47Fbl1",
 }
@@ -819,6 +819,7 @@ ctld.vehicleTransportEnabled = {
 -- We will also use this to make modifications to the menu and other checks and messages
 ctld.dynamicCargoUnits = {
    "CH-47Fbl1",
+   "UH-1H",
 }
 
 -- ************** Maximum Units SETUP for UNITS ******************
@@ -2073,14 +2074,14 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     -- see to spawn the crate at random position heading the transport unnit
                     local _unitId        = ctld.getNextUnitId()
                     local _name          = string.format("%s_%i", v.desc, _unitId)
-                    local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 7
+                    local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 10
                     local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
-                    local _point         = ctld.getPointAt6Oclock(PlayerTransportUnit, 15)
                     if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
-                        --ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
-                        ctld.spawnCrateStatic(refCountry, _unitId, _point, _name, crateWeight, playerCoa, playerHeading-math.pi, nil)
+                        local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
+                        ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
                     else 
-                        ctld.spawnCrateStatic(refCountry, _unitId, _point, _name, crateWeight, playerCoa, playerHeading, "dynamic")
+                        local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading+math.pi) -- 7 meters from the transport unit
+                        ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
                 end
 
