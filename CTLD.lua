@@ -819,6 +819,7 @@ ctld.vehicleTransportEnabled = {
 -- We will also use this to make modifications to the menu and other checks and messages
 ctld.dynamicCargoUnits = {
    "CH-47Fbl1",
+   --"UH-1H",
 }
 
 -- ************** Maximum Units SETUP for UNITS ******************
@@ -1925,26 +1926,17 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point, _hdg)
 end
 
 -- ***************************************************************
-function ctld.getUnitDimensions(_unitName)	-- return unit dimùension (widht,longer,hight) 
-	if Unit.getByName(_unitName) then
-        local dimensions = {}
-		local unitBoundingBox = Unit.getByName(_unitName):getDesc().box
-		dimensions.widht  = unitBoundingBox.max.x - unitBoundingBox.min.x
-		dimensions.longer = unitBoundingBox.max.z - unitBoundingBox.min.z
-		dimensions.hight  = unitBoundingBox.max.y - unitBoundingBox.min.y
-        return dimensions
-    end
-end
-
--- ***************************************************************
 function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
+    local rotorDiameter = 19    -- meters  -- õk for UH & CH47
     if Unit.getByName(_unitName) then
-        local dim = ctld.getUnitDimensions(_unitName)
-	
-		-- distanceFromCenterToCorner = 1/2√(l² + w² + h²)
-		local squaresSum                 = dim.longer^2 + dim.widht^2 + dim.hight^2	-- sum of squares
-		local distanceFromCenterToCorner = math.sqrt(squaresSum)  / 2              -- Calculating distance (half square root)
-        return distanceFromCenterToCorner
+        local unitUserBox = Unit.getByName(_unitName):getDesc().box
+        local SecureDistanceFromUnit = 0
+        if math.abs(unitUserBox.max.x) >= math.abs(unitUserBox.min.x) then
+            SecureDistanceFromUnit = math.abs(unitUserBox.max.x) + rotorDiameter
+        else
+            SecureDistanceFromUnit = math.abs(unitUserBox.min.x) + rotorDiameter
+        end
+		return SecureDistanceFromUnit
 	end
 	return nil
 end
@@ -2069,17 +2061,20 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerPoint    = PlayerTransportUnit:getPoint()
                 local offset         = 5
                 local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
+                if ctld.unitDynamicCargoCapable(PlayerTransportUnit) ~= false then
+                    randomHeading  = ctld.RandomReal(playerHeading + math.pi - math.pi/4, playerHeading + math.pi + math.pi/4)
+                end
                 for i = 1, v.cratesRequired or 1 do
                     -- see to spawn the crate at random position heading the transport unnit
                     local _unitId        = ctld.getNextUnitId()
                     local _name          = string.format("%s_%i", v.desc, _unitId)
-                    local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 7
+                    local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 10
                     local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
-                    local _point         = ctld.getPointAt6Oclock(PlayerTransportUnit, 15)
+                        
                     if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
-                    else 
-                        ctld.spawnCrateStatic(refCountry, _unitId, _point, _name, crateWeight, playerCoa, playerHeading, "dynamic")
+                    else
+                        ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
                 end
 
@@ -2583,7 +2578,7 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 
             if ctld.unitDynamicCargoCapable(_heli) then
                 _model_type = "dynamic"
-                _point = ctld.getPointAt6Oclock(_heli, 15)
+                _point = ctld.getPointAt6Oclock(_heli, 30)
                 _position = "6"
             end
 
@@ -2621,18 +2616,42 @@ function ctld.getPointAt6Oclock(_unit, _offset)
     return ctld.getPointAtDirection(_unit, _offset, math.pi)
 end
 
+function ctld.getPointInFrontSector(_unit, _offset)
+    if _unit then
+        local playerHeading = mist.getHeading(_unit)
+        local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
+        if _offset == nil then
+            _offset = 30
+        end
+        return ctld.getPointAtDirection(_unit, _offset, randomHeading)
+    end
+end
+
+function  ctld.getPointInRearSector(_unit, _offset)
+    if _unit then
+        local playerHeading = mist.getHeading(_unit)
+        local randomHeading  = ctld.RandomReal(playerHeading + math.pi - math.pi/4, playerHeading + math.pi + math.pi/4)
+        if _offset == nil then
+            _offset = 30
+        end
+        return ctld.getPointAtDirection(_unit, _offset, randomHeading)
+    end
+end
+
 function ctld.getPointAtDirection(_unit, _offset, _directionInRadian)
+    if _offset == nil then
+        _offset = ctld.getSecureDistanceFromUnit(_unit:getName())
+    end
     --ctld.logTrace("_offset = %s", ctld.p(_offset))
-    local _SecureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_unit:getName())
-    local _randomOffsetX = math.random(_SecureDistanceFromUnit, ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
+    local _randomOffsetX = math.random(0, ctld.randomCrateSpacing * 2) - ctld.randomCrateSpacing
     local _randomOffsetZ = math.random(0, ctld.randomCrateSpacing)
     --ctld.logTrace("_randomOffsetX = %s", ctld.p(_randomOffsetX))
     --ctld.logTrace("_randomOffsetZ = %s", ctld.p(_randomOffsetZ))
     local _position = _unit:getPosition()
-    local _angle = math.atan(_position.x.z, _position.x.x) + _directionInRadian
-    local _xOffset = math.cos(_angle) * (_offset + _randomOffsetX)
-    local _zOffset = math.sin(_angle) * (_offset + _randomOffsetZ)
-    local _point = _unit:getPoint()
+    local _angle    = math.atan(_position.x.z, _position.x.x) + _directionInRadian
+    local _xOffset  = math.cos(_angle) * (_offset + _randomOffsetX)
+    local _zOffset  = math.sin(_angle) * (_offset + _randomOffsetZ)
+    local _point    = _unit:getPoint()
     return { x = _point.x + _xOffset, z = _point.z + _zOffset, y = _point.y }
 end
 
@@ -2640,7 +2659,7 @@ function ctld.getRelativePoint(_refPointXZTable, _distance, _angle_radians)  -- 
     local relativePoint = {}
     relativePoint.x = _refPointXZTable.x + _distance * math.cos(_angle_radians)
     if _refPointXZTable.z == nil then
-        relativePoint.y = _refPointXZTable.y + _distance * math.sin(_angle_radians)    
+        relativePoint.y = _refPointXZTable.y + _distance * math.sin(_angle_radians)
     else
         relativePoint.z = _refPointXZTable.z + _distance * math.sin(_angle_radians)
     end
@@ -3935,7 +3954,11 @@ function ctld.unpackCrates(_arguments)
                 else
                     ctld.logTrace("single crate =  %s", ctld.p(_arguments))
                     -- single crate
-                    local _cratePoint = _crate.crateUnit:getPoint()
+                    --local _cratePoint = _crate.crateUnit:getPoint()
+                    local _point = ctld.getPointInFrontSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
+                    if ctld.unitDynamicCargoCapable(_heli) == true then
+                        _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
+                    end
                     local _crateName  = _crate.crateUnit:getName()
                     local _crateHdg   = mist.getHeading(_crate.crateUnit, true)
 
@@ -3944,7 +3967,7 @@ function ctld.unpackCrates(_arguments)
                     _crate.crateUnit:destroy()
                     -- end
                     ctld.logTrace("_crate =  %s", ctld.p(_crate))
-                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _cratePoint }, { _crate.details.unit }, { _crateHdg })
+                    local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _point }, { _crate.details.unit }, { _crateHdg })
                     ctld.logTrace("_spawnedGroups =  %s", ctld.p(_spawnedGroups))
                     
                     if _heli:getCoalition() == 1 then
@@ -4940,7 +4963,6 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
         if _nearbyCrate.dist < 300 then
             if _nearbyCrate.details.unit == _nearestCrate.details.unit then
                 table.insert(_nearbyMultiCrates, _nearbyCrate)
-
                 if #_nearbyMultiCrates == _nearestCrate.details.cratesRequired then
                     break
                 end
@@ -4950,7 +4972,15 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 
     --- check crate count
     if #_nearbyMultiCrates == _nearestCrate.details.cratesRequired then
-        local _point = _nearestCrate.crateUnit:getPoint()
+        --local _point    = _nearestCrate.crateUnit:getPoint()
+        --local _point    = _heli:getPoint()
+        --local secureDistanceFromUnit = ctld.getSecureDistanceFromUnit(_heli:getName())
+        --_point.x = _point.x + secureDistanceFromUnit
+        local _point = ctld.getPointInFrontSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
+        if ctld.unitDynamicCargoCapable(_heli) == true then
+            _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
+        end
+        
         local _crateHdg = mist.getHeading(_nearestCrate.crateUnit, true)
 
         -- destroy crates
@@ -6010,7 +6040,7 @@ function ctld.buildPaginatedMenu(_menuEntries)
         --ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
         if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
             --ctld.logTrace("FG_ boucle[%s].nextSubMenuPath =  %s", i, ctld.p(nextSubMenuPath))
-            menu.subMenuPath = nextSubMenuPath
+            menu.subMenuPath = mist.utils.deepCopy(nextSubMenuPath)
         end
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
@@ -8246,7 +8276,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 5)
+            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
         if ctld.enableAutoOrbitingFlyinfJtacOnTarget then
