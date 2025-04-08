@@ -7704,13 +7704,13 @@ end
 --                  this one follow it, and start orbiting when he detects a target.
 --                  As soon as it don't detect a target, it restart following its initial route at the nearest waypoint
 --  Use : In mission editor:
---                  0> Set ctld.enableAutoOrbitingFlyinfJtacOnTarget = true
+--                  0> Set ctld.enableAutoOrbitingFlyingJtacOnTarget = true
 --      			1> Load MIST + CTLD
 --                  2> Create a TRIGGER (once) at Time sup à 6, and a ACTION.EXECUTE SCRIPT :
 --							ctld.JTACAutoLase("gdrone1", 1688,false)  -- défine group "gdrone1" as a JTAC
 ------------------------------------------------------------------------------------
 ctld.OrbitInUse = {}	                          -- for each Orbit group in use, indicates the time of the run
-ctld.enableAutoOrbitingFlyinfJtacOnTarget = true  -- if true activate the AutoOrbitingFlyinfJtacOnTarget function for all flying JTACS
+ctld.enableAutoOrbitingFlyingJtacOnTarget = true  -- if true activate the AutoOrbitingFlyinfJtacOnTarget function for all flying JTACS
 ------------------------------------------------------------------------------------
 -- Automatic JTAC orbit on target detect
 function ctld.TreatOrbitJTAC(params, t)
@@ -7719,40 +7719,41 @@ function ctld.TreatOrbitJTAC(params, t)
 	for k,v in pairs(ctld.jtacUnits) do					-- vérify state of each active JTAC
 		if  ctld.isFlyingJtac(k) then
             if ctld.jtacCurrentTargets[k] ~= nil then		-- if detected target by JTAC
-                if ctld.InOrbitList(k) == false then		-- JTAC have a target but isn't in orbit => put it in orbit
-                    --ctld.StartOrbitGroup(k, ctld.jtacCurrentTargets[k].name, 2000, 100)	-- do orbit JTAC
-                    local droneAlti = Unit.getByName(k):getPoint().y
-                    ctld.StartOrbitGroup(k, ctld.jtacCurrentTargets[k].name, droneAlti, 100) -- do orbit JTAC
-                    ctld.OrbitInUse[k] =  timer.getTime()								     -- memorise time of start new orbiting
-                else														                 -- JTAC already is orbiting => update coord for following the target mouvements
-                    if timer.getTime() > (ctld.OrbitInUse[k] + 60) then   	                 -- each 60" update orbit coord 
-                        ctld.AjustRoute(k, ctld.NearWP(ctld.jtacCurrentTargets[k].name, k))  -- ajust JTAC route for the orbit follow the target
+                local droneAlti = Unit.getByName(k):getPoint().y
+                if ctld.InOrbitList(k) == false then		-- JTAC lase a target but isn't in orbit => start orbiting
+                    ctld.StartOrbitGroup(k, ctld.jtacCurrentTargets[k].name, droneAlti, 100)     -- do orbit JTAC
+                    ctld.OrbitInUse[k] = timer.getTime()			          -- update time of the last orbit run 
+                else														                     -- JTAC already is orbiting => update coord for following the target mouvements
+                    if timer.getTime() > (ctld.OrbitInUse[k] + 60) then   	                     -- each 60" update orbit coord 
+                        ctld.StartOrbitGroup(k, ctld.jtacCurrentTargets[k].name, droneAlti, 100) -- do orbit JTAC
+                        ctld.OrbitInUse[k] = timer.getTime()			                         -- update time of the last orbit run
                     end
                 end
-            elseif ctld.jtacCurrentTargets[k] == nil then			      -- if JTAC hav no target
-                if ctld.InOrbitList(k) == true then					      -- JTAC orbiting, without target => stop orbit
-                    Group.getByName(k):getController():resetTask()	      -- stop orbit JTAC
-                    ctld.OrbitInUse[k] =  nil						      -- Reset orbit
-                end
+            else                                        			   -- if JTAC have no target
+                -- if ctld.InOrbitList(k) == true then				   -- JTAC orbiting, without target => stop orbit
+                --     Group.getByName(k):getController():resetTask()  -- stop orbiting JTAC
+                --     --Group.getByName(k):getController():popTask()  -- stop orbiting JTAC
+                --     ctld.OrbitInUse[k] =  nil					   -- Reset orbit
+                -- end
+                Group.getByName(k):getController():popTask()	       -- stop orbiting JTAC
+                ctld.backToRoute(k)                                    -- return to the initial route of the JTAC group
             end
         end
 	end
     return t + 3	--reschedule in 3"
-	
 end
 ------------------------------------------------------------------------------------
 -- Make orbit the group "_grpName", on target "_unitTargetName".  _alti in meters, speed in km/h
-function ctld.StartOrbitGroup(_grpName, _unitTargetName, _alti, _speed)	
+function ctld.StartOrbitGroup(_grpName, _unitTargetName, _alti, _speed)
 	if (Unit.getByName(_unitTargetName) ~= nil) and (Group.getByName(_grpName) ~= nil) then			-- si target unit and JTAC group exist
 		local orbit = {
-		   id = 'Orbit', 
-			 params = { 
-			   pattern = 'Circle',
-			   point = mist.utils.makeVec2(mist.getAvgPos(mist.makeUnitTable({_unitTargetName}))),
-			   speed = _speed,
-			   altitude = _alti,
-		   } 
-		 }
+                        id = 'Orbit', 
+                        params = {pattern = 'Circle',
+                                  point = mist.utils.makeVec2(mist.getAvgPos(mist.makeUnitTable({_unitTargetName}))),
+                                  speed = _speed,
+                                  altitude = _alti
+                                 } 
+                    }
 		 Group.getByName(_grpName):getController():pushTask(orbit)
 		 ctld.OrbitInUse[_grpName] = true
 	 end
@@ -7792,24 +7793,10 @@ function ctld.NearWP(_unitTargetName, _grpName)
 end
 ----------------------------------------------------------------------------
 -- Modify the route deleting all the WP before "firstWP" param, for aligne the orbit on the nearest WP of the target
-function ctld.AjustRoute(_grpName, firstWP)
+function ctld.backToRoute(_grpName)
     local JTACRoute = mist.getGroupRoute (_grpName, true)   -- get the initial editor route of the current group
-	for i=0, #JTACRoute-1 do
-       	if firstWP+i <= #JTACRoute then
-        	JTACRoute[i+1] = JTACRoute[firstWP+i]		-- replace keeped WP at start of new route
-        else 
-            JTACRoute[i+1] = nil						-- delete useless WP
-        end
-    end
-     
 	local Mission = {} 	
-    Mission = { 
-                id = 'Mission', 
-                 params = { 
-                           route = {points = JTACRoute
-                				   }
-            			  }
-               } 
+    Mission = { id = 'Mission', params = {route = {points = JTACRoute}}} 
     -- unactive orbit mode if it's on
     if ctld.InOrbitList(_grpName) == true then					-- if JTAC orbiting => stop it
     	Group.getByName(_grpName):getController():resetTask()	-- stop JTAC orbiting
@@ -8279,7 +8266,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
-        if ctld.enableAutoOrbitingFlyinfJtacOnTarget then
+        if ctld.enableAutoOrbitingFlyingJtacOnTarget then
             timer.scheduleFunction(ctld.TreatOrbitJTAC, {}, timer.getTime()+3)
         end
     end, nil, timer.getTime() + 1)
