@@ -7776,16 +7776,16 @@ function ctld.InOrbitList(_grpName)
 end
 -------------------------------------------------------------------------------------------
 -- return the WayPoint number (on the JTAC route) the most near from the target 
-function ctld.NearWP(_unitTargetName, _jtacUnitName)
+function ctld.getNearestWP(_referenceUnitName)
     local WP = 0
     local memoDist = nil	-- Lower distance checked
-    local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
-    local JTACRoute = mist.getGroupRoute (jtacGroupName, true)   -- get the initial editor route of the current group
-    if Unit.getByName(_jtacUnitName) ~= nil and Unit.getByName(_unitTargetName) ~= nil then	--JTAC et unit must exist
+    local refGroupName = Unit.getByName(_referenceUnitName):getGroup():getName()
+    local JTACRoute = mist.getGroupRoute (refGroupName, true)   -- get the initial editor route of the current group
+    if Unit.getByName(_referenceUnitName) ~= nil then	--JTAC et unit must exist
         for i=1, #JTACRoute do
-            local ptJTAC   = {x = JTACRoute[i].x, y = JTACRoute[i].y}
-            local ptTarget = mist.utils.makeVec2(Unit.getByName(_unitTargetName):getPoint())
-            local dist = mist.utils.get2DDist(ptJTAC, ptTarget)		-- distance between 2 points
+            local ptWP  = {x = JTACRoute[i].x, y = JTACRoute[i].y}
+            local ptRef = mist.utils.makeVec2(Unit.getByName(_referenceUnitName):getPoint())
+            local dist  = mist.utils.get2DDist(ptRef, ptWP)		-- distance between 2 points
             if memoDist == nil then
                 memoDist = dist
                 WP = i
@@ -7812,6 +7812,38 @@ function ctld.backToRoute(_jtacUnitName)
     Unit.getByName(_jtacUnitName):getController():popTask()	        -- stop current Task
     Unit.getByName(_jtacUnitName):getController():setTask(Mission)	-- submit the new route
     return Mission
+end
+----------------------------------------------------------------------------
+function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a route based on inital one, starting at _firstWpOfNewRoute WP
+                                                                   -- if the last WP switch to the first this cycle is recreated
+    local adjustedRoute = {}
+    local lastRouteTasks = _initialRouteTable{#_initialRouteTable].task.params.tasks
+    for i=1, #lastRouteTasks do		            -- look at each task of last WP
+        if lastRouteTasks[i].params.action.id == "SwitchWaypoint" then
+        local fromWaypointIndex = lastRouteTasks[i].params.action.params.fromWaypointIndex
+        local goToWaypointIndex = lastRouteTasks[i].params.action.params.goToWaypointIndex 
+        end                 
+    end
+
+    local idx = 1
+    for i=1, #_initialRouteTable do		            -- look at each task of last WP
+        if i >= _firstWpOfNewRoute then
+            adjustedRoute[idx] = _initialRouteTable[i]
+            idx = idx + 1
+                if i == #_initialRouteTable then		-- if on last initial WP => delete initial switch action
+
+                end
+        end                 
+    end
+    if _firstWpOfNewRoute > 1 then						-- add firsts WPs at the end of adjustedRoute
+        for i=1, _firstWpOfNewRoute-1 do		        -- look at each WP skeeped in pass 1
+            adjustedRoute[idx] = _initialRouteTable[i]
+            idx = idx + 1
+            if i == _firstWpOfNewRoute-1 then		    -- if on final adjustedRoute WP => add new switch action on _firstWpOfNewRoute-1 WP
+
+            end
+        end           
+    end
 end
 ----------------------------------------------------------------------------
 function  ctld.isFlyingJtac(_jtacUnitName)
