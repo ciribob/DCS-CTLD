@@ -7738,7 +7738,8 @@ function ctld.TreatOrbitJTAC(params, t)
                 end
             else                                                   -- if JTAC have no target
                 if ctld.InOrbitList(k) == true then				   -- JTAC orbiting, without target => stop orbit
-                    Unit.getByName(k):getController():popTask()	   -- stop orbiting JTAC Task => return to route
+                    --Unit.getByName(k):getController():popTask()	   -- stop orbiting JTAC Task => return to route
+                    ctld.backToRoute(k)                            -- return to route from the nearest WP
                     ctld.OrbitInUse[k]  =  nil					   -- Reset orbit
                     ctld.JTACInRoute[k] = timer.getTime()		   -- update time of the last start inroute
                 end
@@ -7802,48 +7803,59 @@ end
 function ctld.backToRoute(_jtacUnitName)
     local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
     local JTACRoute = mist.getGroupRoute (jtacGroupName, true)   -- get the initial editor route of the current group
-	local Mission = {} 	
-    Mission = { id = 'Mission', params = {route = {points = JTACRoute}}} 
+    local newJTACRoute = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
+    local Mission = {} 	
+    Mission = { id = 'Mission', params = {route = {points = newJTACRoute}}} 
 
     -- unactive orbit mode if it's on
     if ctld.InOrbitList(_jtacUnitName) == true then					-- if JTAC orbiting => stop it
         ctld.OrbitInUse[_jtacUnitName] =  nil
     end
-    Unit.getByName(_jtacUnitName):getController():popTask()	        -- stop current Task
+    --Unit.getByName(_jtacUnitName):getController():popTask()	        -- stop current Task
     Unit.getByName(_jtacUnitName):getController():setTask(Mission)	-- submit the new route
     return Mission
 end
 ----------------------------------------------------------------------------
 function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a route based on inital one, starting at _firstWpOfNewRoute WP
-                                                                   -- if the last WP switch to the first this cycle is recreated
-    local adjustedRoute = {}
-    local lastRouteTasks = _initialRouteTable{#_initialRouteTable].task.params.tasks
-    for i=1, #lastRouteTasks do		            -- look at each task of last WP
-        if lastRouteTasks[i].params.action.id == "SwitchWaypoint" then
-        local fromWaypointIndex = lastRouteTasks[i].params.action.params.fromWaypointIndex
-        local goToWaypointIndex = lastRouteTasks[i].params.action.params.goToWaypointIndex 
-        end                 
-    end
-
-    local idx = 1
-    for i=1, #_initialRouteTable do		            -- look at each task of last WP
-        if i >= _firstWpOfNewRoute then
+	if _firstWpOfNewRoute >=1 then
+        -- if the last WP switch to the first this cycle is recreated
+        local adjustedRoute = {}
+        local mappingWP = {}
+        local idx = 1
+        for i =_firstWpOfNewRoute, #_initialRouteTable do	-- load each WP route starting from _firstWpOfNewRoute to end
             adjustedRoute[idx] = _initialRouteTable[i]
+            mappingWP[i] = idx
             idx = idx + 1
-                if i == #_initialRouteTable then		-- if on last initial WP => delete initial switch action
+        end
+        for i=1, _firstWpOfNewRoute - 1 do		            -- load each WP route starting from 1 to _firstWpOfNewRoute-1
+            adjustedRoute[idx] = _initialRouteTable[i]
+            mappingWP[i] = idx
+            idx = idx + 1
+        end
 
+        -- apply offset (_firstWpOfNewRoute) to SwitchWaypoint tasks
+        for idx = 1, #adjustedRoute do
+            for j=1, #adjustedRoute[idx].task.params.tasks do
+                if adjustedRoute[idx].task.params.tasks[j].id ~= "ControlledTask" then
+                    if adjustedRoute[idx].task.params.tasks[j].params.action.id == "SwitchWaypoint" then
+                        local fromWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.action.params.fromWaypointIndex
+                        local goToWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.action.params.goToWaypointIndex
+                        adjustedRoute[idx].task.params.tasks[j].params.action.params.fromWaypointIndex = idx
+                        adjustedRoute[idx].task.params.tasks[j].params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
+                    end
+                else	-- for "ControlledTask"
+                    if adjustedRoute[idx].task.params.tasks[j].params.task.params.action.id == "SwitchWaypoint" then
+                        local fromWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.fromWaypointIndex
+                        local goToWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex
+                        adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.fromWaypointIndex = idx
+                        adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
+                    end
                 end
-        end                 
-    end
-    if _firstWpOfNewRoute > 1 then						-- add firsts WPs at the end of adjustedRoute
-        for i=1, _firstWpOfNewRoute-1 do		        -- look at each WP skeeped in pass 1
-            adjustedRoute[idx] = _initialRouteTable[i]
-            idx = idx + 1
-            if i == _firstWpOfNewRoute-1 then		    -- if on final adjustedRoute WP => add new switch action on _firstWpOfNewRoute-1 WP
-
             end
-        end           
+        end
+        return adjustedRoute
     end
+    return nil
 end
 ----------------------------------------------------------------------------
 function  ctld.isFlyingJtac(_jtacUnitName)
