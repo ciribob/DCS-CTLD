@@ -6445,7 +6445,7 @@ function ctld.JTACStart(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _rad
 end
 
 function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio)
-    ctld.logDebug(string.format("ctld.JTACAutoLase(_jtacGroupName=%s, _laserCode=%s", ctld.p(_jtacGroupName), ctld.p(_laserCode)))
+    --ctld.logDebug(string.format("ctld.JTACAutoLase(_jtacGroupName=%s, _laserCode=%s", ctld.p(_jtacGroupName), ctld.p(_laserCode)))
     local _radio = _radio
     if not _radio then
         _radio = {}
@@ -6455,9 +6455,9 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
                 local _laserB = math.floor((_laserCode - 1000) / 100)
                 local _laserCD = _laserCode - 1000 - _laserB * 100
                 local _frequency = tostring(30 + _laserB + _laserCD * 0.05)
-                ctld.logTrace(string.format("_laserB=%s", ctld.p(_laserB)))
-                ctld.logTrace(string.format("_laserCD=%s", ctld.p(_laserCD)))
-                ctld.logTrace(string.format("_frequency=%s", ctld.p(_frequency)))
+                --ctld.logTrace(string.format("_laserB=%s", ctld.p(_laserB)))
+                --ctld.logTrace(string.format("_laserCD=%s", ctld.p(_laserCD)))
+                --ctld.logTrace(string.format("_frequency=%s", ctld.p(_frequency)))
                 _radio.freq = _frequency
                 _radio.mod = "fm"
             end
@@ -6699,7 +6699,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
         local targetSpeedVec = _enemyUnit:getVelocity()
         local targetSpeed = math.sqrt(targetSpeedVec.x ^ 2 + targetSpeedVec.y ^ 2 + targetSpeedVec.z ^ 2)
         local maxUpdateDist = 5         --maximum distance the unit will be allowed to travel before the lase spot is updated again
-        ctld.logTrace(string.format("targetSpeed=%s", ctld.p(targetSpeed)))
+        --ctld.logTrace(string.format("targetSpeed=%s", ctld.p(targetSpeed)))
 
         ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
 
@@ -6707,9 +6707,7 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
         if targetSpeed >= maxUpdateDist / refreshDelay then
             local updateTimeStep = maxUpdateDist /
             targetSpeed                                                  --calculate the time step so that the target is never more than maxUpdateDist from it's last lased position
-            ctld.logTrace(string.format(
-            "JTAC - LASE - [%s] - target is moving at %s m/s, schedulting lasing steps every %ss", ctld.p(_jtacGroupName),
-                ctld.p(targetSpeed), ctld.p(updateTimeStep)))
+            --ctld.logTrace(string.format("JTAC - LASE - [%s] - target is moving at %s m/s, schedulting lasing steps every %ss", ctld.p(_jtacGroupName), ctld.p(targetSpeed), ctld.p(updateTimeStep)))
 
             local i = 1
             while i * updateTimeStep <= refreshDelay - updateTimeStep do           --while the scheduled time for the laseUnit call isn't greater than the time between two JTACAutoLase() calls minus one time step (because at the next time step JTACAutoLase() should have been called and this in term also calls laseUnit())
@@ -6717,12 +6715,10 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
                     timer.getTime() + i * updateTimeStep)
                 i = i + 1
             end
-            ctld.logTrace(string.format("JTAC - LASE - [%s] - scheduled %s moving target lasing steps",
-                ctld.p(_jtacGroupName), ctld.p(i)))
+            --ctld.logTrace(string.format("JTAC - LASE - [%s] - scheduled %s moving target lasing steps", ctld.p(_jtacGroupName), ctld.p(i)))
         end
 
-        ctld.logTrace(string.format("JTAC - LASE - [%s] - scheduling JTACAutoLase in %ss at %s", ctld.p(_jtacGroupName),
-            ctld.p(refreshDelay), ctld.p(timer.getTime() + refreshDelay)))
+        --ctld.logTrace(string.format("JTAC - LASE - [%s] - scheduling JTACAutoLase in %ss at %s", ctld.p(_jtacGroupName), ctld.p(refreshDelay), ctld.p(timer.getTime() + refreshDelay)))
         timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio },
             timer.getTime() + refreshDelay)
 
@@ -6735,14 +6731,13 @@ function ctld.JTACAutoLase(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _
             end
         end
     else
-        ctld.logDebug(string.format("JTAC - MODE - [%s] - No Enemies Nearby / Standby mode", ctld.p(_jtacGroupName)))
+        --ctld.logDebug(string.format("JTAC - MODE - [%s] - No Enemies Nearby / Standby mode", ctld.p(_jtacGroupName)))
 
         -- stop lazing the old spot
-        ctld.logDebug(string.format("JTAC - LASE - [%s] - canceling lasing of the old spot", ctld.p(_jtacGroupName)))
+        --ctld.logDebug(string.format("JTAC - LASE - [%s] - canceling lasing of the old spot", ctld.p(_jtacGroupName)))
         ctld.cancelLase(_jtacGroupName)
 
-        ctld.logTrace(string.format("JTAC - LASE - [%s] - scheduling JTACAutoLase in %ss at %s", ctld.p(_jtacGroupName),
-            ctld.p(5), ctld.p(timer.getTime() + 5)))
+        --ctld.logTrace(string.format("JTAC - LASE - [%s] - scheduling JTACAutoLase in %ss at %s", ctld.p(_jtacGroupName), ctld.p(5), ctld.p(timer.getTime() + 5)))
         timer.scheduleFunction(ctld.timerJTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio },
             timer.getTime() + 5)
     end
@@ -6879,7 +6874,7 @@ end
 
 function ctld.laseUnit(_enemyUnit, _jtacUnit, _jtacGroupName, _laserCode)
     --cancelLase(jtacGroupName)
-    ctld.logTrace("ctld.laseUnit()")
+    --ctld.logTrace("ctld.laseUnit()")
 
     local _spots = {}
 
@@ -7175,20 +7170,18 @@ function ctld.getGroup(groupName)
     local _x = 1
 
     if _group ~= nil then
-        ctld.logTrace(string.format("ctld.getGroup - %s - group ~= nil", ctld.p(groupName)))
+        --ctld.logTrace(string.format("ctld.getGroup - %s - group ~= nil", ctld.p(groupName)))
         if _group:isExist() then
-            ctld.logTrace(string.format("ctld.getGroup - %s - group:isExist()", ctld.p(groupName)))
+            --ctld.logTrace(string.format("ctld.getGroup - %s - group:isExist()", ctld.p(groupName)))
             local _groupUnits = _group:getUnits()
 
             if _groupUnits ~= nil and #_groupUnits > 0 then
-                ctld.logTrace(string.format("ctld.getGroup - %s - group has %s units", ctld.p(groupName),
-                    ctld.p(#_groupUnits)))
+                --ctld.logTrace(string.format("ctld.getGroup - %s - group has %s units", ctld.p(groupName), ctld.p(#_groupUnits)))
                 for _x = 1, #_groupUnits do
                     if _groupUnits[_x]:getLife() > 0 then                        -- removed and _groupUnits[_x]:isExist() as isExist doesnt work on single units!
                         table.insert(_filteredUnits, _groupUnits[_x])
                     else
-                        ctld.logTrace(string.format("ctld.getGroup - %s - dead unit %s", ctld.p(groupName),
-                            ctld.p(_groupUnits[_x]:getName())))
+                        --ctld.logTrace(string.format("ctld.getGroup - %s - dead unit %s", ctld.p(groupName), ctld.p(_groupUnits[_x]:getName())))
                     end
                 end
             end
@@ -7725,7 +7718,6 @@ function ctld.TreatOrbitJTAC(params, t)
             
             if ctld.jtacCurrentTargets[k] ~= nil then		       -- if target lased by JTAC
                 local droneAlti = Unit.getByName(k):getPoint().y
-                
                 if ctld.OrbitInUse[k] == nil then		-- if JTAC is not in orbit => start orbiting and update start time
                     ctld.StartOrbitGroup(k, ctld.jtacCurrentTargets[k].name, droneAlti, 100) -- do orbit JTAC
                     ctld.OrbitInUse[k]  = timer.getTime()			          -- update time of the last orbit run 
@@ -7825,11 +7817,13 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
         for i =_firstWpOfNewRoute, #_initialRouteTable do	-- load each WP route starting from _firstWpOfNewRoute to end
             adjustedRoute[idx] = _initialRouteTable[i]
             mappingWP[i] = idx
+            ctld.logDebug("ctld.adjustRoute - mappingWP[%s]=[%s]", ctld.p(i), ctld.p(idx))
             idx = idx + 1
         end
         for i=1, _firstWpOfNewRoute - 1 do		            -- load each WP route starting from 1 to _firstWpOfNewRoute-1
             adjustedRoute[idx] = _initialRouteTable[i]
             mappingWP[i] = idx
+            ctld.logDebug("ctld.adjustRoute - mappingWP[%s]=[%s]", ctld.p(i), ctld.p(idx))
             idx = idx + 1
         end
 
@@ -7853,6 +7847,12 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
                 end
             end
         end
+        -- add a SwitchWaypoint to the last offseted task to ensure continuity of WPs
+        local newTaskIdx = #adjustedRoute[#_initialRouteTable].task.params.tasks + 1
+        adjustedRoute[#_initialRouteTable].task.params.tasks[newTaskIdx].params.task.params.action.id                       = "SwitchWaypoint"
+        adjustedRoute[#_initialRouteTable].task.params.tasks[newTaskIdx].params.task.params.action.params.fromWaypointIndex = #_initialRouteTable
+        adjustedRoute[#_initialRouteTable].task.params.tasks[newTaskIdx].params.task.params.action.params.goToWaypointIndex = 1
+        ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))
         return adjustedRoute
     end
     return nil
