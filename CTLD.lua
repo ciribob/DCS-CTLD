@@ -7848,11 +7848,11 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
             end
         end
         -- add a SwitchWaypoint to the last offseted task to ensure continuity of WPs
-        local newTaskIdx = #adjustedRoute[#_initialRouteTable].task.params.tasks + 1
-        adjustedRoute[#_initialRouteTable].task.params.tasks[newTaskIdx].params.task.params.action.id                       = "SwitchWaypoint"
-        adjustedRoute[#_initialRouteTable].task.params.tasks[newTaskIdx].params.task.params.action.params.fromWaypointIndex = #_initialRouteTable
-        adjustedRoute[#_initialRouteTable].task.params.tasks[newTaskIdx].params.task.params.action.params.goToWaypointIndex = 1
-        ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))
+        local newTaskIdx = #adjustedRoute[#adjustedRoute].task.params.tasks + 1
+        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx] = {params = {task = {params = {action = {id = "SwitchWaypoint"}}}}}
+        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.task[1].params.action.params.fromWaypointIndex = #_initialRouteTable
+        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.task[1].params.action.params.goToWaypointIndex = 1
+        ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))
         return adjustedRoute
     end
     return nil
