@@ -7847,12 +7847,33 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
                 end
             end
         end
-        -- add a SwitchWaypoint to the last offseted task to ensure continuity of WPs
+
         local newTaskIdx = #adjustedRoute[#adjustedRoute].task.params.tasks + 1
-        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx] = {params = {task = {params = {action = {id = "SwitchWaypoint"}}}}}
-        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.task[1].params.action.params.fromWaypointIndex = #_initialRouteTable
-        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.task[1].params.action.params.goToWaypointIndex = 1
-        ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))
+        
+--[[
+       [14]["task"]["params"]["tasks"][1] = table: 0000012EF5AF0CA8                     {
+                    [14]["task"]["params"]["tasks"][1]["number"] = 1,
+                    [14]["task"]["params"]["tasks"][1]["auto"] = false,
+                    [14]["task"]["params"]["tasks"][1]["id"] = "WrappedAction",
+                    [14]["task"]["params"]["tasks"][1]["enabled"] = true,
+                    [14]["task"]["params"]["tasks"][1]["params"] = table: 0000012EF5AF0CE8                         {
+                        [14]["task"]["params"]["tasks"][1]["params"]["action"] = table: 0000012EF5AF0D28                             {
+                            [14]["task"]["params"]["tasks"][1]["params"]["action"]["id"] = "SwitchWaypoint",
+                            [14]["task"]["params"]["tasks"][1]["params"]["action"]["params"] = table: 0000012EF5AF0D68                                 {
+                                [14]["task"]["params"]["tasks"][1]["params"]["action"]["params"]["goToWaypointIndex"] = 11,
+                                [14]["task"]["params"]["tasks"][1]["params"]["action"]["params"]["fromWaypointIndex"] = 14,
+        
+ ]]--    
+        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx] =  {number  = newTaskIdx,
+        																auto    = false,
+            															enabled = true,
+            															id      = "WrappedAction",
+            															params  = {action = {}}
+        																}
+        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.action.id     = "SwitchWaypoint"
+        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.action.params = {fromWaypointIndex = #_initialRouteTable,
+                																			goToWaypointIndex = 1 }
+        ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute,100))
         return adjustedRoute
     end
     return nil
