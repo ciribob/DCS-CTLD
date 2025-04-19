@@ -7720,7 +7720,7 @@ function ctld.TreatOrbitJTAC(params, t)
                 local droneAlti = Unit.getByName(k):getPoint().y
                 if ctld.OrbitInUse[k] == nil then		-- if JTAC is not in orbit => start orbiting and update start time
                     ctld.StartOrbitGroup(k, ctld.jtacCurrentTargets[k].name, droneAlti, 100) -- do orbit JTAC
-                    ctld.OrbitInUse[k]  = timer.getTime()			          -- update time of the last orbit run 
+                    ctld.OrbitInUse[k]  = timer.getTime()			      -- update time of the last orbit run 
                 	ctld.JTACInRoute[k] = nil			                  -- JTAC is in orbit => reset the route time    
                 else    -- JTAC already orbiting => update coord for following the target mouvements each 60"
                     if timer.getTime() > (ctld.OrbitInUse[k] + 60) then   	                     -- each 60" update orbit coord 
@@ -7744,14 +7744,13 @@ end
 -- Make orbit the group "_grpName", on target "_unitTargetName".  _alti in meters, speed in km/h
 function ctld.StartOrbitGroup(_jtacUnitName, _unitTargetName, _alti, _speed)
 	if (Unit.getByName(_unitTargetName) ~= nil) and (Unit.getByName(_jtacUnitName) ~= nil) then			-- si target unit and JTAC group exist
-		local orbit = {
-                        id = 'Orbit', 
+		local orbit = { id     = 'Orbit', 
                         params = {pattern = 'Circle',
                                   point = mist.utils.makeVec2(mist.getAvgPos(mist.makeUnitTable({_unitTargetName}))),
                                   speed = _speed,
                                   altitude = _alti
                                  } 
-                    }
+                      }
         local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
         Unit.getByName(_jtacUnitName):getController():popTask()	                      -- stop current Task
         Group.getByName(jtacGroupName):getController():pushTask(orbit)
@@ -7794,16 +7793,15 @@ end
 -- Modify the route deleting all the WP before "firstWP" param, for aligne the orbit on the nearest WP of the target
 function ctld.backToRoute(_jtacUnitName)
     local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
-    local JTACRoute = mist.getGroupRoute (jtacGroupName, true)   -- get the initial editor route of the current group
-    local newJTACRoute = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
-    local Mission = {} 	
+    local JTACRoute     = mist.getGroupRoute(jtacGroupName, true)   -- get the initial editor route of the current group
+    local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
+    local Mission       = {} 	
     Mission = { id = 'Mission', params = {route = {points = newJTACRoute}}} 
 
     -- unactive orbit mode if it's on
     if ctld.InOrbitList(_jtacUnitName) == true then					-- if JTAC orbiting => stop it
         ctld.OrbitInUse[_jtacUnitName] =  nil
     end
-    --Unit.getByName(_jtacUnitName):getController():popTask()	        -- stop current Task
     Unit.getByName(_jtacUnitName):getController():setTask(Mission)	-- submit the new route
     return Mission
 end
@@ -7832,14 +7830,12 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
             for j=1, #adjustedRoute[idx].task.params.tasks do
                 if adjustedRoute[idx].task.params.tasks[j].id ~= "ControlledTask" then
                     if adjustedRoute[idx].task.params.tasks[j].params.action.id == "SwitchWaypoint" then
-                        local fromWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.action.params.fromWaypointIndex
                         local goToWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.action.params.goToWaypointIndex
                         adjustedRoute[idx].task.params.tasks[j].params.action.params.fromWaypointIndex = idx
                         adjustedRoute[idx].task.params.tasks[j].params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
                     end
                 else	-- for "ControlledTask"
                     if adjustedRoute[idx].task.params.tasks[j].params.task.params.action.id == "SwitchWaypoint" then
-                        local fromWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.fromWaypointIndex
                         local goToWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex
                         adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.fromWaypointIndex = idx
                         adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
@@ -7847,10 +7843,7 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
                 end
             end
         end
-
-        local newTaskIdx = #adjustedRoute[#adjustedRoute].task.params.tasks + 1
-        
---[[
+        --[[
        [14]["task"]["params"]["tasks"][1] = table: 0000012EF5AF0CA8                     {
                     [14]["task"]["params"]["tasks"][1]["number"] = 1,
                     [14]["task"]["params"]["tasks"][1]["auto"] = false,
@@ -7863,7 +7856,8 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
                                 [14]["task"]["params"]["tasks"][1]["params"]["action"]["params"]["goToWaypointIndex"] = 11,
                                 [14]["task"]["params"]["tasks"][1]["params"]["action"]["params"]["fromWaypointIndex"] = 14,
         
- ]]--    
+        ]]--
+        local newTaskIdx = #adjustedRoute[#adjustedRoute].task.params.tasks + 1
         adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx] =  {number  = newTaskIdx,
         																auto    = false,
             															enabled = true,
@@ -7873,7 +7867,7 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
         adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.action.id     = "SwitchWaypoint"
         adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.action.params = {fromWaypointIndex = #_initialRouteTable,
                 																			goToWaypointIndex = 1 }
-        ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute,100))
+        ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))
         return adjustedRoute
     end
     return nil
