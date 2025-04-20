@@ -5873,9 +5873,9 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
                             end
 
-                            if ctld.enableRepackingVehicles then
-                                --ctld.updateRepackMenu(_unitName)
-                            end
+                            -- if ctld.enableRepackingVehicles then
+                            --     ctld.updateRepackMenu(_unitName)
+                            -- end
                             if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                 missionCommands.addCommandForGroup(_groupId,
                                     ctld.i18n_translate("Load / Unload FOB Crate"), _vehicleCommandsPath,
@@ -5954,13 +5954,10 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 if ctld.vehicleCommandsPath[_unitName] == nil then
                                     ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_rootPath)
                                 end
-                                if ctld.enableRepackingVehicles then
-                                    ctld.updateRepackMenu(_unitName)
-                                end
-                                
+                                -- if ctld.enableRepackingVehicles then
+                                --     ctld.updateRepackMenu(_unitName)
+                                -- end
                             end
-                            
-        
                         end
                     end
                     
@@ -6049,7 +6046,8 @@ function ctld.buildPaginatedMenu(_menuEntries)
         menu.menuArgsTable.subMenuPath      = mist.utils.deepCopy(menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
         menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, mist.utils.deepCopy(menu.menuArgsTable))
-        ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
+        --ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
+        ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
     end
 end
 
@@ -6083,12 +6081,6 @@ function ctld.updateRepackMenu(_playerUnitName)
                 for i, _vehicle in ipairs(repackableVehicles) do
                     if ctld.isUnitInMenuEntriesTable(menuEntries, _vehicle.desc) == false then
                         _vehicle.playerUnitName = _playerUnitName
-                        -- table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
-                        --                             groupId       = _groupId,
-                        --                             subMenuPath   = RepackmenuPath,
-                        --                             menuFunction  = ctld.repackVehicleRequest,
-                        --                             menuArgsTable = mist.utils.deepCopy(_vehicle)
-                        --                         })
                         menuEntries[i] = {  text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
                                             groupId       = _groupId,
                                             subMenuPath   = RepackmenuPath,
