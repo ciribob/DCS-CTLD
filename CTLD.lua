@@ -7864,7 +7864,7 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
             adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.action.params = {fromWaypointIndex = #_initialRouteTable,
                                                                                                 goToWaypointIndex = 1 }
         end
-        ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))
+        --ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))
         return adjustedRoute
     end
     return nil
