@@ -6059,8 +6059,18 @@ function ctld.buildPaginatedMenu(_menuEntries)
 end
 
 --******************************************************************************************************
+-- return true if  _typeUnitDesc already exist in _repackableVehiclesTable
+-- ex:  ctld.isUnitInrepackableVehicles(repackableTable, "Humvee - TOW")
+function ctld.isUnitInrepackableVehicles(_repackableVehiclesTable, _typeUnitDesc)
+    for i=1, #_repackableVehiclesTable do
+        if _repackableVehiclesTable[i].desc == _typeUnitDesc then
+        	return true
+        end
+    end
+	return false
+end
+--******************************************************************************************************
 function ctld.updateRepackMenu(_playerUnitName)
-    --ctld.logTrace("FG_ _playerUnitName = %s", ctld.p(_playerUnitName))
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
         local _unitTypename = playerUnit:getTypeName()
@@ -6075,16 +6085,18 @@ function ctld.updateRepackMenu(_playerUnitName)
                 missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
                 local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
-                --ctld.logTrace("FG_ ctld.updateRepackMenu.repackableVehicles = %s", ctld.p(repackableVehicles))
-                --for _, _vehicle in pairs(repackableVehicles) do
                 for i, _vehicle in ipairs(repackableVehicles) do
-                    _vehicle.playerUnitName = _playerUnitName
-                    table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
-                                                groupId       = _groupId,
-                                                subMenuPath   = RepackmenuPath,
-                                                menuFunction  = ctld.repackVehicleRequest,
-                                                menuArgsTable = mist.utils.deepCopy(_vehicle)
-                                            })
+                    if ctld.isUnitInrepackableVehicles(menuEntries, _vehicle.desc) == false then
+                        _vehicle.playerUnitName = _playerUnitName
+                        ctld.logTrace("FG_ ctld.updateRepackMenu PASS")
+                        table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
+                                                    groupId       = _groupId,
+                                                    subMenuPath   = RepackmenuPath,
+                                                    menuFunction  = ctld.repackVehicleRequest,
+                                                    menuArgsTable = mist.utils.deepCopy(_vehicle),
+                                    				desc          = _vehicle.desc
+                                                })
+                    end
                 end
                 --ctld.logTrace("FG_ menuEntries = %s", ctld.p(menuEntries))
                 ctld.buildPaginatedMenu(menuEntries)
