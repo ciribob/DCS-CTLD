@@ -2042,9 +2042,9 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
     if t == nil then
         t = timer.getTime()
     end
-    -- if #ctld.repackRequestsStack ~= 0 then
-    -- ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
-    -- end
+    if #ctld.repackRequestsStack ~= 0 then
+        ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
+    end
     for ii, v in ipairs(ctld.repackRequestsStack) do
         --ctld.logTrace("FG_    ctld.repackVehicle.v[%s] = %s", ii, ctld.p(v))
         local repackableUnitName  = v.repackableUnitName
@@ -2082,7 +2082,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
             end
             ctld.repackRequestsStack[ii] = nil        -- remove the request from the stacking table
         end
-        ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
+        --ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
     end
     if ctld.enableRepackingVehicles == true then
         return t + 3         -- reschedule the function in 3 seconds
@@ -5874,7 +5874,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             end
 
                             if ctld.enableRepackingVehicles then
-                                ctld.updateRepackMenu(_unitName)
+                                --ctld.updateRepackMenu(_unitName)
                             end
                             if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                 missionCommands.addCommandForGroup(_groupId,
@@ -6033,37 +6033,32 @@ end
 
 --******************************************************************************************************
 function ctld.buildPaginatedMenu(_menuEntries)
-    --ctld.logTrace("FG_ _menuEntries = [%s]", ctld.p(_menuEntries))
-    local nextSubMenuPath = ""
+    local nextSubMenuPath = {}
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
-        --ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
-        if nextSubMenuPath ~= "" and menu.subMenuPath ~= nextSubMenuPath then
-            --ctld.logTrace("FG_ boucle[%s].nextSubMenuPath =  %s", i, ctld.p(nextSubMenuPath))
+        if #nextSubMenuPath ~= 0 then
             menu.subMenuPath = mist.utils.deepCopy(nextSubMenuPath)
+            --menu.subMenuPath = nextSubMenuPath
         end
         -- add the submenu item
         itemNbSubmenu = itemNbSubmenu + 1
         if itemNbSubmenu == 10 and i < #_menuEntries then     -- page limit reached
-            --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath avant =  %s", i, ctld.p(menu.subMenuPath))
-            nextSubMenuPath = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
-            menu.subMenuPath = mist.utils.deepCopy(nextSubMenuPath)
-            --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath apres =  %s", i, ctld.p(menu.subMenuPath))
+            nextSubMenuPath  = missionCommands.addSubMenuForGroup(menu.groupId, ctld.i18n_translate("Next page"), menu.subMenuPath)
             itemNbSubmenu = 1
         end
         menu.menuArgsTable.subMenuPath      = mist.utils.deepCopy(menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
         menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
-        --ctld.logTrace("FG_ boucle[%s]  ctld.buildPaginatedMenu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, mist.utils.deepCopy(menu.menuArgsTable))
+        ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
     end
 end
 
 --******************************************************************************************************
--- return true if  _typeUnitDesc already exist in _repackableVehiclesTable
+-- return true if  _typeUnitDesc already exist in _MenuEntriesTable
 -- ex:  ctld.isUnitInrepackableVehicles(repackableTable, "Humvee - TOW")
-function ctld.isUnitInrepackableVehicles(_repackableVehiclesTable, _typeUnitDesc)
-    for i=1, #_repackableVehiclesTable do
-        if _repackableVehiclesTable[i].desc == _typeUnitDesc then
+function ctld.isUnitInMenuEntriesTable(_MenuEntriesTable, _typeUnitDesc)
+    for i=1, #_MenuEntriesTable do
+        if _MenuEntriesTable[i].menuArgsTable.desc == _typeUnitDesc then
         	return true
         end
     end
@@ -6086,16 +6081,20 @@ function ctld.updateRepackMenu(_playerUnitName)
                 local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
                 for i, _vehicle in ipairs(repackableVehicles) do
-                    if ctld.isUnitInrepackableVehicles(menuEntries, _vehicle.desc) == false then
+                    if ctld.isUnitInMenuEntriesTable(menuEntries, _vehicle.desc) == false then
                         _vehicle.playerUnitName = _playerUnitName
-                        ctld.logTrace("FG_ ctld.updateRepackMenu PASS")
-                        table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
-                                                    groupId       = _groupId,
-                                                    subMenuPath   = RepackmenuPath,
-                                                    menuFunction  = ctld.repackVehicleRequest,
-                                                    menuArgsTable = mist.utils.deepCopy(_vehicle),
-                                    				desc          = _vehicle.desc
-                                                })
+                        -- table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
+                        --                             groupId       = _groupId,
+                        --                             subMenuPath   = RepackmenuPath,
+                        --                             menuFunction  = ctld.repackVehicleRequest,
+                        --                             menuArgsTable = mist.utils.deepCopy(_vehicle)
+                        --                         })
+                        menuEntries[i] = {  text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
+                                            groupId       = _groupId,
+                                            subMenuPath   = RepackmenuPath,
+                                            menuFunction  = ctld.repackVehicleRequest,
+                                            menuArgsTable = mist.utils.deepCopy(_vehicle)
+                                         }
                     end
                 end
                 --ctld.logTrace("FG_ menuEntries = %s", ctld.p(menuEntries))
@@ -6120,7 +6119,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                                                 local _unitTypename = _unit:getTypeName()
                                                 local _groupId = ctld.getGroupId(_unit)
                                                 if _groupId then
-                                                    if ctld.addedTo[tostring(_groupId)] ~= nil then
+                                                    if ctld.addedTo[tostring(_groupId)] ~= nil then  -- if groupMenu on loaded => add RepackMenus
                                                         --ctld.logTrace("FG_    ctld.autoUpdateRepackMenu call ctld.updateRepackMenu for = %s", ctld.p(_unitName))
                                                         ctld.updateRepackMenu(_unitName)
                                                     end
@@ -6133,7 +6132,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
             end
         end
     end
-    return t + 3   -- reschedule every 3 seconds
+    return t + 6   -- reschedule every 6 seconds
 end
 
 --******************************************************************************************************
