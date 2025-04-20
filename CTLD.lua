@@ -7772,7 +7772,7 @@ function ctld.getNearestWP(_referenceUnitName)
     local WP = 0
     local memoDist = nil	-- Lower distance checked
     local refGroupName = Unit.getByName(_referenceUnitName):getGroup():getName()
-    local JTACRoute = mist.getGroupRoute (refGroupName, true)   -- get the initial editor route of the current group
+    local JTACRoute = mist.getGroupRoute(refGroupName, true)   -- get the initial editor route of the current group
     if Unit.getByName(_referenceUnitName) ~= nil then	--JTAC et unit must exist
         for i=1, #JTACRoute do
             local ptWP  = {x = JTACRoute[i].x, y = JTACRoute[i].y}
