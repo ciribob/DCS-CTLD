@@ -7793,8 +7793,10 @@ end
 -- Modify the route deleting all the WP before "firstWP" param, for aligne the orbit on the nearest WP of the target
 function ctld.backToRoute(_jtacUnitName)
     local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
-    local JTACRoute     = mist.getGroupRoute(jtacGroupName, true)   -- get the initial editor route of the current group
-    local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
+    --local JTACRoute     = mist.getGroupRoute(jtacGroupName, true)   -- get the initial editor route of the current group
+    local JTACRoute     = mist.utils.deepCopy(mist.getGroupRoute(jtacGroupName, true))   -- get the initial editor route of the current group
+    local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName)) 
+
     local Mission       = {} 	
     Mission = { id = 'Mission', params = {route = {points = newJTACRoute}}} 
 
@@ -7826,6 +7828,7 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
         end
 
         -- apply offset (_firstWpOfNewRoute) to SwitchWaypoint tasks
+        local lastWpAsAlreadySwitchWaypoint = false
         for idx = 1, #adjustedRoute do
             for j=1, #adjustedRoute[idx].task.params.tasks do
                 if adjustedRoute[idx].task.params.tasks[j].id ~= "ControlledTask" then
@@ -7833,40 +7836,34 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
                         local goToWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.action.params.goToWaypointIndex
                         adjustedRoute[idx].task.params.tasks[j].params.action.params.fromWaypointIndex = idx
                         adjustedRoute[idx].task.params.tasks[j].params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
+                    	if idx == #adjustedRoute then
+                            lastWpAsAlreadySwitchWaypoint = true 
+                        end
                     end
                 else	-- for "ControlledTask"
                     if adjustedRoute[idx].task.params.tasks[j].params.task.params.action.id == "SwitchWaypoint" then
                         local goToWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex
                         adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.fromWaypointIndex = idx
                         adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
+						if idx == #adjustedRoute then
+                            lastWpAsAlreadySwitchWaypoint = true 
+                        end
                     end
                 end
             end
         end
-        --[[
-       [14]["task"]["params"]["tasks"][1] = table: 0000012EF5AF0CA8                     {
-                    [14]["task"]["params"]["tasks"][1]["number"] = 1,
-                    [14]["task"]["params"]["tasks"][1]["auto"] = false,
-                    [14]["task"]["params"]["tasks"][1]["id"] = "WrappedAction",
-                    [14]["task"]["params"]["tasks"][1]["enabled"] = true,
-                    [14]["task"]["params"]["tasks"][1]["params"] = table: 0000012EF5AF0CE8                         {
-                        [14]["task"]["params"]["tasks"][1]["params"]["action"] = table: 0000012EF5AF0D28                             {
-                            [14]["task"]["params"]["tasks"][1]["params"]["action"]["id"] = "SwitchWaypoint",
-                            [14]["task"]["params"]["tasks"][1]["params"]["action"]["params"] = table: 0000012EF5AF0D68                                 {
-                                [14]["task"]["params"]["tasks"][1]["params"]["action"]["params"]["goToWaypointIndex"] = 11,
-                                [14]["task"]["params"]["tasks"][1]["params"]["action"]["params"]["fromWaypointIndex"] = 14,
-        
-        ]]--
-        local newTaskIdx = #adjustedRoute[#adjustedRoute].task.params.tasks + 1
-        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx] =  {number  = newTaskIdx,
-        																auto    = false,
-            															enabled = true,
-            															id      = "WrappedAction",
-            															params  = {action = {}}
-        																}
-        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.action.id     = "SwitchWaypoint"
-        adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.action.params = {fromWaypointIndex = #_initialRouteTable,
-                																			goToWaypointIndex = 1 }
+        if lastWpAsAlreadySwitchWaypoint == false then
+            local newTaskIdx = #adjustedRoute[#adjustedRoute].task.params.tasks + 1
+            adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx] =  {number  = newTaskIdx,
+                                                                            auto    = false,
+                                                                            enabled = true,
+                                                                            id      = "WrappedAction",
+                                                                            params  = {action = {}}
+                                                                            }
+            adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.action.id     = "SwitchWaypoint"
+            adjustedRoute[#adjustedRoute].task.params.tasks[newTaskIdx].params.action.params = {fromWaypointIndex = #_initialRouteTable,
+                                                                                                goToWaypointIndex = 1 }
+        end
         ctld.logDebug("ctld.adjustRoute - adjustedRoute = [%s]", ctld.p(adjustedRoute))
         return adjustedRoute
     end
