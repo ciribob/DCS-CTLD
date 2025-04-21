@@ -6961,7 +6961,6 @@ function ctld.getCurrentUnit(_jtacUnit, _jtacGroupName)
     local _tempPoint = nil
     local _tempDist = nil
     local _tempPosition = nil
-
     local _jtacPosition = _jtacUnit:getPosition()
     local _jtacPoint = _jtacUnit:getPoint()
 
@@ -6989,15 +6988,11 @@ end
 -- Find nearest enemy to JTAC that isn't blocked by terrain
 function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType, _distance)
     --local startTime = os.clock()
-
     local _maxDistance = _distance or ctld.JTAC_maxDistance
-
     local _nearestDistance = _maxDistance
-
     local _jtacGroupName = _jtacUnit:getGroup():getName()
     local _jtacPoint = _jtacUnit:getPoint()
     local _coa = _jtacUnit:getCoalition()
-
     local _offsetJTACPos = { x = _jtacPoint.x, y = _jtacPoint.y + 2.0, z = _jtacPoint.z }
 
     local _volume = {
@@ -7009,7 +7004,6 @@ function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType, _distance)
     }
 
     local _unitList = {}
-
 
     local _search = function(_unit, _coa)
         pcall(function()
