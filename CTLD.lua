@@ -2038,7 +2038,6 @@ end
 -- ***************************************************************
 function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' to process each request
     --ctld.logTrace("FG_ XXXXXXXXXXXXXXXXXXXXXXXXXXX ctld.repackVehicle.ctld.repackRequestsStack XXXXXXXXXXXXXXXXXXXXXXXXXXX")
-    
     if t == nil then
         t = timer.getTime()
     end
