@@ -6045,7 +6045,6 @@ function ctld.buildPaginatedMenu(_menuEntries)
         menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, mist.utils.deepCopy(menu.menuArgsTable))
         --ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
-        ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
     end
 end
 
