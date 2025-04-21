@@ -5871,9 +5871,6 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
                             end
 
-                            -- if ctld.enableRepackingVehicles then
-                            --     ctld.updateRepackMenu(_unitName)
-                            -- end
                             if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                 missionCommands.addCommandForGroup(_groupId,
                                     ctld.i18n_translate("Load / Unload FOB Crate"), _vehicleCommandsPath,
@@ -5950,11 +5947,8 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             end
                             if ctld.unitDynamicCargoCapable(_unit) then
                                 if ctld.vehicleCommandsPath[_unitName] == nil then
-                                    ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_rootPath)
+                                    ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_cratesMenuPath)
                                 end
-                                -- if ctld.enableRepackingVehicles then
-                                --     ctld.updateRepackMenu(_unitName)
-                                -- end
                             end
                         end
                     end
