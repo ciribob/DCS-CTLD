@@ -6045,7 +6045,6 @@ function ctld.buildPaginatedMenu(_menuEntries)
         menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
         missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, mist.utils.deepCopy(menu.menuArgsTable))
         --ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
-        ctld.logTrace("FG_ boucle[%s].menu =  %s", i, ctld.p(menu))
     end
 end
 
@@ -6096,7 +6095,6 @@ end
 
 --******************************************************************************************************
 function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each transport unit
-    --ctld.logTrace("FG_    ctld.autoUpdateRepackMenu.ctld.transportPilotNames = %s", ctld.p(mist.utils.tableShow(ctld.transportPilotNames)))
     if t == nil then t = timer.getTime() end
     if ctld.enableRepackingVehicles then
         for _, _unitName in pairs(ctld.transportPilotNames) do
@@ -6110,7 +6108,6 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                                                 local _groupId = ctld.getGroupId(_unit)
                                                 if _groupId then
                                                     if ctld.addedTo[tostring(_groupId)] ~= nil then  -- if groupMenu on loaded => add RepackMenus
-                                                        --ctld.logTrace("FG_    ctld.autoUpdateRepackMenu call ctld.updateRepackMenu for = %s", ctld.p(_unitName))
                                                         ctld.updateRepackMenu(_unitName)
                                                     end
                                                 end
@@ -6133,11 +6130,8 @@ function ctld.addOtherF10MenuOptions()
     local status, error = pcall(function()
         -- now do any player controlled aircraft that ARENT transport units
         if ctld.enabledRadioBeaconDrop then
-            -- get all BLUE players
-            ctld.addRadioListCommand(2)
-
-            -- get all RED players
-            ctld.addRadioListCommand(1)
+            ctld.addRadioListCommand(2)             -- get all BLUE players
+            ctld.addRadioListCommand(1)             -- get all RED players
         end
 
         if ctld.JTAC_jtacStatusF10 then
@@ -6966,7 +6960,6 @@ function ctld.getCurrentUnit(_jtacUnit, _jtacGroupName)
     local _tempPoint = nil
     local _tempDist = nil
     local _tempPosition = nil
-
     local _jtacPosition = _jtacUnit:getPosition()
     local _jtacPoint = _jtacUnit:getPoint()
 
@@ -6994,15 +6987,11 @@ end
 -- Find nearest enemy to JTAC that isn't blocked by terrain
 function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType, _distance)
     --local startTime = os.clock()
-
     local _maxDistance = _distance or ctld.JTAC_maxDistance
-
     local _nearestDistance = _maxDistance
-
     local _jtacGroupName = _jtacUnit:getGroup():getName()
     local _jtacPoint = _jtacUnit:getPoint()
     local _coa = _jtacUnit:getCoalition()
-
     local _offsetJTACPos = { x = _jtacPoint.x, y = _jtacPoint.y + 2.0, z = _jtacPoint.z }
 
     local _volume = {
@@ -7014,7 +7003,6 @@ function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType, _distance)
     }
 
     local _unitList = {}
-
 
     local _search = function(_unit, _coa)
         pcall(function()
