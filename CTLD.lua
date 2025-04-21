@@ -2046,7 +2046,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
         ctld.logTrace("FG_    ctld.repackVehicle.ctld.repackRequestsStack = %s", ctld.p(ctld.repackRequestsStack))
     end
     for ii, v in ipairs(ctld.repackRequestsStack) do
-        --ctld.logTrace("FG_    ctld.repackVehicle.v[%s] = %s", ii, ctld.p(v))
+        ctld.logTrace("FG_    ctld.repackVehicle.v[%s] = %s", ii, ctld.p(v))
         local repackableUnitName  = v.repackableUnitName
         local repackableUnit      = Unit.getByName(repackableUnitName)
         local crateWeight         = v.weight
@@ -2065,7 +2065,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     randomHeading  = ctld.RandomReal(playerHeading + math.pi - math.pi/4, playerHeading + math.pi + math.pi/4)
                 end
                 for i = 1, v.cratesRequired or 1 do
-                    -- see to spawn the crate at random position heading the transport unnit
+                    -- see to spawn the crate at random position heading the transport unit
                     local _unitId        = ctld.getNextUnitId()
                     local _name          = string.format("%s_%i", v.desc, _unitId)
                     local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 10
@@ -2077,12 +2077,11 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
                 end
-
-                repackableUnit:destroy()              -- destroy repacked unit
+                repackableUnit:destroy()                -- destroy repacked unit
             end
-            ctld.repackRequestsStack[ii] = nil        -- remove the request from the stacking table
         end
         --ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
+        ctld.repackRequestsStack[ii] = nil              -- remove the processed request from the stacking table
     end
     if ctld.enableRepackingVehicles == true then
         return t + 3         -- reschedule the function in 3 seconds
@@ -6076,7 +6075,7 @@ function ctld.updateRepackMenu(_playerUnitName)
                 RepackCommandsPath[#RepackCommandsPath + 1] = ctld.i18n_translate("Repack Vehicles")
                 --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
                 missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
-                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
+                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
                 local menuEntries = {}
                 for i, _vehicle in ipairs(repackableVehicles) do
                     if ctld.isUnitInMenuEntriesTable(menuEntries, _vehicle.desc) == false then
