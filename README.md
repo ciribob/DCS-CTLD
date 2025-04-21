@@ -44,6 +44,7 @@ This script is a rewrite of some of the functionality of the original Complete C
     * [Spawn Sling loadable crate at a Zone](#spawn-sling-loadable-crate-at-a-zone)
     * [Spawn Sling loadable crate at a Point](#spawn-sling-loadable-crate-at-a-point)
     * [JTAC Automatic Targeting and Laser](#jtac-automatic-targeting-and-laser)
+    * [JTAC Automatic Orbiting Over Lased Target](#jtac-automatic-orbiting-over-lased-target)
 * [In Game](#in-game)
 * [Troop Loading and Unloading](#troop-loading-and-unloading)
 * [Cargo Spawning and Sling Loading](#cargo-spawning-and-sling-loading)
@@ -862,6 +863,13 @@ For example, if the laser code is *1688*, the frequency will be *40.40Mhz*.
 
 JTAC frequency is available through the "JTAC Status" radio menu
 
+#### Jtac-automatic-orbiting-over-lased-target
+By setting parameter ctld.enableAutoOrbitingFlyingJtacOnTarget = true, a script 
+dedicated script puts in orbit each flying JTAC over his detected target.
+Associated with CTLD/JTAC functions, you can assign a fly route to the JTAC drone,
+this one follow it, and start orbiting when he detects a target.
+As soon as it don't detect a target, it restart following its initial route at the nearest waypoint
+
 # In Game
 ## Troop Loading and Unloading
 
@@ -1010,7 +1018,6 @@ You can also repair a partially destroyed HAWK / BUK or KUB system by dropping a
 ## Crate Repacking
 The F10 menu allows you to repack units having associated crate types in the "ctld.spawnableCrates" table.
 Simply land near the unit you wish to repack and select it from the list presented by the "CTLD//Vehicle/FOB transport...//Repack Vehicles" menu.
-If repacking is possible, a logistics zone is automatically created around your aircraft to allow you to load and handle the produced crates.
 
 ## Forward Operating Base (FOB) Construction
 FOBs can be built by loading special FOB crates from a **Logistics** unit into a C-130 or other large aircraft configured in the script. To load the crate use the F10 - Troop Commands Menu. The idea behind FOBs is to make player vs player missions even more dynamic as these can be deployed in most locations. Once destroyed the FOB can no longer be used.
