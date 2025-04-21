@@ -1927,7 +1927,7 @@ end
 
 -- ***************************************************************
 function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
-    local rotorDiameter = 19    -- meters  -- õk for UH & CH47
+    local rotorDiameter = 0 --19    -- meters  -- õk for UH & CH47
     if Unit.getByName(_unitName) then
         local unitUserBox = Unit.getByName(_unitName):getDesc().box
         local SecureDistanceFromUnit = 0
@@ -2619,7 +2619,7 @@ function ctld.getPointInFrontSector(_unit, _offset)
         local playerHeading = mist.getHeading(_unit)
         local randomHeading  = ctld.RandomReal(playerHeading - math.pi/4, playerHeading + math.pi/4)
         if _offset == nil then
-            _offset = 30
+            _offset = 20
         end
         return ctld.getPointAtDirection(_unit, _offset, randomHeading)
     end
@@ -6072,12 +6072,12 @@ function ctld.updateRepackMenu(_playerUnitName)
                 for i, _vehicle in ipairs(repackableVehicles) do
                     if ctld.isUnitInMenuEntriesTable(menuEntries, _vehicle.desc) == false then
                         _vehicle.playerUnitName = _playerUnitName
-                        menuEntries[i] = {  text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
-                                            groupId       = _groupId,
-                                            subMenuPath   = RepackmenuPath,
-                                            menuFunction  = ctld.repackVehicleRequest,
-                                            menuArgsTable = mist.utils.deepCopy(_vehicle)
-                                         }
+                        table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
+                                                    groupId       = _groupId,
+                                                    subMenuPath   = RepackmenuPath,
+                                                    menuFunction  = ctld.repackVehicleRequest,
+                                                    menuArgsTable = mist.utils.deepCopy(_vehicle)
+                                                    })
                     end
                 end
                 --ctld.logTrace("FG_ menuEntries = %s", ctld.p(menuEntries))
