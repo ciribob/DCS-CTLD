@@ -71,7 +71,7 @@ end
 -- If a string is not found in the current language then it will default to this language
 -- Note that no translation is provided for this language (obviously) but that we'll maintain this table to help the translators.
 ctld.i18n["en"] = {}
-ctld.i18n["en"].translation_version = "1.5"                                       -- make sure that all the translations are compatible with this version of the english language texts
+ctld.i18n["en"].translation_version = "1.6"            -- make sure that all the translations are compatible with this version of the english language texts
 local lang = "en"; env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang,
     tostring(ctld.i18n[lang].translation_version)))
 
@@ -212,8 +212,6 @@ ctld.i18n["en"]["FOB Crate dropped back to base"] = ""
 ctld.i18n["en"]["FOB Crate Loaded"] = ""
 ctld.i18n["en"]["%1 loaded a FOB Crate ready for delivery!"] = ""
 ctld.i18n["en"]["There are no friendly logistic units nearby to load a FOB crate from!"] = ""
-ctld.i18n["en"]["You already have troops onboard."] = ""
-ctld.i18n["en"]["You already have vehicles onboard."] = ""
 ctld.i18n["en"]["This area has no more reinforcements available!"] = ""
 ctld.i18n["en"]["You are not in a pickup zone and no one is nearby to extract"] = ""
 ctld.i18n["en"]["You are not in a pickup zone"] = ""
@@ -221,6 +219,7 @@ ctld.i18n["en"]["No one to unload"] = ""
 ctld.i18n["en"]["Dropped troops back to base"] = ""
 ctld.i18n["en"]["Dropped vehicles back to base"] = ""
 ctld.i18n["en"]["You already have troops onboard."] = ""
+ctld.i18n["en"]["Count Infantries limit in the mission reached, you can't load more troops"] = ""
 ctld.i18n["en"]["You already have vehicles onboard."] = ""
 ctld.i18n["en"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = ""
 ctld.i18n["en"]["%1 extracted troops in %2 from combat"] = ""
@@ -460,6 +459,9 @@ ctld.radioSoundFC3 =
 ctld.deployedBeaconBattery = 30         -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
 ctld.enabledRadioBeaconDrop = true      -- if its set to false then beacons cannot be dropped by units
 ctld.allowRandomAiTeamPickups = false   -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
+-- Limit the dropping of infantry teams -- this limit control is inactive if ctld.nbLimitSpwanedTroops = {0, 0} ----
+ctld.nbLimitSpwanedTroops = {0, 0}      -- {redLimitInfantryCount, blueLimitInfantryCount} when this cumulative number of troops is reached, no more troops can be loaded onboard
+ctld.InfantryInGameCount  = {0, 0}      -- {redCoaInfantryCount, blueCoaInfantryCount}
 
 -- Simulated Sling load configuration
 ctld.minimumHoverHeight = 7.5   -- Lowest allowable height for crate hover
@@ -3136,6 +3138,21 @@ function ctld.loadUnloadFOBCrate(_args)
     end
 end
 
+function ctld.updateTroopsInGame(params, t)		-- return count of troops in game by Coalition
+ 	if t == nil then t = timer.getTime() + 1; end
+    ctld.InfantryInGameCount  = {0, 0}
+    for coalitionId=1, 2 do				-- for each CoaId
+        for k,v in ipairs(coalition.getGroups(coalitionId, Group.Category.GROUND)) do   -- for each GROUND type group
+			for index, unitObj in pairs(v:getUnits()) do		-- for each unit in group
+                if unitObj:getDesc().attributes.Infantry then
+                    ctld.InfantryInGameCount[coalitionId] = ctld.InfantryInGameCount[coalitionId] + 1
+                end 
+            end
+        end
+    end
+    return 5		-- reschedule each 5"
+end
+
 function ctld.loadTroopsFromZone(_args)
     local _heli = ctld.getTransportUnit(_args[1])
     local _troops = _args[2]
@@ -3154,7 +3171,6 @@ function ctld.loadTroopsFromZone(_args)
         else
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You already have vehicles onboard."), 10)
         end
-
         return false
     end
 
@@ -3169,6 +3185,7 @@ function ctld.loadTroopsFromZone(_args)
                 _extract = ctld.findNearestGroup(_heli, ctld.droppedTroopsBLUE)
             end
         else
+
             if _heli:getCoalition() == 1 then
                 _extract = ctld.findNearestGroup(_heli, ctld.droppedVehiclesRED)
             else
@@ -3179,24 +3196,32 @@ function ctld.loadTroopsFromZone(_args)
 
     if _extract ~= nil then
         -- search for nearest troops to pickup
-        return ctld.extractTroops({ _heli:getName(), _troops })
+        return ctld.extractTroops({_heli:getName(), _troops})
     elseif _zone.inZone == true then
+        local heloCoa = _heli:getCoalition()
+        ctld.logTrace("FG_ heloCoa =  %s", ctld.p(heloCoa))
+        ctld.logTrace("FG_ (ctld.nbLimitSpwanedTroops[1]~=0 or ctld.nbLimitSpwanedTroops[2]~=0) =  %s", ctld.p(ctld.nbLimitSpwanedTroops[1]~=0 or ctld.nbLimitSpwanedTroops[2]~=0))
+        ctld.logTrace("FG_ ctld.InfantryInGameCount[heloCoa] =  %s", ctld.p(ctld.InfantryInGameCount[heloCoa]))
+        ctld.logTrace("FG_ _groupTemplate.total =  %s", ctld.p(_groupTemplate.total))
+        ctld.logTrace("FG_ ctld.nbLimitSpwanedTroops[%s].total =  %s", ctld.p(heloCoa), ctld.p(ctld.nbLimitSpwanedTroops[heloCoa]))
+        
+        local limitReached = true
+        if (ctld.nbLimitSpwanedTroops[1]~=0 or ctld.nbLimitSpwanedTroops[2]~=0) and (ctld.InfantryInGameCount[heloCoa] + _groupTemplate.total > ctld.nbLimitSpwanedTroops[heloCoa]) then  -- load troops only if Coa limit not reached
+            ctld.displayMessageToGroup(_heli, ctld.i18n_translate("Count Infantries limit in the mission reached, you can't load more troops"), 10)
+            return false
+        end
         if _zone.limit - 1 >= 0 then
             -- decrease zone counter by 1
             ctld.updateZoneCounter(_zone.index, -1)
-
-            ctld.loadTroops(_heli, _troops, _groupTemplate)
-
+            ctld.loadTroops(_heli, _troops,_groupTemplate)
             return true
         else
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("This area has no more reinforcements available!"), 20)
-
             return false
         end
     else
         if _allowExtract then
-            ctld.displayMessageToGroup(_heli,
-                ctld.i18n_translate("You are not in a pickup zone and no one is nearby to extract"), 10)
+            ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You are not in a pickup zone and no one is nearby to extract"), 10)
         else
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You are not in a pickup zone"), 10)
         end
@@ -3904,7 +3929,6 @@ function ctld.getCrateObject(_name)
 end
 
 function ctld.unpackCrates(_arguments)
-    ctld.logTrace("FG_ _arguments =  %s", ctld.p(_arguments))
     local _status, _err = pcall(function(_args)
         local _heli = ctld.getTransportUnit(_args[1])
 
@@ -8314,6 +8338,9 @@ function ctld.initialize()
         end
         if ctld.enableAutoOrbitingFlyingJtacOnTarget then
             timer.scheduleFunction(ctld.TreatOrbitJTAC, {}, timer.getTime()+3)
+        end
+        if ctld.nbLimitSpwanedTroops[1]~=0 or ctld.nbLimitSpwanedTroops[2]~=0 then
+            timer.scheduleFunction(ctld.updateTroopsInGame, {}, timer.getTime()+1)
         end
     end, nil, timer.getTime() + 1)
 
