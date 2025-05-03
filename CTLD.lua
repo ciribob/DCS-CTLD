@@ -808,8 +808,6 @@ ctld.logisticUnits = {
 ctld.vehicleTransportEnabled = {
     "76MD",     -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
     "Hercules",
-    "UH-1H",
-    "Mi-8MT",
     --"CH-47Fbl1",
 }
 
@@ -5895,6 +5893,10 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             local itemNbMain = 0
                             local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId,
                                 ctld.i18n_translate("Vehicle / FOB Crates / Drone"), _rootPath)
+
+                            if ctld.vehicleCommandsPath[_unitName] == nil then
+                                ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_cratesMenuPath)
+                            end
                             for _i, _category in ipairs(crateCategories) do
                                 local _subMenuName = _category
                                 local _crates = ctld.spawnableCrates[_subMenuName]
