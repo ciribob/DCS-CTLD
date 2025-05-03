@@ -18,7 +18,7 @@ ctld.i18n = {}
 
 --========  FRENCH - FRANCAIS =====================================================================================
 ctld.i18n["fr"] = {}
-ctld.i18n["fr"].translation_version = "1.5" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["fr"].translation_version = "1.6" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="fr";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -158,8 +158,6 @@ ctld.i18n["fr"]["FOB Crate dropped back to base"] = "Caisse FOB ramenée à la b
 ctld.i18n["fr"]["FOB Crate Loaded"] = "Caisse FOB chargée"
 ctld.i18n["fr"]["%1 loaded a FOB Crate ready for delivery!"] = "%1 a chargé une caisse FOB prête à être livrée !"
 ctld.i18n["fr"]["There are no friendly logistic units nearby to load a FOB crate from!"] = "Il n'y a pas d'unités logistiques alliée à proximité pour charger une caisse FOB !"
-ctld.i18n["fr"]["You already have troops onboard."] = "Vous avez déjà des troupes à bord."
-ctld.i18n["fr"]["You already have vehicles onboard."] = "Vous avez déjà des véhicules à bord."
 ctld.i18n["fr"]["This area has no more reinforcements available!"] = "Cette zone n'a plus de renforts disponibles !"
 ctld.i18n["fr"]["You are not in a pickup zone and no one is nearby to extract"] = "Vous n'êtes pas dans une zone d'embarquement et personne n'est à proximité pour être extrait."
 ctld.i18n["fr"]["You are not in a pickup zone"] = "Vous n'êtes pas dans une zone d'embarquement"
@@ -167,6 +165,7 @@ ctld.i18n["fr"]["No one to unload"] = "Personne à débarquer"
 ctld.i18n["fr"]["Dropped troops back to base"] = "Troupes larguées à la base"
 ctld.i18n["fr"]["Dropped vehicles back to base"] = "Véhicules largués à la base"
 ctld.i18n["fr"]["You already have troops onboard."] = "Vous avez déjà des troupes à bord."
+ctld.i18n["fr"]["Count Infantries limit in the mission reached, you can't load more troops"] = "Nombre maximum de troupes sur mission atteint, vous ne pouvez pas charger plus de troupes"
 ctld.i18n["fr"]["You already have vehicles onboard."] = "Vous avez déjà des véhicules à bord."
 ctld.i18n["fr"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = "Désolé - Le groupe de %1 est trop important. \n\nLa limite est de %2 pour %3"
 ctld.i18n["fr"]["%1 extracted troops in %2 from combat"] = "%1 troupes extraites du combat en %2"
@@ -302,7 +301,7 @@ ctld.i18n["fr"]["STOP autoRefresh targets in LOS"] = "Stopper suivi automatique 
 
 --======  SPANISH : ESPAÑOL====================================================================================
 ctld.i18n["es"] = {}
-ctld.i18n["es"].translation_version = "1.5" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+ctld.i18n["es"].translation_version = "1.6" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
 local lang="es";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
@@ -442,8 +441,6 @@ ctld.i18n["es"]["FOB Crate dropped back to base"] = "La caja FOB volvió a la ba
 ctld.i18n["es"]["FOB Crate Loaded"] = "Caja FOB cargada"
 ctld.i18n["es"]["%1 loaded a FOB Crate ready for delivery!"] = "%1 cargó una caja FOB lista para su entrega!"
 ctld.i18n["es"]["There are no friendly logistic units nearby to load a FOB crate from!"] = "¡No hay unidades logísticas amigas cerca para cargar una caja FOB!"
-ctld.i18n["es"]["You already have troops onboard."] = "Ya tienes tropas a bordo."
-ctld.i18n["es"]["You already have vehicles onboard."] = "Ya tiene vehículos a bordo."
 ctld.i18n["es"]["This area has no more reinforcements available!"] = "¡Esta área no tiene más refuerzos disponibles!"
 ctld.i18n["es"]["You are not in a pickup zone and no one is nearby to extract"] = "No estás en una zona de recogida y no hay nadie cerca para extraerlo"
 ctld.i18n["es"]["You are not in a pickup zone"] = "No estás en una zona de recogida"
@@ -451,6 +448,7 @@ ctld.i18n["es"]["No one to unload"] = "Nadie para descargar"
 ctld.i18n["es"]["Dropped troops back to base"] = "Tropas arrojadas a la base"
 ctld.i18n["es"]["Dropped vehicles back to base"] = "Vehículos arrojados a la base"
 ctld.i18n["es"]["You already have troops onboard."] = "Ya tienes tropas a bordo."
+ctld.i18n["es"]["Count Infantries limit in the mission reached, you can't load more troops"] = "Se alcanzó el límite de infantería en la misión, no puedes cargar más tropas"
 ctld.i18n["es"]["You already have vehicles onboard."] = "Ya tiene vehículos a bordo."
 ctld.i18n["es"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = "Lo sentimos, el grupo de %1 es demasiado grande. \n \nEl límite es %2 para %3"
 ctld.i18n["es"]["%1 extracted troops in %2 from combat"] = "%1 tropas extraídas del combate en %2"

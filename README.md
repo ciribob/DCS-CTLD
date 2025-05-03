@@ -47,6 +47,7 @@ This script is a rewrite of some of the functionality of the original Complete C
     * [JTAC Automatic Orbiting Over Lased Target](#jtac-automatic-orbiting-over-lased-target)
 * [In Game](#in-game)
 * [Troop Loading and Unloading](#troop-loading-and-unloading)
+* [Limit troop Loading](#limit-troop-loading)
 * [Cargo Spawning and Sling Loading](#cargo-spawning-and-sling-loading)
   * [Simulated Sling Loading](#simulated-sling-loading)
   * [Real Sling Loading](#real-sling-loading)
@@ -924,7 +925,14 @@ ctld.MG_WEIGHT = 10 -- kg
 ctld.MORTAR_WEIGHT = 26 -- kg
 ctld.JTAC_WEIGHT = 15 -- kg
 ```
+## Limit troop Loading
+The number of Infantries units in mission can be limited by setting the table below :
+ctld.nbLimitSpwanedTroops = {0, 0}      -- {redLimitInfantryCount, blueLimitInfantryCount} 
 
+When this cumulative number of troops is reached for a coalition, no more troops can be loaded onboard, and a message is sent to player.
+
+If ctld.nbLimitSpwanedTroops = {0, 0} (both values at 0) the limit control is disabled.
+If either value is non-zero, limit control becomes active for both coalitions.
 
 ## Cargo Spawning and Sling Loading
 
