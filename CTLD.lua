@@ -325,7 +325,7 @@ ctld.i18n["en"]["Unload / Extract Troops"] = ""
 ctld.i18n["en"]["Next page"] = ""
 ctld.i18n["en"]["Load "] = ""
 ctld.i18n["en"]["Vehicle / FOB Transport"] = ""
-ctld.i18n["en"]["Vehicle / FOB Crates / Drone"] = ""
+ctld.i18n["en"]["Crates: Vehicle / FOB / Drone"] = ""
 ctld.i18n["en"]["Unload Vehicles"] = ""
 ctld.i18n["en"]["Load / Extract Vehicles"] = ""
 ctld.i18n["en"]["Load / Unload FOB Crate"] = ""
@@ -3867,12 +3867,12 @@ function ctld.getClosestCrate(_heli, _crates, _type)
     local _shortestDistance = -1
     local _distance = 0
     local _minimumDistance = 5     -- prevents dynamic cargo crates from unpacking while in cargo hold
-
+    local _maxDistance     = 10    -- prevents onboard dynamic cargo crates from unpacking requested by other helo
     for _, _crate in pairs(_crates) do
         if (_crate.details.unit == _type or _type == nil) then
             _distance = _crate.dist
 
-            if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) and _distance > _minimumDistance then
+            if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) and _distance > _minimumDistance and _distance < _maxDistance then
                 _shortestDistance = _distance
                 _closetCrate = _crate
             end
@@ -5889,9 +5889,9 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
                                 _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
-                            if ctld.vehicleCommandsPath[_unitName] == nil then
-                                ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
-                            end
+                            -- if ctld.vehicleCommandsPath[_unitName] == nil then
+                            --     ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
+                            -- end
 
                             if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                 missionCommands.addCommandForGroup(_groupId,
@@ -5916,11 +5916,11 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             -- add menu for spawning crates
                             local itemNbMain = 0
                             local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId,
-                                ctld.i18n_translate("Vehicle / FOB Crates / Drone"), _rootPath)
+                                ctld.i18n_translate("Crates: Vehicle / FOB / Drone"), _rootPath)
 
-                            if ctld.vehicleCommandsPath[_unitName] == nil then
-                                ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_cratesMenuPath)
-                            end
+                            -- if ctld.vehicleCommandsPath[_unitName] == nil then
+                            --     ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_cratesMenuPath)
+                            -- end
                             for _i, _category in ipairs(crateCategories) do
                                 local _subMenuName = _category
                                 local _crates = ctld.spawnableCrates[_subMenuName]
@@ -5971,17 +5971,20 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                         ctld.spawnCrate, { _unitName, _menu.crate.weight })
                                 end
                             end
-                            if ctld.unitDynamicCargoCapable(_unit) then
-                                if ctld.vehicleCommandsPath[_unitName] == nil then
-                                    ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_cratesMenuPath)
-                                end
-                            end
+                            -- if ctld.unitDynamicCargoCapable(_unit) then
+                            --     if ctld.vehicleCommandsPath[_unitName] == nil then
+                            --         ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_cratesMenuPath)
+                            --     end
+                            -- end
                         end
                     end
                     
                     if (ctld.enabledFOBBuilding or ctld.enableCrates) and _unitActions.crates then
                         local _crateCommands = missionCommands.addSubMenuForGroup(_groupId,
                             ctld.i18n_translate("CTLD Commands"), _rootPath)
+                        if ctld.vehicleCommandsPath[_unitName] == nil then
+                            ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_crateCommands)
+                        end
                         if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
                             if ctld.loadCrateFromMenu then
                                 missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate(s)"),
@@ -6083,8 +6086,7 @@ end
 function ctld.updateRepackMenu(_playerUnitName)
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
-        local _unitTypename = playerUnit:getTypeName()
-        local _groupId      = ctld.getGroupId(playerUnit)
+        local _groupId = ctld.getGroupId(playerUnit)
         if ctld.enableRepackingVehicles then
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
@@ -6118,24 +6120,26 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
     if t == nil then t = timer.getTime() end
     if ctld.enableRepackingVehicles then
         for _, _unitName in pairs(ctld.transportPilotNames) do
-            local status, error = pcall(
-                                    function()
-                                        local _unit = ctld.getTransportUnit(_unitName)
-                                        if _unit then
-                                            -- if transport unit landed => update repack menus
-                                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and mist.vec.mag(_unit:getVelocity()) < 0.1)) then
-                                                local _unitTypename = _unit:getTypeName()
-                                                local _groupId = ctld.getGroupId(_unit)
-                                                if _groupId then
-                                                    if ctld.addedTo[tostring(_groupId)] ~= nil then  -- if groupMenu on loaded => add RepackMenus
-                                                        ctld.updateRepackMenu(_unitName)
+            if ctld.vehicleCommandsPath[_unitName] ~= nil then
+                local status, error = pcall(
+                                        function()
+                                            local _unit = ctld.getTransportUnit(_unitName)
+                                            if _unit then
+                                                -- if transport unit landed => update repack menus
+                                                if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and mist.vec.mag(_unit:getVelocity()) < 0.1)) then
+                                                    local _unitTypename = _unit:getTypeName()
+                                                    local _groupId = ctld.getGroupId(_unit)
+                                                    if _groupId then
+                                                        if ctld.addedTo[tostring(_groupId)] ~= nil then  -- if groupMenu on loaded => add RepackMenus
+                                                            ctld.updateRepackMenu(_unitName)
+                                                        end
                                                     end
                                                 end
                                             end
-                                        end
-                                    end)
-            if (not status) then
-                env.error(string.format("Error in ctld.autoUpdateRepackMenu : %s", error), false)
+                                        end)
+                if (not status) then
+                    env.error(string.format("Error in ctld.autoUpdateRepackMenu : %s", error), false)
+                end
             end
         end
     end
