@@ -5911,7 +5911,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 table.insert(crateCategories, category)
                             end
                             table.sort(crateCategories)
-                            ctld.logTrace("crateCategories = [%s]", ctld.p(crateCategories))
+                            --ctld.logTrace("crateCategories = [%s]", ctld.p(crateCategories))
 
                             -- add menu for spawning crates
                             local itemNbMain = 0
@@ -5936,10 +5936,10 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 local menuEntries = {}
                                 local _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratesMenuPath)
                                 for _, _crate in pairs(_crates) do
-                                    ctld.logTrace("_crate = [%s]", ctld.p(_crate))
+                                    --ctld.logTrace("_crate = [%s]", ctld.p(_crate))
                                     if not (_crate.multiple) or ctld.enableAllCrates then
                                         local isJTAC = ctld.isJTACUnitType(_crate.unit)
-                                        ctld.logTrace("isJTAC = [%s]", ctld.p(isJTAC))
+                                        --ctld.logTrace("isJTAC = [%s]", ctld.p(isJTAC))
                                         if not isJTAC or (isJTAC and ctld.JTAC_dropEnabled) then
                                             if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
                                                 local _crateRadioMsg = _crate.desc
@@ -5952,14 +5952,14 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                                     _crateRadioMsg = "* " .. _crateRadioMsg
                                                 end
                                                 local _menuEntry = { text = _crateRadioMsg, crate = _crate }
-                                                ctld.logTrace("_menuEntry = [%s]", ctld.p(_menuEntry))
+                                                --ctld.logTrace("_menuEntry = [%s]", ctld.p(_menuEntry))
                                                 table.insert(menuEntries, _menuEntry)
                                             end
                                         end
                                     end
                                 end
                                 for _i, _menu in ipairs(menuEntries) do
-                                    ctld.logTrace("_menu = [%s]", ctld.p(_menu))
+                                    --ctld.logTrace("_menu = [%s]", ctld.p(_menu))
                                     -- add the submenu item
                                     itemNbSubmenu = itemNbSubmenu + 1
                                     if itemNbSubmenu == 10 and _i < #menuEntries then     -- page limit reached
@@ -6143,7 +6143,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
             end
         end
     end
-    return t + 6   -- reschedule every 6 seconds
+    return t + 1   -- reschedule every 1 seconds
 end
 
 --******************************************************************************************************
@@ -8339,7 +8339,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
+            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 1)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
         if ctld.enableAutoOrbitingFlyingJtacOnTarget then
@@ -8496,7 +8496,7 @@ function ctld.eventHandler:onEvent(event)
         timer.scheduleFunction(function()
             ctld.logTrace("calling the 'processHumanPlayer' function in a timer")
             processHumanPlayer()
-        end, nil, timer.getTime() + 1.5)
+        end, nil, timer.getTime() + 2)      --1.5
     else
         ctld.logTrace("calling the 'processHumanPlayer' function immediately")
         processHumanPlayer()
