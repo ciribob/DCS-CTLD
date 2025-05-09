@@ -6094,11 +6094,13 @@ function ctld.updateRepackMenu(_playerUnitName)
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
                 --ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
-                local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
-                RepackCommandsPath[#RepackCommandsPath + 1] = ctld.i18n_translate("Repack Vehicles")
+                local RepackPreviousMenu    = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
+                local RepackCommandsPath = RepackPreviousMenu
+                local repackSubMenuText  = ctld.i18n_translate("Repack Vehicles")
+                RepackCommandsPath[#RepackCommandsPath + 1] = repackSubMenuText  -- add the submenu name to get the complet repack path
                 --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
                 missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
-                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Repack Vehicles"), ctld.vehicleCommandsPath[_playerUnitName])
+                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId, repackSubMenuText, RepackPreviousMenu)
                 local menuEntries = {}
                 for i, _vehicle in ipairs(repackableVehicles) do
                     if ctld.isUnitInMenuEntriesTable(menuEntries, _vehicle.desc) == false then
