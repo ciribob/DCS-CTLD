@@ -5889,9 +5889,6 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
                                 _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
-                            -- if ctld.vehicleCommandsPath[_unitName] == nil then
-                            --     ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_vehicleCommandsPath)
-                            -- end
 
                             if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
                                 missionCommands.addCommandForGroup(_groupId,
@@ -5918,9 +5915,6 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId,
                                 ctld.i18n_translate("Crates: Vehicle / FOB / Drone"), _rootPath)
 
-                            -- if ctld.vehicleCommandsPath[_unitName] == nil then
-                            --     ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_cratesMenuPath)
-                            -- end
                             for _i, _category in ipairs(crateCategories) do
                                 local _subMenuName = _category
                                 local _crates = ctld.spawnableCrates[_subMenuName]
@@ -5971,11 +5965,6 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                         ctld.spawnCrate, { _unitName, _menu.crate.weight })
                                 end
                             end
-                            -- if ctld.unitDynamicCargoCapable(_unit) then
-                            --     if ctld.vehicleCommandsPath[_unitName] == nil then
-                            --         ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_cratesMenuPath)
-                            --     end
-                            -- end
                         end
                     end
                     
@@ -6050,7 +6039,13 @@ function ctld.addTransportF10MenuOptions(_unitName)
 end
 
 --******************************************************************************************************
-function ctld.buildPaginatedMenu(_menuEntries)
+function ctld.buildPaginatedMenu(_menuEntries) --[[ params table :
+                                                    { text        = command name menu
+                                                    groupId       = playerUnit groupId,
+                                                    subMenuPath   = complet MenuPath clicked,
+                                                    menuFunction  = function name to run on clicked menu,
+                                                    menuArgsTable = table with arguments for the function to run,
+                                                    }]]
     local nextSubMenuPath = {}
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
@@ -6094,20 +6089,20 @@ function ctld.updateRepackMenu(_playerUnitName)
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
                 --ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
-                local RepackPreviousMenu    = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
+                local RepackPreviousMenu = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
                 local RepackCommandsPath = RepackPreviousMenu
                 local repackSubMenuText  = ctld.i18n_translate("Repack Vehicles")
                 RepackCommandsPath[#RepackCommandsPath + 1] = repackSubMenuText  -- add the submenu name to get the complet repack path
                 --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
                 missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
-                local RepackmenuPath = missionCommands.addSubMenuForGroup(_groupId, repackSubMenuText, RepackPreviousMenu)
+                local RepackMenuPath = missionCommands.addSubMenuForGroup(_groupId, repackSubMenuText, RepackPreviousMenu)
                 local menuEntries = {}
                 for i, _vehicle in ipairs(repackableVehicles) do
                     if ctld.isUnitInMenuEntriesTable(menuEntries, _vehicle.desc) == false then
                         _vehicle.playerUnitName = _playerUnitName
                         table.insert(menuEntries, { text          = ctld.i18n_translate("repack ") .. _vehicle.unit,
                                                     groupId       = _groupId,
-                                                    subMenuPath   = RepackmenuPath,
+                                                    subMenuPath   = RepackMenuPath,
                                                     menuFunction  = ctld.repackVehicleRequest,
                                                     menuArgsTable = mist.utils.deepCopy(_vehicle)
                                                     })
