@@ -2078,12 +2078,16 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
                 end
-                repackableUnit:destroy()                -- destroy repacked unit
+                repackableUnit:destroy()                  -- destroy repacked unit
             end
+            --ctld.updateRepackMenu(playerUnitName)       -- update the repack menu
+            timer.scheduleFunction(ctld.updateRepackMenu, playerUnitName, timer.getTime() + 1)
         end
-        ctld.updateRepackMenu(playerUnitName)           -- update the repack menu
-        ctld.repackRequestsStack[ii] = nil              -- remove the processed request from the stacking table
+        ctld.repackRequestsStack[ii] = nil                -- remove the processed request from the stacking table
     end
+
+    
+        
     if ctld.enableRepackingVehicles == true then
         return t + 3         -- reschedule the function in 3 seconds
     else
@@ -3869,7 +3873,7 @@ function ctld.getClosestCrate(_heli, _crates, _type)
     local _shortestDistance = -1
     local _distance = 0
     local _minimumDistance = 5     -- prevents dynamic cargo crates from unpacking while in cargo hold
-    local _maxDistance     = 10    -- prevents onboard dynamic cargo crates from unpacking requested by other helo
+    local _maxDistance     = 15    -- prevents onboard dynamic cargo crates from unpacking requested by other helo
     for _, _crate in pairs(_crates) do
         if (_crate.details.unit == _type or _type == nil) then
             _distance = _crate.dist
@@ -3929,9 +3933,10 @@ function ctld.getCrateObject(_name)
 end
 
 function ctld.unpackCrates(_arguments)
+    ctld.logTrace("FG_ ctld.unpackCrates._arguments =  %s", ctld.p(_arguments))
     local _status, _err = pcall(function(_args)
         local _heli = ctld.getTransportUnit(_args[1])
-
+        ctld.logTrace("FG_ ctld.unpackCrates._args =  %s", ctld.p(_args))
         if _heli ~= nil and ctld.inAir(_heli) == false then
             local _crates = ctld.getCratesAndDistance(_heli)
             local _crate = ctld.getClosestCrate(_heli, _crates)
@@ -4008,9 +4013,9 @@ function ctld.unpackCrates(_arguments)
 
 
                     trigger.action.outTextForCoalition(_heli:getCoalition(),
-                        ctld.i18n_translate("%1 successfully deployed %2 to the field", ctld.getPlayerNameOrType(_heli),
+                            ctld.i18n_translate("%1 successfully deployed %2 to the field", ctld.getPlayerNameOrType(_heli),
                             _crate.details.desc), 10)
-
+                    timer.scheduleFunction(ctld.autoUpdateRepackMenu, { reschedule = false }, timer.getTime() + 1)
                     if ctld.isJTACUnitType(_crate.details.unit) and ctld.JTAC_dropEnabled then
                         local _code = table.remove(ctld.jtacGeneratedLaserCodes, 1)
                         --put to the end
@@ -6067,8 +6072,13 @@ function ctld.buildPaginatedMenu(_menuEntries) --[[ params table :
         end
         menu.menuArgsTable.subMenuPath      = mist.utils.deepCopy(menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
         menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
-        missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, mist.utils.deepCopy(menu.menuArgsTable))
-        --ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
+        ctld.logTrace("FG_ boucle[%s].groupId = %s", i, menu.groupId)
+        ctld.logTrace("FG_ boucle[%s].menu.text = %s", i, menu.text)
+        ctld.logTrace("FG_ boucle[%s].menu.subMenuPath = %s", i, menu.subMenuPath)
+        ctld.logTrace("FG_ boucle[%s].menu.menuFunction = %s", i, menu.menuFunction)
+        local r = missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction, mist.utils.deepCopy(menu.menuArgsTable))
+        ctld.logTrace("FG_ boucle[%s].r = %s", i, r)
+        ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
     end
 end
 
@@ -6099,11 +6109,16 @@ function ctld.updateRepackMenu(_playerUnitName)
             if repackableVehicles then
                 --ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
                 local RepackPreviousMenu = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
-                local RepackCommandsPath = RepackPreviousMenu
+                local RepackCommandsPath = mist.utils.deepCopy(ctld.vehicleCommandsPath[_playerUnitName])
                 local repackSubMenuText  = ctld.i18n_translate("Repack Vehicles")
                 RepackCommandsPath[#RepackCommandsPath + 1] = repackSubMenuText  -- add the submenu name to get the complet repack path
                 --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
                 missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
+                ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
+
+                ctld.logTrace("FG_ repackableVehicles = %s", ctld.p(repackableVehicles))
+                ctld.logTrace("FG_ repackSubMenuText  = %s", ctld.p(repackSubMenuText))
+                ctld.logTrace("FG_ RepackPreviousMenu = %s", ctld.p(RepackPreviousMenu))
                 local RepackMenuPath = missionCommands.addSubMenuForGroup(_groupId, repackSubMenuText, RepackPreviousMenu)
                 local menuEntries = {}
                 for i, _vehicle in ipairs(repackableVehicles) do
@@ -6127,6 +6142,8 @@ end
 --******************************************************************************************************
 function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each transport unit
     if t == nil then t = timer.getTime() end
+    if p.reschedule == nil then p.reschedule = false end
+    ctld.logTrace("FG_ ctld.autoUpdateRepackMenu.p.reschedule = %s", p.reschedule)
     if ctld.enableRepackingVehicles then
         for _, _unitName in pairs(ctld.transportPilotNames) do
             if ctld.vehicleCommandsPath[_unitName] ~= nil then
@@ -6152,7 +6169,9 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
             end
         end
     end
-    return t + 1   -- reschedule every 1 seconds
+    if p.reschedule == true or p.reschedule == nil then
+        return t + 5   -- reschedule every 5 seconds
+    end
 end
 
 --******************************************************************************************************
