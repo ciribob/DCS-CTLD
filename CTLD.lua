@@ -2081,7 +2081,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 repackableUnit:destroy()                -- destroy repacked unit
             end
         end
-        --ctld.updateRepackMenu(playerUnitName)         -- update the repack menu to process destroyed units
+        ctld.updateRepackMenu(playerUnitName)           -- update the repack menu
         ctld.repackRequestsStack[ii] = nil              -- remove the processed request from the stacking table
     end
     if ctld.enableRepackingVehicles == true then
@@ -5997,6 +5997,10 @@ function ctld.addTransportF10MenuOptions(_unitName)
                             missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List FOBs"), _crateCommands,
                                 ctld.listFOBS, { _unitName })
                         end
+
+                        if  ctld.enableRepackingVehicles == true then
+                            ctld.updateRepackMenu( _unitName )        -- add repack menu
+                        end
                     end
 
                     if ctld.enableSmokeDrop then
@@ -6080,7 +6084,10 @@ function ctld.isUnitInMenuEntriesTable(_MenuEntriesTable, _typeUnitDesc)
 	return false
 end
 --******************************************************************************************************
+ctld.updateCount = 0
 function ctld.updateRepackMenu(_playerUnitName)
+    ctld.updateCount = ctld.updateCount + 1
+    ctld.logTrace("FG_ ctld.updateRepackMenu(%s) - %s", _playerUnitName, ctld.updateCount)
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
         local _groupId = ctld.getGroupId(playerUnit)
@@ -8341,7 +8348,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 1)
+            --timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 1)                              -- initialize repack menu
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
         if ctld.enableAutoOrbitingFlyingJtacOnTarget then
