@@ -1957,6 +1957,7 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
     end
 
     local unitsNamesList  = ctld.getNearbyUnits(unit:getPoint(), _radius, unit:getCoalition())
+    
     local repackableUnits = {}
     for i = 1, #unitsNamesList do
         local unitObject     = Unit.getByName(unitsNamesList[i])
@@ -1984,13 +1985,14 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
             --local _dist = ctld.getDistance(u:getPoint(), _point)
             local _dist = mist.utils.get2DDist(u:getPoint(), _point)
             if _dist <= _radius then
-                unitsByDistance[cpt] = {id =cpt, dist = _dist, unit = _unitName}
+                unitsByDistance[cpt] = {id =cpt, dist = _dist, unit = _unitName, typeName = u:getTypeName()}
                 cpt = cpt + 1
             end
         end
     end
     
-    table.sort(unitsByDistance, function(a,b) return a.dist < b.dist end)   -- sort the table by distance (the nearest first)
+    --table.sort(unitsByDistance, function(a,b) return a.dist < b.dist end)       -- sort the table by distance (the nearest first)
+    table.sort(unitsByDistance, function(a,b) return a.typeName < b.typeName end)   -- sort the table by typeNAme
     for i, v in ipairs(unitsByDistance) do
         table.insert(_units, v.unit)                 -- insert nearby unitName
     end
