@@ -6087,6 +6087,9 @@ function ctld.updateRepackMenu(_playerUnitName)
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
         local _groupId = ctld.getGroupId(playerUnit)
+        if _groupId == nil then
+            return
+        end
         if ctld.enableRepackingVehicles then
             local repackableVehicles = ctld.getUnitsInRepackRadius(_playerUnitName, ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
@@ -6143,7 +6146,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
             end
         end
     end
-    return t + 6   -- reschedule every 6 seconds
+    return t + 1   -- reschedule every 6 seconds
 end
 
 --******************************************************************************************************
@@ -8339,7 +8342,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 3)
+            timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 1)
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
         if ctld.enableAutoOrbitingFlyingJtacOnTarget then
