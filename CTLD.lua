@@ -1932,9 +1932,9 @@ function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between 
         local unitUserBox = Unit.getByName(_unitName):getDesc().box
         local SecureDistanceFromUnit = 0
         if math.abs(unitUserBox.max.x) >= math.abs(unitUserBox.min.x) then
-            SecureDistanceFromUnit = math.abs(unitUserBox.max.x) + rotorDiameter
+            SecureDistanceFromUnit = math.abs(unitUserBox.max.x) + (rotorDiameter/2)
         else
-            SecureDistanceFromUnit = math.abs(unitUserBox.min.x) + rotorDiameter
+            SecureDistanceFromUnit = math.abs(unitUserBox.min.x) + (rotorDiameter/2)
         end
 		return SecureDistanceFromUnit
 	end
@@ -1945,7 +1945,29 @@ end
 --               Repack vehicules crates functions
 -- ***************************************************************
 ctld.repackRequestsStack = {} -- table to store the repack request
+ctld.inAirMemorisation   = {} -- last helico state of InAir()
+function ctld.updateRepackMenuOnlanding(p, t)       -- update helo repack menu when a helo landing is detected
+    if t == nil then t = timer.getTime() + 1; end
+    if ctld.transportPilotNames then
+        for _, _unitName in pairs(ctld.transportPilotNames) do
+            if Unit.getByName(_unitName) ~= nil and Unit.getByName(_unitName):isActive() == true then
+                if ctld.inAirMemorisation[_unitName] == nil then ctld.inAirMemorisation[_unitName] = false end      -- init InAir() state
+                local _heli = Unit.getByName(_unitName)
+                if ctld.inAir(_heli) == false then
+                    if  ctld.inAirMemorisation[_unitName] == true then  -- if transition from inAir to Landed => updateRepackMenu
+                        ctld.updateRepackMenu(_unitName)
+                    end
+                    ctld.inAirMemorisation[_unitName] = false
+                else
+                    ctld.inAirMemorisation[_unitName] = true
+                end
+            end
+        end
+    end
+    return t + 5        -- reschdule each 5 seconds
+end
 
+-- ***************************************************************
 function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
     if _radius == nil then
         _radius = ctld.maximumDistanceRepackableUnitsSearch
@@ -2065,6 +2087,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 if ctld.unitDynamicCargoCapable(PlayerTransportUnit) ~= false then
                     randomHeading  = ctld.RandomReal(playerHeading + math.pi - math.pi/4, playerHeading + math.pi + math.pi/4)
                 end
+                repackableUnit:destroy()                  -- destroy repacked unit
                 for i = 1, v.cratesRequired or 1 do
                     -- see to spawn the crate at random position heading the transport unit
                     local _unitId        = ctld.getNextUnitId()
@@ -2078,10 +2101,8 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, "dynamic")
                     end
                 end
-                repackableUnit:destroy()                  -- destroy repacked unit
             end
-            --ctld.updateRepackMenu(playerUnitName)       -- update the repack menu
-            timer.scheduleFunction(ctld.updateRepackMenu, playerUnitName, timer.getTime() + 1)
+            timer.scheduleFunction(ctld.autoUpdateRepackMenu, { reschedule = false }, timer.getTime() + 1)  -- for add unpacked unit in repack menu
         end
         ctld.repackRequestsStack[ii] = nil                -- remove the processed request from the stacking table
     end
@@ -2577,12 +2598,12 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 
             local _model_type = nil
 
-            local _point = ctld.getPointAt12Oclock(_heli, 30)
+            local _point = ctld.getPointAt12Oclock(_heli, 15)
             local _position = "12"
 
             if ctld.unitDynamicCargoCapable(_heli) then
                 _model_type = "dynamic"
-                _point = ctld.getPointAt6Oclock(_heli, 30)
+                _point = ctld.getPointAt6Oclock(_heli, 15)
                 _position = "6"
             end
 
@@ -2611,7 +2632,7 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 end
 
 --***************************************************************
-ctld.randomCrateSpacing = 20 -- meters
+ctld.randomCrateSpacing = 15 -- meters
 function ctld.getPointAt12Oclock(_unit, _offset)
     return ctld.getPointAtDirection(_unit, _offset, 0)
 end
@@ -3873,7 +3894,7 @@ function ctld.getClosestCrate(_heli, _crates, _type)
     local _shortestDistance = -1
     local _distance = 0
     local _minimumDistance = 5     -- prevents dynamic cargo crates from unpacking while in cargo hold
-    local _maxDistance     = 15    -- prevents onboard dynamic cargo crates from unpacking requested by other helo
+    local _maxDistance     = 20    -- prevents onboard dynamic cargo crates from unpacking requested by other helo
     for _, _crate in pairs(_crates) do
         if (_crate.details.unit == _type or _type == nil) then
             _distance = _crate.dist
@@ -4194,7 +4215,7 @@ function ctld.dropSlingCrate(_args)
             local _name = string.format("%s #%i", _crate.desc, _unitId)
             local _model_type = nil
             if ctld.inAir(_heli) == false or _heightDiff <= 7.5 then
-                _point = ctld.getPointAt12Oclock(_heli, 30)
+                _point = ctld.getPointAt12Oclock(_heli, 15)
                 local _position = "12"
                 if ctld.unitDynamicCargoCapable(_heli) then
                     _model_type = "dynamic"
@@ -6095,10 +6116,7 @@ function ctld.isUnitInMenuEntriesTable(_MenuEntriesTable, _typeUnitDesc)
 	return false
 end
 --******************************************************************************************************
-ctld.updateCount = 0
 function ctld.updateRepackMenu(_playerUnitName)
-    ctld.updateCount = ctld.updateCount + 1
-    ctld.logTrace("FG_ ctld.updateRepackMenu(%s) - %s", _playerUnitName, ctld.updateCount)
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
         local _groupId = ctld.getGroupId(playerUnit)
@@ -8368,7 +8386,7 @@ function ctld.initialize()
             timer.scheduleFunction(ctld.checkHoverStatus, nil, timer.getTime() + 1)
         end
         if ctld.enableRepackingVehicles == true then
-            --timer.scheduleFunction(ctld.autoUpdateRepackMenu, nil, timer.getTime() + 1)                              -- initialize repack menu
+            timer.scheduleFunction(ctld.updateRepackMenuOnlanding, nil, timer.getTime() + 1)    -- update helo repack menu when a helo landing is detected
             timer.scheduleFunction(ctld.repackVehicle, nil, timer.getTime() + 1)
         end
         if ctld.enableAutoOrbitingFlyingJtacOnTarget then
