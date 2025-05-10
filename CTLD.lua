@@ -7489,7 +7489,7 @@ function ctld.setGrpROE(_grp, _ROE)
         local _controller = _grp:getController();
         Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
         Controller.setOption(_controller, AI.Option.Ground.id.ROE, _ROE)
-        --_controller:setTask(_grp)
+        --_controller:setTask(_grp)             -- FG 250510 this line seems to be a bug
     end
 end
 
