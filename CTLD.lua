@@ -4015,7 +4015,7 @@ function ctld.unpackCrates(_arguments)
                     trigger.action.outTextForCoalition(_heli:getCoalition(),
                             ctld.i18n_translate("%1 successfully deployed %2 to the field", ctld.getPlayerNameOrType(_heli),
                             _crate.details.desc), 10)
-                    timer.scheduleFunction(ctld.autoUpdateRepackMenu, { reschedule = false }, timer.getTime() + 1)
+                    timer.scheduleFunction(ctld.autoUpdateRepackMenu, { reschedule = false }, timer.getTime() + 1)  -- for add unpacked unit in repack menu
                     if ctld.isJTACUnitType(_crate.details.unit) and ctld.JTAC_dropEnabled then
                         local _code = table.remove(ctld.jtacGeneratedLaserCodes, 1)
                         --put to the end
@@ -4982,7 +4982,7 @@ function ctld.repairAASystem(_heli, _nearestCrate, _aaSystem)
 end
 
 function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
-    ctld.logTrace("FG_ ctld.unpackMultiCrate, _nearestCrate =  %s", ctld.p(_nearestCrate))
+    --ctld.logTrace("FG_ ctld.unpackMultiCrate, _nearestCrate =  %s", ctld.p(_nearestCrate))
     -- unpack multi crate
     local _nearbyMultiCrates = {}
 
@@ -5033,6 +5033,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
         if _spawnedGroup == nil then
             ctld.logError("ctld.unpackMultiCrate group was not spawned - skipping setGrpROE")
         else
+            timer.scheduleFunction(ctld.autoUpdateRepackMenu, { reschedule = false }, timer.getTime() + 1)  -- for add unpacked unit in repack menu
             ctld.setGrpROE(_spawnedGroup)
             ctld.processCallback({ unit = _heli, crate = _nearestCrate, spawnedGroup = _spawnedGroup, action = "unpack" })
             trigger.action.outTextForCoalition(_heli:getCoalition(),
@@ -7488,7 +7489,7 @@ function ctld.setGrpROE(_grp, _ROE)
         local _controller = _grp:getController();
         Controller.setOption(_controller, AI.Option.Ground.id.ALARM_STATE, AI.Option.Ground.val.ALARM_STATE.AUTO)
         Controller.setOption(_controller, AI.Option.Ground.id.ROE, _ROE)
-        _controller:setTask(_grp)
+        --_controller:setTask(_grp)
     end
 end
 
