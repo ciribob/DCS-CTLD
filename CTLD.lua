@@ -890,6 +890,7 @@ ctld.internalCargoLimits = {
     -- Remove the -- below to turn on options
     ["Mi-8MT"] = 2,
     ["CH-47Fbl1"] = 8,
+    ["UH-1H"] = 3,        -- to remove after debug
 }
 
 
@@ -1179,8 +1180,8 @@ ctld.spawnableCrates = {
 
 ctld.spawnableCratesModels = {
     ["load"] = {
-        ["category"] = "Fortifications",
-        ["type"] = "Cargo04",
+        ["category"] = "Cargos",    --"Fortifications"
+        ["type"] = "ammo_cargo",    --"uh1h_cargo"    --"Cargo04"
         ["canCargo"] = false,
     },
     ["sling"] = {
