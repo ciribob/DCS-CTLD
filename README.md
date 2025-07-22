@@ -44,12 +44,15 @@ This script is a rewrite of some of the functionality of the original Complete C
     * [Spawn Sling loadable crate at a Zone](#spawn-sling-loadable-crate-at-a-zone)
     * [Spawn Sling loadable crate at a Point](#spawn-sling-loadable-crate-at-a-point)
     * [JTAC Automatic Targeting and Laser](#jtac-automatic-targeting-and-laser)
+    * [JTAC Automatic Orbiting Over Lased Target](#jtac-automatic-orbiting-over-lased-target)
 * [In Game](#in-game)
 * [Troop Loading and Unloading](#troop-loading-and-unloading)
+* [Limit troop Loading](#limit-troop-loading)
 * [Cargo Spawning and Sling Loading](#cargo-spawning-and-sling-loading)
   * [Simulated Sling Loading](#simulated-sling-loading)
   * [Real Sling Loading](#real-sling-loading)
 * [Crate Unpacking](#crate-unpacking)
+* [Crate Repacking](#crate-repacking)
 * [Forward Operating Base (FOB) Construction](#forward-operating-base-fob-construction)
 * [Radio Beacon Deployment](#radio-beacon-deployment)
   * [A10\-C UHF ADF Radio Setup](#a10-c-uhf-adf-radio-setup)
@@ -861,6 +864,13 @@ For example, if the laser code is *1688*, the frequency will be *40.40Mhz*.
 
 JTAC frequency is available through the "JTAC Status" radio menu
 
+#### Jtac-automatic-orbiting-over-lased-target
+By setting parameter ctld.enableAutoOrbitingFlyingJtacOnTarget = true, a script 
+dedicated script puts in orbit each flying JTAC over his detected target.
+Associated with CTLD/JTAC functions, you can assign a fly route to the JTAC drone,
+this one follow it, and start orbiting when he detects a target.
+As soon as it don't detect a target, it restart following its initial route at the nearest waypoint
+
 # In Game
 ## Troop Loading and Unloading
 
@@ -915,7 +925,14 @@ ctld.MG_WEIGHT = 10 -- kg
 ctld.MORTAR_WEIGHT = 26 -- kg
 ctld.JTAC_WEIGHT = 15 -- kg
 ```
+## Limit troop Loading
+The number of Infantries units in mission can be limited by setting the table below :
+ctld.nbLimitSpwanedTroops = {0, 0}      -- {redLimitInfantryCount, blueLimitInfantryCount} 
 
+When this cumulative number of troops is reached for a coalition, no more troops can be loaded onboard, and a message is sent to player.
+
+If ctld.nbLimitSpwanedTroops = {0, 0} (both values at 0) the limit control is disabled.
+If either value is non-zero, limit control becomes active for both coalitions.
 
 ## Cargo Spawning and Sling Loading
 
@@ -1005,6 +1022,15 @@ Rearming:
 **Note: Once unpacked a crate will not disappear from the field or the F6 Menu, but will disappear from the F10 Nearby Crates list. There is currently no way to remove crates due to a DCS Bug AFAIK. This can make picking the right crate tricky, but by using the F10 List crates option, you can keep readjusting your position until you are close to the crate that you want and then it's trial and error, using the F6 menu to pick the right crate for sling loading. **
 
 You can also repair a partially destroyed HAWK / BUK or KUB system by dropping a repair crate next to it and unpacking. A repair crate will also re-arm the system.
+
+## Crate Repacking
+The F10 menu allows you to repack units having associated crate types in the "ctld.spawnableCrates" table.
+Simply land near the unit you wish to repack and select it from the list presented by the "CTLD//Vehicle/FOB transport...//Repack Vehicles" menu.
+The defined radius of vehicles detection is specified by the parameter 
+
+ctld.maximumDistanceRepackableUnitsSearch = 200  -- max distance from transportUnit to search force repackable units in meters
+ 
+WARNING: Due to technical reasons related to the refresh time of the F10 menus, there may be inconsistencies between the type of vehicles requested and those provided. It is recommended to wait 5 to 10 seconds without moving after landing and opening the F10 menu for a packaging order.
 
 ## Forward Operating Base (FOB) Construction
 FOBs can be built by loading special FOB crates from a **Logistics** unit into a C-130 or other large aircraft configured in the script. To load the crate use the F10 - Troop Commands Menu. The idea behind FOBs is to make player vs player missions even more dynamic as these can be deployed in most locations. Once destroyed the FOB can no longer be used.
