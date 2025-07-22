@@ -865,10 +865,11 @@ For example, if the laser code is *1688*, the frequency will be *40.40Mhz*.
 JTAC frequency is available through the "JTAC Status" radio menu
 
 #### Jtac-automatic-orbiting-over-lased-target
-By setting parameter ctld.enableAutoOrbitingFlyingJtacOnTarget = true, a script 
-dedicated script puts in orbit each flying JTAC over his detected target.
-Associated with CTLD/JTAC functions, you can assign a fly route to the JTAC drone,
-this one follow it, and start orbiting when he detects a target.
+
+By setting parameter ctld.enableAutoOrbitingFlyingJtacOnTarget = true, a script dedicated script puts in orbit each flying JTAC over his detected target.
+
+Associated with CTLD/JTAC functions, you can assign a fly route to the JTAC drone, this one follow it, and start orbiting when he detects a target.
+
 As soon as it don't detect a target, it restart following its initial route at the nearest waypoint
 
 # In Game
@@ -927,11 +928,13 @@ ctld.JTAC_WEIGHT = 15 -- kg
 ```
 ## Limit troop Loading
 The number of Infantries units in mission can be limited by setting the table below :
-ctld.nbLimitSpwanedTroops = {0, 0}      -- {redLimitInfantryCount, blueLimitInfantryCount} 
+
+`ctld.nbLimitSpawnedTroops = {0, 0}      -- {redLimitInfantryCount, blueLimitInfantryCount}`
 
 When this cumulative number of troops is reached for a coalition, no more troops can be loaded onboard, and a message is sent to player.
 
-If ctld.nbLimitSpwanedTroops = {0, 0} (both values at 0) the limit control is disabled.
+If set to `ctld.nbLimitSpawnedTroops = {0, 0}` (both values at 0) the limit control is disabled. This is the default.
+
 If either value is non-zero, limit control becomes active for both coalitions.
 
 ## Cargo Spawning and Sling Loading
@@ -1024,13 +1027,14 @@ Rearming:
 You can also repair a partially destroyed HAWK / BUK or KUB system by dropping a repair crate next to it and unpacking. A repair crate will also re-arm the system.
 
 ## Crate Repacking
-The F10 menu allows you to repack units having associated crate types in the "ctld.spawnableCrates" table.
-Simply land near the unit you wish to repack and select it from the list presented by the "CTLD//Vehicle/FOB transport...//Repack Vehicles" menu.
-The defined radius of vehicles detection is specified by the parameter 
 
-ctld.maximumDistanceRepackableUnitsSearch = 200  -- max distance from transportUnit to search force repackable units in meters
+The F10 menu allows you to repack units having associated crate types in the "ctld.spawnableCrates" table.
+
+Simply land near the unit you wish to repack and select it from the list presented by the "CTLD//Vehicle/FOB transport...//Repack Vehicles" menu.
+
+The defined radius of vehicles detection is specified by the parameter `ctld.maximumDistanceRepackableUnitsSearch` (default 200 meters).
  
-WARNING: Due to technical reasons related to the refresh time of the F10 menus, there may be inconsistencies between the type of vehicles requested and those provided. It is recommended to wait 5 to 10 seconds without moving after landing and opening the F10 menu for a packaging order.
+*WARNING*: Due to technical reasons related to the refresh time of the F10 menus, there may be inconsistencies between the type of vehicles requested and those provided. It is recommended to wait 5 to 10 seconds without moving after landing and opening the F10 menu for a packaging order.
 
 ## Forward Operating Base (FOB) Construction
 FOBs can be built by loading special FOB crates from a **Logistics** unit into a C-130 or other large aircraft configured in the script. To load the crate use the F10 - Troop Commands Menu. The idea behind FOBs is to make player vs player missions even more dynamic as these can be deployed in most locations. Once destroyed the FOB can no longer be used.
