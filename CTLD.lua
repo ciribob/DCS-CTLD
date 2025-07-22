@@ -40,11 +40,11 @@ end
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.4.0"
+ctld.Version = "1.5.0"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
-ctld.Debug = true
-ctld.Trace = true
+ctld.Debug = false
+ctld.Trace = false
 
 ctld.dontInitialize = false -- if true, ctld.initialize() will not run; instead, you'll have to run it from your own code - it's useful when you want to override some functions/parameters before the initialization takes place
 
@@ -452,15 +452,13 @@ ctld.troopPickupAtFOB = true            -- if true, troops can also be picked up
 ctld.buildTimeFOB = 120                 --time in seconds for the FOB to be built
 ctld.crateWaitTime = 40                 -- time in seconds to wait before you can spawn another crate
 ctld.forceCrateToBeMoved = true         -- a crate must be picked up at least once and moved before it can be unpacked. Helps to reduce crate spam
-ctld.radioSound =
-"beacon.ogg"                            -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
-ctld.radioSoundFC3 =
-"beaconsilent.ogg"                      -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
+ctld.radioSound = "beacon.ogg"          -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
+ctld.radioSoundFC3 ="beaconsilent.ogg"  -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
 ctld.deployedBeaconBattery = 30         -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
 ctld.enabledRadioBeaconDrop = true      -- if its set to false then beacons cannot be dropped by units
 ctld.allowRandomAiTeamPickups = false   -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
--- Limit the dropping of infantry teams -- this limit control is inactive if ctld.nbLimitSpwanedTroops = {0, 0} ----
-ctld.nbLimitSpwanedTroops = {0, 0}      -- {redLimitInfantryCount, blueLimitInfantryCount} when this cumulative number of troops is reached, no more troops can be loaded onboard
+-- Limit the dropping of infantry teams -- this limit control is inactive if ctld.nbLimitSpawnedTroops = {0, 0} ----
+ctld.nbLimitSpawnedTroops = {0, 0}      -- {redLimitInfantryCount, blueLimitInfantryCount} when this cumulative number of troops is reached, no more troops can be loaded onboard
 ctld.InfantryInGameCount  = {0, 0}      -- {redCoaInfantryCount, blueCoaInfantryCount}
 
 -- Simulated Sling load configuration
@@ -1033,7 +1031,7 @@ ctld.spawnableCrates = {
         --- BLUE
         { weight = 1000.01,                                desc = ctld.i18n_translate("Humvee - MG"),                      unit = "M1043 HMMWV Armament", side = 2 }, --careful with the names as the script matches the desc to JTAC types
         { weight = 1000.02,                                desc = ctld.i18n_translate("Humvee - TOW"),                     unit = "M1045 HMMWV TOW",      side = 2, cratesRequired = 2 },
-        { multiple = { 1000.02,1000.02 },                           desc = ctld.i18n_translate("Humvee - TOW - All crates"),        side = 2 },
+        { multiple = { 1000.02,1000.02 },                   desc = ctld.i18n_translate("Humvee - TOW - All crates"),        side = 2 },
         { weight = 1000.03,                                desc = ctld.i18n_translate("Light Tank - MRAP"),                unit = "MaxxPro_MRAP",         side = 2, cratesRequired = 2 },
         { multiple = { 1000.03, 1000.03 },                 desc = ctld.i18n_translate("Light Tank - MRAP - All crates"),   side = 2 },
         { weight = 1000.04,                                desc = ctld.i18n_translate("Med Tank - LAV-25"),                unit = "LAV-25",               side = 2, cratesRequired = 3 },
@@ -1773,7 +1771,7 @@ end
 -- Deactivates a Waypoint zone
 -- Deactivates a Waypoint zone when called from a trigger
 -- EG: ctld.deactivateWaypointZone("wpzone3")
--- This    disables wpzone3 so that troops dropped in this zone will search for troops as normal
+-- This disables wpzone3 so that troops dropped in this zone will search for troops as normal
 -- These functions can be called by triggers
 function ctld.deactivateWaypointZone(_zoneName)
     local _triggerZone = trigger.misc.getZone(_zoneName)
@@ -3226,13 +3224,13 @@ function ctld.loadTroopsFromZone(_args)
     elseif _zone.inZone == true then
         local heloCoa = _heli:getCoalition()
         ctld.logTrace("FG_ heloCoa =  %s", ctld.p(heloCoa))
-        ctld.logTrace("FG_ (ctld.nbLimitSpwanedTroops[1]~=0 or ctld.nbLimitSpwanedTroops[2]~=0) =  %s", ctld.p(ctld.nbLimitSpwanedTroops[1]~=0 or ctld.nbLimitSpwanedTroops[2]~=0))
+        ctld.logTrace("FG_ (ctld.nbLimitSpawnedTroops[1]~=0 or ctld.nbLimitSpawnedTroops[2]~=0) =  %s", ctld.p(ctld.nbLimitSpawnedTroops[1]~=0 or ctld.nbLimitSpawnedTroops[2]~=0))
         ctld.logTrace("FG_ ctld.InfantryInGameCount[heloCoa] =  %s", ctld.p(ctld.InfantryInGameCount[heloCoa]))
         ctld.logTrace("FG_ _groupTemplate.total =  %s", ctld.p(_groupTemplate.total))
-        ctld.logTrace("FG_ ctld.nbLimitSpwanedTroops[%s].total =  %s", ctld.p(heloCoa), ctld.p(ctld.nbLimitSpwanedTroops[heloCoa]))
+        ctld.logTrace("FG_ ctld.nbLimitSpawnedTroops[%s].total =  %s", ctld.p(heloCoa), ctld.p(ctld.nbLimitSpawnedTroops[heloCoa]))
         
         local limitReached = true
-        if (ctld.nbLimitSpwanedTroops[1]~=0 or ctld.nbLimitSpwanedTroops[2]~=0) and (ctld.InfantryInGameCount[heloCoa] + _groupTemplate.total > ctld.nbLimitSpwanedTroops[heloCoa]) then  -- load troops only if Coa limit not reached
+        if (ctld.nbLimitSpawnedTroops[1]~=0 or ctld.nbLimitSpawnedTroops[2]~=0) and (ctld.InfantryInGameCount[heloCoa] + _groupTemplate.total > ctld.nbLimitSpawnedTroops[heloCoa]) then  -- load troops only if Coa limit not reached
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("Count Infantries limit in the mission reached, you can't load more troops"), 10)
             return false
         end
@@ -8393,7 +8391,7 @@ function ctld.initialize()
         if ctld.enableAutoOrbitingFlyingJtacOnTarget then
             timer.scheduleFunction(ctld.TreatOrbitJTAC, {}, timer.getTime()+3)
         end
-        if ctld.nbLimitSpwanedTroops[1]~=0 or ctld.nbLimitSpwanedTroops[2]~=0 then
+        if ctld.nbLimitSpawnedTroops[1]~=0 or ctld.nbLimitSpawnedTroops[2]~=0 then
             timer.scheduleFunction(ctld.updateTroopsInGame, {}, timer.getTime()+1)
         end
     end, nil, timer.getTime() + 1)
