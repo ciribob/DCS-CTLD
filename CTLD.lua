@@ -7887,26 +7887,56 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
 
         -- apply offset (_firstWpOfNewRoute) to SwitchWaypoint tasks
         local lastWpAsAlreadySwitchWaypoint = false
-        for idx = 1, #adjustedRoute do
-            for j=1, #adjustedRoute[idx].task.params.tasks do
-                if adjustedRoute[idx].task.params.tasks[j].id ~= "ControlledTask" then
-                    if adjustedRoute[idx].task.params.tasks[j].params.action.id == "SwitchWaypoint" then
-                        local goToWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.action.params.goToWaypointIndex
-                        adjustedRoute[idx].task.params.tasks[j].params.action.params.fromWaypointIndex = idx
-                        adjustedRoute[idx].task.params.tasks[j].params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
-                    	if idx == #adjustedRoute then
-                            lastWpAsAlreadySwitchWaypoint = true 
+        for idx2 = 1, #adjustedRoute do
+            if #adjustedRoute[idx2] and
+               #adjustedRoute[idx2].task and
+               #adjustedRoute[idx2].task.params and
+               #adjustedRoute[idx2].task.params.tasks then
+
+                for j=1, #adjustedRoute[idx2].task.params.tasks do
+                    if adjustedRoute[idx2].task.params.tasks[j].id and
+                       adjustedRoute[idx2].task.params.tasks[j].id ~= "ControlledTask" then
+
+                        if adjustedRoute[idx2].task.params.tasks[j].params and
+                           adjustedRoute[idx2].task.params.tasks[j].params.action and
+                           adjustedRoute[idx2].task.params.tasks[j].params.action.id and
+                           adjustedRoute[idx2].task.params.tasks[j].params.action.id == "SwitchWaypoint" then
+
+                            if adjustedRoute[idx2].task.params.tasks[j].params.action.params then
+
+                                local goToWaypointIndex = adjustedRoute[idx2].task.params.tasks[j].params.action.params.goToWaypointIndex
+                                adjustedRoute[idx2].task.params.tasks[j].params.action.params.fromWaypointIndex = idx2
+                                adjustedRoute[idx2].task.params.tasks[j].params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
+                                if idx2 == #adjustedRoute then
+                                    lastWpAsAlreadySwitchWaypoint = true
+                                end
+                            
+                            end
+                        
                         end
-                    end
-                else	-- for "ControlledTask"
-                    if adjustedRoute[idx].task.params.tasks[j].params.task.params.action.id == "SwitchWaypoint" then
-                        local goToWaypointIndex = adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex
-                        adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.fromWaypointIndex = idx
-                        adjustedRoute[idx].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
-						if idx == #adjustedRoute then
-                            lastWpAsAlreadySwitchWaypoint = true 
+                    
+                    else	-- for "ControlledTask"
+                        if adjustedRoute[idx2].task.params.tasks[j].params and
+                           adjustedRoute[idx2].task.params.tasks[j].params.task and
+                           adjustedRoute[idx2].task.params.tasks[j].params.task.params and
+                           adjustedRoute[idx2].task.params.tasks[j].params.task.params.action and
+                           adjustedRoute[idx2].task.params.tasks[j].params.task.params.action.id and
+                           adjustedRoute[idx2].task.params.tasks[j].params.task.params.action.id == "SwitchWaypoint" then
+
+                            if adjustedRoute[idx2].task.params.tasks[j].params.task.params.action.params then
+
+                                local goToWaypointIndex = adjustedRoute[idx2].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex
+                                adjustedRoute[idx2].task.params.tasks[j].params.task.params.action.params.fromWaypointIndex = idx2
+                                adjustedRoute[idx2].task.params.tasks[j].params.task.params.action.params.goToWaypointIndex = mappingWP[goToWaypointIndex]
+                                if idx2 == #adjustedRoute then
+                                    lastWpAsAlreadySwitchWaypoint = true
+                                end
+
+                            end
                         end
+
                     end
+
                 end
             end
         end
