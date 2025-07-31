@@ -7987,7 +7987,7 @@ ctld.reconMenuName                  = ctld.i18n_translate("RECON") --name of the
 ctld.reconRadioAdded                = {}                         --stores the groups that have had the radio menu added
 ctld.reconLosSearchRadius           = 2000                       -- search radius in meters
 ctld.reconLosMarkRadius             = 100                        -- mark radius dimension in meters
-ctld.reconAutoRefreshLosTargetMarks = true                       -- if true recon LOS marks are automaticaly refreshed on F10 map
+ctld.reconAutoRefreshLosTargetMarks = false                      -- if true recon LOS marks are automaticaly refreshed on F10 map
 ctld.reconLastScheduleIdAutoRefresh = 0
 
 ---- F10 RECON Menus ------------------------------------------------------------------
