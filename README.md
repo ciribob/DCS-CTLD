@@ -11,6 +11,8 @@ It's open-source and free as in free beer (you don't have to pay to use it), and
 
 We're always looking for help, please reach out to [Zip on Discord](https://discordapp.com/users/421317390807203850) if you want to participate in maintenance or development.
 
+And if you'd like to support our work, you can [buy me a coffee](https://coff.ee/veaf_zip)!
+
 ## Contents
 
 This script is a rewrite of some of the functionality of the original Complete Combat Troop Transport Script (CTTS) by Geloxo (http://forums.eagle.ru/showthread.php?t=108523), as well as adding new features.
