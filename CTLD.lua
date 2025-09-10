@@ -40,7 +40,7 @@ end
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.5.1"
+ctld.Version = "1.5.2"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -1977,7 +1977,7 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
     end
 
     local unitsNamesList  = ctld.getNearbyUnits(unit:getPoint(), _radius, unit:getCoalition())
-    
+
     local repackableUnits = {}
     for i = 1, #unitsNamesList do
         local unitObject     = Unit.getByName(unitsNamesList[i])
@@ -1998,11 +1998,13 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     local unitsByDistance = {}
     local cpt = 1
     local _units = {}
-    local _unitList = mist.DBs.unitsByName
-    for _unitName, _unit in pairs(mist.DBs.unitsByName) do
+    for _unitName, _ in pairs(mist.DBs.unitsByName) do
         local u = Unit.getByName(_unitName)
-        if u and u:isExist() and (_coalition == 4 or u:getCoalition() == _coalition) then
-            --local _dist = ctld.getDistance(u:getPoint(), _point)
+        local e = (u and u:isExist()) or false
+        -- pcall is needed because getCoalition() fails if the unit is an object without coalition (like a smoke effect)
+        local c = nil
+        pcall(function() c = (u and e and u:getCoalition()) or nil end)
+            if u and e and (_coalition == 4 or c == _coalition) then
             local _dist = mist.utils.get2DDist(u:getPoint(), _point)
             if _dist <= _radius then
                 unitsByDistance[cpt] = {id =cpt, dist = _dist, unit = _unitName, typeName = u:getTypeName()}
@@ -2010,7 +2012,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
             end
         end
     end
-    
+
     --table.sort(unitsByDistance, function(a,b) return a.dist < b.dist end)       -- sort the table by distance (the nearest first)
     table.sort(unitsByDistance, function(a,b) return a.typeName < b.typeName end)   -- sort the table by typeNAme
     for i, v in ipairs(unitsByDistance) do
@@ -2092,7 +2094,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                     local _name          = string.format("%s_%i", v.desc, _unitId)
                     local secureDistance = ctld.getSecureDistanceFromUnit(playerUnitName) or 10
                     local relativePoint  = ctld.getRelativePoint(playerPoint, secureDistance + (i * offset), randomHeading) -- 7 meters from the transport unit
-                        
+
                     if ctld.unitDynamicCargoCapable(PlayerTransportUnit) == false then
                         ctld.spawnCrateStatic(refCountry, _unitId, relativePoint, _name, crateWeight, playerCoa, playerHeading, nil)
                     else
@@ -2105,8 +2107,8 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
         ctld.repackRequestsStack[ii] = nil                -- remove the processed request from the stacking table
     end
 
-    
-        
+
+
     if ctld.enableRepackingVehicles == true then
         return t + 3         -- reschedule the function in 3 seconds
     else
@@ -3169,7 +3171,7 @@ function ctld.updateTroopsInGame(params, t)		-- return count of troops in game b
 			for index, unitObj in pairs(v:getUnits()) do		-- for each unit in group
                 if unitObj:getDesc().attributes.Infantry then
                     ctld.InfantryInGameCount[coalitionId] = ctld.InfantryInGameCount[coalitionId] + 1
-                end 
+                end
             end
         end
     end
@@ -3227,7 +3229,7 @@ function ctld.loadTroopsFromZone(_args)
         ctld.logTrace("FG_ ctld.InfantryInGameCount[heloCoa] =  %s", ctld.p(ctld.InfantryInGameCount[heloCoa]))
         ctld.logTrace("FG_ _groupTemplate.total =  %s", ctld.p(_groupTemplate.total))
         ctld.logTrace("FG_ ctld.nbLimitSpawnedTroops[%s].total =  %s", ctld.p(heloCoa), ctld.p(ctld.nbLimitSpawnedTroops[heloCoa]))
-        
+
         local limitReached = true
         if (ctld.nbLimitSpawnedTroops[1]~=0 or ctld.nbLimitSpawnedTroops[2]~=0) and (ctld.InfantryInGameCount[heloCoa] + _groupTemplate.total > ctld.nbLimitSpawnedTroops[heloCoa]) then  -- load troops only if Coa limit not reached
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("Count Infantries limit in the mission reached, you can't load more troops"), 10)
@@ -3960,7 +3962,7 @@ function ctld.unpackCrates(_arguments)
             local _crates = ctld.getCratesAndDistance(_heli)
             local _crate = ctld.getClosestCrate(_heli, _crates)
             ctld.logTrace("FG_ ctld.unpackCrates._crate =  %s", ctld.p(_crate))
-    
+
             if ctld.inLogisticsZone(_heli) == true or ctld.farEnoughFromLogisticZone(_heli) == false then
                 ctld.displayMessageToGroup(_heli,
                     ctld.i18n_translate("You can't unpack that here! Take it to where it's needed!"), 20)
@@ -4015,7 +4017,7 @@ function ctld.unpackCrates(_arguments)
                     ctld.logTrace("_crate =  %s", ctld.p(_crate))
                     local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _point }, { _crate.details.unit }, { _crateHdg })
                     ctld.logTrace("_spawnedGroups =  %s", ctld.p(_spawnedGroups))
-                    
+
                     if _heli:getCoalition() == 1 then
                         ctld.spawnedCratesRED[_crateName] = nil
                     else
@@ -5026,7 +5028,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
         if ctld.unitDynamicCargoCapable(_heli) == true then
             _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
         end
-        
+
         local _crateHdg = mist.getHeading(_nearestCrate.crateUnit, true)
 
         -- destroy crates
@@ -5864,208 +5866,203 @@ end
 -- Adds menuitem to a human unit
 function ctld.addTransportF10MenuOptions(_unitName)
     ctld.logDebug("ctld.addTransportF10MenuOptions(_unitName=[%s])", ctld.p(_unitName))
-    local status, error = pcall(function()
-        local _unit = ctld.getTransportUnit(_unitName)
-        ctld.logTrace("_unit = %s", ctld.p(_unit))
+    local _unit = ctld.getTransportUnit(_unitName)
+    ctld.logTrace("_unit = %s", ctld.p(_unit))
 
-        if _unit then
-            local _unitTypename = _unit:getTypeName()
-            local _groupId = ctld.getGroupId(_unit)
-            if _groupId then
-                -- ctld.logTrace("_groupId = %s", ctld.p(_groupId))
-                -- ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo[tostring(_groupId)]))
-                if ctld.addedTo[tostring(_groupId)] == nil then
-                    ctld.logTrace("adding CTLD menu for _groupId = %s", ctld.p(_groupId))
-                    local _rootPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("CTLD"))
-                    local _unitActions = ctld.getUnitActions(_unitTypename)
-                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Check Cargo"), _rootPath, ctld.checkTroopStatus, { _unitName })
-                    if _unitActions.troops then
-                        local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Troop Transport"), _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload / Extract Troops"),
-                            _troopCommandsPath, ctld.unloadExtractTroops, { _unitName })
+    if _unit then
+        local _unitTypename = _unit:getTypeName()
+        local _groupId = ctld.getGroupId(_unit)
+        if _groupId then
+            -- ctld.logTrace("_groupId = %s", ctld.p(_groupId))
+            -- ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo[tostring(_groupId)]))
+            if ctld.addedTo[tostring(_groupId)] == nil then
+                ctld.logTrace("adding CTLD menu for _groupId = %s", ctld.p(_groupId))
+                local _rootPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("CTLD"))
+                local _unitActions = ctld.getUnitActions(_unitTypename)
+                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Check Cargo"), _rootPath, ctld.checkTroopStatus, { _unitName })
+                if _unitActions.troops then
+                    local _troopCommandsPath = missionCommands.addSubMenuForGroup(_groupId,ctld.i18n_translate("Troop Transport"), _rootPath)
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload / Extract Troops"),
+                        _troopCommandsPath, ctld.unloadExtractTroops, { _unitName })
 
-                        -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
-                        local _transportLimit = ctld.getTransportLimit(_unitTypename)
-                        local itemNb = 0
-                        local menuEntries = {}
-                        local menuPath = _troopCommandsPath
-                        for _, _loadGroup in pairs(ctld.loadableGroups) do
-                            if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
-                                -- check size & unit
-                                if _transportLimit >= _loadGroup.total then
-                                    table.insert(menuEntries,
-                                        { text = ctld.i18n_translate("Load ") .. _loadGroup.name, group = _loadGroup })
-                                end
+                    -- local _loadPath = missionCommands.addSubMenuForGroup(_groupId, "Load From Zone", _troopCommandsPath)
+                    local _transportLimit = ctld.getTransportLimit(_unitTypename)
+                    local itemNb = 0
+                    local menuEntries = {}
+                    local menuPath = _troopCommandsPath
+                    for _, _loadGroup in pairs(ctld.loadableGroups) do
+                        if not _loadGroup.side or _loadGroup.side == _unit:getCoalition() then
+                            -- check size & unit
+                            if _transportLimit >= _loadGroup.total then
+                                table.insert(menuEntries,
+                                    { text = ctld.i18n_translate("Load ") .. _loadGroup.name, group = _loadGroup })
                             end
-                        end
-                        for _i, _menu in ipairs(menuEntries) do
-                            -- add the menu item
-                            itemNb = itemNb + 1
-                            if itemNb == 9 and _i < #menuEntries then                                     -- page limit reached (first item is "unload")
-                                menuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Next page"),
-                                    menuPath)
-                                itemNb = 1
-                            end
-                            missionCommands.addCommandForGroup(_groupId, _menu.text, menuPath, ctld.loadTroopsFromZone,
-                                { _unitName, true, _menu.group, false })
-                        end
-                        if ctld.unitCanCarryVehicles(_unit) then
-                            local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId,
-                                ctld.i18n_translate("Vehicle / FOB Transport"), _rootPath)
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload Vehicles"),
-                                _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
-                                _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
-
-                            if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
-                                missionCommands.addCommandForGroup(_groupId,
-                                    ctld.i18n_translate("Load / Unload FOB Crate"), _vehicleCommandsPath,
-                                    ctld.loadUnloadFOBCrate, { _unitName, false })
-                            end
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Check Cargo"),
-                                _vehicleCommandsPath, ctld.checkTroopStatus, { _unitName })
                         end
                     end
+                    for _i, _menu in ipairs(menuEntries) do
+                        -- add the menu item
+                        itemNb = itemNb + 1
+                        if itemNb == 9 and _i < #menuEntries then                                     -- page limit reached (first item is "unload")
+                            menuPath = missionCommands.addSubMenuForGroup(_groupId, ctld.i18n_translate("Next page"),
+                                menuPath)
+                            itemNb = 1
+                        end
+                        missionCommands.addCommandForGroup(_groupId, _menu.text, menuPath, ctld.loadTroopsFromZone,
+                            { _unitName, true, _menu.group, false })
+                    end
+                    if ctld.unitCanCarryVehicles(_unit) then
+                        local _vehicleCommandsPath = missionCommands.addSubMenuForGroup(_groupId,
+                            ctld.i18n_translate("Vehicle / FOB Transport"), _rootPath)
+                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unload Vehicles"),
+                            _vehicleCommandsPath, ctld.unloadTroops, { _unitName, false })
+                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load / Extract Vehicles"),
+                            _vehicleCommandsPath, ctld.loadTroopsFromZone, { _unitName, false, "", true })
 
-                    if ctld.enableCrates and _unitActions.crates then
-                        if ctld.unitCanCarryVehicles(_unit) == false then
-                            -- sort the crate categories alphabetically
-                            local crateCategories = {}
-                            for category, _ in pairs(ctld.spawnableCrates) do
-                                table.insert(crateCategories, category)
+                        if ctld.enabledFOBBuilding and ctld.staticBugWorkaround == false then
+                            missionCommands.addCommandForGroup(_groupId,
+                                ctld.i18n_translate("Load / Unload FOB Crate"), _vehicleCommandsPath,
+                                ctld.loadUnloadFOBCrate, { _unitName, false })
+                        end
+                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Check Cargo"),
+                            _vehicleCommandsPath, ctld.checkTroopStatus, { _unitName })
+                    end
+                end
+
+                if ctld.enableCrates and _unitActions.crates then
+                    if ctld.unitCanCarryVehicles(_unit) == false then
+                        -- sort the crate categories alphabetically
+                        local crateCategories = {}
+                        for category, _ in pairs(ctld.spawnableCrates) do
+                            table.insert(crateCategories, category)
+                        end
+                        table.sort(crateCategories)
+                        --ctld.logTrace("crateCategories = [%s]", ctld.p(crateCategories))
+
+                        -- add menu for spawning crates
+                        local itemNbMain = 0
+                        local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId,
+                            ctld.i18n_translate("Crates: Vehicle / FOB / Drone"), _rootPath)
+
+                        for _i, _category in ipairs(crateCategories) do
+                            local _subMenuName = _category
+                            local _crates = ctld.spawnableCrates[_subMenuName]
+
+                            -- add the submenu item
+                            itemNbMain = itemNbMain + 1
+                            if itemNbMain == 10 and _i < #crateCategories then    -- page limit reached
+                                _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId,
+                                    ctld.i18n_translate("Next page"), _cratesMenuPath)
+                                itemNbMain = 1
                             end
-                            table.sort(crateCategories)
-                            --ctld.logTrace("crateCategories = [%s]", ctld.p(crateCategories))
-
-                            -- add menu for spawning crates
-                            local itemNbMain = 0
-                            local _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId,
-                                ctld.i18n_translate("Crates: Vehicle / FOB / Drone"), _rootPath)
-
-                            for _i, _category in ipairs(crateCategories) do
-                                local _subMenuName = _category
-                                local _crates = ctld.spawnableCrates[_subMenuName]
-
-                                -- add the submenu item
-                                itemNbMain = itemNbMain + 1
-                                if itemNbMain == 10 and _i < #crateCategories then    -- page limit reached
-                                    _cratesMenuPath = missionCommands.addSubMenuForGroup(_groupId,
-                                        ctld.i18n_translate("Next page"), _cratesMenuPath)
-                                    itemNbMain = 1
-                                end
-                                local itemNbSubmenu = 0
-                                local menuEntries = {}
-                                local _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratesMenuPath)
-                                for _, _crate in pairs(_crates) do
-                                    --ctld.logTrace("_crate = [%s]", ctld.p(_crate))
-                                    if not (_crate.multiple) or ctld.enableAllCrates then
-                                        local isJTAC = ctld.isJTACUnitType(_crate.unit)
-                                        --ctld.logTrace("isJTAC = [%s]", ctld.p(isJTAC))
-                                        if not isJTAC or (isJTAC and ctld.JTAC_dropEnabled) then
-                                            if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
-                                                local _crateRadioMsg = _crate.desc
-                                                --add in the number of crates required to build something
-                                                if _crate.cratesRequired ~= nil and _crate.cratesRequired > 1 then
-                                                    _crateRadioMsg = _crateRadioMsg .. " (" .. _crate.cratesRequired ..
-                                                    ")"
-                                                end
-                                                if _crate.multiple then
-                                                    _crateRadioMsg = "* " .. _crateRadioMsg
-                                                end
-                                                local _menuEntry = { text = _crateRadioMsg, crate = _crate }
-                                                --ctld.logTrace("_menuEntry = [%s]", ctld.p(_menuEntry))
-                                                table.insert(menuEntries, _menuEntry)
+                            local itemNbSubmenu = 0
+                            local menuEntries = {}
+                            local _subMenuPath = missionCommands.addSubMenuForGroup(_groupId, _subMenuName, _cratesMenuPath)
+                            for _, _crate in pairs(_crates) do
+                                --ctld.logTrace("_crate = [%s]", ctld.p(_crate))
+                                if not (_crate.multiple) or ctld.enableAllCrates then
+                                    local isJTAC = ctld.isJTACUnitType(_crate.unit)
+                                    --ctld.logTrace("isJTAC = [%s]", ctld.p(isJTAC))
+                                    if not isJTAC or (isJTAC and ctld.JTAC_dropEnabled) then
+                                        if _crate.side == nil or (_crate.side == _unit:getCoalition()) then
+                                            local _crateRadioMsg = _crate.desc
+                                            --add in the number of crates required to build something
+                                            if _crate.cratesRequired ~= nil and _crate.cratesRequired > 1 then
+                                                _crateRadioMsg = _crateRadioMsg .. " (" .. _crate.cratesRequired ..
+                                                ")"
                                             end
+                                            if _crate.multiple then
+                                                _crateRadioMsg = "* " .. _crateRadioMsg
+                                            end
+                                            local _menuEntry = { text = _crateRadioMsg, crate = _crate }
+                                            --ctld.logTrace("_menuEntry = [%s]", ctld.p(_menuEntry))
+                                            table.insert(menuEntries, _menuEntry)
                                         end
                                     end
                                 end
-                                for _i, _menu in ipairs(menuEntries) do
-                                    --ctld.logTrace("_menu = [%s]", ctld.p(_menu))
-                                    -- add the submenu item
-                                    itemNbSubmenu = itemNbSubmenu + 1
-                                    if itemNbSubmenu == 10 and _i < #menuEntries then     -- page limit reached
-                                        _subMenuPath = missionCommands.addSubMenuForGroup(_groupId,
-                                            ctld.i18n_translate("Next page"), _subMenuPath)
-                                        itemNbSubmenu = 1
-                                    end
-                                    missionCommands.addCommandForGroup(_groupId, _menu.text, _subMenuPath,
-                                        ctld.spawnCrate, { _unitName, _menu.crate.weight })
+                            end
+                            for _i, _menu in ipairs(menuEntries) do
+                                --ctld.logTrace("_menu = [%s]", ctld.p(_menu))
+                                -- add the submenu item
+                                itemNbSubmenu = itemNbSubmenu + 1
+                                if itemNbSubmenu == 10 and _i < #menuEntries then     -- page limit reached
+                                    _subMenuPath = missionCommands.addSubMenuForGroup(_groupId,
+                                        ctld.i18n_translate("Next page"), _subMenuPath)
+                                    itemNbSubmenu = 1
                                 end
+                                missionCommands.addCommandForGroup(_groupId, _menu.text, _subMenuPath,
+                                    ctld.spawnCrate, { _unitName, _menu.crate.weight })
                             end
                         end
                     end
-                    
-                    if (ctld.enabledFOBBuilding or ctld.enableCrates) and _unitActions.crates then
-                        local _crateCommands = missionCommands.addSubMenuForGroup(_groupId,
-                            ctld.i18n_translate("CTLD Commands"), _rootPath)
-                        if ctld.vehicleCommandsPath[_unitName] == nil then
-                            ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_crateCommands)
-                        end
-                        if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
-                            if ctld.loadCrateFromMenu then
-                                missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate(s)"),
-                                    _crateCommands, ctld.loadNearbyCrate, _unitName)
-                            end
-                        end
-
-                        if ctld.loadCrateFromMenu or ctld.hoverPickup then
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Crate(s)"),
-                                _crateCommands, ctld.dropSlingCrate, { _unitName })
-                        end
-
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unpack Any Crate"),
-                            _crateCommands, ctld.unpackCrates, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Nearby Crates"),
-                            _crateCommands, ctld.listNearbyCrates, { _unitName })
-
-                        if ctld.enabledFOBBuilding then
-                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List FOBs"), _crateCommands,
-                                ctld.listFOBS, { _unitName })
-                        end
-
-                        if  ctld.enableRepackingVehicles == true then
-                            ctld.updateRepackMenu( _unitName )        -- add repack menu
-                        end
-                    end
-
-                    if ctld.enableSmokeDrop then
-                        local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId,
-                            ctld.i18n_translate("Smoke Markers"), _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Red Smoke"), _smokeMenu,
-                            ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Blue Smoke"), _smokeMenu,
-                            ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Orange Smoke"), _smokeMenu,
-                            ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Green Smoke"), _smokeMenu,
-                            ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
-                    end
-
-                    if ctld.enabledRadioBeaconDrop then
-                        local _radioCommands = missionCommands.addSubMenuForGroup(_groupId,
-                            ctld.i18n_translate("Radio Beacons"), _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands,
-                            ctld.listRadioBeacons, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Beacon"), _radioCommands,
-                            ctld.dropRadioBeacon, { _unitName })
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Remove Closest Beacon"),
-                            _radioCommands, ctld.removeRadioBeacon, { _unitName })
-                    elseif ctld.deployedRadioBeacons ~= {} then
-                        local _radioCommands = missionCommands.addSubMenuForGroup(_groupId,
-                            ctld.i18n_translate("Radio Beacons"), _rootPath)
-                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands,
-                            ctld.listRadioBeacons, { _unitName })
-                    end
-
-                    ctld.addedTo[tostring(_groupId)] = true
-                    ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
-                    ctld.logTrace("done adding CTLD menu for _groupId = %s", ctld.p(_groupId))
                 end
+
+                if (ctld.enabledFOBBuilding or ctld.enableCrates) and _unitActions.crates then
+                    local _crateCommands = missionCommands.addSubMenuForGroup(_groupId,
+                        ctld.i18n_translate("CTLD Commands"), _rootPath)
+                    if ctld.vehicleCommandsPath[_unitName] == nil then
+                        ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_crateCommands)
+                    end
+                    if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
+                        if ctld.loadCrateFromMenu then
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Load Nearby Crate(s)"),
+                                _crateCommands, ctld.loadNearbyCrate, _unitName)
+                        end
+                    end
+
+                    if ctld.loadCrateFromMenu or ctld.hoverPickup then
+                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Crate(s)"),
+                            _crateCommands, ctld.dropSlingCrate, { _unitName })
+                    end
+
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Unpack Any Crate"),
+                        _crateCommands, ctld.unpackCrates, { _unitName })
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Nearby Crates"),
+                        _crateCommands, ctld.listNearbyCrates, { _unitName })
+
+                    if ctld.enabledFOBBuilding then
+                        missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List FOBs"), _crateCommands,
+                            ctld.listFOBS, { _unitName })
+                    end
+
+                    if  ctld.enableRepackingVehicles == true then
+                        ctld.updateRepackMenu( _unitName )        -- add repack menu
+                    end
+                end
+
+                if ctld.enableSmokeDrop then
+                    local _smokeMenu = missionCommands.addSubMenuForGroup(_groupId,
+                        ctld.i18n_translate("Smoke Markers"), _rootPath)
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Red Smoke"), _smokeMenu,
+                        ctld.dropSmoke, { _unitName, trigger.smokeColor.Red })
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Blue Smoke"), _smokeMenu,
+                        ctld.dropSmoke, { _unitName, trigger.smokeColor.Blue })
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Orange Smoke"), _smokeMenu,
+                        ctld.dropSmoke, { _unitName, trigger.smokeColor.Orange })
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Green Smoke"), _smokeMenu,
+                        ctld.dropSmoke, { _unitName, trigger.smokeColor.Green })
+                end
+
+                if ctld.enabledRadioBeaconDrop then
+                    local _radioCommands = missionCommands.addSubMenuForGroup(_groupId,
+                        ctld.i18n_translate("Radio Beacons"), _rootPath)
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands,
+                        ctld.listRadioBeacons, { _unitName })
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Drop Beacon"), _radioCommands,
+                        ctld.dropRadioBeacon, { _unitName })
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Remove Closest Beacon"),
+                        _radioCommands, ctld.removeRadioBeacon, { _unitName })
+                elseif ctld.deployedRadioBeacons ~= {} then
+                    local _radioCommands = missionCommands.addSubMenuForGroup(_groupId,
+                        ctld.i18n_translate("Radio Beacons"), _rootPath)
+                    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("List Beacons"), _radioCommands,
+                        ctld.listRadioBeacons, { _unitName })
+                end
+
+                ctld.addedTo[tostring(_groupId)] = true
+                ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
+                ctld.logTrace("done adding CTLD menu for _groupId = %s", ctld.p(_groupId))
             end
         end
-    end)
-    if (not status) then
-        ctld.logError(string.format("Error adding f10 to transport: %s", error))
     end
 end
 
@@ -7773,7 +7770,7 @@ function ctld.TreatOrbitJTAC(params, t)
             if ctld.JTACInRoute[k] == nil and  ctld.OrbitInUse[k] == nil then		-- if JTAC is in route
                 ctld.JTACInRoute[k] = timer.getTime()		-- update time of the last run
             end
-            
+
             if ctld.jtacCurrentTargets[k] ~= nil then		       -- if target lased by JTAC
                 local droneAlti = Unit.getByName(k):getPoint().y
                 if ctld.OrbitInUse[k] == nil then		-- if JTAC is not in orbit => start orbiting and update start time
@@ -7784,7 +7781,7 @@ function ctld.TreatOrbitJTAC(params, t)
                     if timer.getTime() > (ctld.OrbitInUse[k] + 60) then   	                     -- each 60" update orbit coord 
                         ctld.StartOrbitGroup(k, ctld.jtacCurrentTargets[k].name, droneAlti, 100) -- do orbit JTAC
                         ctld.OrbitInUse[k] = timer.getTime()			          -- update time of the last orbit run 
-                    end 
+                    end
                 end
             else                                                   -- if JTAC have no target
                 if ctld.InOrbitList(k) == true then				   -- JTAC orbiting, without target => stop orbit
@@ -7802,12 +7799,12 @@ end
 -- Make orbit the group "_grpName", on target "_unitTargetName".  _alti in meters, speed in km/h
 function ctld.StartOrbitGroup(_jtacUnitName, _unitTargetName, _alti, _speed)
 	if (Unit.getByName(_unitTargetName) ~= nil) and (Unit.getByName(_jtacUnitName) ~= nil) then			-- si target unit and JTAC group exist
-		local orbit = { id     = 'Orbit', 
+		local orbit = { id     = 'Orbit',
                         params = {pattern = 'Circle',
                                   point = mist.utils.makeVec2(mist.getAvgPos(mist.makeUnitTable({_unitTargetName}))),
                                   speed = _speed,
                                   altitude = _alti
-                                 } 
+                                 }
                       }
         local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
         Unit.getByName(_jtacUnitName):getController():popTask()	                      -- stop current Task
@@ -7818,10 +7815,10 @@ end
 -- test if one unitName already is targeted by a JTAC
 function ctld.InOrbitList(_grpName)
     for k, v in pairs(ctld.OrbitInUse) do			-- for each orbit in use
-		if k == _grpName then 
+		if k == _grpName then
 			return true
 		end
-	end 
+	end
 	return false
 end
 -------------------------------------------------------------------------------------------
@@ -7853,10 +7850,10 @@ function ctld.backToRoute(_jtacUnitName)
     local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
     --local JTACRoute     = mist.getGroupRoute(jtacGroupName, true)   -- get the initial editor route of the current group
     local JTACRoute     = mist.utils.deepCopy(mist.getGroupRoute(jtacGroupName, true))   -- get the initial editor route of the current group
-    local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName)) 
+    local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
 
-    local Mission       = {} 	
-    Mission = { id = 'Mission', params = {route = {points = newJTACRoute}}} 
+    local Mission       = {}
+    Mission = { id = 'Mission', params = {route = {points = newJTACRoute}}}
 
     -- unactive orbit mode if it's on
     if ctld.InOrbitList(_jtacUnitName) == true then					-- if JTAC orbiting => stop it
@@ -7910,11 +7907,11 @@ function ctld.adjustRoute(_initialRouteTable, _firstWpOfNewRoute)  -- create a r
                                 if idx2 == #adjustedRoute then
                                     lastWpAsAlreadySwitchWaypoint = true
                                 end
-                            
+
                             end
-                        
+
                         end
-                    
+
                     else	-- for "ControlledTask"
                         if adjustedRoute[idx2].task.params.tasks[j].params and
                            adjustedRoute[idx2].task.params.tasks[j].params.task and
@@ -8495,7 +8492,7 @@ end
 --- Handle world events.
 ctld.eventHandler = {}
 function ctld.eventHandler:onEvent(event)
-    ctld.logTrace("ctld.eventHandler:onEvent()")
+    --ctld.logTrace("ctld.eventHandler:onEvent()")
     if event == nil then
         ctld.logError("Event handler was called with a nil event!")
         return
@@ -8508,7 +8505,7 @@ function ctld.eventHandler:onEvent(event)
     elseif event.id == world.event.S_EVENT_BIRTH then
         eventName = "S_EVENT_BIRTH"
     else
-        ctld.logTrace("Ignoring event %s", ctld.p(event))
+        --ctld.logTrace("Ignoring event %s", ctld.p(event))
         return
     end
     ctld.logDebug("caught event %s: %s", ctld.p(eventName), ctld.p(event))
