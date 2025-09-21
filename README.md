@@ -134,6 +134,8 @@ Optionaly, you can disable the STTS (text to speech over SRS) feature (4).
 ### Script Setup
 **This script requires MIST supplied in the CTLD zipped pack to correctly manage dynamic spwans.
 
+<span style="color:red">This script requires MIST supplied in the CTLD zipped pack to correctly manage dynamic spwans.</span>
+
 First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a "TIME MORE" of 1. "TIME MORE" means run the actions after X seconds into the mission.
 
 If you want to make use of translations (internationalization features, a.k.a. "i18n"), you need to load the `CTLD-i18n.lua` script _before_ CTLD. Do this by adding a second trigger with a "TIME MORE" and a DO SCRIPT of `CTLD-i18n.lua`. 
