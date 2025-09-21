@@ -818,7 +818,9 @@ ctld.vehicleTransportEnabled = {
 -- We will also use this to make modifications to the menu and other checks and messages
 ctld.dynamicCargoUnits = {
    "CH-47Fbl1",
-   --"UH-1H",
+   "UH-1H",
+   "Mi-8MT",
+   "Mi-24P",
 }
 
 -- ************** Maximum Units SETUP for UNITS ******************
