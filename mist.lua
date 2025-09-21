@@ -826,11 +826,11 @@ do -- the main scope
 							if zone.verticies then
 								local offset = {}
 								for i = 1, #zone.verticies do
-									table.insert(offset, {dist = mist.utils.get2DDist(uRef.point, zone.verticies[i]), heading = mist.getHeadingPoints(uRef.point, zone.verticies[i]) + uRef.heading})
+									table.insert(offset, {dist = mist.utils.get2DDist(uRef.point, zone.verticies[i]), heading = mist.utils.getHeadingPoints(uRef.point, zone.verticies[i]) + uRef.heading})
 								end
 								zone.offset = offset
 							else
-								zone.offset = {dist = mist.utils.get2DDist(uRef.point, zone.point), heading = mist.getHeadingPoints(uRef.point, zone.point) + uRef.heading}
+								zone.offset = {dist = mist.utils.get2DDist(uRef.point, zone.point), heading = mist.utils.getHeadingPoints(uRef.point, zone.point) + uRef.heading}
 							end
 						end
 					end
