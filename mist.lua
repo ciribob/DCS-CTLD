@@ -35,7 +35,7 @@ mist = {}
 -- don't change these
 mist.majorVersion = 4
 mist.minorVersion = 5
-mist.build = "128-DYNSLOTS-01"
+mist.build = "128-DYNSLOTS-02"
 
 -- forward declaration of log shorthand
 local log
