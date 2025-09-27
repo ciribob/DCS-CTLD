@@ -41,7 +41,7 @@ end
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.5.2"
+ctld.Version = "1.5.3"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -4226,8 +4226,7 @@ function ctld.dropSlingCrate(_args)
                     _position = "6"
                 end
                 ctld.displayMessageToGroup(_heli,
-                    ctld.i18n_translate("%1 crate has been safely unhooked and is at your %2 o'clock", _crate.desc,
-                        _position), 10)
+                    ctld.i18n_translate("%1 crate has been safely unhooked and is at your %2 o'clock", _crate.desc, _position), 10)
             elseif _heightDiff > 7.5 and _heightDiff <= 40.0 then
                 ctld.displayMessageToGroup(_heli,
                     ctld.i18n_translate("%1 crate has been safely dropped below you", _crate.desc), 10)
@@ -5749,7 +5748,7 @@ function ctld.unitDynamicCargoCapable(_unit)
         --ctld.logDebug("ctld.unitDynamicCargoCapable(_type=[%s])", ctld.p(_type))
         for _, _name in ipairs(ctld.dynamicCargoUnits) do
             local _nameLower = string.lower(_name)
-            if string.find(_type, _nameLower, 1, true) then             --string.match does not work with patterns containing '-' as it is a magic character
+            if string.find(_type, _nameLower, 1, true) then    --string.match does not work with patterns containing '-' as it is a magic character
                 result = true
                 break
             end
@@ -8543,7 +8542,7 @@ function ctld.eventHandler:onEvent(event)
                     for _, aircraftType in pairs(ctld.aircraftTypeTable) do
                         if aircraftType == playerTypeName then
                             ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
-                            if ctld.isValueInIpairTable(ctld.transportPilotNames, unitName) == false then
+                            if ctld.tools.isValueInIpairTable(ctld.transportPilotNames, unitName) == false then
                                 table.insert(ctld.transportPilotNames, unitName)  -- add transport unit to the list
                             end
                             if ctld.addedTo[tostring(_groupId)] == nil then  -- only if menu not already set up
@@ -8621,7 +8620,8 @@ function ctld.RandomReal(mini, maxi)
 end
 
 -- Tools
-function ctld.isValueInIpairTable(tab, value)
+ctld.tools = {}
+function ctld.tools.isValueInIpairTable(tab, value)
     for i, v in ipairs(tab) do
       if v == value then
         return true -- La valeur existe
@@ -8629,6 +8629,58 @@ function ctld.isValueInIpairTable(tab, value)
     end
     return false -- La valeur n'existe pas
   end
+------------------------------------------------------------------------------------
+--- Calculates the orientation of an end point relative to a reference point.
+--- The calculation takes into account the current orientation of the reference point.
+---
+--- @param refLat number Latitude of the reference point in degrees.
+--- @param refLon number Longitude of the reference point in degrees.
+--- @param refHeading number Current orientation of the reference point in degrees (0 = North, 90 = East).
+--- @param destLat number Latitude of the arrival point in degrees.
+--- @param destLon number Longitude of the arrival point in degrees.
+--- @param resultFormat string The desired output format: "radian", "degree" or "clock".
+--- @return number The relative orientation in the specified resultFormat.
+function ctld.tools.getRelativeBearing(refLat, refLon, refHeading, destLat, destLon, resultFormat)
+  -- Converting degrees to radians for geometric calculations
+  local radrefLat = math.rad(refLat)
+  local raddestLat = math.rad(destLat)
+  local radrefLon = math.rad(refLon)
+  local raddestLon = math.rad(destLon)
+  local radrefHeading = math.rad(refHeading)
+
+  -- Calculating the longitude difference between the two points
+  local deltaLon = raddestLon - radrefLon
+
+  -- Using the great circle formula for azimuth (bearing)
+  -- This formula is based on spherical trigonometry and uses atan2
+  -- to correctly handle all quadrants.
+  local y = math.sin(deltaLon) * math.cos(raddestLat)
+  local x = math.cos(radrefLat) * math.sin(raddestLat) - math.sin(radrefLat) * math.cos(raddestLat) * math.cos(deltaLon)
+  local absoluteBearingRad = math.atan2(y, x)
+
+  -- Calculate relative orientation by subtracting the reference refHeading
+  local relativeBearingRad = absoluteBearingRad - radrefHeading
+
+  -- Normalizes the angle to be in the range [-pi, pi]
+  -- This ensures a consistent angle, whether positive or negative.
+  local normalizedRad = (relativeBearingRad + math.pi) % (2 * math.pi) - math.pi
+
+  -- Returns the value in the requested resultFormat
+  if resultFormat == "radian" then
+    return normalizedRad, resultFormat
+  elseif resultFormat == "clock" then
+    -- Convert to clock position (12h = front, 3h = right, 6h = back, etc..)
+    local bearingDeg = math.deg(normalizedRad)
+    local clockPosition = ((bearingDeg + 360) % 360) / 30
+    clockPosition =  clockPosition >= 0 and math.floor(clockPosition + 0.5) or math.ceil(clockPosition - 0.5), resultFormat		-- rounded clockPosition
+    if clockPosition == 0 then clockPosition = 12 end
+    return clockPosition, resultFormat
+  else -- By default, the resultFormat is "degree"
+    resultFormat = "degree"
+    local bearingDeg = math.deg(normalizedRad)
+    return (bearingDeg + 360) % 360, resultFormat
+  end
+end
 
 --- Enable/Disable error boxes displayed on screen.
 env.setErrorMessageBoxEnabled(false)
