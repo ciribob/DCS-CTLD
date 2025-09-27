@@ -2628,7 +2628,7 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
  
             local destLat, destLon, destAlt = coord.LOtoLL(_point)	
 
-            local relativePos, forma = ctld.Tools.getRelativeBearing(refLat, refLon, refHeading, destLat, destLon, 'clock')
+            local relativePos, forma = ctld.tools.getRelativeBearing(refLat, refLon, refHeading, destLat, destLon, 'clock')
                 
             ctld.displayMessageToGroup(_heli,
                 ctld.i18n_translate("A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock ",
