@@ -2620,10 +2620,19 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 
             -- add to move table
             ctld.crateMove[_name] = _name
+                
+            local refPoint = _heli:getPoint()
+            local refLat, refLon = coord.LOtoLL(refPoint)
+            local unitPos = _heli:getPosition()
+   			local refHeading = math.deg(math.atan2(unitPos.x.z, unitPos.x.x))
+ 
+            local destLat, destLon, destAlt = coord.LOtoLL(_point)	
 
+            local relativePos, forma = ctld.Tools.getRelativeBearing(refLat, refLon, refHeading, destLat, destLon, 'clock')
+                
             ctld.displayMessageToGroup(_heli,
                 ctld.i18n_translate("A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock ",
-                    _crateType.desc, _crateType.weight, _position), 20)
+                    _crateType.desc, _crateType.weight, relativePos), 20)
         else
             env.info("Couldn't find crate item to spawn")
         end
