@@ -891,6 +891,7 @@ ctld.internalCargoLimits = {
     -- Remove the -- below to turn on options
     ["Mi-8MT"] = 2,
     ["CH-47Fbl1"] = 8,
+    ["UH-1H"] = 3,        -- to remove after debug
 }
 
 
