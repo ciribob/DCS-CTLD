@@ -41,7 +41,7 @@ end
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.5.3"
+ctld.Version = "1.6.0-alpha"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
