@@ -132,7 +132,7 @@ Optionaly, you can disable the STTS (text to speech over SRS) feature (4).
 ![dynamic_loading]
 
 ### Script Setup
-**This script requires MIST version 4.0.57 or above: https://github.com/mrSkortch/MissionScriptingTools**
+🔴IMPORTANT: This script requires MIST supplied in the CTLD zipped pack to correctly manage dynamic spwans.
 
 First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a "TIME MORE" of 1. "TIME MORE" means run the actions after X seconds into the mission.
 
