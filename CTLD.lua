@@ -12,6 +12,9 @@
         See https://github.com/ciribob/DCS-CTLD for a user manual and the latest version
 
         Contributors:
+                - FullGas1 - https://github.com/FullGas1 (i18n concept, FR and SP translations)
+                - Rex (VEAF) - https://github.com/RexAttaque (code, testing, JTAC)
+                - Zip (VEAF) - https://github.com/davidp57 (project management, code, testing)
                 - Steggles - https://github.com/Bob7heBuilder
                 - mvee - https://github.com/mvee
                 - jmontleon - https://github.com/jmontleon
@@ -21,7 +24,6 @@
                 - Proxy404 - https://github.com/Proxy404
                 - atcz - https://github.com/atcz
                 - marcos2221- https://github.com/marcos2221
-                - FullGas1 - https://github.com/FullGas1 (i18n concept, FR and SP translations)
 
         Add [issues](https://github.com/ciribob/DCS-CTLD/issues) to the GitHub repository if you want to report a bug or suggest a new feature.
 
@@ -41,7 +43,7 @@ end
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.6.0-alpha"
+ctld.Version = "1.6.1"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -612,6 +614,7 @@ ctld.aircraftTypeTable = {
     --"Mirage-F1DDA",
     --"Su-25T",
     --"Yak-52",
+    "C-130J-30",
 
     --%%%%% WARBIRDS %%%%%
     --"Bf-109K-4",
@@ -809,6 +812,7 @@ ctld.logisticUnits = {
 ctld.vehicleTransportEnabled = {
     "76MD",     -- the il-76 mod doesnt use a normal - sign so il-76md wont match... !!!! GRR
     "Hercules",
+    "C-130J-30",
     --"CH-47Fbl1",
 }
 
@@ -821,6 +825,7 @@ ctld.dynamicCargoUnits = {
    "UH-1H",
    "Mi-8MT",
    "Mi-24P",
+   "C-130J-30"
 }
 
 -- ************** Maximum Units SETUP for UNITS ******************
@@ -869,6 +874,7 @@ ctld.unitLoadLimits = {
     --["Mirage-F1DDA"] = 1,
     --["Su-25T"] = 1,
     --["Yak-52"] = 1,
+    ["C-130J-30"] = 80
 
     --%%%%% WARBIRDS %%%%%
     --["Bf-109K-4"] = 1,
@@ -891,7 +897,7 @@ ctld.internalCargoLimits = {
     -- Remove the -- below to turn on options
     ["Mi-8MT"] = 2,
     ["CH-47Fbl1"] = 8,
-    ["UH-1H"] = 3,        -- to remove after debug
+    ["C-130J-30"] = 20
 }
 
 
@@ -920,6 +926,7 @@ ctld.unitActions = {
     ["Hercules"] = { crates = true, troops = true },
     ["SK-60"] = { crates = true, troops = true },
     ["UH-60L"] = { crates = true, troops = true },
+    ["C-130J-30"] = { crates = true, troops = true },
     --["T-45"] = {crates=true, troops=true},
 
     --%%%%% CHOPPERS %%%%%
@@ -1928,19 +1935,24 @@ function ctld.spawnCrateAtPoint(_side, _weight, _point, _hdg)
 end
 
 -- ***************************************************************
-function ctld.getSecureDistanceFromUnit(_unitName)	-- return a distance between the center of unitName, to be sure not touch the unitName
-    local rotorDiameter = 0 --19    -- meters  -- õk for UH & CH47
-    if Unit.getByName(_unitName) then
-        local unitUserBox = Unit.getByName(_unitName):getDesc().box
-        local SecureDistanceFromUnit = 0
+function ctld.getSecureDistanceFromUnit(_unitOrName)	-- return a distance between the center of unitName, to be sure not touch the unitName
+    local rotorDiameter = 19    -- meters  -- ok for UH & CH47
+    local unit = _unitOrName
+    if type(unit) == "string" then
+        unit = Unit.getByName(_unitOrName)
+    end
+    local secureDistanceFromUnit = rotorDiameter
+    if unit then
+        local unitUserBox = unit:getDesc().box
+        if unitUserBox then
         if math.abs(unitUserBox.max.x) >= math.abs(unitUserBox.min.x) then
-            SecureDistanceFromUnit = math.abs(unitUserBox.max.x) + (rotorDiameter/2)
+                secureDistanceFromUnit = math.abs(unitUserBox.max.x) + (rotorDiameter/2)
         else
-            SecureDistanceFromUnit = math.abs(unitUserBox.min.x) + (rotorDiameter/2)
+                secureDistanceFromUnit = math.abs(unitUserBox.min.x) + (rotorDiameter/2)
         end
-		return SecureDistanceFromUnit
 	end
-	return nil
+	end
+    return secureDistanceFromUnit
 end
 
 -- ***************************************************************
@@ -2607,7 +2619,7 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 
             if ctld.unitDynamicCargoCapable(_heli) then
                 _model_type = "dynamic"
-                _point = ctld.getPointAt6Oclock(_heli, 15)
+                _point = ctld.getPointAt6Oclock(_heli, ctld.getSecureDistanceFromUnit(_heli))
                 _position = "6"
             end
 
@@ -3907,7 +3919,7 @@ function ctld.getClosestCrate(_heli, _crates, _type)
     local _shortestDistance = -1
     local _distance = 0
     local _minimumDistance = 5     -- prevents dynamic cargo crates from unpacking while in cargo hold
-    local _maxDistance     = 20    -- prevents onboard dynamic cargo crates from unpacking requested by other helo
+    local _maxDistance     = 75    -- prevents onboard dynamic cargo crates from unpacking requested by other helo
     for _, _crate in pairs(_crates) do
         if (_crate.details.unit == _type or _type == nil) then
             _distance = _crate.dist
@@ -4232,7 +4244,7 @@ function ctld.dropSlingCrate(_args)
                 local _position = "12"
                 if ctld.unitDynamicCargoCapable(_heli) then
                     _model_type = "dynamic"
-                    _point = ctld.getPointAt6Oclock(_heli, 15)
+                    _point = ctld.getPointAt6Oclock(_heli, ctld.getSecureDistanceFromUnit(_heli))
                     _position = "6"
                 end
                 ctld.displayMessageToGroup(_heli,
@@ -5941,7 +5953,6 @@ function ctld.addTransportF10MenuOptions(_unitName)
                 end
 
                 if ctld.enableCrates and _unitActions.crates then
-                    if ctld.unitCanCarryVehicles(_unit) == false then
                         -- sort the crate categories alphabetically
                         local crateCategories = {}
                         for category, _ in pairs(ctld.spawnableCrates) do
@@ -6003,7 +6014,6 @@ function ctld.addTransportF10MenuOptions(_unitName)
                                 end
                                 missionCommands.addCommandForGroup(_groupId, _menu.text, _subMenuPath,
                                     ctld.spawnCrate, { _unitName, _menu.crate.weight })
-                            end
                         end
                     end
                 end

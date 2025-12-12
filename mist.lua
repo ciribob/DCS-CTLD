@@ -1481,19 +1481,27 @@ do -- the main scope
 		-- dont need to add units spawned in at the start of the mission if mist is loaded in init line
 		if event.id == world.event.S_EVENT_BIRTH and timer.getTime0() < timer.getAbsTime() then
 
-			if Object.getCategory(event.initiator) == 1  then 
+			if Object.getCategory(event.initiator) == 1  then
 				--log:info('Object is a Unit')
 				local g =  Unit.getGroup(event.initiator)
-				if g and event.initiator:getPlayerName() ~= "" and not mist.DBs.MEunitsByName[event.initiator:getName()] then
+				if not g then
+					log:error('groupSpawned event handler: cannot get hold of Group via Unit. This is a DCS bug')
+					return
+				end
+				if event.initiator:getPlayerName() == "" then
+					log:error('groupSpawned event handler: cannot get initiator playerName. This is a DCS bug')
+					return
+				end
+				if not mist.DBs.MEunitsByName[event.initiator:getName()] then
+					log:error('groupSpawned event handler: cannot find initiator unit in MiST tables. This is a DCS bug')
+					return
+				end
 				--	log:info(Unit.getGroup(event.initiator):getName())
-					local gName = g:getName()
-					if not tempSpawnedGroups[gName] then
-						--log:warn('addedTo tempSpawnedGroups: $1', gName)
-						tempSpawnedGroups[gName] = {type = 'group', gp = g}
-						tempSpawnGroupsCounter = tempSpawnGroupsCounter + 1
-					end
-				else
-					log:error('Group not accessible by unit in event handler. This is a DCS bug')
+				local gName = g:getName()
+				if not tempSpawnedGroups[gName] then
+					--log:warn('addedTo tempSpawnedGroups: $1', gName)
+					tempSpawnedGroups[gName] = {type = 'group', gp = g}
+					tempSpawnGroupsCounter = tempSpawnGroupsCounter + 1
 				end
 			elseif Object.getCategory(event.initiator) == 3 or Object.getCategory(event.initiator) == 6 then
 				--log:info('staticSpawnEvent')
