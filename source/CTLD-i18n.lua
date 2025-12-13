@@ -7,8 +7,7 @@
     - FullGas1 (concept, FR and ES translations)
     - rising_star (KO translation)
 ]]
-
-ctld = {} -- DONT REMOVE!
+if not ctld then ctld = {} end -- DONT REMOVE!
 ctld.i18n = {}
 
 -- These are the string translations
@@ -18,8 +17,10 @@ ctld.i18n = {}
 
 --========  FRENCH - FRANCAIS =====================================================================================
 ctld.i18n["fr"] = {}
-ctld.i18n["fr"].translation_version = "1.6" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
-local lang="fr";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
+ctld.i18n["fr"].translation_version =
+"1.6" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+local lang = "fr"; env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang,
+    tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
 ctld.i18n["fr"]["Standard Group"] = "Groupe standard"
@@ -134,21 +135,29 @@ ctld.i18n["fr"]["Patriot - All crates"] = "Patriot - Toutes les caisses"
 ctld.i18n["fr"]["Patriot - All crates"] = "Patriot - Toutes les caisses"
 
 --- mission design error messages
-ctld.i18n["fr"]["CTLD.lua ERROR: Can't find trigger called %1"]      = "CTLD.lua ERREUR : Impossible de trouver le déclencheur appelé %1"
-ctld.i18n["fr"]["CTLD.lua ERROR: Can't find zone called %1"]         = "CTLD.lua ERREUR : Impossible de trouver la zone appelée %1"
-ctld.i18n["fr"]["CTLD.lua ERROR: Can't find zone or ship called %1"] = "CTLD.lua ERREUR : Impossible de trouver la zone ou le navire appelé %1"
-ctld.i18n["fr"]["CTLD.lua ERROR: Can't find crate with weight %1"]   = "CTLD.lua ERREUR : Impossible de trouver une caisse avec un poids de %1"
+ctld.i18n["fr"]["CTLD.lua ERROR: Can't find trigger called %1"] =
+"CTLD.lua ERREUR : Impossible de trouver le déclencheur appelé %1"
+ctld.i18n["fr"]["CTLD.lua ERROR: Can't find zone called %1"] =
+"CTLD.lua ERREUR : Impossible de trouver la zone appelée %1"
+ctld.i18n["fr"]["CTLD.lua ERROR: Can't find zone or ship called %1"] =
+"CTLD.lua ERREUR : Impossible de trouver la zone ou le navire appelé %1"
+ctld.i18n["fr"]["CTLD.lua ERROR: Can't find crate with weight %1"] =
+"CTLD.lua ERREUR : Impossible de trouver une caisse avec un poids de %1"
 
 --- runtime messages
-ctld.i18n["fr"]["You are not close enough to friendly logistics to get a crate!"] = "Vous n'êtes pas assez proche de la logistique alliée pour obtenir une caisse !"
+ctld.i18n["fr"]["You are not close enough to friendly logistics to get a crate!"] =
+"Vous n'êtes pas assez proche de la logistique alliée pour obtenir une caisse !"
 ctld.i18n["fr"]["No more JTAC Crates Left!"] = "Plus de caisses JTAC disponibles !"
-ctld.i18n["fr"]["Sorry you must wait %1 seconds before you can get another crate"] = "Désolé, vous devez attendre %1 secondes avant de pouvoir obtenir une autre caisse"
-ctld.i18n["fr"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = "Une caisse %1 pesant %2 kg a été apportée et se trouve à vos %3 heure"
+ctld.i18n["fr"]["Sorry you must wait %1 seconds before you can get another crate"] =
+"Désolé, vous devez attendre %1 secondes avant de pouvoir obtenir une autre caisse"
+ctld.i18n["fr"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] =
+"Une caisse %1 pesant %2 kg a été apportée et se trouve à vos %3 heure"
 ctld.i18n["fr"]["%1 fast-ropped troops from %2 into combat"] = "%1 a largué rapidement des troupes de %2 au combat"
 ctld.i18n["fr"]["%1 dropped troops from %2 into combat"] = "%1 a largué des troupes de %2 au combat"
 ctld.i18n["fr"]["%1 fast-ropped troops from %2 into %3"] = "%1 a largué rapidement des troupes de %2 à %3"
 ctld.i18n["fr"]["%1 dropped troops from %2 into %3"] = "%1 a largué des troupes de %2 à %3"
-ctld.i18n["fr"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] = "Trop haut ou trop rapide pour larguer des troupes au combat ! Survolez en dessous de %1 pieds ou atterrissez."
+ctld.i18n["fr"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] =
+"Trop haut ou trop rapide pour larguer des troupes au combat ! Survolez en dessous de %1 pieds ou atterrissez."
 ctld.i18n["fr"]["%1 dropped vehicles from %2 into combat"] = "%1 a largué des véhicules de %2 au combat"
 ctld.i18n["fr"]["%1 loaded troops into %2"] = "%1 a chargé des troupes dans %2"
 ctld.i18n["fr"]["%1 loaded %2 vehicles into %3"] = "%1 a chargé %2 véhicules dans %3"
@@ -157,17 +166,21 @@ ctld.i18n["fr"]["Delivered FOB Crate 60m at 6'oclock to you"] = "Caisse FOB livr
 ctld.i18n["fr"]["FOB Crate dropped back to base"] = "Caisse FOB ramenée à la base"
 ctld.i18n["fr"]["FOB Crate Loaded"] = "Caisse FOB chargée"
 ctld.i18n["fr"]["%1 loaded a FOB Crate ready for delivery!"] = "%1 a chargé une caisse FOB prête à être livrée !"
-ctld.i18n["fr"]["There are no friendly logistic units nearby to load a FOB crate from!"] = "Il n'y a pas d'unités logistiques alliée à proximité pour charger une caisse FOB !"
+ctld.i18n["fr"]["There are no friendly logistic units nearby to load a FOB crate from!"] =
+"Il n'y a pas d'unités logistiques alliée à proximité pour charger une caisse FOB !"
 ctld.i18n["fr"]["This area has no more reinforcements available!"] = "Cette zone n'a plus de renforts disponibles !"
-ctld.i18n["fr"]["You are not in a pickup zone and no one is nearby to extract"] = "Vous n'êtes pas dans une zone d'embarquement et personne n'est à proximité pour être extrait."
+ctld.i18n["fr"]["You are not in a pickup zone and no one is nearby to extract"] =
+"Vous n'êtes pas dans une zone d'embarquement et personne n'est à proximité pour être extrait."
 ctld.i18n["fr"]["You are not in a pickup zone"] = "Vous n'êtes pas dans une zone d'embarquement"
 ctld.i18n["fr"]["No one to unload"] = "Personne à débarquer"
 ctld.i18n["fr"]["Dropped troops back to base"] = "Troupes larguées à la base"
 ctld.i18n["fr"]["Dropped vehicles back to base"] = "Véhicules largués à la base"
 ctld.i18n["fr"]["You already have troops onboard."] = "Vous avez déjà des troupes à bord."
-ctld.i18n["fr"]["Count Infantries limit in the mission reached, you can't load more troops"] = "Nombre maximum de troupes sur mission atteint, vous ne pouvez pas charger plus de troupes"
+ctld.i18n["fr"]["Count Infantries limit in the mission reached, you can't load more troops"] =
+"Nombre maximum de troupes sur mission atteint, vous ne pouvez pas charger plus de troupes"
 ctld.i18n["fr"]["You already have vehicles onboard."] = "Vous avez déjà des véhicules à bord."
-ctld.i18n["fr"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = "Désolé - Le groupe de %1 est trop important. \n\nLa limite est de %2 pour %3"
+ctld.i18n["fr"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] =
+"Désolé - Le groupe de %1 est trop important. \n\nLa limite est de %2 pour %3"
 ctld.i18n["fr"]["%1 extracted troops in %2 from combat"] = "%1 troupes extraites du combat en %2"
 ctld.i18n["fr"]["No extractable troops nearby!"] = "Aucune troupe extractible à proximité !"
 ctld.i18n["fr"]["%1 extracted vehicles in %2 from combat"] = "%1 véhicules extraits du combat en %2"
@@ -178,51 +191,77 @@ ctld.i18n["fr"]["1 FOB Crate oboard (%1 kg)\n"] = "1 caisse FOB à bord (%1 kg)\
 ctld.i18n["fr"]["%1 crate onboard (%2 kg)\n"] = "%1 caisse à bord (%2 kg)\n"
 ctld.i18n["fr"]["Total weight of cargo : %1 kg\n"] = "Poids total de la cargaison : %1 kg\n"
 ctld.i18n["fr"]["No cargo."] = "Aucune cargaison."
-ctld.i18n["fr"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "Stationaire au-dessus de la caisse %1. \n\nMaintenez le stationaire pendant %2 secondes ! \n\nSi le compte à rebours s'arrête, vous êtes trop loin !"
+ctld.i18n["fr"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] =
+"Stationaire au-dessus de la caisse %1. \n\nMaintenez le stationaire pendant %2 secondes ! \n\nSi le compte à rebours s'arrête, vous êtes trop loin !"
 ctld.i18n["fr"]["Loaded %1 crate!"] = "Caisse %1 chargée !"
-ctld.i18n["fr"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = "Trop bas pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
-ctld.i18n["fr"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = "Trop haut pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
-ctld.i18n["fr"]["You must land before you can load a crate!"] = "Vous devez atterrir avant de pouvoir charger une caisse !"
+ctld.i18n["fr"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] =
+"Trop bas pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
+ctld.i18n["fr"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] =
+"Trop haut pour accrocher la caisse %1.\n\nMaintenez le stationaire pendant %2 secondes"
+ctld.i18n["fr"]["You must land before you can load a crate!"] =
+"Vous devez atterrir avant de pouvoir charger une caisse !"
 ctld.i18n["fr"]["No Crates within 50m to load!"] = "Aucune caisse à moins de 50 m pour charger !"
 ctld.i18n["fr"]["Maximum number of crates are on board!"] = "Nombre maximal de caisses à bord !"
 ctld.i18n["fr"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = "%1\n%2 caisse - kg %3 - %4 m - %5 heures"
 ctld.i18n["fr"]["FOB Crate - %1 m - %2 o'clock\n"] = "Caisse FOB - %1 m - %2 heures\n"
 ctld.i18n["fr"]["No Nearby Crates"] = "Aucune caisse à proximité"
 ctld.i18n["fr"]["Nearby Crates:\n%1"] = "Caisses à proximité :\n%1"
-ctld.i18n["fr"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = "Caisses FOB à proximité (non chargeables par élingue) :\n%1"
+ctld.i18n["fr"]["Nearby FOB Crates (Not Slingloadable):\n%1"] =
+"Caisses FOB à proximité (non chargeables par élingue) :\n%1"
 ctld.i18n["fr"]["FOB Positions:"] = "Positions FOB :"
 ctld.i18n["fr"]["%1\nFOB @ %2"] = "%1\nFOB @ %2"
 ctld.i18n["fr"]["Sorry, there are no active FOBs!"] = "Désolé, il n'y a pas de FOB actif !"
-ctld.i18n["fr"]["You can't unpack that here! Take it to where it's needed!"] = "Vous ne pouvez déballer ça ici ! Emmenez-le là où vous en avez besoin !"
-ctld.i18n["fr"]["Sorry you must move this crate before you unpack it!"] = "Désolé, vous devez déplacer cette caisse avant de la déballer !"
+ctld.i18n["fr"]["You can't unpack that here! Take it to where it's needed!"] =
+"Vous ne pouvez déballer ça ici ! Emmenez-le là où vous en avez besoin !"
+ctld.i18n["fr"]["Sorry you must move this crate before you unpack it!"] =
+"Désolé, vous devez déplacer cette caisse avant de la déballer !"
 ctld.i18n["fr"]["%1 successfully deployed %2 to the field"] = "%1 a déployé avec succès %2 sur le terrain."
-ctld.i18n["fr"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = "Aucune caisse alliée n'est suffisamment proche pour être déballée, ou la caisse est trop proche d'un avion."
-ctld.i18n["fr"]["Finished building FOB! Crates and Troops can now be picked up."] = "Construction du FOB terminée ! Les caisses et les troupes peuvent maintenant embarqués."
-ctld.i18n["fr"]["Finished building FOB! Crates can now be picked up."] = "Construction du FOB terminée ! Les caisses peuvent maintenant être embarqués."
-ctld.i18n["fr"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] = "%1 a commencé à construire le FOB en utilisant %2 caisses FOB, il sera terminé dans %3 secondes.\nPosition marquée par le fumigène."
-ctld.i18n["fr"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] = "Impossible de construire le FOB !\n\nIl nécessite %1 grandes caisses FOB (3 petites caisses FOB équivalent à 1 grande caisse FOB) et il y a l'équivalent de %2 grandes caisses FOB à proximité\n\nOu les caisses ne sont pas à moins de 750 m les unes des autres autre"
-ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = "Vous ne transportez actuellement aucune caisse. \n\nPour charger une caisse, survolez la caisse pendant %1 secondes ou atterrissez et utilisez les commandes de caisse F10."
-ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = "Vous ne transportez actuellement aucune caisse. \n\nPour ramasser une caisse, survolez la caisse pendant %1 secondes."
-ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = "Vous ne transportez actuellement aucune caisse. \n\nPour charger une caisse, atterrissez et utilisez les commandes de caisse F10."
-ctld.i18n["fr"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = "%1 caisse a été décrochée en toute sécurité et se trouve à vos %2 heures"
+ctld.i18n["fr"]["No friendly crates close enough to unpack, or crate too close to aircraft."] =
+"Aucune caisse alliée n'est suffisamment proche pour être déballée, ou la caisse est trop proche d'un avion."
+ctld.i18n["fr"]["Finished building FOB! Crates and Troops can now be picked up."] =
+"Construction du FOB terminée ! Les caisses et les troupes peuvent maintenant embarqués."
+ctld.i18n["fr"]["Finished building FOB! Crates can now be picked up."] =
+"Construction du FOB terminée ! Les caisses peuvent maintenant être embarqués."
+ctld.i18n["fr"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] =
+"%1 a commencé à construire le FOB en utilisant %2 caisses FOB, il sera terminé dans %3 secondes.\nPosition marquée par le fumigène."
+ctld.i18n["fr"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] =
+"Impossible de construire le FOB !\n\nIl nécessite %1 grandes caisses FOB (3 petites caisses FOB équivalent à 1 grande caisse FOB) et il y a l'équivalent de %2 grandes caisses FOB à proximité\n\nOu les caisses ne sont pas à moins de 750 m les unes des autres autre"
+ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] =
+"Vous ne transportez actuellement aucune caisse. \n\nPour charger une caisse, survolez la caisse pendant %1 secondes ou atterrissez et utilisez les commandes de caisse F10."
+ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] =
+"Vous ne transportez actuellement aucune caisse. \n\nPour ramasser une caisse, survolez la caisse pendant %1 secondes."
+ctld.i18n["fr"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] =
+"Vous ne transportez actuellement aucune caisse. \n\nPour charger une caisse, atterrissez et utilisez les commandes de caisse F10."
+ctld.i18n["fr"]["%1 crate has been safely unhooked and is at your %2 o'clock"] =
+"%1 caisse a été décrochée en toute sécurité et se trouve à vos %2 heures"
 ctld.i18n["fr"]["%1 crate has been safely dropped below you"] = "%1 caisse a été déposée en toute sécurité sous vous"
 ctld.i18n["fr"]["You were too high! The crate has been destroyed"] = "Vous étiez trop haut! La caisse a été détruite"
 ctld.i18n["fr"]["Radio Beacons:\n%1"] = "Balises radio :\n%1"
 ctld.i18n["fr"]["No Active Radio Beacons"] = "Aucune balise radio active"
 ctld.i18n["fr"]["%1 deployed a Radio Beacon.\n\n%2"] = "%1 a déployé une balise radio.\n\n%2"
-ctld.i18n["fr"]["You need to land before you can deploy a Radio Beacon!"] = "Vous devez atterrir avant de pouvoir déployer une balise radio !"
+ctld.i18n["fr"]["You need to land before you can deploy a Radio Beacon!"] =
+"Vous devez atterrir avant de pouvoir déployer une balise radio !"
 ctld.i18n["fr"]["%1 removed a Radio Beacon.\n\n%2"] = "%1 a supprimé une balise radio.\n\n%2"
 ctld.i18n["fr"]["No Radio Beacons within 500m."] = "Aucune balise radio à moins de 500m."
-ctld.i18n["fr"]["You need to land before remove a Radio Beacon"] = "Vous devez atterrir avant de retirer une balise radio"
-ctld.i18n["fr"]["%1 successfully rearmed a full %2 in the field"] = "%1 a réarmé avec succès un %2 complet sur le terrain"
+ctld.i18n["fr"]["You need to land before remove a Radio Beacon"] =
+"Vous devez atterrir avant de retirer une balise radio"
+ctld.i18n["fr"]["%1 successfully rearmed a full %2 in the field"] =
+"%1 a réarmé avec succès un %2 complet sur le terrain"
 ctld.i18n["fr"]["Missing %1\n"] = "%1 manquant\n"
-ctld.i18n["fr"]["Out of parts for AA Systems. Current limit is %1\n"] = "Plus de pièces pour les systèmes AA. La limite actuelle est de %1\n"
-ctld.i18n["fr"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] = "Impossible de construire %1\n%2\n\nOu les caisses ne sont pas assez proches les unes des autres"
-ctld.i18n["fr"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] = "%1 a déployé avec succès un %2 complet sur le terrain. \n\nLa limite du système actif AA est : %3\nActif : %4"
-ctld.i18n["fr"]["%1 successfully repaired a full %2 in the field."] = "%1 a réparé avec succès un %2 complet sur le terrain."
-ctld.i18n["fr"]["Cannot repair %1. No damaged %2 within 300m"] = "Impossible de réparer %1. Aucun %2 endommagé à moins de 300 m"
-ctld.i18n["fr"]["%1 successfully deployed %2 to the field using %3 crates."] = "%1 a déployé avec succès %2 sur le terrain en utilisant %3 caisses."
-ctld.i18n["fr"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = "Impossible de construire %1 !\n\nIl faut %2 caisses et il y en a %3 \n\nOu les caisses ne sont pas à moins de 300 m les unes des autres"
+ctld.i18n["fr"]["Out of parts for AA Systems. Current limit is %1\n"] =
+"Plus de pièces pour les systèmes AA. La limite actuelle est de %1\n"
+ctld.i18n["fr"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] =
+"Impossible de construire %1\n%2\n\nOu les caisses ne sont pas assez proches les unes des autres"
+ctld.i18n["fr"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] =
+"%1 a déployé avec succès un %2 complet sur le terrain. \n\nLa limite du système actif AA est : %3\nActif : %4"
+ctld.i18n["fr"]["%1 successfully repaired a full %2 in the field."] =
+"%1 a réparé avec succès un %2 complet sur le terrain."
+ctld.i18n["fr"]["Cannot repair %1. No damaged %2 within 300m"] =
+"Impossible de réparer %1. Aucun %2 endommagé à moins de 300 m"
+ctld.i18n["fr"]["%1 successfully deployed %2 to the field using %3 crates."] =
+"%1 a déployé avec succès %2 sur le terrain en utilisant %3 caisses."
+ctld.i18n["fr"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] =
+"Impossible de construire %1 !\n\nIl faut %2 caisses et il y en a %3 \n\nOu les caisses ne sont pas à moins de 300 m les unes des autres"
 ctld.i18n["fr"]["%1 dropped %2 smoke."] = "%1 a largué un fumigène %2."
 
 --- JTAC messages
@@ -243,7 +282,8 @@ ctld.i18n["fr"][", available on %1 %2,"] = ", disponible sur %1 %2,"
 ctld.i18n["fr"]["UNKNOWN"] = "INCONNU"
 ctld.i18n["fr"][" targeting "] = " ciblage "
 ctld.i18n["fr"][" targeting selected unit "] = " ciblage de l'unité sélectionnée "
-ctld.i18n["fr"][" attempting to find selected unit, temporarily targeting "] = " tentative de recherche de l'unité sélectionnée, ciblage temporaire "
+ctld.i18n["fr"][" attempting to find selected unit, temporarily targeting "] =
+" tentative de recherche de l'unité sélectionnée, ciblage temporaire "
 ctld.i18n["fr"]["(Laser OFF) "] = "(Laser INACTIF) "
 ctld.i18n["fr"]["Visual On: "] = "Visuel activé : "
 ctld.i18n["fr"][" searching for targets %1\n"] = " recherche de cibles %1\n"
@@ -253,8 +293,10 @@ ctld.i18n["fr"][". CODE: %1. POSITION: %2"] = ". CODE : %1. POSITION : %2"
 ctld.i18n["fr"][", target selection reset."] = ", sélection de cible réinitialisée."
 ctld.i18n["fr"]["%1, laser and smokes enabled"] = "%1, laser et fumigènes activés"
 ctld.i18n["fr"]["%1, laser and smokes disabled"] = "%1, laser et fumigènes désactivés"
-ctld.i18n["fr"]["%1, wind and target speed laser spot compensations enabled"] = "%1, compensations activées de la vitesse du vent et de la cible pour le spot laser"
-ctld.i18n["fr"]["%1, wind and target speed laser spot compensations disabled"] = "%1, compensations désactivées de la vitesse du vent et de la cible pour le spot laser"
+ctld.i18n["fr"]["%1, wind and target speed laser spot compensations enabled"] =
+"%1, compensations activées de la vitesse du vent et de la cible pour le spot laser"
+ctld.i18n["fr"]["%1, wind and target speed laser spot compensations disabled"] =
+"%1, compensations désactivées de la vitesse du vent et de la cible pour le spot laser"
 ctld.i18n["fr"]["%1, WHITE smoke deployed near target"] = "%1, fumigène BLANCHE déployée près de la cible"
 
 --- F10 menu messages
@@ -301,8 +343,11 @@ ctld.i18n["fr"]["STOP autoRefresh targets in LOS"] = "Stopper suivi automatique 
 
 --======  SPANISH : ESPAÑOL====================================================================================
 ctld.i18n["es"] = {}
-ctld.i18n["es"].translation_version = "1.6" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
-local lang="es";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
+ctld.i18n["es"].translation_version =
+"1.6" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+local lang = "es"; env
+    .info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang,
+        tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
 ctld.i18n["es"]["Standard Group"] = "Grupo estándar"
@@ -417,21 +462,28 @@ ctld.i18n["es"]["Patriot - All crates"] = "Patriot - Todas las cajas"
 ctld.i18n["es"]["Patriot - All crates"] = "Patriot - Todas las cajas"
 
 --- mission design error messages
-ctld.i18n["es"]["CTLD.lua ERROR: Can't find trigger called %1"]      = "CTLD.lua ERROR : Imposible encontrar el activador llamado %1"
-ctld.i18n["es"]["CTLD.lua ERROR: Can't find zone called %1"]         = "CTLD.lua ERROR : Imposible encontrar la zona llamada %1"
-ctld.i18n["es"]["CTLD.lua ERROR: Can't find zone or ship called %1"] = "CTLD.lua ERROR : Imposible encontrar la zona o el barco llamado %1"
-ctld.i18n["es"]["CTLD.lua ERROR: Can't find crate with weight %1"]   = "CTLD.lua ERROR : Imposible encontrar una caja con un peso de %1"
+ctld.i18n["es"]["CTLD.lua ERROR: Can't find trigger called %1"] =
+"CTLD.lua ERROR : Imposible encontrar el activador llamado %1"
+ctld.i18n["es"]["CTLD.lua ERROR: Can't find zone called %1"] = "CTLD.lua ERROR : Imposible encontrar la zona llamada %1"
+ctld.i18n["es"]["CTLD.lua ERROR: Can't find zone or ship called %1"] =
+"CTLD.lua ERROR : Imposible encontrar la zona o el barco llamado %1"
+ctld.i18n["es"]["CTLD.lua ERROR: Can't find crate with weight %1"] =
+"CTLD.lua ERROR : Imposible encontrar una caja con un peso de %1"
 
 --- runtime messages
-ctld.i18n["es"]["You are not close enough to friendly logistics to get a crate!"] = "¡No estás lo suficientemente cerca de la logística aliada para solicitar una caja!"
+ctld.i18n["es"]["You are not close enough to friendly logistics to get a crate!"] =
+"¡No estás lo suficientemente cerca de la logística aliada para solicitar una caja!"
 ctld.i18n["es"]["No more JTAC Crates Left!"] = "¡No hay más cajas JTAC disponibles!"
-ctld.i18n["es"]["Sorry you must wait %1 seconds before you can get another crate"] = "Lo sentimos, debes esperar %1 segundos antes de poder solicitar otra caja"
-ctld.i18n["es"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = "Una caja %1 pesando %2 kg ha sido preparada y está a tus %3 en punto "
+ctld.i18n["es"]["Sorry you must wait %1 seconds before you can get another crate"] =
+"Lo sentimos, debes esperar %1 segundos antes de poder solicitar otra caja"
+ctld.i18n["es"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] =
+"Una caja %1 pesando %2 kg ha sido preparada y está a tus %3 en punto "
 ctld.i18n["es"]["%1 fast-ropped troops from %2 into combat"] = "%1 descolgo tropas con cuerdas de %2 al combate"
 ctld.i18n["es"]["%1 dropped troops from %2 into combat"] = "%1 descargo tropas de %2 al combate"
 ctld.i18n["es"]["%1 fast-ropped troops from %2 into %3"] = "%1 descolgo tropas con cuerdas de %2 a %3"
 ctld.i18n["es"]["%1 dropped troops from %2 into %3"] = "%1 arrojó tropas de %2 a %3"
-ctld.i18n["es"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] = "¡Demasiado alto o rápido para lanzar tropas al combate! Manten estacionario por debajo de % 1 pies o aterriza."
+ctld.i18n["es"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] =
+"¡Demasiado alto o rápido para lanzar tropas al combate! Manten estacionario por debajo de % 1 pies o aterriza."
 ctld.i18n["es"]["%1 dropped vehicles from %2 into combat"] = "%1 descargo vehículos de %2 al combate"
 ctld.i18n["es"]["%1 loaded troops into %2"] = "%1 cargó tropas en %2"
 ctld.i18n["es"]["%1 loaded %2 vehicles into %3"] = "%1 cargó %2 vehículos en %3"
@@ -440,17 +492,21 @@ ctld.i18n["es"]["Delivered FOB Crate 60m at 6 o'clock to you"] = "Se le entregó
 ctld.i18n["es"]["FOB Crate dropped back to base"] = "Caja FOB devuelta a la base"
 ctld.i18n["es"]["FOB Crate Loaded"] = "Caja FOB cargada"
 ctld.i18n["es"]["%1 loaded a FOB Crate ready for delivery!"] = "%1 cargó una caja FOB lista para su entrega!"
-ctld.i18n["es"]["There are no friendly logistic units nearby to load a FOB crate from!"] = "¡No hay unidades logísticas amigas cerca para cargar una caja FOB!"
+ctld.i18n["es"]["There are no friendly logistic units nearby to load a FOB crate from!"] =
+"¡No hay unidades logísticas amigas cerca para cargar una caja FOB!"
 ctld.i18n["es"]["This area has no more reinforcements available!"] = "¡Esta área no tiene más refuerzos disponibles!"
-ctld.i18n["es"]["You are not in a pickup zone and no one is nearby to extract"] = "No estás en una zona de carga y/o no hay nadie cerca para extraccion"
+ctld.i18n["es"]["You are not in a pickup zone and no one is nearby to extract"] =
+"No estás en una zona de carga y/o no hay nadie cerca para extraccion"
 ctld.i18n["es"]["You are not in a pickup zone"] = "No estás en una zona de carga"
 ctld.i18n["es"]["No one to unload"] = "Nadie / Nada para descargar"
 ctld.i18n["es"]["Dropped troops back to base"] = "Tropas descargados de vuelta a la base"
 ctld.i18n["es"]["Dropped vehicles back to base"] = "Vehículos descargados de vuelta a la base"
 ctld.i18n["es"]["You already have troops onboard."] = "Ya tienes tropas a bordo."
-ctld.i18n["es"]["Count Infantries limit in the mission reached, you can't load more troops"] = "Se alcanzó el límite de infantería en la misión, no puedes cargar más tropas"
+ctld.i18n["es"]["Count Infantries limit in the mission reached, you can't load more troops"] =
+"Se alcanzó el límite de infantería en la misión, no puedes cargar más tropas"
 ctld.i18n["es"]["You already have vehicles onboard."] = "Ya tienes vehículos a bordo."
-ctld.i18n["es"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = "Lo sentimos, el grupo de %1 es demasiado grande. \n \nEl límite es %2 para %3"
+ctld.i18n["es"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] =
+"Lo sentimos, el grupo de %1 es demasiado grande. \n \nEl límite es %2 para %3"
 ctld.i18n["es"]["%1 extracted troops in %2 from combat"] = "%1 tropas extraídas del combate en %2"
 ctld.i18n["es"]["No extractable troops nearby!"] = "¡No hay tropas extraíbles cerca!"
 ctld.i18n["es"]["%1 extracted vehicles in %2 from combat"] = "%1 vehículos extraídos del combate en %2"
@@ -461,10 +517,13 @@ ctld.i18n["es"]["1 FOB Crate oboard (%1 kg)\n"] = "1 caja FOB a bordo (%1 kg)\n"
 ctld.i18n["es"]["%1 crate onboard (%2 kg)\n"] = "%1 caja a bordo (%2 kg)\n"
 ctld.i18n["es"]["Total weight of cargo : %1 kg\n"] = "Peso total de la carga: %1 kg\n"
 ctld.i18n["es"]["No cargo."] = "Sin carga."
-ctld.i18n["es"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "En estacionario sobre la caja %1 \n\n¡Mantenlo durante %2 segundos! \n\n¡Si la cuenta atras se detiene, estás demasiado lejos!"
+ctld.i18n["es"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] =
+"En estacionario sobre la caja %1 \n\n¡Mantenlo durante %2 segundos! \n\n¡Si la cuenta atras se detiene, estás demasiado lejos!"
 ctld.i18n["es"]["Loaded %1 crate!"] = "Caja %1 cargada !"
-ctld.i18n["es"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = "Demasiado bajo para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
-ctld.i18n["es"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = "Demasiado alto para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
+ctld.i18n["es"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] =
+"Demasiado bajo para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
+ctld.i18n["es"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] =
+"Demasiado alto para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
 ctld.i18n["es"]["You must land before you can load a crate!"] = "¡Debes aterrizar antes de poder cargar una caja!"
 ctld.i18n["es"]["No Crates within 50m to load!"] = "¡No hay cajas para cargar en un radio de 50 m!"
 ctld.i18n["es"]["Maximum number of crates are on board!"] = "¡El número máximo de cajas está a bordo!"
@@ -472,15 +531,19 @@ ctld.i18n["es"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = "%1\n%2 caja - kg 
 ctld.i18n["es"]["FOB Crate - %1 m - %2 o'clock\n"] = "Caja FOB - %1 m - a las %2 en punto\n"
 ctld.i18n["es"]["No Nearby Crates"] = "Ninguna caja de proximidad"
 ctld.i18n["es"]["Nearby Crates:\n%1"] = "Cajas cercanas:\n%1"
-ctld.i18n["es"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = "Cajas FOB cercanas (no se pueden cargar con eslinga):\n%1"
+ctld.i18n["es"]["Nearby FOB Crates (Not Slingloadable):\n%1"] =
+"Cajas FOB cercanas (no se pueden cargar con eslinga):\n%1"
 ctld.i18n["es"]["FOB Positions:"] = "Posiciones FOB:"
 ctld.i18n["es"]["%1\nFOB @ %2"] = "%1\nFOB @ %2"
 ctld.i18n["es"]["Sorry, there are no active FOBs!"] = "¡Lo sentimos, no hay FOB activos!"
 ctld.i18n["es"]["No cargo."] = "Sin carga."
-ctld.i18n["es"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "En estacionario sobre la caja %1 \n\n¡Mantenlo durante %2 segundos! \n\n¡Si la cuenta atras se detiene, estás demasiado lejos!"
+ctld.i18n["es"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] =
+"En estacionario sobre la caja %1 \n\n¡Mantenlo durante %2 segundos! \n\n¡Si la cuenta atras se detiene, estás demasiado lejos!"
 ctld.i18n["es"]["Loaded %1 crate!"] = "¡Caja %1 cargada!"
-ctld.i18n["es"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = "Demasiado bajo para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
-ctld.i18n["es"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = "Demasiado alto para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
+ctld.i18n["es"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] =
+"Demasiado bajo para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
+ctld.i18n["es"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] =
+"Demasiado alto para enganchar la caja %1.\n\nMantén el estacionario durante %2 segundos"
 ctld.i18n["es"]["You must land before you can load a crate!"] = "¡Debes aterrizar antes de poder cargar una caja!"
 ctld.i18n["es"]["No Crates within 50m to load!"] = "¡No hay cajas para cargar en un radio de 50 m!"
 ctld.i18n["es"]["Maximum number of crates are on board!"] = "¡Número máximo de cajas a bordo!"
@@ -488,40 +551,60 @@ ctld.i18n["es"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = "%1\n%2 caja - kg 
 ctld.i18n["es"]["FOB Crate - %1 m - %2 o'clock\n"] = "Caja FOB - %1 m - a tus %2 en punto\n"
 ctld.i18n["es"]["No Nearby Crates"] = "No hay cajas cerca"
 ctld.i18n["es"]["Nearby Crates:\n%1"] = "Cajas cercanas:\n%1"
-ctld.i18n["es"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = "Cajas FOB cercanas (no se pueden cargar con eslinga):\n%1"
+ctld.i18n["es"]["Nearby FOB Crates (Not Slingloadable):\n%1"] =
+"Cajas FOB cercanas (no se pueden cargar con eslinga):\n%1"
 ctld.i18n["es"]["FOB Positions:"] = "Posiciones FOB:"
 ctld.i18n["es"]["%1\nFOB @ %2"] = "%1\nFOB @ %2"
 ctld.i18n["es"]["Sorry, there are no active FOBs!"] = "¡Lo sentimos, no hay FOB activos!"
-ctld.i18n["es"]["You can't unpack that here! Take it to where it's needed!"] = "¡No puedes desembalar eso aquí! ¡Llévalo a donde lo necesiten!"
-ctld.i18n["es"]["Sorry you must move this crate before you unpack it!"] = "¡Lo siento, debes mover esta caja antes de desembalar!"
+ctld.i18n["es"]["You can't unpack that here! Take it to where it's needed!"] =
+"¡No puedes desembalar eso aquí! ¡Llévalo a donde lo necesiten!"
+ctld.i18n["es"]["Sorry you must move this crate before you unpack it!"] =
+"¡Lo siento, debes mover esta caja antes de desembalar!"
 ctld.i18n["es"]["%1 successfully deployed %2 to the field"] = "%1 Desplego %2 con exito en el campo."
-ctld.i18n["es"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = "No hay cajas amigas lo suficientemente cerca por desembalar, o la caja está demasiado cerca de un avión"
-ctld.i18n["es"]["Finished building FOB! Crates and Troops can now be picked up."] = "¡Construcción FOB completada! Ahora se pueden recoger cajas y tropas"
-ctld.i18n["es"]["Finished building FOB! Crates can now be picked up."] ="¡Construcción FOB completada! Ahora se pueden recoger cajas."
-ctld.i18n["es"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] = "%1 comenzó a construir FOB usando %2 cajas FOB , estará terminado en %3 segundos.\nPosición marcada con bomba de humo."
-ctld.i18n["es"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] = "¡No se puede construir el FOB!\n\nSe requiere %1 cajas FOB grandes (3 cajas FOB pequeñas equivalente a 1 caja FOB grande) y hay el equivalente a %2 cajas FOB grandes cerca\n\nO las cajas no están a menos de 750 m una de otra"
-ctld.i18n["es"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = "Actualmente no estás transportando ninguna caja.\n\nPara cargar una caja, realiza un estacionario sobre la caja durante %1 segundos o aterrice y use los comandos de caja F10."
-ctld.i18n["es"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = "Actualmente no estás transportando ninguna caja. \n\nPara cargar una caja, realiza un estacionario sobre la caja durante %1 segundos."
-ctld.i18n["es"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = "Actualmente no estás transportando ninguna caja. \n\nPara cargar una caja, aterriza y usa los controles de la caja F10."
-ctld.i18n["es"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = "%1 caja desenganchada de forma segura y está en tus %2 en punto"
+ctld.i18n["es"]["No friendly crates close enough to unpack, or crate too close to aircraft."] =
+"No hay cajas amigas lo suficientemente cerca por desembalar, o la caja está demasiado cerca de un avión"
+ctld.i18n["es"]["Finished building FOB! Crates and Troops can now be picked up."] =
+"¡Construcción FOB completada! Ahora se pueden recoger cajas y tropas"
+ctld.i18n["es"]["Finished building FOB! Crates can now be picked up."] =
+"¡Construcción FOB completada! Ahora se pueden recoger cajas."
+ctld.i18n["es"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] =
+"%1 comenzó a construir FOB usando %2 cajas FOB , estará terminado en %3 segundos.\nPosición marcada con bomba de humo."
+ctld.i18n["es"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] =
+"¡No se puede construir el FOB!\n\nSe requiere %1 cajas FOB grandes (3 cajas FOB pequeñas equivalente a 1 caja FOB grande) y hay el equivalente a %2 cajas FOB grandes cerca\n\nO las cajas no están a menos de 750 m una de otra"
+ctld.i18n["es"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] =
+"Actualmente no estás transportando ninguna caja.\n\nPara cargar una caja, realiza un estacionario sobre la caja durante %1 segundos o aterrice y use los comandos de caja F10."
+ctld.i18n["es"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] =
+"Actualmente no estás transportando ninguna caja. \n\nPara cargar una caja, realiza un estacionario sobre la caja durante %1 segundos."
+ctld.i18n["es"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] =
+"Actualmente no estás transportando ninguna caja. \n\nPara cargar una caja, aterriza y usa los controles de la caja F10."
+ctld.i18n["es"]["%1 crate has been safely unhooked and is at your %2 o'clock"] =
+"%1 caja desenganchada de forma segura y está en tus %2 en punto"
 ctld.i18n["es"]["%1 crate has been safely dropped below you"] = "%1 caja ha soltado de forma segura debajo de ti"
 ctld.i18n["es"]["You were too high! The crate has been destroyed"] = "¡Estabas demasiado alto! La caja ha sido destruida"
 ctld.i18n["es"]["Radio Beacons:\n%1"] = "Balizas de radio:\n%1"
 ctld.i18n["es"]["No Active Radio Beacons"] = "No hay radiobalizas activas"
 ctld.i18n["es"]["%1 deployed a Radio Beacon.\n\n%2"] = "%1 Despliega una radiobaliza.\n\n%2"
-ctld.i18n["es"]["You need to land before you can deploy a Radio Beacon!"] = "¡Debes aterrizar antes de poder desplegar una radiobaliza!"
+ctld.i18n["es"]["You need to land before you can deploy a Radio Beacon!"] =
+"¡Debes aterrizar antes de poder desplegar una radiobaliza!"
 ctld.i18n["es"]["%1 removed a Radio Beacon.\n\n%2"] = "%1 eliminó una radiobaliza.\n\n%2"
 ctld.i18n["es"]["No Radio Beacons within 500m."] = "No hay radiobalizas a menos de 500 m."
-ctld.i18n["es"]["You need to land before remove a Radio Beacon"] = "Es necesario aterrizar antes de eliminar una radiobaliza"
+ctld.i18n["es"]["You need to land before remove a Radio Beacon"] =
+"Es necesario aterrizar antes de eliminar una radiobaliza"
 ctld.i18n["es"]["%1 successfully rearmed a full %2 in the field"] = "%1 rearmó con exito un %2 completo en el campo"
 ctld.i18n["es"]["Missing %1\n"] = "Faltan: %1\n"
-ctld.i18n["es"]["Out of parts for AA Systems. Current limit is %1\n"] = "Sin piezas para sistemas AA. El límite actual es %1\n"
-ctld.i18n["es"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] = "Imposible construir %1\n%2\n\nO las cajas no están lo suficientemente cerca unas de otras."
-ctld.i18n["es"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] = "%1 Despliegue con exito un % 2 completo en el campo \n\nEl límite AA del sistema activo es: %3\nActivo: %4"
+ctld.i18n["es"]["Out of parts for AA Systems. Current limit is %1\n"] =
+"Sin piezas para sistemas AA. El límite actual es %1\n"
+ctld.i18n["es"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] =
+"Imposible construir %1\n%2\n\nO las cajas no están lo suficientemente cerca unas de otras."
+ctld.i18n["es"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] =
+"%1 Despliegue con exito un % 2 completo en el campo \n\nEl límite AA del sistema activo es: %3\nActivo: %4"
 ctld.i18n["es"]["%1 successfully repaired a full %2 in the field."] = "%1 reparó con exito un %2 completo en el campo."
-ctld.i18n["es"]["Cannot repair %1. No damaged %2 within 300m"] = "Imposible reparar %1. No hay daños en %2 en 300 m al rededor"
-ctld.i18n["es"]["%1 successfully deployed %2 to the field using %3 crates."] = "%1 Despliegue con exito de %2 en el campo usando %3 cajas."
-ctld.i18n["es"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = "Imposible construir %1 !\n\nNecesita %2 cajas y hay %3 \n\nO las cajas están a no menos de 300 m una de otra"
+ctld.i18n["es"]["Cannot repair %1. No damaged %2 within 300m"] =
+"Imposible reparar %1. No hay daños en %2 en 300 m al rededor"
+ctld.i18n["es"]["%1 successfully deployed %2 to the field using %3 crates."] =
+"%1 Despliegue con exito de %2 en el campo usando %3 cajas."
+ctld.i18n["es"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] =
+"Imposible construir %1 !\n\nNecesita %2 cajas y hay %3 \n\nO las cajas están a no menos de 300 m una de otra"
 ctld.i18n["es"]["%1 dropped %2 smoke."] = "%1 lanzo humo %2."
 
 --- JTAC messages
@@ -542,7 +625,8 @@ ctld.i18n["es"][", available on %1 %2,"] = ", disponible en %1 %2,"
 ctld.i18n["es"]["UNKNOWN"] = "DESCONOCIDO"
 ctld.i18n["es"][" targeting "] = " apuntando "
 ctld.i18n["es"][" targeting selected unit "] = " apuntando a la unidad indicada"
-ctld.i18n["es"][" attempting to find selected unit, temporarily targeting "] = " intentando encontrar la unidad indicada, laser activo "
+ctld.i18n["es"][" attempting to find selected unit, temporarily targeting "] =
+" intentando encontrar la unidad indicada, laser activo "
 ctld.i18n["es"]["(Laser OFF) "] = "(Láser INACTIVO) "
 ctld.i18n["es"]["Visual On: "] = "Visual activado: "
 ctld.i18n["es"][" searching for targets %1\n"] = " buscando objetivos %1\n"
@@ -552,8 +636,10 @@ ctld.i18n["es"][". CODE: %1. POSITION: %2"] = ". CÓDIGO: %1. POSICIÓN: %2"
 ctld.i18n["es"][", target selection reset."] = ", reinicio de selección de objetivo."
 ctld.i18n["es"]["%1, laser and smokes enabled"] = "%1, láser y humo habilitados"
 ctld.i18n["es"]["%1, laser and smokes disabled"] = "%1, láser y humo deshabilitados"
-ctld.i18n["es"]["%1, wind and target speed laser spot compensations enabled"] = "%1, compensaciones habilitadas del viento y de velocidad del objetivo para el punto láser"
-ctld.i18n["es"]["%1, wind and target speed laser spot compensations disabled"] = "%1, compensaciones deshabilitadas del viento y de velocidad del objetivo para el punto láser"
+ctld.i18n["es"]["%1, wind and target speed laser spot compensations enabled"] =
+"%1, compensaciones habilitadas del viento y de velocidad del objetivo para el punto láser"
+ctld.i18n["es"]["%1, wind and target speed laser spot compensations disabled"] =
+"%1, compensaciones deshabilitadas del viento y de velocidad del objetivo para el punto láser"
 ctld.i18n["es"]["%1, WHITE smoke deployed near target"] = "%1, humo BLANCO desplegado cerca del objetivo"
 
 --- F10 menu messages
@@ -601,8 +687,11 @@ ctld.i18n["es"]["STOP autoRefresh targets in LOS"] = "Detener el seguimiento aut
 
 --========  Korean - 한국어 =====================================================================================
 ctld.i18n["ko"] = {}
-ctld.i18n["ko"].translation_version = "1.1" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
-local lang="ko";env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang, tostring(ctld.i18n[lang].translation_version)))
+ctld.i18n["ko"].translation_version =
+"1.1" -- make sure that this translation is compatible with the current version of the english language texts (ctld.i18n["en"].translation_version)
+local lang = "ko"; env
+    .info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang,
+        tostring(ctld.i18n[lang].translation_version)))
 
 --- groups names
 ctld.i18n["ko"]["Standard Group"] = "표준 그룹"
@@ -685,21 +774,23 @@ ctld.i18n["ko"]["S-300 Grumble C2"] = "S-300 관제소"
 ctld.i18n["ko"]["S-300 Repair"] = "S-300 수리킷"
 
 --- mission design error messages
-ctld.i18n["ko"]["CTLD.lua ERROR: Can't find trigger called %1"]      = "CTLD.lua 오류 : %1 트리거를 찾을 수 없음"
-ctld.i18n["ko"]["CTLD.lua ERROR: Can't find zone called %1"]         = "CTLD.lua 오류 : %1 존을 찾을 수 없음"
+ctld.i18n["ko"]["CTLD.lua ERROR: Can't find trigger called %1"] = "CTLD.lua 오류 : %1 트리거를 찾을 수 없음"
+ctld.i18n["ko"]["CTLD.lua ERROR: Can't find zone called %1"] = "CTLD.lua 오류 : %1 존을 찾을 수 없음"
 ctld.i18n["ko"]["CTLD.lua ERROR: Can't find zone or ship called %1"] = "CTLD.lua 오류 : %1 존 또는 함선을 찾을 수 없음"
-ctld.i18n["ko"]["CTLD.lua ERROR: Can't find crate with weight %1"]   = "CTLD.lua 오류 : %1 의 무게를 가진 화물을 찾을 수 없음"
+ctld.i18n["ko"]["CTLD.lua ERROR: Can't find crate with weight %1"] = "CTLD.lua 오류 : %1 의 무게를 가진 화물을 찾을 수 없음"
 
 --- runtime messages
 ctld.i18n["ko"]["You are not close enough to friendly logistics to get a crate!"] = "아군 보급계가 화물을 싣기에 충분한 거리에 있지 않습니다!"
 ctld.i18n["ko"]["No more JTAC Crates Left!"] = "JTAC 화물이 남아있지 않습니다!"
 ctld.i18n["ko"]["Sorry you must wait %1 seconds before you can get another crate"] = "죄송합니다, 다른 화물을 얻기까지 %1 초 기다려야 합니다."
-ctld.i18n["ko"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = "%2 KG의 %1 화물이 %3 시 방향에 있습니다."
+ctld.i18n["ko"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] =
+"%2 KG의 %1 화물이 %3 시 방향에 있습니다."
 ctld.i18n["ko"]["%1 fast-ropped troops from %2 into combat"] = "%1 이(가) %2 에서 공수부대를 투입했습니다."
 ctld.i18n["ko"]["%1 dropped troops from %2 into combat"] = "%1 이(가) %2 에서 병력을 투입했습니다."
 ctld.i18n["ko"]["%1 fast-ropped troops from %2 into %3"] = "%1 이(가) %2 에서 %3 로 공수부대를 투입했습니다."
 ctld.i18n["ko"]["%1 dropped troops from %2 into %3"] = "%1 이(가) %2에서 %3 로 병력을 투입했습니다."
-ctld.i18n["ko"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] = "병력을 투입하기에 너무 빠르거나 너무 높습니다! %1 피트 아래로 호버링 하거나 착륙하십시오."
+ctld.i18n["ko"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] =
+"병력을 투입하기에 너무 빠르거나 너무 높습니다! %1 피트 아래로 호버링 하거나 착륙하십시오."
 ctld.i18n["ko"]["%1 dropped vehicles from %2 into combat"] = "%1 이(가) %2 에서 차량(들)을 투입했습니다."
 ctld.i18n["ko"]["%1 loaded troops into %2"] = "%1 이 %2 로 병력을 실었습니다."
 ctld.i18n["ko"]["%1 loaded %2 vehicles into %3"] = "%1 이 %2 대의 차량을 %3 로 실었습니다."
@@ -708,7 +799,8 @@ ctld.i18n["ko"]["Delivered FOB Crate 60m at 6'oclock to you"] = "FOB 화물이 6
 ctld.i18n["ko"]["FOB Crate dropped back to base"] = "FOB 화물이 기지로 돌아갔습니다."
 ctld.i18n["ko"]["FOB Crate Loaded"] = "FOB 화물 적재 완료"
 ctld.i18n["ko"]["%1 loaded a FOB Crate ready for delivery!"] = "%1 이 배달 준비가 완료된 FOB 화물을 실었습니다!"
-ctld.i18n["ko"]["There are no friendly logistic units nearby to load a FOB crate from!"] = "아군 보급계가 FOB 화물을 싣기에 충분한 거리에 있지 않습니다!"
+ctld.i18n["ko"]["There are no friendly logistic units nearby to load a FOB crate from!"] =
+"아군 보급계가 FOB 화물을 싣기에 충분한 거리에 있지 않습니다!"
 ctld.i18n["ko"]["You already have troops onboard."] = "이미 병력이 탑승중입니다."
 ctld.i18n["ko"]["You already have vehicles onboard."] = "이미 차량이 적재되어 있습니다."
 ctld.i18n["ko"]["This area has no more reinforcements available!"] = "이 구역은 지원이 불가합니다!"
@@ -717,7 +809,8 @@ ctld.i18n["ko"]["You are not in a pickup zone"] = "픽업 구역이 아닙니다
 ctld.i18n["ko"]["No one to unload"] = "내릴 사람 없음"
 ctld.i18n["ko"]["Dropped troops back to base"] = "병력을 기지로 돌려보냈습니다."
 ctld.i18n["ko"]["Dropped vehicles back to base"] = "차량을 기지로 돌려보냈습니다."
-ctld.i18n["ko"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = "죄송합니다. %1 그룹이 너무 무겁습니다. \n\n%3 의 무게 제한은 %2 입니다."
+ctld.i18n["ko"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] =
+"죄송합니다. %1 그룹이 너무 무겁습니다. \n\n%3 의 무게 제한은 %2 입니다."
 ctld.i18n["ko"]["%1 extracted troops in %2 from combat"] = "%1 이 %2 에서 병력을 철수시켰습니다."
 ctld.i18n["ko"]["No extractable troops nearby!"] = "철수시킬 병력이 근처에 없습니다!"
 ctld.i18n["ko"]["%1 extracted vehicles in %2 from combat"] = "%1 이 %2 에서 차량을 철수시켰습니다."
@@ -728,7 +821,8 @@ ctld.i18n["ko"]["1 FOB Crate oboard (%1 kg)\n"] = "FOB 화물 1개 적재됨 (%1
 ctld.i18n["ko"]["%1 crate onboard (%2 kg)\n"] = "적재된 화물 : %1 (%2 kg)\n"
 ctld.i18n["ko"]["Total weight of cargo : %1 kg\n"] = "총 화물 무게 : %1 kg\n"
 ctld.i18n["ko"]["No cargo."] = "화물 없음."
-ctld.i18n["ko"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] = "%1 화물 위 호버링 중. \n\n%2 초 동안 호버링하세요! \n\n카운트다운이 멈추면 너무 멀다는 뜻입니다!"
+ctld.i18n["ko"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] =
+"%1 화물 위 호버링 중. \n\n%2 초 동안 호버링하세요! \n\n카운트다운이 멈추면 너무 멀다는 뜻입니다!"
 ctld.i18n["ko"]["Loaded %1 crate!"] = "%1 화물 적재 완료!"
 ctld.i18n["ko"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = "%1 화물을 싣기에 너무 낮습니다.\n\n%2 초 동안 호버링하세요."
 ctld.i18n["ko"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = "%1 화물을 싣기에 너무 높습니다.\n\n%2 초 동안 호버링하세요."
@@ -746,14 +840,20 @@ ctld.i18n["ko"]["Sorry, there are no active FOBs!"] = "죄송합니다, 활성�
 ctld.i18n["ko"]["You can't unpack that here! Take it to where it's needed!"] = "여기에 풀 수 없습니다! 필요한 곳에 가져가세요!"
 ctld.i18n["ko"]["Sorry you must move this crate before you unpack it!"] = "죄송합니다, 풀기 전에 이 화물을 옮겨야 합니다!"
 ctld.i18n["ko"]["%1 successfully deployed %2 to the field"] = "%1 이 %2 를 성공적으로 배치했습니다."
-ctld.i18n["ko"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = "풀 아군 화물이 가깝지 않거나 너무 가깝습니다."
+ctld.i18n["ko"]["No friendly crates close enough to unpack, or crate too close to aircraft."] =
+"풀 아군 화물이 가깝지 않거나 너무 가깝습니다."
 ctld.i18n["ko"]["Finished building FOB! Crates and Troops can now be picked up."] = "FOB 건설 완료! 이제 화물과 병력을 실을 수 있습니다."
 ctld.i18n["ko"]["Finished building FOB! Crates can now be picked up."] = "FOB 건설 완료! 이제 화물을 실을 수 있습니다."
-ctld.i18n["ko"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] = "%1 이 %2 개의 FOB 화물을 이용하여 FOB 건설을 시작했습니다. %3 초 후 완료됩니다.\n위치가 연막으로 표시됐습니다."
-ctld.i18n["ko"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] = "FOB를 건설할 수 없습니다!\n\n%1 개의 FOB 화물 - 大 가 필요합니다! (3개의 FOB 화물 - 小 는 1개의 FOB 화물 - 大 와 동일합니다.) 근처에 %2 개의 FOB 화물 - 大 가 있습니다.\n\n또는 화물들이 서로 750m 거리보다 멀리 있습니다."
-ctld.i18n["ko"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] = "현재 화물을 운송하고 있지 않습니다. \n\n화물을 실으려면, 화물 위에서 %1 초 동안 호버링하거나 착륙하여 F10 화물 명령어를 사용하세요."
-ctld.i18n["ko"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] = "현재 화물을 운송하고 있지 않습니다. \n\n화물을 실으려면, 화물 위에서 %1 초 동안 호버링하세요."
-ctld.i18n["ko"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] = "현재 화물을 운송하고 있지 않습니다. \n\n화물을 실으려면, 착륙하여 F10 화물 명령어를 사용하세요."
+ctld.i18n["ko"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] =
+"%1 이 %2 개의 FOB 화물을 이용하여 FOB 건설을 시작했습니다. %3 초 후 완료됩니다.\n위치가 연막으로 표시됐습니다."
+ctld.i18n["ko"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] =
+"FOB를 건설할 수 없습니다!\n\n%1 개의 FOB 화물 - 大 가 필요합니다! (3개의 FOB 화물 - 小 는 1개의 FOB 화물 - 大 와 동일합니다.) 근처에 %2 개의 FOB 화물 - 大 가 있습니다.\n\n또는 화물들이 서로 750m 거리보다 멀리 있습니다."
+ctld.i18n["ko"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] =
+"현재 화물을 운송하고 있지 않습니다. \n\n화물을 실으려면, 화물 위에서 %1 초 동안 호버링하거나 착륙하여 F10 화물 명령어를 사용하세요."
+ctld.i18n["ko"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] =
+"현재 화물을 운송하고 있지 않습니다. \n\n화물을 실으려면, 화물 위에서 %1 초 동안 호버링하세요."
+ctld.i18n["ko"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] =
+"현재 화물을 운송하고 있지 않습니다. \n\n화물을 실으려면, 착륙하여 F10 화물 명령어를 사용하세요."
 ctld.i18n["ko"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = "%1 화물이 안전하게 내려졌고 %2 시 방향에 있습니다."
 ctld.i18n["ko"]["%1 crate has been safely dropped below you"] = "%1 화물이 밑에 안전하게 내려졌습니다."
 ctld.i18n["ko"]["You were too high! The crate has been destroyed"] = "너무 높았습니다! 화물이 파괴되었습니다."
@@ -767,12 +867,16 @@ ctld.i18n["ko"]["You need to land before remove a Radio Beacon"] = "라디오 �
 ctld.i18n["ko"]["%1 successfully rearmed a full %2 in the field"] = "%1 이(가) %2 을(를) 성공적으로 재무장 시켰습니다."
 ctld.i18n["ko"]["Missing %1\n"] = "%1 없음\n"
 ctld.i18n["ko"]["Out of parts for AA Systems. Current limit is %1\n"] = "방공 시스템 필요 부분 없음. 현재 제한 : %1\n"
-ctld.i18n["ko"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] = "%1 건설 불가\n%2\n\n또는 화물이 서로 가까이 있지 않습니다."
-ctld.i18n["ko"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] = "%1 이(가) 완전한 %2 를 성공적으로 투입했습니다. \n\n방공 시스템 제한 : %3\n활성화된 방공 시스템 : %4"
+ctld.i18n["ko"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] =
+"%1 건설 불가\n%2\n\n또는 화물이 서로 가까이 있지 않습니다."
+ctld.i18n["ko"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] =
+"%1 이(가) 완전한 %2 를 성공적으로 투입했습니다. \n\n방공 시스템 제한 : %3\n활성화된 방공 시스템 : %4"
 ctld.i18n["ko"]["%1 successfully repaired a full %2 in the field."] = "%1 이(가) 완전한 %2 을(를) 성공적으로 수리했습니다."
 ctld.i18n["ko"]["Cannot repair %1. No damaged %2 within 300m"] = "%1 수리 불가. 300m 내에 손상을 입은 %2 없음."
-ctld.i18n["ko"]["%1 successfully deployed %2 to the field using %3 crates."] = "%1 이 %3 개의 화물을 이용하여 %2 을(를) 성공적으로 배치했습니다."
-ctld.i18n["ko"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] = "%1 건설 불가!\n\n%2 개의 화물이 필요하지만 %3 개 있습니다. \n\n또는 화물들이 서로 300m 내의 거리에 있지 않습니다."
+ctld.i18n["ko"]["%1 successfully deployed %2 to the field using %3 crates."] =
+"%1 이 %3 개의 화물을 이용하여 %2 을(를) 성공적으로 배치했습니다."
+ctld.i18n["ko"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] =
+"%1 건설 불가!\n\n%2 개의 화물이 필요하지만 %3 개 있습니다. \n\n또는 화물들이 서로 300m 내의 거리에 있지 않습니다."
 ctld.i18n["ko"]["%1 dropped %2 smoke."] = "%1 이(가) %2 연막을 투하했습니다."
 
 --- JTAC messages
