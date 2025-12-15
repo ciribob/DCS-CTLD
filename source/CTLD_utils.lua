@@ -543,7 +543,7 @@ end
 --------------------------------------------------------------------------------------------------------
 function ctld.utils.getUnitsLOS(caller, unitset1, altoffset1, unitset2, altoffset2, radius)
     --log:info("$1, $2, $3, $4, $5", unitset1, altoffset1, unitset2, altoffset2, radius)
-    if unitset1 == nil or unitset2 == nil or altoffset1 == nil or altoffset2 == nil or radius = nil then
+    if unitset1 == nil or unitset2 == nil or altoffset1 == nil or altoffset2 == nil or radius == nil then
         if env and env.error then
             env.error("ctld.utils.getUnitsLOS()." .. tostring(caller) .. ": parameters sets cannot be nil.")
         end
@@ -629,7 +629,8 @@ function ctld.utils.getGroupRoute(caller, groupIdent, task)
     if mist.DBs.MEgroupsByName[groupIdent] then
         gpId = mist.DBs.MEgroupsByName[groupIdent].groupId
     else
-        log:error("ctld.utils.getGroupRoute()." .. tostring(caller) .. '$1 not found in mist.DBs.MEgroupsByName', groupIdent)
+        log:error("ctld.utils.getGroupRoute()." .. tostring(caller) .. '$1 not found in mist.DBs.MEgroupsByName',
+            groupIdent)
     end
 
     for coa_name, coa_data in pairs(env.mission.coalition) do
@@ -637,10 +638,10 @@ function ctld.utils.getGroupRoute(caller, groupIdent, task)
             if coa_data.country then --there is a country table
                 for cntry_id, cntry_data in pairs(coa_data.country) do
                     for obj_cat_name, obj_cat_data in pairs(cntry_data) do
-                        if obj_cat_name == "helicopter" or obj_cat_name == "ship" or obj_cat_name == "plane" or obj_cat_name == "vehicle" then -- only these types have points
+                        if obj_cat_name == "helicopter" or obj_cat_name == "ship" or obj_cat_name == "plane" or obj_cat_name == "vehicle" then                       -- only these types have points
                             if ((type(obj_cat_data) == 'table') and obj_cat_data.group and (type(obj_cat_data.group) == 'table') and (#obj_cat_data.group > 0)) then --there's a group!
                                 for group_num, group_data in pairs(obj_cat_data.group) do
-                                    if group_data and group_data.groupId == gpId then                                                        -- this is the group we are looking for
+                                    if group_data and group_data.groupId == gpId then                                                                                -- this is the group we are looking for
                                         if group_data.route and group_data.route.points and #group_data.route.points > 0 then
                                             local points = {}
 
@@ -677,16 +678,15 @@ function ctld.utils.getGroupRoute(caller, groupIdent, task)
                                         log:error('Group route not defined in mission editor for groupId: $1', gpId)
                                         return
                                     end --if group_data and group_data.name and group_data.name == 'groupname'
-                                end --for group_num, group_data in pairs(obj_cat_data.group) do
-                            end --if ((type(obj_cat_data) == 'table') and obj_cat_data.group and (type(obj_cat_data.group) == 'table') and (#obj_cat_data.group > 0)) then
-                        end --if obj_cat_name == "helicopter" or obj_cat_name == "ship" or obj_cat_name == "plane" or obj_cat_name == "vehicle" or obj_cat_name == "static" then
-                    end --for obj_cat_name, obj_cat_data in pairs(cntry_data) do
-                end --for cntry_id, cntry_data in pairs(coa_data.country) do
-            end --if coa_data.country then --there is a country table
-        end --if coa_name == 'red' or coa_name == 'blue' and type(coa_data) == 'table' then
-    end   --for coa_name, coa_data in pairs(mission.coalition) do
+                                end     --for group_num, group_data in pairs(obj_cat_data.group) do
+                            end         --if ((type(obj_cat_data) == 'table') and obj_cat_data.group and (type(obj_cat_data.group) == 'table') and (#obj_cat_data.group > 0)) then
+                        end             --if obj_cat_name == "helicopter" or obj_cat_name == "ship" or obj_cat_name == "plane" or obj_cat_name == "vehicle" or obj_cat_name == "static" then
+                    end                 --for obj_cat_name, obj_cat_data in pairs(cntry_data) do
+                end                     --for cntry_id, cntry_data in pairs(coa_data.country) do
+            end                         --if coa_data.country then --there is a country table
+        end                             --if coa_name == 'red' or coa_name == 'blue' and type(coa_data) == 'table' then
+    end                                 --for coa_name, coa_data in pairs(mission.coalition) do
 end
-
 
 --------------------------------------------------------------------------------------------------------
 --Gets the average position of a group of units (by name)
