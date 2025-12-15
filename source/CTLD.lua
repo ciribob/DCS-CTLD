@@ -2783,7 +2783,7 @@ end
 function ctld.metersToFeet(_meters)
     local _feet = _meters * 3.2808399
 
-    return CTLD_extAPI.utils.round("ctld.metersToFeet", _feet)
+    return ctld.utils.round("ctld.metersToFeet", _feet)
 end
 
 function ctld.inAir(_heli)
@@ -4470,7 +4470,7 @@ function ctld.updateRadioBeacon(_beaconDetails)
 
     --fobs have unlimited battery life
     --        if _battery ~= -1 then
-    --                _text = _text.." "..CTLD_extAPI.utils.round("ctld.updateRadioBeacon()", _batLife).." seconds of battery"
+    --                _text = _text.." "..ctld.utils.round("ctld.updateRadioBeacon()", _batLife).." seconds of battery"
     --        end
 
     for _, _radio in pairs(_radioLoop) do
@@ -8048,8 +8048,8 @@ function ctld.getPositionString(_unit)
         " - MGRS " ..
         _mgrsString ..
         " - ALTI: " ..
-        CTLD_extAPI.utils.round("ctld.getPositionString()", _TargetAlti, 0) ..
-        " m / " .. CTLD_extAPI.utils.round("ctld.getPositionString()", _TargetAlti / 0.3048, 0) .. " ft"
+        ctld.utils.round("ctld.getPositionString()", _TargetAlti, 0) ..
+        " m / " .. ctld.utils.round("ctld.getPositionString()", _TargetAlti / 0.3048, 0) .. " ft"
 end
 
 --**********************************************************************

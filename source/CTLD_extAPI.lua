@@ -162,15 +162,6 @@ CTLD_extAPI.utils.get2DDist  = function(caller, ...)
     return framework.utils.get2DDist(...)
 end
 
-CTLD_extAPI.utils.round      = function(caller, ...)
-    if not (framework and framework.utils and framework.utils.round) then
-        logError('[CTLD_extAPI ERROR] utils.round unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.utils.round(...)
-end
-
 CTLD_extAPI.utils.tableShow  = function(caller, ...)
     if not (framework and framework.utils and framework.utils.tableShow) then
         logError('[CTLD_extAPI ERROR] utils.tableShow unavailable (' ..
