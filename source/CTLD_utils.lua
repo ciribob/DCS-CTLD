@@ -36,15 +36,15 @@ function ctld.utils.drawQuad(coalitionId, vec3Points1To4, message)
     trigger.action.quadToAll(coalitionId, markId,
         vec3Points1To4[1], vec3Points1To4[2], vec3Points1To4[3], vec3Points1To4[4],
         tableColor, tableFillColor, lineType, true, message)
-end
 
---[[-example ------------------------------------------------------------
+    --[[-example ------------------------------------------------------------
 local heliName = "h1-1"
 local triggerUnitObj = Unit.getByName(heliName)
 local vec3StartPoint = triggerUnitObj:getPosition().p
 local vec3EndPoint = {x = vec3StartPoint.x+1000,z=vec3StartPoint.z+1000,y=vec3StartPoint.y}
 ctld.utils.drawQuad(coalitionId, vec3Points1To4, message)
-return mist.utils.tableShow(ctld.marks)  ]] -----------------------------
+]] --
+end
 
 --------------------------------------------------------------------------------------------------------
 -- Calculates the absolute coordinates (x, y, heading, altitude) of a target point
