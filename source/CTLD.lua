@@ -3792,8 +3792,7 @@ function ctld.getCompassBearing(_ref, _unitPos)
     local _dir = CTLD_extAPI.utils.getDir("ctld.getCompassBearing()", _vec, _ref)
 
     local _bearing = CTLD_extAPI.utils.round("ctld.getCompassBearing()",
-        CTLD_extAPI.utils.toDegree("ctld.getCompassBearing()", _dir), 0)
-
+        ctld.utils.radianToDegree("ctld.getCompassBearing()", _dir), 0)
     return _bearing
 end
 

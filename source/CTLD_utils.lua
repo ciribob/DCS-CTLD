@@ -264,6 +264,19 @@ function ctld.utils.getNextUniqId()
     return utils.UniqIdCounter
 end
 
+--- Converts angle in radians to degrees.
+-- @param angle angle in radians
+-- @return angle in degrees
+function ctld.utils.radianToDegree(caller, angleInRadians)
+    if angle == nil or type(angle) ~= "number" then
+        if env and env.error then
+            env.error("CTLD.utils:toDegree()." .. tostring(caller) .. ": Invalid angle provided.")
+        end
+        return 0
+    end
+    return math.deg(angleInRadians)
+end
+
 --------------------------------------------------------------------------------------------------------
 --- @function ctld.utils:normalizeHeading
 -- Normalise a heading between 0 et 360 degrees.
