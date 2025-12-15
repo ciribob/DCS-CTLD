@@ -2088,7 +2088,9 @@ do -- the main scope
 			newGroup.units[unitIndex].unitName = nil
 		end
 
-		--coalition.addGroup(country.id[newCountry], Unit.Category[newCat], newGroup)
+		ctld.logTrace("mist.dynAdd().nexGroup =  %s", ctld.p(newGroup))
+		ctld.logTrace("mist.dynAdd().nexGroup =  %s", mist.utils.tableShow(newGroup))
+		coalition.addGroup(country.id[newCountry], Unit.Category[newCat], newGroup)
 
 		return newGroup
 	end
@@ -11805,7 +11807,7 @@ ctld.internalCargoLimits                  = {
     -- Remove the -- below to turn on options
     ["Mi-8MT"] = 2,
     ["CH-47Fbl1"] = 8,
-    ["UH-1H"] = 3, -- to remove after debug
+    --["UH-1H"] = 3, -- to remove after debug
 }
 
 
@@ -12091,14 +12093,9 @@ ctld.spawnableCrates = {
         { weight = 1006.11, desc = ctld.i18n_translate("MQ-1A Predator - JTAC"), unit = "RQ-1A Predator", side = 1 },
         -- End of RED MQ-1A Predator
     },
-    ["FARP Alpha"] = {
-        --- Single Farp
-        { weight = 1007.01, desc = ctld.i18n_translate("FARP Alpha"), unit = "FARP Alpha", cratesRequired = 1 },
-    },
-    ["mineField"] = {
-        --- Single Farp
-        { weight = 1007.02, desc = ctld.i18n_translate("mineField"), unit = "mineField", cratesRequired = 1 },
-    },
+    --["FARP Alpha"] = {{ weight = 1007.01, desc = ctld.i18n_translate("FARP Alpha"), unit = "FARP Alpha", cratesRequired = 1 }, },
+    --- Single Farp
+    --["mineField"] = {{ weight = 1007.02, desc = ctld.i18n_translate("mineField"), unit = "mineField", cratesRequired = 1 },},
 }
 
 ctld.spawnableCratesModels = {
@@ -12299,7 +12296,7 @@ function ctld.cratesInZone(_zone, _flagNumber)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
+    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.cratesInZone()", _zone)
 
     --ignore side, if crate has been used its discounted from the count
     local _crateTables = { ctld.spawnedCratesRED, ctld.spawnedCratesBLUE, ctld.missionEditorCargoCrates }
@@ -12423,7 +12420,7 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
+    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
 
     local _redCount = 0;
     local _blueCount = 0;
@@ -12435,7 +12432,7 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
             local _groupUnits = ctld.getGroup(_groupName)
 
             if #_groupUnits > 0 then
-                local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
+                local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
                 local _dist = ctld.getDistance(_groupUnits[1]:getPoint(), _zonePos)
 
                 if _dist <= _triggerZone.radius then
@@ -12468,7 +12465,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
+    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
 
     local _redCount = 0;
     local _blueCount = 0;
@@ -12481,7 +12478,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
             local _groupUnits = ctld.getGroup(_groupName)
 
             if #_groupUnits > 0 then
-                local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
+                local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
                 for _, _unit in pairs(_groupUnits) do
                     local _dist = ctld.getDistance(_unit:getPoint(), _zonePos)
 
@@ -12526,7 +12523,7 @@ function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife, _name)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
+    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.createRadioBeaconAtZone()", _zone)
 
     ctld.beaconCount = ctld.beaconCount + 1
 
@@ -12910,7 +12907,7 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
         local repackableUnit = ctld.isRepackableUnit(unitsNamesList[i])
         if repackableUnit then
             repackableUnit["repackableUnitGroupID"] = unitObject:getGroup():getID()
-            table.insert(repackableUnits, CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", repackableUnit))
+            table.insert(repackableUnits, CTLD_extAPI.utils.deepCopy("ctld.getUnitsInRepackRadius()", repackableUnit))
         end
     end
     return repackableUnits
@@ -12931,7 +12928,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
         local c = nil
         pcall(function() c = (u and e and u:getCoalition()) or nil end)
         if u and e and (_coalition == 4 or c == _coalition) then
-            local _dist = CTLD_extAPI.utils.get2DDist("GLOBAL_SCOPE", u:getPoint(), _point)
+            local _dist = CTLD_extAPI.utils.get2DDist("ctld.getNearbyUnits()", u:getPoint(), _point)
             if _dist <= _radius then
                 unitsByDistance[cpt] = { id = cpt, dist = _dist, unit = _unitName, typeName = u:getTypeName() }
                 cpt = cpt + 1
@@ -13007,7 +13004,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerCoa           = PlayerTransportUnit:getCoalition()
                 local refCountry          = PlayerTransportUnit:getCountry()
                 -- calculate the heading of the spawns to be carried out
-                local playerHeading       = CTLD_extAPI.getHeading("GLOBAL_SCOPE", PlayerTransportUnit)
+                local playerHeading       = CTLD_extAPI.getHeading("ctld.repackVehicle()", PlayerTransportUnit)
                 local playerPoint         = PlayerTransportUnit:getPoint()
                 local offset              = 5
                 local randomHeading       = ctld.RandomReal(playerHeading - math.pi / 4, playerHeading + math.pi / 4)
@@ -13387,7 +13384,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _crate["heading"] = hdg
         _crate["country"] = _country
 
-        CTLD_extAPI.dynAddStatic("GLOBAL_SCOPE", _crate)
+        CTLD_extAPI.dynAddStatic("ctld.spawnCrateStatic()", _crate)
 
         _spawnedCrate = StaticObject.getByName(_crate["name"])
     end
@@ -13686,7 +13683,7 @@ function ctld.safeToFastRope(_heli)
     end
 
     --landed or speed is less than 8 km/h and height is less than fast rope height
-    if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and CTLD_extAPI.vec.mag("GLOBAL_SCOPE", _heli:getVelocity()) < 2.2)) then
+    if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and CTLD_extAPI.vec.mag("ctld.safeToFastRope()", _heli:getVelocity()) < 2.2)) then
         return true
     end
 end
@@ -13704,7 +13701,7 @@ function ctld.inAir(_heli)
 
     -- less than 5 cm/s a second so landed
     -- BUT AI can hold a perfect hover so ignore AI
-    if CTLD_extAPI.vec.mag("GLOBAL_SCOPE", _heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
+    if CTLD_extAPI.vec.mag("ctld.inAir)", _heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
         return false
     end
     return true
@@ -14533,7 +14530,8 @@ function ctld.checkHoverStatus()
 
                                 _crate.crateUnit:destroy()
 
-                                local _copiedCrate = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", _crate.details)
+                                local _copiedCrate = CTLD_extAPI.utils.deepCopy("ctld.checkHoverStatus()", _crate
+                                    .details)
                                 _copiedCrate.simulatedSlingload = true
                                 table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                                 ctld.adaptWeightToCargo(_name)
@@ -14599,7 +14597,7 @@ function ctld.loadNearbyCrate(_name)
 
                     _crate.crateUnit:destroy()
 
-                    local _copiedCrate = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", _crate.details)
+                    local _copiedCrate = CTLD_extAPI.utils.deepCopy("ctld.loadNearbyCrate()", _crate.details)
                     _copiedCrate.simulatedSlingload = true
                     table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                     loaded = true
@@ -14663,9 +14661,9 @@ function ctld.getClockDirection(_heli, _crate)
 
     local _position = _crate:getPosition().p      -- get position of crate
     local _playerPosition = _heli:getPosition().p -- get position of helicopter
-    local _relativePosition = CTLD_extAPI.vec.sub("ctld.getClockDirection", _position, _playerPosition)
+    local _relativePosition = CTLD_extAPI.vec.sub("ctld.getClockDirection()", _position, _playerPosition)
 
-    local _playerHeading = CTLD_extAPI.getHeading("ctld.getClockDirection", _heli) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
+    local _playerHeading = CTLD_extAPI.getHeading("ctld.getClockDirection()", _heli) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
 
     local _headingVector = { x = math.cos(_playerHeading), y = 0, z = math.sin(_playerHeading) }
 
@@ -14676,9 +14674,9 @@ function ctld.getClockDirection(_heli, _crate)
             math.pi / 2)
     }
 
-    local _forwardDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection", _relativePosition, _headingVector)
+    local _forwardDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection()", _relativePosition, _headingVector)
 
-    local _rightDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection", _relativePosition, _headingVectorPerpendicular)
+    local _rightDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection()", _relativePosition, _headingVectorPerpendicular)
 
     local _angle = math.atan2(_rightDistance, _forwardDistance) * 180 / math.pi
 
@@ -14694,14 +14692,15 @@ function ctld.getClockDirection(_heli, _crate)
 end
 
 function ctld.getCompassBearing(_ref, _unitPos)
-    _ref = CTLD_extAPI.utils.makeVec3("ctld.getCompassBearing", _ref, 0)         -- turn it into Vec3 if it is not already.
-    _unitPos = CTLD_extAPI.utils.makeVec3("ctld.getCompassBearing", _unitPos, 0) -- turn it into Vec3 if it is not already.
+    _ref = CTLD_extAPI.utils.makeVec3("ctld.getCompassBearing()", _ref, 0)         -- turn it into Vec3 if it is not already.
+    _unitPos = CTLD_extAPI.utils.makeVec3("ctld.getCompassBearing()", _unitPos, 0) -- turn it into Vec3 if it is not already.
 
     local _vec = { x = _unitPos.x - _ref.x, y = _unitPos.y - _ref.y, z = _unitPos.z - _ref.z }
 
-    local _dir = CTLD_extAPI.utils.getDir("ctld.getCompassBearing", _vec, _ref)
+    local _dir = CTLD_extAPI.utils.getDir("ctld.getCompassBearing()", _vec, _ref)
 
-    local _bearing = CTLD_extAPI.utils.round("ctld.getCompassBearing", CTLD_extAPI.utils.toDegree(_dir), 0)
+    local _bearing = CTLD_extAPI.utils.round("ctld.getCompassBearing()",
+        CTLD_extAPI.utils.toDegree("ctld.getCompassBearing()", _dir), 0)
 
     return _bearing
 end
@@ -14783,9 +14782,9 @@ end
 function ctld.getFOBPositionString(_fob)
     local _lat, _lon = coord.LOtoLL(_fob:getPosition().p)
 
-    local _latLngStr = CTLD_extAPI.tostringLL("ctld.getFOBPositionString", _lat, _lon, 3, ctld.location_DMS)
+    local _latLngStr = CTLD_extAPI.tostringLL("ctld.getFOBPositionString()", _lat, _lon, 3, ctld.location_DMS)
 
-    --     local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.getFOBPositionString", coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
+    --     local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.getFOBPositionString()", coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
 
     local _message = _latLngStr
 
@@ -14870,7 +14869,7 @@ function ctld.getCratesAndDistance(_heli)
 end
 
 function ctld.getClosestCrate(_heli, _crates, _type)
-    local _closetCrate      = nil
+    local _closestCrate     = nil
     local _shortestDistance = -1
     local _distance         = 0
     local _minimumDistance  = 5  -- prevents dynamic cargo crates from unpacking while in cargo hold
@@ -14881,12 +14880,12 @@ function ctld.getClosestCrate(_heli, _crates, _type)
 
             if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) and _distance > _minimumDistance and _distance < _maxDistance then
                 _shortestDistance = _distance
-                _closetCrate = _crate
+                _closestCrate = _crate
             end
         end
     end
 
-    return _closetCrate
+    return _closestCrate
 end
 
 function ctld.findNearestAASystem(_heli, _aaSystem)
@@ -14986,16 +14985,23 @@ function ctld.unpackCrates(_arguments)
                     local _point = ctld.getPointInFrontSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
                     if ctld.unitDynamicCargoCapable(_heli) == true then
                         _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
+                        if _crate.details.unit == "MQ-9 Reaper" or _crate.details.unit == "RQ-1A Predator" then
+                            --special case to increase spawn altitude for drones
+                            _point.y = _point.y + 1000 -- set spawn altitude to 1000m
+                        end
                     end
                     local _crateName = _crate.crateUnit:getName()
-                    local _crateHdg  = CTLD_extAPI.getHeading("GLOBAL_SCOPE", _crate.crateUnit, true)
+                    local _crateHdg  = CTLD_extAPI.getHeading("ctld.unpackCrates()", _crate.crateUnit, true)
 
                     --remove crate
                     --    if ctld.slingLoad == false then
                     _crate.crateUnit:destroy()
                     -- end
                     ctld.logTrace("_crate =  %s", ctld.p(_crate))
+                    ctld.logTrace("single _point =  %s", ctld.p(_point))
+                    ctld.logTrace("single _crate.details.unit =  %s", ctld.p(_crate.details.unit))
                     local _spawnedGroups = ctld.spawnCrateGroup(_heli, { _point }, { _crate.details.unit }, { _crateHdg })
+                    ctld.logTrace("_spawnedGroups.name =  %s", ctld.p(_spawnedGroups:getName()))
                     ctld.logTrace("_spawnedGroups =  %s", ctld.p(_spawnedGroups))
 
                     if _heli:getCoalition() == 1 then
@@ -15180,7 +15186,7 @@ function ctld.dropSlingCrate(_args)
     else
         local _point = _heli:getPoint()
         local _side = _heli:getCoalition()
-        local _hdg = CTLD_extAPI.getHeading("GLOBAL_SCOPE", _heli, true)
+        local _hdg = CTLD_extAPI.getHeading("ctld.dropSlingCrate()", _heli, true)
         local _heightDiff = ctld.heightDiff(_heli)
 
         if _heightDiff > 40.0 then
@@ -15189,7 +15195,8 @@ function ctld.dropSlingCrate(_args)
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You were too high! The crate has been destroyed"), 10)
             return
         end
-        local _loadedCratesCopy = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", ctld.inTransitSlingLoadCrates[_unitName])
+        local _loadedCratesCopy = CTLD_extAPI.utils.deepCopy("ctld.dropSlingCrate()",
+            ctld.inTransitSlingLoadCrates[_unitName])
         ctld.logTrace("_loadedCratesCopy = %s", ctld.p(_loadedCratesCopy))
         for _, _crate in pairs(_loadedCratesCopy) do
             ctld.logTrace("_crate = %s", ctld.p(_crate))
@@ -15238,9 +15245,9 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
 
     local _lat, _lon = coord.LOtoLL(_point)
 
-    local _latLngStr = CTLD_extAPI.tostringLL("GLOBAL_SCOPE", _lat, _lon, 3, ctld.location_DMS)
+    local _latLngStr = CTLD_extAPI.tostringLL("ctld.createRadioBeacon()", _lat, _lon, 3, ctld.location_DMS)
 
-    --local _mgrsString = CTLD_extAPI.tostringMGRS("GLOBAL_SCOPE", coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
+    --local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.createRadioBeacon()", coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
 
     local _freqsText = _name
 
@@ -15339,7 +15346,7 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
     }
 
     -- return coalition.addGroup(_country, Group.Category.GROUND, _radioGroup)
-    return Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnRadioBeaconUnit", _radioGroup).name)
+    return Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnRadioBeaconUnit()", _radioGroup).name)
 end
 
 function ctld.updateRadioBeacon(_beaconDetails)
@@ -15385,7 +15392,7 @@ function ctld.updateRadioBeacon(_beaconDetails)
 
     --fobs have unlimited battery life
     --        if _battery ~= -1 then
-    --                _text = _text.." "..CTLD_extAPI.utils.round("GLOBAL_SCOPE", _batLife).." seconds of battery"
+    --                _text = _text.." "..CTLD_extAPI.utils.round("ctld.updateRadioBeacon()", _batLife).." seconds of battery"
     --        end
 
     for _, _radio in pairs(_radioLoop) do
@@ -15582,7 +15589,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
 
                         table.insert(_points, _units[x]:getPoint())
                         table.insert(_types, _units[x]:getTypeName())
-                        table.insert(_hdgs, CTLD_extAPI.getHeading("ctld.rearmAASystem", _units[x], true))
+                        table.insert(_hdgs, CTLD_extAPI.getHeading("ctld.rearmAASystem()", _units[x], true))
                     end
                 end
             end
@@ -15644,7 +15651,7 @@ function ctld.getAASystemDetails(_hawkGroup, _aaSystemTemplate)
                 name = _unit:getName(),
                 system = _aaSystemTemplate,
                 hdg =
-                    CTLD_extAPI.getHeading("ctld.getAASystemDetails", _unit, true)
+                    CTLD_extAPI.getHeading("ctld.getAASystemDetails()", _unit, true)
             })
     end
 
@@ -15746,7 +15753,7 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempl
                 end
                 table.insert(_systemParts[_name].crates, _nearbyCrate)
                 table.insert(_cratePositions[_name], crateUnit:getPoint())
-                table.insert(_crateHdg[_name], CTLD_extAPI.getHeading("GLOBAL_SCOPE", crateUnit, true))
+                table.insert(_crateHdg[_name], CTLD_extAPI.getHeading("ctld.unpackAASystem()", crateUnit, true))
             end
         end
     end
@@ -15924,7 +15931,7 @@ function ctld.countCompleteAASystems(_heli)
     for _groupName, _hawkDetails in pairs(ctld.completeAASystems) do
         local _hawkGroup = Group.getByName(_groupName)
 
-        --    env.info(_groupName..": "..CTLD_extAPI.utils.tableShow("ctld.countCompleteAASystems", _hawkDetails))
+        --    env.info(_groupName..": "..CTLD_extAPI.utils.tableShow("ctld.countCompleteAASystems()", _hawkDetails))
         if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() then
             local _units = _hawkGroup:getUnits()
 
@@ -16037,7 +16044,9 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
             _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
         end
 
-        local _crateHdg = CTLD_extAPI.getHeading("GLOBAL_SCOPE", _nearestCrate.crateUnit, true)
+        ctld.logError("5134 :ctld.unpackMultiCrate(): _nearestCrate.crateUnit = " ..
+            mist.utils.tableShow(_nearestCrate.crateUnit))
+        local _crateHdg = CTLD_extAPI.getHeading("ctld.unpackMultiCrate()", _nearestCrate.crateUnit, true)
 
         -- destroy crates
         for _, _crate in pairs(_nearbyMultiCrates) do
@@ -16056,7 +16065,6 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
             _crate.crateUnit:destroy()
             --     end
         end
-
 
         local _spawnedGroup = ctld.spawnCrateGroup(_heli, { _point }, { _nearestCrate.details.unit }, { _crateHdg })
         if _spawnedGroup == nil then
@@ -16235,36 +16243,38 @@ function ctld.spawnCrateGroup_old(_heli, _positions, _types, _hdgs)
     end
 
     _group.country = _heli:getCountry()
-    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("GLOBAL_SCOPE", _group).name)
+    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnCrateGroup_old()", _group).name)
     return _spawnedGroup
 end ]] --#region
 
 function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
-    -- ctld.logTrace("_heli      =  %s", ctld.p(_heli))
-    -- ctld.logTrace("_positions =  %s", ctld.p(_positions))
-    -- ctld.logTrace("_types     =  %s", ctld.p(_types))
-    -- ctld.logTrace("_hdgs      =  %s", ctld.p(_hdgs))
+    --ctld.logTrace("_heli      =  %s", ctld.p(_heli))
+    --ctld.logTrace("_positions =  %s", ctld.p(_positions))
+    --ctld.logTrace("_types     =  %s", ctld.p(_types))
+    --ctld.logTrace("_hdgs      =  %s", ctld.p(_hdgs))
 
     local _id = ctld.getNextGroupId()
     local _groupName = _types[1] .. "    #" .. _id
     local _side = _heli:getCoalition()
     local _group = {
-        ["visible"]  = false,
-        -- ["groupId"] = _id,
-        ["hidden"]   = false,
-        ["units"]    = {},
+        ["visible"]    = false,
+        ["groupId"]    = _id,
+        ["hidden"]     = false,
+        ["units"]      = {},
         --                ["y"] = _positions[1].z,
         --                ["x"] = _positions[1].x,
-        ["name"]     = _groupName,
-        ["tasks"]    = {},
-        ["radioSet"] = false,
-        ["task"]     = "Reconnaissance",
-        ["route"]    = {},
+        ["name"]       = _groupName,
+        ["tasks"]      = {},
+        ["radioSet"]   = false,
+        ["task"]       = "Reconnaissance",
+        ["route"]      = {},
+        ["start_time"] = 0,
     }
     local _hdg = 120 * math.pi / 180 -- radians = 120 degrees
 
     --------------------------------------------------------------------------------------
-    if ctld.scene.SceneModels[_types[1]] == nil then -- if DCS standard typeName
+    if true then -- disable scene crates for now
+        --if ctld.scene.SceneModels[_types[1]] == nil then -- if DCS standard typeName
         local _spreadMin = 5
         local _spreadMax = 5
         local _spreadMult = 1
@@ -16273,21 +16283,98 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
             local _details = {
                 type = _types[_i],
                 unitId = _unitId,
-                name = string.format("Unpacked %s #%i", _types[_i],
-                    _unitId)
+                name = string.format("Unpacked %s #%i", _types[_i], _unitId)
             }
             --ctld.logTrace("Group._details =  %s", ctld.p(_details))
             if _hdgs and _hdgs[_i] then
                 _hdg = _hdgs[_i]
             end
-            _group.units[_i] = ctld.createUnit(_pos.x + math.random(_spreadMin, _spreadMax) * _spreadMult,
-                _pos.z + math.random(_spreadMin, _spreadMax) * _spreadMult,
-                _hdg,
-                _details)
+            local _unit_x = _pos.x + math.random(_spreadMin, _spreadMax) * _spreadMult
+            local _unit_y = _pos.z + math.random(_spreadMin, _spreadMax) * _spreadMult
+
+            local _unit_speed = 0
+            local _unit_alt = _pos.y
+            if _types[_i] ~= "MQ-9 Reaper" and _types[_i] ~= "RQ-1A Predator" then
+                _unit_alt = nil
+                _unit_speed = nil
+            else                 -- for drones
+                _unit_alt = 4000 --meters
+                _unit_speed = 54 -- kts
+            end
+
+            _group.units[_i] = ctld.createUnit(_unit_x, _unit_y, _hdg, _details, _unit_alt, _unit_speed)
+            _group.units[_i].speed = 54
         end
-        _group.category = Group.Category.GROUND
+        if _types[1] ~= "MQ-9 Reaper" and _types[1] ~= "RQ-1A Predator" then
+            _group.speed = _group.units[1].speed
+            _group.category = Group.Category.GROUND
+        else
+            _group.category = Group.Category.AIRPLANE -- for drones
+            _group.communication = true
+            _group.frequency = 124
+            _group.route = {
+                ["points"] =
+                {
+                    [1] =
+                    {
+                        ["alt"] = _group.units[1].alt,
+                        ["action"] = "Turning Point",
+                        ["alt_type"] = "BARO",
+                        ["properties"] = { ["addopt"] = {},
+                        }
+                        , -- end of ["properties"]
+                        ["speed"] = _group.speed,
+                        ["task"] =
+                        {
+                            ["id"] = "ComboTask",
+                            ["params"] =
+                            {
+                                ["tasks"] =
+                                {
+                                    [1] = {
+                                        ["number"] = 1,
+                                        ["auto"] = true,
+                                        ["id"] = "WrappedAction",
+                                        ["enabled"] = true,
+                                        ["params"] =
+                                        {
+                                            ["action"] = {
+                                                ["id"] = "EPLRS",
+                                                ["params"] = {
+                                                    ["value"] = true,
+                                                    ["groupId"] = _group.groupId,
+                                                },
+                                            },
+                                        },
+                                    },
+                                    [2] = {
+                                        ["number"] = 2,
+                                        ["auto"] = false,
+                                        ["id"] = "Orbit",
+                                        ["enabled"] = true,
+                                        ["params"] = {
+                                            ["altitude"] = _group.units[1].alt,
+                                            ["pattern"] = "Circle",
+                                            ["speed"] = _group.speed,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        ["type"] = "Turning Point",
+                        ["ETA"] = 0,
+                        ["ETA_locked"] = true,
+                        ["y"] = _group.units[1].y,
+                        ["x"] = _group.units[1].x,
+                        ["speed_locked"] = true,
+                        ["formation_template"] = "",
+                    },
+                },
+            }
+        end
+
         _group.country = _heli:getCountry()
-        local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("GLOBAL_SCOPE", _group).name)
+        local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnCrateGroup()", _group).name)
         return _spawnedGroup
     else -- if scene crate requested
         return ctld.scene.playScene(_heli, ctld.scene.SceneModels[_types[1]])
@@ -16341,7 +16428,7 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
     _group.category = Group.Category.GROUND;
     _group.country = _details.country;
 
-    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("GLOBAL_SCOPE", _group).name)
+    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnDroppedGroup()", _group).name)
 
     --local _spawnedGroup = coalition.addGroup(_details.country, Group.Category.GROUND, _group)
 
@@ -16487,8 +16574,27 @@ function ctld.findNearestGroup(_heli, _groups)
     end
 end
 
-function ctld.createUnit(_x, _y, _angle, _details)
+function ctld.createUnit(_x, _y, _angle, _details, _altitude, _speed)
+    local _alt_type = "BARO"
+    local _payload = {}
+    local _callsign = {
+        [1] = 7,
+        [2] = 1,
+        ["name"] = "Chevy11",
+        [3] = 1,
+    }
+    if _altitude == nil then
+        _alt_type = nil
+        _speed = nil
+        _payload = nil
+        _callsign = nil
+    end
     local _newUnit = {
+        ["alt"] = _altitude,
+        ["alt_type"] = _alt_type,
+        ["speed"] = _speed,
+        ["payload"] = _payload,
+        ["callsign"] = _callsign,
         ["y"] = _y,
         ["type"] = _details.type,
         ["name"] = _details.name,
@@ -16525,8 +16631,8 @@ function ctld.orderGroupToMoveToPoint(_leader, _destination)
     local _group = _leader:getGroup()
 
     local _path = {}
-    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint", _leader:getPoint(), 'Off Road', 50))
-    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint", _destination, 'Off Road', 50))
+    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint()", _leader:getPoint(), 'Off Road', 50))
+    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint()", _destination, 'Off Road', 50))
 
     local _mission = {
         id = 'Mission',
@@ -17081,7 +17187,8 @@ function ctld.addTransportF10MenuOptions(_unitName)
                     local _crateCommands = missionCommands.addSubMenuForGroup(_groupId,
                         ctld.i18n_translate("CTLD Commands"), _rootPath)
                     if ctld.vehicleCommandsPath[_unitName] == nil then
-                        ctld.vehicleCommandsPath[_unitName] = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", _crateCommands)
+                        ctld.vehicleCommandsPath[_unitName] = CTLD_extAPI.utils.deepCopy(
+                            "ctld.addTransportF10MenuOptions()", _crateCommands)
                     end
                     if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
                         if ctld.loadCrateFromMenu then
@@ -17159,7 +17266,7 @@ function ctld.buildPaginatedMenu(_menuEntries) --[[ params table :
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
         if #nextSubMenuPath ~= 0 then
-            menu.subMenuPath = CTLD_extAPI.utils.deepCopy("ctld.buildPaginatedMenu", nextSubMenuPath)
+            menu.subMenuPath = CTLD_extAPI.utils.deepCopy("ctld.buildPaginatedMenu()", nextSubMenuPath)
             --menu.subMenuPath = nextSubMenuPath
         end
         -- add the submenu item
@@ -17169,16 +17276,17 @@ function ctld.buildPaginatedMenu(_menuEntries) --[[ params table :
                 menu.subMenuPath)
             itemNbSubmenu   = 1
         end
-        menu.menuArgsTable.subMenuPath      = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
+        menu.menuArgsTable.subMenuPath      = CTLD_extAPI.utils.deepCopy("ctld.buildPaginatedMenu()", menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
         menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
-        ctld.logTrace("FG_ boucle[%s].groupId = %s", i, menu.groupId)
-        ctld.logTrace("FG_ boucle[%s].menu.text = %s", i, menu.text)
-        ctld.logTrace("FG_ boucle[%s].menu.subMenuPath = %s", i, menu.subMenuPath)
-        ctld.logTrace("FG_ boucle[%s].menu.menuFunction = %s", i, menu.menuFunction)
-        local r = missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction,
-            CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", menu.menuArgsTable))
-        ctld.logTrace("FG_ boucle[%s].r = %s", i, r)
-        ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
+        --ctld.logTrace("FG_ boucle[%s].groupId = %s", i, menu.groupId)
+        --ctld.logTrace("FG_ boucle[%s].menu.text = %s", i, menu.text)
+        --ctld.logTrace("FG_ boucle[%s].menu.subMenuPath = %s", i, menu.subMenuPath)
+        --ctld.logTrace("FG_ boucle[%s].menu.menuFunction = %s", i, menu.menuFunction)
+        local r                             = missionCommands.addCommandForGroup(menu.groupId, menu.text,
+            menu.subMenuPath, menu.menuFunction,
+            CTLD_extAPI.utils.deepCopy("ctld.buildPaginatedMenu()", menu.menuArgsTable))
+        --ctld.logTrace("FG_ boucle[%s].r = %s", i, r)
+        --ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
     end
 end
 
@@ -17207,10 +17315,10 @@ function ctld.updateRepackMenu(_playerUnitName)
                 ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
                 --ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
-                local RepackPreviousMenu                    = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE",
+                local RepackPreviousMenu                    = CTLD_extAPI.utils.deepCopy("ctld.updateRepackMenu()",
                     ctld.vehicleCommandsPath
                     [_playerUnitName])
-                local RepackCommandsPath                    = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE",
+                local RepackCommandsPath                    = CTLD_extAPI.utils.deepCopy("ctld.updateRepackMenu()",
                     ctld.vehicleCommandsPath
                     [_playerUnitName])
                 local repackSubMenuText                     = ctld.i18n_translate("Repack Vehicles")
@@ -17218,11 +17326,10 @@ function ctld.updateRepackMenu(_playerUnitName)
                     repackSubMenuText                                            -- add the submenu name to get the complet repack path
                 --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
                 missionCommands.removeItemForGroup(_groupId, RepackCommandsPath) -- remove existing "Repack Vehicles" menu
-                ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
-
-                ctld.logTrace("FG_ repackableVehicles = %s", ctld.p(repackableVehicles))
-                ctld.logTrace("FG_ repackSubMenuText  = %s", ctld.p(repackSubMenuText))
-                ctld.logTrace("FG_ RepackPreviousMenu = %s", ctld.p(RepackPreviousMenu))
+                --ctld.logTrace("FG_ RepackCommandsPath = %s", ctld.p(RepackCommandsPath))
+                --ctld.logTrace("FG_ repackableVehicles = %s", ctld.p(repackableVehicles))
+                --ctld.logTrace("FG_ repackSubMenuText  = %s", ctld.p(repackSubMenuText))
+                --ctld.logTrace("FG_ RepackPreviousMenu = %s", ctld.p(RepackPreviousMenu))
                 local RepackMenuPath = missionCommands.addSubMenuForGroup(_groupId, repackSubMenuText, RepackPreviousMenu)
                 local menuEntries = {}
                 for i, _vehicle in ipairs(repackableVehicles) do
@@ -17233,7 +17340,7 @@ function ctld.updateRepackMenu(_playerUnitName)
                             groupId       = _groupId,
                             subMenuPath   = RepackMenuPath,
                             menuFunction  = ctld.repackVehicleRequest,
-                            menuArgsTable = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", _vehicle)
+                            menuArgsTable = CTLD_extAPI.utils.deepCopy("ctld.updateRepackMenu()", _vehicle)
                         })
                     end
                 end
@@ -17257,7 +17364,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                         local _unit = ctld.getTransportUnit(_unitName)
                         if _unit then
                             -- if transport unit landed => update repack menus
-                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and CTLD_extAPI.vec.mag("ctld.autoUpdateRepackMenu", _unit:getVelocity()) < 0.1)) then
+                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and CTLD_extAPI.vec.mag("ctld.autoUpdateRepackMenu()", _unit:getVelocity()) < 0.1)) then
                                 local _unitTypename = _unit:getTypeName()
                                 local _groupId = ctld.getGroupId(_unit)
                                 if _groupId then
@@ -17402,7 +17509,7 @@ function ctld.addJTACRadioCommand(_side)
                                 --ctld.logTrace(string.format("JTAC - MENU - [%s] - jtacGroupSubMenuPath = %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacGroupSubMenuPath[_jtacGroupName])))
 
                                 --make a copy of the JTAC group submenu's path to insert the target's list on as many pages as required. The JTAC's group submenu path only leads to the first page
-                                local jtacTargetPagePath = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE",
+                                local jtacTargetPagePath = CTLD_extAPI.utils.deepCopy("ctld.addJTACRadioCommand()",
                                     ctld.jtacGroupSubMenuPath[_jtacGroupName])
 
                                 --counter to know when to add the next page submenu to fit all of the targets in the JTAC's group submenu. SMay not actually start at 0 due to static items being present on the first page
@@ -17597,7 +17704,7 @@ ctld.jtacRadioData = {}
         By waiting a bit, the group gets populated before JTACAutoLase is called, hence avoiding a trip to cleanupJTAC.
 ]]
 function ctld.JTACStart(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio)
-    CTLD_extAPI.scheduleFunction("ctld.JTACStart", ctld.JTACAutoLase,
+    CTLD_extAPI.scheduleFunction("ctld.JTACStart()", ctld.JTACAutoLase,
         { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio },
         timer.getTime() + 1)
 end
@@ -18854,16 +18961,17 @@ function ctld.getPositionString(_unit)
     end
 
     local _lat, _lon  = coord.LOtoLL(_unit:getPosition().p)
-    local _latLngStr  = CTLD_extAPI.tostringLL("GLOBAL_SCOPE", _lat, _lon, 3, ctld.location_DMS)
-    local _mgrsString = CTLD_extAPI.tostringMGRS("GLOBAL_SCOPE", coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
-    local _TargetAlti = land.getHeight(CTLD_extAPI.utils.makeVec2("GLOBAL_SCOPE", _unit:getPoint()))
+    local _latLngStr  = CTLD_extAPI.tostringLL("ctld.getPositionString()", _lat, _lon, 3, ctld.location_DMS)
+    local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.getPositionString()",
+        coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
+    local _TargetAlti = land.getHeight(CTLD_extAPI.utils.makeVec2("ctld.getPositionString()", _unit:getPoint()))
     return " @ " ..
         _latLngStr ..
         " - MGRS " ..
         _mgrsString ..
         " - ALTI: " ..
-        CTLD_extAPI.utils.round("GLOBAL_SCOPE", _TargetAlti, 0) ..
-        " m / " .. CTLD_extAPI.utils.round(_TargetAlti / 0.3048, 0) .. " ft"
+        CTLD_extAPI.utils.round("ctld.getPositionString()", _TargetAlti, 0) ..
+        " m / " .. CTLD_extAPI.utils.round("ctld.getPositionString()", _TargetAlti / 0.3048, 0) .. " ft"
 end
 
 --**********************************************************************
@@ -18926,8 +19034,9 @@ function ctld.StartOrbitGroup(_jtacUnitName, _unitTargetName, _alti, _speed)
             id     = 'Orbit',
             params = {
                 pattern = 'Circle',
-                point = CTLD_extAPI.utils.makeVec2("ctld.StartOrbitGroup",
-                    CTLD_extAPI.getAvgPos(CTLD_extAPI.makeUnitTable({ _unitTargetName }))),
+                point = CTLD_extAPI.utils.makeVec2("ctld.StartOrbitGroup()",
+                    CTLD_extAPI.getAvgPos("ctld.StartOrbitGroup()",
+                        CTLD_extAPI.makeUnitTable("ctld.StartOrbitGroup()", { _unitTargetName }))),
                 speed = _speed,
                 altitude = _alti
             }
@@ -18953,14 +19062,14 @@ end
 -- return the WayPoint number (on the JTAC route) the most near from the target
 function ctld.getNearestWP(_referenceUnitName)
     local WP = 0
-    local memoDist = nil                                                                 -- Lower distance checked
+    local memoDist = nil                                                                   -- Lower distance checked
     local refGroupName = Unit.getByName(_referenceUnitName):getGroup():getName()
-    local JTACRoute = CTLD_extAPI.getGroupRoute("ctld.getNearestWP", refGroupName, true) -- get the initial editor route of the current group
-    if Unit.getByName(_referenceUnitName) ~= nil then                                    --JTAC et unit must exist
+    local JTACRoute = CTLD_extAPI.getGroupRoute("ctld.getNearestWP()", refGroupName, true) -- get the initial editor route of the current group
+    if Unit.getByName(_referenceUnitName) ~= nil then                                      --JTAC et unit must exist
         for i = 1, #JTACRoute do
             local ptWP  = { x = JTACRoute[i].x, y = JTACRoute[i].y }
-            local ptRef = CTLD_extAPI.utils.makeVec2("ctld.getNearestWP", Unit.getByName(_referenceUnitName):getPoint())
-            local dist  = CTLD_extAPI.utils.get2DDist("ctld.getNearestWP", ptRef, ptWP) -- distance between 2 points
+            local ptRef = CTLD_extAPI.utils.makeVec2("ctld.getNearestWP()", Unit.getByName(_referenceUnitName):getPoint())
+            local dist  = CTLD_extAPI.utils.get2DDist("ctld.getNearestWP()", ptRef, ptWP) -- distance between 2 points
             if memoDist == nil then
                 memoDist = dist
                 WP = i
@@ -18977,8 +19086,9 @@ end
 -- Modify the route deleting all the WP before "firstWP" param, for aligne the orbit on the nearest WP of the target
 function ctld.backToRoute(_jtacUnitName)
     local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
-    --local JTACRoute     = CTLD_extAPI.getGroupRoute("ctld.backToRoute", jtacGroupName, true)   -- get the initial editor route of the current group
-    local JTACRoute     = CTLD_extAPI.utils.deepCopy("ctld.backToRoute", CTLD_extAPI.getGroupRoute(jtacGroupName, true)) -- get the initial editor route of the current group
+    --local JTACRoute     = CTLD_extAPI.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)   -- get the initial editor route of the current group
+    local JTACRoute     = CTLD_extAPI.utils.deepCopy("ctld.backToRoute()",
+        CTLD_extAPI.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)) -- get the initial editor route of the current group
     local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
 
     local Mission       = {}
@@ -19225,8 +19335,8 @@ function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRad
             color = { 51 / 255, 51 / 255, 1, 0.2 } -- blue
         end
 
-        local t = CTLD_extAPI.getUnitsLOS("GLOBAL_SCOPE", { _playerUnit:getName() }, 180,
-            CTLD_extAPI.makeUnitTable("GLOBAL_SCOPE", { '[' .. enemyColor .. '][vehicle]' }),
+        local t = CTLD_extAPI.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()", { _playerUnit:getName() }, 180,
+            CTLD_extAPI.makeUnitTable("ctld.reconShowTargetsInLosOnF10Map()", { '[' .. enemyColor .. '][vehicle]' }),
             180, _searchRadius)
 
         local MarkIds = {}
@@ -19826,524 +19936,285 @@ end
 -- ==================================================================================================== 
 -- Start : CTLD_extAPI.lua 
 -- ================================================================
--- CTLD_extAPI.lua (auto-generated)
--- Mirrors used mist/Moose paths with wrappers (caller-as-first-arg)
+-- CTLD_extAPI.lua
+-- Explicit indirections to MIST / MOOSE (no wrapper system)
 -- ================================================================
+
 if trigger == nil then
     trigger = { action = { outText = function(msg, time) print('[DCS outText] ' .. msg) end } }
 end
 
 CTLD_extAPI = CTLD_extAPI or {}
+
 local framework = nil
 local frameworkName = nil
+
 if mist ~= nil then
     framework = mist
     frameworkName = 'MIST'
 elseif Moose ~= nil then
     framework = Moose
     frameworkName = 'MOOSE'
+else
+    local msg = '[CTLD_extAPI ERROR] No framework detected (mist == nil and Moose == nil)'
+    if trigger and trigger.action and trigger.action.outText then
+        trigger.action.outText(msg, 20)
+    else
+        print(msg)
+    end
+    if env and env.info then env.info(msg) end
 end
 
 local function logError(msg)
-    local ok, err = pcall(function()
-        if trigger and trigger.action and trigger.action.outText then
-            trigger.action.outText(msg, 15)
-        else
-            print(msg)
-        end
-        if env and env.info then env.info(msg) end
-    end)
+    if trigger and trigger.action and trigger.action.outText then
+        trigger.action.outText(msg, 15)
+    else
+        print(msg)
+    end
+    if env and env.info then env.info(msg) end
 end
 
-CTLD_extAPI.DBs = CTLD_extAPI.DBs or {}
-CTLD_extAPI.DBs.humansByName = (framework.DBs.humansByName) or nil
-CTLD_extAPI.DBs.unitsById = (framework.DBs.unitsById) or nil
-CTLD_extAPI.DBs.unitsByName = (framework.DBs.unitsByName) or nil
-CTLD_extAPI.dynAdd = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for dynAdd. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+-- ================================================================
+-- DBs
+-- ================================================================
+
+CTLD_extAPI.DBs              = CTLD_extAPI.DBs or {}
+
+CTLD_extAPI.DBs.humansByName = framework and framework.DBs and framework.DBs.humansByName or nil
+CTLD_extAPI.DBs.unitsById    = framework and framework.DBs and framework.DBs.unitsById or nil
+CTLD_extAPI.DBs.unitsByName  = framework and framework.DBs and framework.DBs.unitsByName or nil
+
+-- ================================================================
+-- Top-level functions
+-- ================================================================
+
+CTLD_extAPI.dynAdd           = function(caller, ...)
+    if not (framework and framework.dynAdd) then
+        logError('[CTLD_extAPI ERROR] dynAdd unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.dynAdd
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: dynAdd (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: dynAdd (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.dynAdd(...)
 end
 
-CTLD_extAPI.dynAddStatic = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for dynAddStatic. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.dynAddStatic     = function(caller, ...)
+    if not (framework and framework.dynAddStatic) then
+        logError('[CTLD_extAPI ERROR] dynAddStatic unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.dynAddStatic
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: dynAddStatic (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: dynAddStatic (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.dynAddStatic(...)
 end
 
-CTLD_extAPI.getAvgPos = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for getAvgPos. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.getAvgPos        = function(caller, ...)
+    if not (framework and framework.getAvgPos) then
+        logError('[CTLD_extAPI ERROR] getAvgPos unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.getAvgPos
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: getAvgPos (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: getAvgPos (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.getAvgPos(...)
 end
 
-CTLD_extAPI.getGroupRoute = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for getGroupRoute. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.getGroupRoute    = function(caller, ...)
+    if not (framework and framework.getGroupRoute) then
+        logError('[CTLD_extAPI ERROR] getGroupRoute unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.getGroupRoute
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: getGroupRoute (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: getGroupRoute (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.getGroupRoute(...)
 end
 
-CTLD_extAPI.getHeading = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for getHeading. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.getHeading       = function(caller, ...)
+    if not (framework and framework.getHeading) then
+        logError('[CTLD_extAPI ERROR] getHeading unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.getHeading
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: getHeading (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: getHeading (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+
+    return framework.getHeading(...)
 end
 
-CTLD_extAPI.getUnitsLOS = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for getUnitsLOS. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.getUnitsLOS      = function(caller, ...)
+    if not (framework and framework.getUnitsLOS) then
+        logError('[CTLD_extAPI ERROR] getUnitsLOS unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.getUnitsLOS
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: getUnitsLOS (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: getUnitsLOS (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.getUnitsLOS(...)
 end
 
-CTLD_extAPI.ground = CTLD_extAPI.ground or {}
-CTLD_extAPI.ground.buildWP = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for ground.buildWP. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.makeUnitTable    = function(caller, ...)
+    if not (framework and framework.makeUnitTable) then
+        logError('[CTLD_extAPI ERROR] makeUnitTable unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.ground.buildWP
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: ground.buildWP (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: ground.buildWP (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
-end
-
-CTLD_extAPI.makeUnitTable = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for makeUnitTable. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
-        return nil
-    end
-    local target = framework.makeUnitTable
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: makeUnitTable (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: makeUnitTable (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.makeUnitTable(...)
 end
 
 CTLD_extAPI.scheduleFunction = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for scheduleFunction. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+    if not (framework and framework.scheduleFunction) then
+        logError('[CTLD_extAPI ERROR] scheduleFunction unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.scheduleFunction
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: scheduleFunction (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: scheduleFunction (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.scheduleFunction(...)
 end
 
-CTLD_extAPI.tostringLL = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for tostringLL. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.tostringLL       = function(caller, ...)
+    if not (framework and framework.tostringLL) then
+        logError('[CTLD_extAPI ERROR] tostringLL unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.tostringLL
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: tostringLL (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: tostringLL (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.tostringLL(...)
 end
 
-CTLD_extAPI.tostringMGRS = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for tostringMGRS. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.tostringMGRS     = function(caller, ...)
+    if not (framework and framework.tostringMGRS) then
+        logError('[CTLD_extAPI ERROR] tostringMGRS unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.tostringMGRS
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: tostringMGRS (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: tostringMGRS (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.tostringMGRS(...)
 end
 
-CTLD_extAPI.utils = CTLD_extAPI.utils or {}
-CTLD_extAPI.utils.deepCopy = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.deepCopy. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+-- ================================================================
+-- ground
+-- ================================================================
+
+CTLD_extAPI.ground           = CTLD_extAPI.ground or {}
+
+CTLD_extAPI.ground.buildWP   = function(caller, ...)
+    if not (framework and framework.ground and framework.ground.buildWP) then
+        logError('[CTLD_extAPI ERROR] ground.buildWP unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.deepCopy
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.deepCopy (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.deepCopy (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.ground.buildWP(...)
 end
 
-CTLD_extAPI.utils.get2DDist = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.get2DDist. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+-- ================================================================
+-- utils
+-- ================================================================
+
+CTLD_extAPI.utils            = CTLD_extAPI.utils or {}
+
+CTLD_extAPI.utils.deepCopy   = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.deepCopy) then
+        logError('[CTLD_extAPI ERROR] utils.deepCopy unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.get2DDist
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.get2DDist (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.get2DDist (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.deepCopy(...)
 end
 
-CTLD_extAPI.utils.getDir = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.getDir. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.utils.get2DDist  = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.get2DDist) then
+        logError('[CTLD_extAPI ERROR] utils.get2DDist unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.getDir
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.getDir (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.getDir (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.get2DDist(...)
 end
 
-CTLD_extAPI.utils.makeVec2 = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.makeVec2. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.utils.getDir     = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.getDir) then
+        logError('[CTLD_extAPI ERROR] utils.getDir unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.makeVec2
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.makeVec2 (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.makeVec2 (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.getDir(...)
 end
 
-CTLD_extAPI.utils.makeVec3 = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.makeVec3. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.utils.makeVec2   = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.makeVec2) then
+        logError('[CTLD_extAPI ERROR] utils.makeVec2 unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.makeVec3
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.makeVec3 (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.makeVec3 (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.makeVec2(...)
 end
 
-CTLD_extAPI.utils.round = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.round. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.utils.makeVec3   = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.makeVec3) then
+        logError('[CTLD_extAPI ERROR] utils.makeVec3 unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.round
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.round (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.round (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.makeVec3(...)
 end
 
-CTLD_extAPI.utils.tableShow = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.tableShow. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.utils.round      = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.round) then
+        logError('[CTLD_extAPI ERROR] utils.round unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.tableShow
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.tableShow (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.tableShow (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.round(...)
 end
 
-CTLD_extAPI.utils.toDegree = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.toDegree. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.utils.tableShow  = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.tableShow) then
+        logError('[CTLD_extAPI ERROR] utils.tableShow unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.toDegree
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.toDegree (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+    return framework.utils.tableShow(...)
+end
+
+CTLD_extAPI.utils.toDegree   = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.toDegree) then
+        logError('[CTLD_extAPI ERROR] utils.toDegree unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.toDegree (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.toDegree(...)
 end
 
 CTLD_extAPI.utils.zoneToVec3 = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.zoneToVec3. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+    if not (framework and framework.utils and framework.utils.zoneToVec3) then
+        logError('[CTLD_extAPI ERROR] utils.zoneToVec3 unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.zoneToVec3
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.zoneToVec3 (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.zoneToVec3 (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.zoneToVec3(...)
 end
 
-CTLD_extAPI.vec = CTLD_extAPI.vec or {}
-CTLD_extAPI.vec.dp = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for vec.dp. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+-- ================================================================
+-- vec
+-- ================================================================
+
+CTLD_extAPI.vec              = CTLD_extAPI.vec or {}
+
+CTLD_extAPI.vec.dp           = function(caller, ...)
+    if not (framework and framework.vec and framework.vec.dp) then
+        logError('[CTLD_extAPI ERROR] vec.dp unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.vec.dp
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: vec.dp (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: vec.dp (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.vec.dp(...)
 end
 
-CTLD_extAPI.vec.mag = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for vec.mag. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.vec.mag          = function(caller, ...)
+    if not (framework and framework.vec and framework.vec.mag) then
+        logError('[CTLD_extAPI ERROR] vec.mag unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.vec.mag
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: vec.mag (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: vec.mag (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.vec.mag(...)
 end
 
-CTLD_extAPI.vec.sub = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for vec.sub. Required: MIST or MOOSE. Caller: ' ..
-        tostring(caller))
+CTLD_extAPI.vec.sub          = function(caller, ...)
+    if not (framework and framework.vec and framework.vec.sub) then
+        logError('[CTLD_extAPI ERROR] vec.sub unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.vec.sub
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: vec.sub (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: vec.sub (framework: ' ..
-        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.vec.sub(...)
 end
 
+-- ================================================================
 -- End of CTLD_extAPI.lua
+-- ================================================================
 -- End : CTLD_extAPI.lua 
