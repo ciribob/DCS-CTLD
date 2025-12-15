@@ -171,15 +171,6 @@ CTLD_extAPI.utils.getDir     = function(caller, ...)
     return framework.utils.getDir(...)
 end
 
-CTLD_extAPI.utils.makeVec2   = function(caller, ...)
-    if not (framework and framework.utils and framework.utils.makeVec2) then
-        logError('[CTLD_extAPI ERROR] utils.makeVec2 unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.utils.makeVec2(...)
-end
-
 CTLD_extAPI.utils.round      = function(caller, ...)
     if not (framework and framework.utils and framework.utils.round) then
         logError('[CTLD_extAPI ERROR] utils.round unavailable (' ..
@@ -196,15 +187,6 @@ CTLD_extAPI.utils.tableShow  = function(caller, ...)
         return nil
     end
     return framework.utils.tableShow(...)
-end
-
-CTLD_extAPI.utils.toDegree   = function(caller, ...)
-    if not (framework and framework.utils and framework.utils.toDegree) then
-        logError('[CTLD_extAPI ERROR] utils.toDegree unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.utils.toDegree(...)
 end
 
 CTLD_extAPI.utils.zoneToVec3 = function(caller, ...)

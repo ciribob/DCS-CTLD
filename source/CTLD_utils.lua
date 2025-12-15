@@ -213,6 +213,24 @@ function ctld.utils.makeVec3FromVec2OrVec3(caller, vec, y)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Converts a Vec3 to a Vec2.
+-- @tparam Vec3 vec the 3D vector
+-- @return vector converted to Vec2
+function ctld.utils.makeVec2FromVec3OrVec2(caller, vec)
+    if vec == nil then
+        if env and env.error then
+            env.error("CTLD.utils:makeVec2FromVec3OrVec2()." .. tostring(caller) .. ": Invalid vector provided.")
+        end
+        return nil
+    end
+    if vec.z then
+        return { x = vec.x, y = vec.z }
+    else
+        return { x = vec.x, y = vec.y } -- it was actually already vec2.
+    end
+end
+
+--------------------------------------------------------------------------------------------------------
 --- @function ctld.utils:rotateVec3
 -- Calcule l'offset cartésien absolu en appliquant la rotation du cap de l'appareil.
 -- (Conçu pour le format de données : relative = {x, y, z})

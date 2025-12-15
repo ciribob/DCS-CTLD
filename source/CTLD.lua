@@ -8055,7 +8055,7 @@ function ctld.getPositionString(_unit)
     local _latLngStr  = CTLD_extAPI.tostringLL("ctld.getPositionString()", _lat, _lon, 3, ctld.location_DMS)
     local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.getPositionString()",
         coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
-    local _TargetAlti = land.getHeight(CTLD_extAPI.utils.makeVec2("ctld.getPositionString()", _unit:getPoint()))
+    local _TargetAlti = land.getHeight(ctld.utils.makeVec2FromVec3OrVec2("ctld.getPositionString()", _unit:getPoint()))
     return " @ " ..
         _latLngStr ..
         " - MGRS " ..
@@ -8125,7 +8125,7 @@ function ctld.StartOrbitGroup(_jtacUnitName, _unitTargetName, _alti, _speed)
             id     = 'Orbit',
             params = {
                 pattern = 'Circle',
-                point = CTLD_extAPI.utils.makeVec2("ctld.StartOrbitGroup()",
+                point = ctld.utils.makeVec2FromVec3OrVec2("ctld.StartOrbitGroup()",
                     CTLD_extAPI.getAvgPos("ctld.StartOrbitGroup()",
                         CTLD_extAPI.makeUnitTable("ctld.StartOrbitGroup()", { _unitTargetName }))),
                 speed = _speed,
@@ -8159,7 +8159,8 @@ function ctld.getNearestWP(_referenceUnitName)
     if Unit.getByName(_referenceUnitName) ~= nil then                                      --JTAC et unit must exist
         for i = 1, #JTACRoute do
             local ptWP  = { x = JTACRoute[i].x, y = JTACRoute[i].y }
-            local ptRef = CTLD_extAPI.utils.makeVec2("ctld.getNearestWP()", Unit.getByName(_referenceUnitName):getPoint())
+            local ptRef = ctld.utils.makeVec2FromVec3OrVec2("ctld.getNearestWP()",
+                Unit.getByName(_referenceUnitName):getPoint())
             local dist  = CTLD_extAPI.utils.get2DDist("ctld.getNearestWP()", ptRef, ptWP) -- distance between 2 points
             if memoDist == nil then
                 memoDist = dist
