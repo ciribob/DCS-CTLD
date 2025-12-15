@@ -11021,6 +11021,131 @@ function ctld.utils.round(caller, num, idp)
 end
 
 --------------------------------------------------------------------------------------------------------
+--[[acc:
+in DM: decimal point of minutes.
+In DMS: decimal point of seconds.
+position after the decimal of the least significant digit:
+So:
+42.32 - acc of 2.
+]]
+function ctld.utils.tostringLL(caller, lat, lon, acc, DMS)
+    if lat == nil or lon == nil then
+        if env and env.error then
+            env.error("ctld.utils.tostringLL()." .. tostring(caller) .. ": Invalid latitude or longitude provided.")
+        end
+        return ""
+    end
+    local latHemi, lonHemi
+    if lat > 0 then
+        latHemi = 'N'
+    else
+        latHemi = 'S'
+    end
+
+    if lon > 0 then
+        lonHemi = 'E'
+    else
+        lonHemi = 'W'
+    end
+
+    lat = math.abs(lat)
+    lon = math.abs(lon)
+
+    local latDeg = math.floor(lat)
+    local latMin = (lat - latDeg) * 60
+
+    local lonDeg = math.floor(lon)
+    local lonMin = (lon - lonDeg) * 60
+
+    if DMS then -- degrees, minutes, and seconds.
+        local oldLatMin = latMin
+        latMin = math.floor(latMin)
+        local latSec = ctld.utils.round("ctld.utils.tostringLL()", (oldLatMin - latMin) * 60, acc)
+
+        local oldLonMin = lonMin
+        lonMin = math.floor(lonMin)
+        local lonSec = ctld.utils.round("ctld.utils.tostringLL()", (oldLonMin - lonMin) * 60, acc)
+
+        if latSec == 60 then
+            latSec = 0
+            latMin = latMin + 1
+        end
+
+        if lonSec == 60 then
+            lonSec = 0
+            lonMin = lonMin + 1
+        end
+
+        local secFrmtStr -- create the formatting string for the seconds place
+        if acc <= 0 then -- no decimal place.
+            secFrmtStr = '%02d'
+        else
+            local width = 3 + acc -- 01.310 - that's a width of 6, for example.
+            secFrmtStr = '%0' .. width .. '.' .. acc .. 'f'
+        end
+
+        return string.format('%02d', latDeg) ..
+            ' ' ..
+            string.format('%02d', latMin) .. '\' ' .. string.format(secFrmtStr, latSec) .. '"' .. latHemi .. '	 '
+            ..
+            string.format('%02d', lonDeg) ..
+            ' ' .. string.format('%02d', lonMin) .. '\' ' .. string.format(secFrmtStr, lonSec) .. '"' .. lonHemi
+    else -- degrees, decimal minutes.
+        latMin = ctld.utils.round("ctld.utils.tostringLL()", latMin, acc)
+        lonMin = ctld.utils.round("ctld.utils.tostringLL()", lonMin, acc)
+
+        if latMin == 60 then
+            latMin = 0
+            latDeg = latDeg + 1
+        end
+
+        if lonMin == 60 then
+            lonMin = 0
+            lonDeg = lonDeg + 1
+        end
+
+        local minFrmtStr -- create the formatting string for the minutes place
+        if acc <= 0 then -- no decimal place.
+            minFrmtStr = '%02d'
+        else
+            local width = 3 + acc -- 01.310 - that's a width of 6, for example.
+            minFrmtStr = '%0' .. width .. '.' .. acc .. 'f'
+        end
+
+        return string.format('%02d', latDeg) .. ' ' .. string.format(minFrmtStr, latMin) .. '\'' .. latHemi .. '	 '
+            .. string.format('%02d', lonDeg) .. ' ' .. string.format(minFrmtStr, lonMin) .. '\'' .. lonHemi
+    end
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Returns MGRS coordinates as string.
+-- @tparam string MGRS MGRS coordinates
+-- @tparam number acc the accuracy of each easting/northing.
+-- Can be: 0, 1, 2, 3, 4, or 5.
+function ctld.utils.tostringMGRS(caller, MGRS, acc)
+    if MGRS == nil or MGRS == "" or type(MGRS) ~= 'string' then
+        if env and env.error then
+            env.error("ctld.utils.tostringMGRS()." .. tostring(caller) .. ": Invalid MGRS coordinates provided.")
+        end
+        return ""
+    end
+    if acc == 0 then
+        return MGRS.UTMZone .. ' ' .. MGRS.MGRSDigraph
+    else
+        return MGRS.UTMZone ..
+            ' ' ..
+            MGRS.MGRSDigraph ..
+            ' ' ..
+            string.format('%0' .. acc .. 'd',
+                ctld.utils.round("ctld.utils.tostringMGRS()", MGRS.Easting / (10 ^ (5 - acc)), 0))
+            ..
+            ' ' ..
+            string.format('%0' .. acc .. 'd',
+                ctld.utils.round("ctld.utils.tostringMGRS()", MGRS.Northing / (10 ^ (5 - acc)), 0))
+    end
+end
+
+--------------------------------------------------------------------------------------------------------
 utils.UniqIdCounter = 0 -- Compteur statique pour les ID uniques
 --- @function ctld.utils:getNextUniqId
 -- Génère un ID unique incrémental, comme requis pour 'unitId' dans groupData.
@@ -11309,6 +11434,25 @@ function ctld.utils.getGroupRoute(caller, groupIdent, task)
             end                         --if coa_data.country then --there is a country table
         end                             --if coa_name == 'red' or coa_name == 'blue' and type(coa_data) == 'table' then
     end                                 --for coa_name, coa_data in pairs(mission.coalition) do
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Returns GroundUnitsListNames for a given coalition
+function ctld.utils.getGroundUnitsListNames(caller, coalitionId)
+    if coalitionId == nil then
+        if env and env.error then
+            env.error("ctld.utils.getGroundUnitsListNames()." .. tostring(caller) .. ": Invalid coalition ID provided.")
+        end
+        return {}
+    end
+    local UnitsListNames = {}
+    for i, v in ipairs(coalition.getGroups(coalitionId, Group.Category.GROUND)) do
+        local groupUnits = v:getUnits()
+        for ii, vv in ipairs(groupUnits) do
+            UnitsListNames[#UnitsListNames + 1] = vv:getName()
+        end
+    end
+    return UnitsListNames
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -13522,7 +13666,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     local unitsByDistance = {}
     local cpt = 1
     local _units = {}
-    for _unitName, _ in pairs(CTLD_extAPI.DBs.unitsByName) do
+    for _, _unitName in pairs(ctld.utils.getGroundUnitsListNames("ctld.getNearbyUnits()", _coalition)) do
         local u = Unit.getByName(_unitName)
         local e = (u and u:isExist()) or false
         -- pcall is needed because getCoalition() fails if the unit is an object without coalition (like a smoke effect)
@@ -15369,9 +15513,9 @@ end
 function ctld.getFOBPositionString(_fob)
     local _lat, _lon = coord.LOtoLL(_fob:getPosition().p)
 
-    local _latLngStr = CTLD_extAPI.tostringLL("ctld.getFOBPositionString()", _lat, _lon, 3, ctld.location_DMS)
+    local _latLngStr = ctld.utils.tostringLL("ctld.getFOBPositionString()", _lat, _lon, 3, ctld.location_DMS)
 
-    --     local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.getFOBPositionString()", coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
+    --     local _mgrsString = ctld.utils.tostringMGRS("ctld.getFOBPositionString()", coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
 
     local _message = _latLngStr
 
@@ -15830,9 +15974,9 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
 
     local _lat, _lon = coord.LOtoLL(_point)
 
-    local _latLngStr = CTLD_extAPI.tostringLL("ctld.createRadioBeacon()", _lat, _lon, 3, ctld.location_DMS)
+    local _latLngStr = ctld.utils.tostringLL("ctld.createRadioBeacon()", _lat, _lon, 3, ctld.location_DMS)
 
-    --local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.createRadioBeacon()", coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
+    --local _mgrsString = ctld.utils.tostringMGRS("ctld.createRadioBeacon()", coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
 
     local _freqsText = _name
 
@@ -19542,8 +19686,8 @@ function ctld.getPositionString(_unit)
     end
 
     local _lat, _lon  = coord.LOtoLL(_unit:getPosition().p)
-    local _latLngStr  = CTLD_extAPI.tostringLL("ctld.getPositionString()", _lat, _lon, 3, ctld.location_DMS)
-    local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.getPositionString()",
+    local _latLngStr  = ctld.utils.tostringLL("ctld.getPositionString()", _lat, _lon, 3, ctld.location_DMS)
+    local _mgrsString = ctld.utils.tostringMGRS("ctld.getPositionString()",
         coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
     local _TargetAlti = land.getHeight(ctld.utils.makeVec2FromVec3OrVec2("ctld.getPositionString()", _unit:getPoint()))
     return " @ " ..
@@ -20601,24 +20745,6 @@ CTLD_extAPI.dynAddStatic     = function(caller, ...)
         return nil
     end
     return framework.dynAddStatic(...)
-end
-
-CTLD_extAPI.tostringLL       = function(caller, ...)
-    if not (framework and framework.tostringLL) then
-        logError('[CTLD_extAPI ERROR] tostringLL unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.tostringLL(...)
-end
-
-CTLD_extAPI.tostringMGRS     = function(caller, ...)
-    if not (framework and framework.tostringMGRS) then
-        logError('[CTLD_extAPI ERROR] tostringMGRS unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.tostringMGRS(...)
 end
 
 -- ================================================================

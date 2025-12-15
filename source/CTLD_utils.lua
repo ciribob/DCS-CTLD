@@ -814,6 +814,25 @@ function ctld.utils.getGroupRoute(caller, groupIdent, task)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Returns GroundUnitsListNames for a given coalition
+function ctld.utils.getGroundUnitsListNames(caller, coalitionId)
+    if coalitionId == nil then
+        if env and env.error then
+            env.error("ctld.utils.getGroundUnitsListNames()." .. tostring(caller) .. ": Invalid coalition ID provided.")
+        end
+        return {}
+    end
+    local UnitsListNames = {}
+    for i, v in ipairs(coalition.getGroups(coalitionId, Group.Category.GROUND)) do
+        local groupUnits = v:getUnits()
+        for ii, vv in ipairs(groupUnits) do
+            UnitsListNames[#UnitsListNames + 1] = vv:getName()
+        end
+    end
+    return UnitsListNames
+end
+
+--------------------------------------------------------------------------------------------------------
 --Gets the average position of a group of units (by name)
 function ctld.utils.getAvgPos(caller, unitNames)
     if unitNames == nil or #unitNames == 0 then
