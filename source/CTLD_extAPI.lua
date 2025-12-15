@@ -87,16 +87,6 @@ CTLD_extAPI.getGroupRoute    = function(caller, ...)
     return framework.getGroupRoute(...)
 end
 
-CTLD_extAPI.getHeading       = function(caller, ...)
-    if not (framework and framework.getHeading) then
-        logError('[CTLD_extAPI ERROR] getHeading unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-
-    return framework.getHeading(...)
-end
-
 CTLD_extAPI.getUnitsLOS      = function(caller, ...)
     if not (framework and framework.getUnitsLOS) then
         logError('[CTLD_extAPI ERROR] getUnitsLOS unavailable (' ..

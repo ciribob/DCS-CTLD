@@ -161,7 +161,7 @@ end
 function ctld.utils.getHeadingInRadians(caller, unitObject, rawHeading) --rawHeading: boolean (true=geographic/false=magnetic)
     if not unitObject then
         if env and env.error then
-            env.error("CTLD.utils:getHeadingInRadians()." .. caller .. ": Invalid unit object provided.")
+            env.error("CTLD.utils:getHeadingInRadians()." .. tostring(caller) .. ": Invalid unit object provided.")
         end
         return 0
     end
