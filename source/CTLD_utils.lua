@@ -242,9 +242,9 @@ end
 
 --------------------------------------------------------------------------------------------------------
 --- @function ctld.utils:normalizeHeading
--- Normalise un cap (heading) entre 0 et 360 degrés.
-function ctld.utils.normalizeHeading(h)
-    local result = h % 360
+-- Normalise a heading between 0 et 360 degrees.
+function ctld.utils.normalizeHeadingInDegrees(offsetHeadingInDegrees)
+    local result = offsetHeadingInDegrees % 360
     if result < 0 then
         result = result + 360
     end
