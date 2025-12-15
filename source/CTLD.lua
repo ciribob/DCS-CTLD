@@ -8134,10 +8134,10 @@ end
 -- return the WayPoint number (on the JTAC route) the most near from the target
 function ctld.getNearestWP(_referenceUnitName)
     local WP = 0
-    local memoDist = nil                                                                   -- Lower distance checked
+    local memoDist = nil                                                                  -- Lower distance checked
     local refGroupName = Unit.getByName(_referenceUnitName):getGroup():getName()
-    local JTACRoute = CTLD_extAPI.getGroupRoute("ctld.getNearestWP()", refGroupName, true) -- get the initial editor route of the current group
-    if Unit.getByName(_referenceUnitName) ~= nil then                                      --JTAC et unit must exist
+    local JTACRoute = ctld.utils.getGroupRoute("ctld.getNearestWP()", refGroupName, true) -- get the initial editor route of the current group
+    if Unit.getByName(_referenceUnitName) ~= nil then                                     --JTAC et unit must exist
         for i = 1, #JTACRoute do
             local ptWP  = { x = JTACRoute[i].x, y = JTACRoute[i].y }
             local ptRef = ctld.utils.makeVec2FromVec3OrVec2("ctld.getNearestWP()",
@@ -8159,9 +8159,9 @@ end
 -- Modify the route deleting all the WP before "firstWP" param, for aligne the orbit on the nearest WP of the target
 function ctld.backToRoute(_jtacUnitName)
     local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
-    --local JTACRoute     = CTLD_extAPI.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)   -- get the initial editor route of the current group
+    --local JTACRoute     = ctld.utils.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)   -- get the initial editor route of the current group
     local JTACRoute     = ctld.utils.deepCopy("ctld.backToRoute()",
-        CTLD_extAPI.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)) -- get the initial editor route of the current group
+        ctld.utils.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)) -- get the initial editor route of the current group
     local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
 
     local Mission       = {}

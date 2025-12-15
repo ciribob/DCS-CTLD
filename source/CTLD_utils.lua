@@ -616,6 +616,79 @@ function ctld.utils.getUnitsLOS(caller, unitset1, altoffset1, unitset2, altoffse
 end
 
 --------------------------------------------------------------------------------------------------------
+-- same as getGroupPoints but returns speed and formation type along with vec2 of point}
+function ctld.utils.getGroupRoute(caller, groupIdent, task)
+    if groupIdent == nil then
+        if env and env.error then
+            env.error("ctld.utils.getGroupRoute()." .. tostring(caller) .. ": Invalid group identifier provided.")
+        end
+        return nil
+    end
+    -- refactor to search by groupId and allow groupId and groupName as inputs
+    local gpId = groupIdent
+    if mist.DBs.MEgroupsByName[groupIdent] then
+        gpId = mist.DBs.MEgroupsByName[groupIdent].groupId
+    else
+        log:error("ctld.utils.getGroupRoute()." .. tostring(caller) .. '$1 not found in mist.DBs.MEgroupsByName', groupIdent)
+    end
+
+    for coa_name, coa_data in pairs(env.mission.coalition) do
+        if type(coa_data) == 'table' then
+            if coa_data.country then --there is a country table
+                for cntry_id, cntry_data in pairs(coa_data.country) do
+                    for obj_cat_name, obj_cat_data in pairs(cntry_data) do
+                        if obj_cat_name == "helicopter" or obj_cat_name == "ship" or obj_cat_name == "plane" or obj_cat_name == "vehicle" then -- only these types have points
+                            if ((type(obj_cat_data) == 'table') and obj_cat_data.group and (type(obj_cat_data.group) == 'table') and (#obj_cat_data.group > 0)) then --there's a group!
+                                for group_num, group_data in pairs(obj_cat_data.group) do
+                                    if group_data and group_data.groupId == gpId then                                                        -- this is the group we are looking for
+                                        if group_data.route and group_data.route.points and #group_data.route.points > 0 then
+                                            local points = {}
+
+                                            for point_num, point in pairs(group_data.route.points) do
+                                                local routeData = {}
+                                                if env.mission.version > 7 and env.mission.version < 19 then
+                                                    routeData.name = env.getValueDictByKey(point.name)
+                                                else
+                                                    routeData.name = point.name
+                                                end
+                                                if not point.point then
+                                                    routeData.x = point.x
+                                                    routeData.y = point.y
+                                                else
+                                                    routeData.point = point
+                                                        .point --it's possible that the ME could move to the point = Vec2 notation.
+                                                end
+                                                routeData.form = point.action
+                                                routeData.speed = point.speed
+                                                routeData.alt = point.alt
+                                                routeData.alt_type = point.alt_type
+                                                routeData.airdromeId = point.airdromeId
+                                                routeData.helipadId = point.helipadId
+                                                routeData.type = point.type
+                                                routeData.action = point.action
+                                                if task then
+                                                    routeData.task = point.task
+                                                end
+                                                points[point_num] = routeData
+                                            end
+
+                                            return points
+                                        end
+                                        log:error('Group route not defined in mission editor for groupId: $1', gpId)
+                                        return
+                                    end --if group_data and group_data.name and group_data.name == 'groupname'
+                                end --for group_num, group_data in pairs(obj_cat_data.group) do
+                            end --if ((type(obj_cat_data) == 'table') and obj_cat_data.group and (type(obj_cat_data.group) == 'table') and (#obj_cat_data.group > 0)) then
+                        end --if obj_cat_name == "helicopter" or obj_cat_name == "ship" or obj_cat_name == "plane" or obj_cat_name == "vehicle" or obj_cat_name == "static" then
+                    end --for obj_cat_name, obj_cat_data in pairs(cntry_data) do
+                end --for cntry_id, cntry_data in pairs(coa_data.country) do
+            end --if coa_data.country then --there is a country table
+        end --if coa_name == 'red' or coa_name == 'blue' and type(coa_data) == 'table' then
+    end   --for coa_name, coa_data in pairs(mission.coalition) do
+end
+
+
+--------------------------------------------------------------------------------------------------------
 --Gets the average position of a group of units (by name)
 function ctld.utils.getAvgPos(caller, unitNames)
     if unitNames == nil or #unitNames == 0 then

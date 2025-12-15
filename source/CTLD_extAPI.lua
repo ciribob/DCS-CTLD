@@ -69,15 +69,6 @@ CTLD_extAPI.dynAddStatic     = function(caller, ...)
     return framework.dynAddStatic(...)
 end
 
-CTLD_extAPI.getGroupRoute    = function(caller, ...)
-    if not (framework and framework.getGroupRoute) then
-        logError('[CTLD_extAPI ERROR] getGroupRoute unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.getGroupRoute(...)
-end
-
 CTLD_extAPI.makeUnitTable    = function(caller, ...)
     if not (framework and framework.makeUnitTable) then
         logError('[CTLD_extAPI ERROR] makeUnitTable unavailable (' ..
