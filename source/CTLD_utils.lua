@@ -374,8 +374,8 @@ function ctld.utils.get2DDist(caller, point1, point2)
     if not point2 then
         log:warn("ctld.utils.get2DDist()  2nd input value is nil")
     end
-    point1 = ctld.utils.vec3Mag("ctld.utils.get2DDist()", point1)
-    point2 = ctld.utils.vec3Mag("ctld.utils.get2DDist()", point2)
+    point1 = ctld.utils.makeVec3FromVec2OrVec3("ctld.utils.get2DDist()", point1)
+    point2 = ctld.utils.makeVec3FromVec2OrVec3("ctld.utils.get2DDist()", point2)
     return ctld.utils.vec3Mag("ctld.utils.get2DDist()", { x = point1.x - point2.x, y = 0, z = point1.z - point2.z })
 end
 
