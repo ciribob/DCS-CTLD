@@ -142,8 +142,15 @@ end
 --- Returns magnetic variation of given DCS point (vec2 or vec3).
 -- borrowed from mist
 function ctld.utils.getNorthCorrectionInRadians(caller, vec2OrVec3Point) --gets the correction needed for true north (magnetic variation)
+    if vec2OrVec3Point == nil then
+        if env and env.error then
+            env.error("CTLD.utils:getNorthCorrectionInRadians()." .. tostring(caller) .. ": Invalid point provided.")
+        end
+        return 0
+    end
+
     local point = ctld.utils.deepCopy(vec2OrVec3Point)
-    if not point.z then                                                  --Vec2; convert to Vec3
+    if not point.z then --Vec2; convert to Vec3
         point.z = point.y
         point.y = 0
     end
