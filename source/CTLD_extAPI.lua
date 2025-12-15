@@ -105,15 +105,6 @@ CTLD_extAPI.makeUnitTable    = function(caller, ...)
     return framework.makeUnitTable(...)
 end
 
-CTLD_extAPI.scheduleFunction = function(caller, ...)
-    if not (framework and framework.scheduleFunction) then
-        logError('[CTLD_extAPI ERROR] scheduleFunction unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.scheduleFunction(...)
-end
-
 CTLD_extAPI.tostringLL       = function(caller, ...)
     if not (framework and framework.tostringLL) then
         logError('[CTLD_extAPI ERROR] tostringLL unavailable (' ..

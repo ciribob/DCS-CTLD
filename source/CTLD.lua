@@ -6776,7 +6776,7 @@ ctld.jtacRadioData = {}
         By waiting a bit, the group gets populated before JTACAutoLase is called, hence avoiding a trip to cleanupJTAC.
 ]]
 function ctld.JTACStart(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio)
-    CTLD_extAPI.scheduleFunction("ctld.JTACStart()", ctld.JTACAutoLase,
+    timer.scheduleFunction(ctld.JTACAutoLase,
         { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio },
         timer.getTime() + 1)
 end
