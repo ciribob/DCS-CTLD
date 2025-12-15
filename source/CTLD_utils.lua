@@ -385,3 +385,133 @@ function ctld.utils.deepCopy(caller, object)
     end
     return _copy(object)
 end
+
+--======================================================================================================
+--- Returns table in a easy readable string representation.
+-- borrowed from mist
+-- this function is not meant for serialization because it uses
+-- newlines for better readability.
+-- @param tbl table to show
+-- @param loc
+-- @param indent
+-- @param tableshow_tbls
+-- @return human readable string representation of given table
+function ctld.utils.tableShow(caller, tbl, loc, indent, tableshow_tbls) --based on serialize_slmod, this is a _G serialization
+    if tbl == nil then
+        if env and env.error then
+            env.error("ctld.utils.tableShow()." .. tostring(caller) .. ": Attempt to show a nil table.")
+        end
+        return "nil"
+    end
+
+    tableshow_tbls = tableshow_tbls or {} --create table of tables
+    loc = loc or ""
+    indent = indent or ""
+    if type(tbl) == 'table' then --function only works for tables!
+        tableshow_tbls[tbl] = loc
+
+        local tbl_str = {}
+
+        --tbl_str[#tbl_str + 1] = indent .. '{\n'
+        tbl_str[#tbl_str + 1] = '{\n'
+
+        for ind, val in pairs(tbl) do
+            if type(ind) == "number" then
+                tbl_str[#tbl_str + 1] = indent
+                tbl_str[#tbl_str + 1] = loc .. '['
+                tbl_str[#tbl_str + 1] = tostring(ind)
+                tbl_str[#tbl_str + 1] = '] = '
+            else
+                tbl_str[#tbl_str + 1] = indent
+                tbl_str[#tbl_str + 1] = loc .. '['
+                tbl_str[#tbl_str + 1] = ctld.utils.basicSerialize("ctld.utils.tableShow()", ind)
+                tbl_str[#tbl_str + 1] = '] = '
+            end
+
+            if ((type(val) == 'number') or (type(val) == 'boolean')) then
+                tbl_str[#tbl_str + 1] = tostring(val)
+                tbl_str[#tbl_str + 1] = ',\n'
+            elseif type(val) == 'string' then
+                tbl_str[#tbl_str + 1] = ctld.utils.basicSerialize("ctld.utils.tableShow()", val)
+                tbl_str[#tbl_str + 1] = ',\n'
+            elseif type(val) == 'nil' then -- won't ever happen, right?
+                tbl_str[#tbl_str + 1] = 'nil,\n'
+            elseif type(val) == 'table' then
+                if tableshow_tbls[val] then
+                    tbl_str[#tbl_str + 1] = tostring(val) .. ' already defined: ' .. tableshow_tbls[val] .. ',\n'
+                else
+                    --tableshow_tbls[val] = loc .. '[' .. ctld.utils.basicSerialize("ctld.utils.tableShow()", ind) .. ']'
+                    --tbl_str[#tbl_str + 1] = tostring(val) .. ' '
+                    --[[
+                    tbl_str[#tbl_str + 1] = mist.utils.tableShow(val,
+                    loc .. '[' .. ctld.utils.basicSerialize("ctld.utils.tableShow()", ind) .. ']',
+                    indent .. '    ',
+                    tableshow_tbls) ]] --
+                    tbl_str[#tbl_str + 1] = mist.utils.tableShow(val, loc, indent .. '    ')
+                    tbl_str[#tbl_str + 1] = ',\n'
+                end
+            elseif type(val) == 'function' then
+                if debug and debug.getinfo then
+                    local fcnname = tostring(val)
+                    local info = debug.getinfo(val, "S")
+                    if info.what == "C" then
+                        tbl_str[#tbl_str + 1] = string.format('%q', fcnname .. ', C function') .. ',\n'
+                    else
+                        if (string.sub(info.source, 1, 2) == [[./]]) then
+                            tbl_str[#tbl_str + 1] = string.format('%q',
+                                fcnname ..
+                                ', defined in (' ..
+                                info.linedefined .. '-' .. info.lastlinedefined .. ')' .. info.source) .. ',\n'
+                        else
+                            tbl_str[#tbl_str + 1] = string.format('%q',
+                                    fcnname ..
+                                    ', defined in (' .. info.linedefined .. '-' .. info.lastlinedefined .. ')') ..
+                                ',\n'
+                        end
+                    end
+                else
+                    tbl_str[#tbl_str + 1] = 'a function,\n'
+                end
+            else
+                tbl_str[#tbl_str + 1] = 'unable to serialize value type ' ..
+                    ctld.utils.basicSerialize("ctld.utils.tableShow()", type(val)) .. ' at index ' .. tostring(ind)
+            end
+        end
+        --string.sub("Hello, World!", -6, -1)
+        if string.sub(table.concat(tbl_str), - #indent - 2, -1) == '{\n' then
+            trigger.action.outText(string.sub(table.concat(tbl_str), - #indent - 2, -1), 10)
+            for i = 1, #indent do
+                tbl_str[#tbl_str] = nil
+            end
+            tbl_str[#tbl_str + 1] = '{}'
+        else
+            tbl_str[#tbl_str + 1] = indent .. '}'
+        end
+        return table.concat(tbl_str)
+    end
+end
+
+--======================================================================================================
+--- Serializes the give variable to a string.
+-- borrowed from slmod
+-- @param var variable to serialize
+-- @treturn string variable serialized to string
+function ctld.utils.basicSerialize(caller, var)
+    if var == nil then
+        if env and env.error then
+            env.error("ctld.utils.basicSerialize()." .. tostring(caller) .. ": Attempt to serialize a nil variable.")
+        end
+        return "nil"
+    else
+        if ((type(var) == 'number') or
+                (type(var) == 'boolean') or
+                (type(var) == 'function') or
+                (type(var) == 'table') or
+                (type(var) == 'userdata')) then
+            return tostring(var)
+        elseif type(var) == 'string' then
+            var = string.format('%q', var)
+            return var
+        end
+    end
+end

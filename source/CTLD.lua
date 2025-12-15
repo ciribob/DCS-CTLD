@@ -3973,8 +3973,6 @@ function ctld.findNearestAASystem(_heli, _aaSystem)
 
     for _groupName, _hawkDetails in pairs(ctld.completeAASystems) do
         local _hawkGroup = Group.getByName(_groupName)
-
-        --    env.info(_groupName..": "..CTLD_extAPI.utils.tableShow("ctld.findNearestAASystem", _hawkDetails))
         if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() and _hawkDetails[1].system.name == _aaSystem.name then
             local _units = _hawkGroup:getUnits()
 
@@ -5008,8 +5006,6 @@ function ctld.countCompleteAASystems(_heli)
 
     for _groupName, _hawkDetails in pairs(ctld.completeAASystems) do
         local _hawkGroup = Group.getByName(_groupName)
-
-        --    env.info(_groupName..": "..CTLD_extAPI.utils.tableShow("ctld.countCompleteAASystems()", _hawkDetails))
         if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() then
             local _units = _hawkGroup:getUnits()
 
@@ -5122,8 +5118,6 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
             _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
         end
 
-        ctld.logError("5134 :ctld.unpackMultiCrate(): _nearestCrate.crateUnit = " ..
-            mist.utils.tableShow(_nearestCrate.crateUnit))
         local _crateHdg = ctld.utils.getHeadingInRadians("ctld.unpackMultiCrate()", _nearestCrate.crateUnit, true)
 
         -- destroy crates
