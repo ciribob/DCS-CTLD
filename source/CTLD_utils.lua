@@ -144,7 +144,7 @@ end
 function ctld.utils.getNorthCorrectionInRadians(caller, vec2OrVec3Point) --gets the correction needed for true north (magnetic variation)
     if vec2OrVec3Point == nil then
         if env and env.error then
-            env.error("CTLD.utils:getNorthCorrectionInRadians()." .. tostring(caller) .. ": Invalid point provided.")
+            env.error("ctld.utils.getNorthCorrectionInRadians()." .. tostring(caller) .. ": Invalid point provided.")
         end
         return 0
     end
@@ -168,7 +168,7 @@ end
 function ctld.utils.getHeadingInRadians(caller, unitObject, rawHeading) --rawHeading: boolean (true=geographic/false=magnetic)
     if not unitObject then
         if env and env.error then
-            env.error("CTLD.utils:getHeadingInRadians()." .. tostring(caller) .. ": Invalid unit object provided.")
+            env.error("ctld.utils.getHeadingInRadians()." .. tostring(caller) .. ": Invalid unit object provided.")
         end
         return 0
     end
@@ -196,7 +196,7 @@ end
 function ctld.utils.makeVec3FromVec2OrVec3(caller, vec, y)
     if not vec then
         if env and env.error then
-            env.error("CTLD.utils:makeVec3FromVec2OrVec3()." .. tostring(caller) .. ": Invalid vector provided.")
+            env.error("ctld.utils.makeVec3FromVec2OrVec3()." .. tostring(caller) .. ": Invalid vector provided.")
         end
         return nil
     end
@@ -219,7 +219,7 @@ end
 function ctld.utils.makeVec2FromVec3OrVec2(caller, vec)
     if vec == nil then
         if env and env.error then
-            env.error("CTLD.utils:makeVec2FromVec3OrVec2()." .. tostring(caller) .. ": Invalid vector provided.")
+            env.error("ctld.utils.makeVec2FromVec3OrVec2()." .. tostring(caller) .. ": Invalid vector provided.")
         end
         return nil
     end
@@ -274,6 +274,24 @@ function ctld.utils.addVec3(vec1, vec2)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Simple rounding function.
+-- @-- borrowed from mist
+-- From http://lua-users.org/wiki/SimpleRound
+-- use negative idp for rounding ahead of decimal place, positive for rounding after decimal place
+-- @tparam number num number to round
+-- @param idp
+function ctld.utils.round(caller, num, idp)
+    if num == nil or type(num) ~= "number" then
+        if env and env.error then
+            env.error("ctld.utils.round()." .. tostring(caller) .. ": Invalid number provided.")
+        end
+        return 0
+    end
+    local mult = 10 ^ (idp or 0)
+    return math.floor(num * mult + 0.5) / mult
+end
+
+--------------------------------------------------------------------------------------------------------
 utils.UniqIdCounter = 0 -- Compteur statique pour les ID uniques
 --- @function ctld.utils:getNextUniqId
 -- Génère un ID unique incrémental, comme requis pour 'unitId' dans groupData.
@@ -288,7 +306,7 @@ end
 function ctld.utils.radianToDegree(caller, angleInRadians)
     if angle == nil or type(angle) ~= "number" then
         if env and env.error then
-            env.error("CTLD.utils:toDegree()." .. tostring(caller) .. ": Invalid angle provided.")
+            env.error("ctld.utils.toDegree()." .. tostring(caller) .. ": Invalid angle provided.")
         end
         return 0
     end
@@ -301,7 +319,7 @@ end
 function ctld.utils.normalizeHeadingInDegrees(caller, offsetHeadingInDegrees)
     if offsetHeadingInDegrees == nil then
         if env and env.error then
-            env.error("CTLD.utils:normalizeHeadingInDegrees()." .. tostring(caller) .. ": Invalid heading provided.")
+            env.error("CTLD.utils.normalizeHeadingInDegrees()." .. tostring(caller) .. ": Invalid heading provided.")
         end
         return 0
     end
@@ -348,7 +366,7 @@ function ctld.utils.deepCopy(caller, object)
     local lookup_table = {}
     if object == nil then
         if env and env.error then
-            env.error("CTLD.utils:deepCopy()." .. tostring(caller) .. ": Attempt to deep copy a nil object.")
+            env.error("ctld.utils.deepCopy()." .. tostring(caller) .. ": Attempt to deep copy a nil object.")
         end
         return nil
     end
