@@ -10897,6 +10897,112 @@ function ctld.utils.addVec3(vec1, vec2)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Vector substraction.
+-- @tparam Vec3 vec1 first vector
+-- @tparam Vec3 vec2 second vector
+-- @treturn Vec3 new vector, vec2 substracted from vec1.
+function ctld.utils.subVec3(caller, vec1, vec2)
+    if vec1 == nil or vec2 == nil then
+        if env and env.error then
+            env.error("ctld.utils.subVec3()." .. tostring(caller) .. ": Both input values cannot be nil.")
+        end
+        return nil
+    end
+    return { x = vec1.x - vec2.x, y = vec1.y - vec2.y, z = vec1.z - vec2.z }
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Vector dot product.
+-- @tparam Vec3 vec1 first vector
+-- @tparam Vec3 vec2 second vector
+-- @treturn number dot product of given vectors
+function ctld.utils.multVec3(caller, vec1, vec2)
+    if vec1 == nil or vec2 == nil then
+        if env and env.error then
+            env.error("ctld.utils.multVec3()." .. tostring(caller) .. ": Both input values cannot be nil.")
+        end
+        return 0
+    end
+    return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Returns the center of a zone as Vec3.
+-- @-- borrowed from mist
+-- @tparam string|table zone trigger zone name or table
+-- @treturn Vec3 center of the zone
+function ctld.utils.zoneToVec3(caller, zone, gl)
+    if zone == nil then
+        if env and env.error then
+            env.error("ctld.utils.zoneToVec3()." .. tostring(caller) .. ": Invalid zone provided.")
+        end
+        return nil
+    end
+
+    local new = {}
+    if type(zone) == 'table' then
+        if zone.point then
+            new.x = zone.point.x
+            new.y = zone.point.y
+            new.z = zone.point.z
+        elseif zone.x and zone.y and zone.z then
+            new = ctld.utils.deepCopy("ctld.utils.zoneToVec3()", zone)
+        end
+        return new
+    elseif type(zone) == 'string' then
+        zone = trigger.misc.getZone(zone)
+        if zone then
+            new.x = zone.point.x
+            new.y = zone.point.y
+            new.z = zone.point.z
+        end
+    end
+    if new.x and gl then
+        new.y = land.getHeight({ x = new.x, y = new.z })
+    end
+    return new
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Vector magnitude
+-- @tparam Vec3 (3D with x,y,z)vec vector
+-- @treturn number magnitude of vector vec
+function ctld.utils.vec3Mag(caller, vec3)
+    if vec3 == nil or vec3.x == nil or vec3.y == nil or vec3.z == nil then
+        if env and env.error then
+            env.error("ctld.utils.vec3Mag()." .. tostring(caller) .. ": Invalid vector provided.")
+        end
+        return 0
+    end
+
+    return (vec3.x ^ 2 + vec3.y ^ 2 + vec3.z ^ 2) ^ 0.5
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Returns distance in meters between two points.
+-- @-- borrowed from mist
+-- @tparam Vec2|Vec3 point1 first point
+-- @tparam Vec2|Vec3 point2 second point
+-- @treturn number distance between given points.
+function ctld.utils.get2DDist(caller, point1, point2)
+    if point1 == nil or point2 == nil then
+        if env and env.error then
+            env.error("ctld.utils.get2DDist()." .. tostring(caller) .. ": Both input values cannot be nil.")
+        end
+        return 0
+    end
+    if not point1 then
+        log:warn("ctld.utils.get2DDist()  1st input value is nil")
+    end
+    if not point2 then
+        log:warn("ctld.utils.get2DDist()  2nd input value is nil")
+    end
+    point1 = ctld.utils.vec3Mag("ctld.utils.get2DDist()", point1)
+    point2 = ctld.utils.vec3Mag("ctld.utils.get2DDist()", point2)
+    return ctld.utils.vec3Mag("ctld.utils.get2DDist()", { x = point1.x - point2.x, y = 0, z = point1.z - point2.z })
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Simple rounding function.
 -- @-- borrowed from mist
 -- From http://lua-users.org/wiki/SimpleRound
@@ -10976,6 +11082,266 @@ function ctld.utils.polarToCartesian(distance, relativeAngle, headingDeg)
     local z_rot = dist * math.sin(angleRad)
 
     return { x = x_rot, y = 0, z = z_rot }
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Converts kilometers per hour to meters per second.
+-- @param kmph speed in km/h
+-- @return speed in m/s
+function ctld.utils.kmphToMps(caller, kmph)
+    if kmph == nil or type(kmph) ~= "number" then
+        if env and env.error then
+            env.error("ctld.utils.kmphToMps()." .. tostring(caller) .. ": Invalid speed provided.")
+        end
+        return 0
+    end
+    return kmph / 3.6
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Builds a ground waypoint from a point definition.
+-- No longer accepts path
+function ctld.utils.buildWP(caller, point, overRideForm, overRideSpeed)
+    if point == nil then
+        if env and env.error then
+            env.error("ctld.utils.buildWP()." .. tostring(caller) .. ": Invalid point provided.")
+        end
+        return nil
+    end
+
+    local wp = {}
+    wp.x = point.x
+
+    if point.z then
+        wp.y = point.z
+    else
+        wp.y = point.y
+    end
+    local form, speed
+
+    if point.speed and not overRideSpeed then
+        wp.speed = point.speed
+    elseif type(overRideSpeed) == 'number' then
+        wp.speed = overRideSpeed
+    else
+        wp.speed = ctld.utils.kmphToMps("ctld.utils.buildWP()", 20)
+    end
+
+    if point.form and not overRideForm then
+        form = point.form
+    else
+        form = overRideForm
+    end
+
+    if not form then
+        wp.action = 'Cone'
+    else
+        form = string.lower(form)
+        if form == 'off_road' or form == 'off road' then
+            wp.action = 'Off Road'
+        elseif form == 'on_road' or form == 'on road' then
+            wp.action = 'On Road'
+        elseif form == 'rank' or form == 'line_abrest' or form == 'line abrest' or form == 'lineabrest' then
+            wp.action = 'Rank'
+        elseif form == 'cone' then
+            wp.action = 'Cone'
+        elseif form == 'diamond' then
+            wp.action = 'Diamond'
+        elseif form == 'vee' then
+            wp.action = 'Vee'
+        elseif form == 'echelon_left' or form == 'echelon left' or form == 'echelonl' then
+            wp.action = 'EchelonL'
+        elseif form == 'echelon_right' or form == 'echelon right' or form == 'echelonr' then
+            wp.action = 'EchelonR'
+        else
+            wp.action = 'Cone' -- if nothing matched
+        end
+    end
+
+    wp.type = 'Turning Point'
+
+    return wp
+end
+
+--------------------------------------------------------------------------------------------------------
+function ctld.utils.getUnitsLOS(caller, unitset1, altoffset1, unitset2, altoffset2, radius)
+    --log:info("$1, $2, $3, $4, $5", unitset1, altoffset1, unitset2, altoffset2, radius)
+    if unitset1 == nil or unitset2 == nil or altoffset1 == nil or altoffset2 == nil or radius = nil then
+        if env and env.error then
+            env.error("ctld.utils.getUnitsLOS()." .. tostring(caller) .. ": parameters sets cannot be nil.")
+        end
+        return {}
+    end
+
+    radius = radius or math.huge
+    local unit_info1 = {}
+    local unit_info2 = {}
+
+    -- get the positions all in one step, saves execution time.
+    for unitset1_ind = 1, #unitset1 do
+        local unit1 = Unit.getByName(unitset1[unitset1_ind])
+        if unit1 then
+            local lCat = Object.getCategory(unit1)
+            if ((lCat == 1 and unit1:isActive()) or lCat ~= 1) and unit1:isExist() == true then
+                unit_info1[#unit_info1 + 1] = {}
+                unit_info1[#unit_info1].unit = unit1
+                unit_info1[#unit_info1].pos = unit1:getPosition().p
+            end
+        end
+    end
+
+    for unitset2_ind = 1, #unitset2 do
+        local unit2 = Unit.getByName(unitset2[unitset2_ind])
+        if unit2 then
+            local lCat = Object.getCategory(unit2)
+            if ((lCat == 1 and unit2:isActive()) or lCat ~= 1) and unit2:isExist() == true then
+                unit_info2[#unit_info2 + 1] = {}
+                unit_info2[#unit_info2].unit = unit2
+                unit_info2[#unit_info2].pos = unit2:getPosition().p
+            end
+        end
+    end
+
+    local LOS_data = {}
+    -- now compute los
+    for unit1_ind = 1, #unit_info1 do
+        local unit_added = false
+        for unit2_ind = 1, #unit_info2 do
+            if radius == math.huge or (ctld.utils.vec3Mag("ctld.utils.getUnitsLOS()", ctld.utils.subVec3("ctld.utils.getUnitsLOS()", unit_info1[unit1_ind].pos, unit_info2[unit2_ind].pos)) < radius) then -- inside radius
+                local point1 = {
+                    x = unit_info1[unit1_ind].pos.x,
+                    y = unit_info1[unit1_ind].pos.y + altoffset1,
+                    z =
+                        unit_info1[unit1_ind].pos.z
+                }
+                local point2 = {
+                    x = unit_info2[unit2_ind].pos.x,
+                    y = unit_info2[unit2_ind].pos.y + altoffset2,
+                    z =
+                        unit_info2[unit2_ind].pos.z
+                }
+                if land.isVisible(point1, point2) then
+                    if unit_added == false then
+                        unit_added = true
+                        LOS_data[#LOS_data + 1] = {}
+                        LOS_data[#LOS_data].unit = unit_info1[unit1_ind].unit
+                        LOS_data[#LOS_data].vis = {}
+                        LOS_data[#LOS_data].vis[#LOS_data[#LOS_data].vis + 1] = unit_info2[unit2_ind].unit
+                    else
+                        LOS_data[#LOS_data].vis[#LOS_data[#LOS_data].vis + 1] = unit_info2[unit2_ind].unit
+                    end
+                end
+            end
+        end
+    end
+
+    return LOS_data
+end
+
+--------------------------------------------------------------------------------------------------------
+-- same as getGroupPoints but returns speed and formation type along with vec2 of point}
+function ctld.utils.getGroupRoute(caller, groupIdent, task)
+    if groupIdent == nil then
+        if env and env.error then
+            env.error("ctld.utils.getGroupRoute()." .. tostring(caller) .. ": Invalid group identifier provided.")
+        end
+        return nil
+    end
+    -- refactor to search by groupId and allow groupId and groupName as inputs
+    local gpId = groupIdent
+    if mist.DBs.MEgroupsByName[groupIdent] then
+        gpId = mist.DBs.MEgroupsByName[groupIdent].groupId
+    else
+        log:error("ctld.utils.getGroupRoute()." .. tostring(caller) .. '$1 not found in mist.DBs.MEgroupsByName', groupIdent)
+    end
+
+    for coa_name, coa_data in pairs(env.mission.coalition) do
+        if type(coa_data) == 'table' then
+            if coa_data.country then --there is a country table
+                for cntry_id, cntry_data in pairs(coa_data.country) do
+                    for obj_cat_name, obj_cat_data in pairs(cntry_data) do
+                        if obj_cat_name == "helicopter" or obj_cat_name == "ship" or obj_cat_name == "plane" or obj_cat_name == "vehicle" then -- only these types have points
+                            if ((type(obj_cat_data) == 'table') and obj_cat_data.group and (type(obj_cat_data.group) == 'table') and (#obj_cat_data.group > 0)) then --there's a group!
+                                for group_num, group_data in pairs(obj_cat_data.group) do
+                                    if group_data and group_data.groupId == gpId then                                                        -- this is the group we are looking for
+                                        if group_data.route and group_data.route.points and #group_data.route.points > 0 then
+                                            local points = {}
+
+                                            for point_num, point in pairs(group_data.route.points) do
+                                                local routeData = {}
+                                                if env.mission.version > 7 and env.mission.version < 19 then
+                                                    routeData.name = env.getValueDictByKey(point.name)
+                                                else
+                                                    routeData.name = point.name
+                                                end
+                                                if not point.point then
+                                                    routeData.x = point.x
+                                                    routeData.y = point.y
+                                                else
+                                                    routeData.point = point
+                                                        .point --it's possible that the ME could move to the point = Vec2 notation.
+                                                end
+                                                routeData.form = point.action
+                                                routeData.speed = point.speed
+                                                routeData.alt = point.alt
+                                                routeData.alt_type = point.alt_type
+                                                routeData.airdromeId = point.airdromeId
+                                                routeData.helipadId = point.helipadId
+                                                routeData.type = point.type
+                                                routeData.action = point.action
+                                                if task then
+                                                    routeData.task = point.task
+                                                end
+                                                points[point_num] = routeData
+                                            end
+
+                                            return points
+                                        end
+                                        log:error('Group route not defined in mission editor for groupId: $1', gpId)
+                                        return
+                                    end --if group_data and group_data.name and group_data.name == 'groupname'
+                                end --for group_num, group_data in pairs(obj_cat_data.group) do
+                            end --if ((type(obj_cat_data) == 'table') and obj_cat_data.group and (type(obj_cat_data.group) == 'table') and (#obj_cat_data.group > 0)) then
+                        end --if obj_cat_name == "helicopter" or obj_cat_name == "ship" or obj_cat_name == "plane" or obj_cat_name == "vehicle" or obj_cat_name == "static" then
+                    end --for obj_cat_name, obj_cat_data in pairs(cntry_data) do
+                end --for cntry_id, cntry_data in pairs(coa_data.country) do
+            end --if coa_data.country then --there is a country table
+        end --if coa_name == 'red' or coa_name == 'blue' and type(coa_data) == 'table' then
+    end   --for coa_name, coa_data in pairs(mission.coalition) do
+end
+
+
+--------------------------------------------------------------------------------------------------------
+--Gets the average position of a group of units (by name)
+function ctld.utils.getAvgPos(caller, unitNames)
+    if unitNames == nil or #unitNames == 0 then
+        if env and env.error then
+            env.error("ctld.utils.getAvgPos()." .. tostring(caller) .. ": Invalid unit names provided.")
+        end
+        return nil
+    end
+
+    local avgX, avgY, avgZ, totNum = 0, 0, 0, 0
+    for i = 1, #unitNames do
+        local unit
+        if Unit.getByName(unitNames[i]) then
+            unit = Unit.getByName(unitNames[i])
+        elseif StaticObject.getByName(unitNames[i]) then
+            unit = StaticObject.getByName(unitNames[i])
+        end
+        if unit and unit:isExist() == true then
+            local pos = unit:getPosition().p
+            if pos then -- you never know O.o
+                avgX = avgX + pos.x
+                avgY = avgY + pos.y
+                avgZ = avgZ + pos.z
+                totNum = totNum + 1
+            end
+        end
+    end
+    if totNum ~= 0 then
+        return { x = avgX / totNum, y = avgY / totNum, z = avgZ / totNum }
+    end
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -11066,11 +11432,11 @@ function ctld.utils.tableShow(caller, tbl, loc, indent, tableshow_tbls) --based 
                     --tableshow_tbls[val] = loc .. '[' .. ctld.utils.basicSerialize("ctld.utils.tableShow()", ind) .. ']'
                     --tbl_str[#tbl_str + 1] = tostring(val) .. ' '
                     --[[
-                    tbl_str[#tbl_str + 1] = mist.utils.tableShow(val,
+                    tbl_str[#tbl_str + 1] = ctld.utils.tableShow(val,
                     loc .. '[' .. ctld.utils.basicSerialize("ctld.utils.tableShow()", ind) .. ']',
                     indent .. '    ',
                     tableshow_tbls) ]] --
-                    tbl_str[#tbl_str + 1] = mist.utils.tableShow(val, loc, indent .. '    ')
+                    tbl_str[#tbl_str + 1] = ctld.utils.tableShow(val, loc, indent .. '    ')
                     tbl_str[#tbl_str + 1] = ',\n'
                 end
             elseif type(val) == 'function' then
@@ -12531,7 +12897,7 @@ function ctld.cratesInZone(_zone, _flagNumber)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.cratesInZone()", _zone)
+    local _zonePos = ctld.utils.zoneToVec3("ctld.cratesInZone()", _zone)
 
     --ignore side, if crate has been used its discounted from the count
     local _crateTables = { ctld.spawnedCratesRED, ctld.spawnedCratesBLUE, ctld.missionEditorCargoCrates }
@@ -12655,7 +13021,7 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
+    local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
 
     local _redCount = 0;
     local _blueCount = 0;
@@ -12667,7 +13033,7 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
             local _groupUnits = ctld.getGroup(_groupName)
 
             if #_groupUnits > 0 then
-                local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
+                local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
                 local _dist = ctld.getDistance(_groupUnits[1]:getPoint(), _zonePos)
 
                 if _dist <= _triggerZone.radius then
@@ -12700,7 +13066,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
+    local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
 
     local _redCount = 0;
     local _blueCount = 0;
@@ -12713,7 +13079,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
             local _groupUnits = ctld.getGroup(_groupName)
 
             if #_groupUnits > 0 then
-                local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
+                local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
                 for _, _unit in pairs(_groupUnits) do
                     local _dist = ctld.getDistance(_unit:getPoint(), _zonePos)
 
@@ -12758,7 +13124,7 @@ function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife, _name)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.createRadioBeaconAtZone()", _zone)
+    local _zonePos = ctld.utils.zoneToVec3("ctld.createRadioBeaconAtZone()", _zone)
 
     ctld.beaconCount = ctld.beaconCount + 1
 
@@ -13163,7 +13529,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
         local c = nil
         pcall(function() c = (u and e and u:getCoalition()) or nil end)
         if u and e and (_coalition == 4 or c == _coalition) then
-            local _dist = CTLD_extAPI.utils.get2DDist("ctld.getNearbyUnits()", u:getPoint(), _point)
+            local _dist = ctld.utils.get2DDist("ctld.getNearbyUnits()", u:getPoint(), _point)
             if _dist <= _radius then
                 unitsByDistance[cpt] = { id = cpt, dist = _dist, unit = _unitName, typeName = u:getTypeName() }
                 cpt = cpt + 1
@@ -13918,7 +14284,7 @@ function ctld.safeToFastRope(_heli)
     end
 
     --landed or speed is less than 8 km/h and height is less than fast rope height
-    if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and CTLD_extAPI.vec.mag("ctld.safeToFastRope()", _heli:getVelocity()) < 2.2)) then
+    if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and ctld.utils.vec3Mag("ctld.safeToFastRope()", _heli:getVelocity()) < 2.2)) then
         return true
     end
 end
@@ -13936,7 +14302,7 @@ function ctld.inAir(_heli)
 
     -- less than 5 cm/s a second so landed
     -- BUT AI can hold a perfect hover so ignore AI
-    if CTLD_extAPI.vec.mag("ctld.inAir)", _heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
+    if ctld.utils.vec3Mag("ctld.inAir)", _heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
         return false
     end
     return true
@@ -14896,7 +15262,7 @@ function ctld.getClockDirection(_heli, _crate)
 
     local _position = _crate:getPosition().p      -- get position of crate
     local _playerPosition = _heli:getPosition().p -- get position of helicopter
-    local _relativePosition = CTLD_extAPI.vec.sub("ctld.getClockDirection()", _position, _playerPosition)
+    local _relativePosition = ctld.utils.subVec3("ctld.getClockDirection()", _position, _playerPosition)
 
     local _playerHeading = ctld.utils.getHeadingInRadians("ctld.getClockDirection()", _heli) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
 
@@ -14909,9 +15275,9 @@ function ctld.getClockDirection(_heli, _crate)
             math.pi / 2)
     }
 
-    local _forwardDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection()", _relativePosition, _headingVector)
+    local _forwardDistance = ctld.utils.multVec3("ctld.getClockDirection()", _relativePosition, _headingVector)
 
-    local _rightDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection()", _relativePosition, _headingVectorPerpendicular)
+    local _rightDistance = ctld.utils.multVec3("ctld.getClockDirection()", _relativePosition, _headingVectorPerpendicular)
 
     local _angle = math.atan2(_rightDistance, _forwardDistance) * 180 / math.pi
 
@@ -16846,8 +17212,8 @@ function ctld.orderGroupToMoveToPoint(_leader, _destination)
     local _group = _leader:getGroup()
 
     local _path = {}
-    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint()", _leader:getPoint(), 'Off Road', 50))
-    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint()", _destination, 'Off Road', 50))
+    table.insert(_path, ctld.utils.buildWP("ctld.orderGroupToMoveToPoint()", _leader:getPoint(), 'Off Road', 50))
+    table.insert(_path, ctld.utils.buildWP("ctld.orderGroupToMoveToPoint()", _destination, 'Off Road', 50))
 
     local _mission = {
         id = 'Mission',
@@ -17579,7 +17945,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                         local _unit = ctld.getTransportUnit(_unitName)
                         if _unit then
                             -- if transport unit landed => update repack menus
-                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and CTLD_extAPI.vec.mag("ctld.autoUpdateRepackMenu()", _unit:getVelocity()) < 0.1)) then
+                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and ctld.utils.vec3Mag("ctld.autoUpdateRepackMenu()", _unit:getVelocity()) < 0.1)) then
                                 local _unitTypename = _unit:getTypeName()
                                 local _groupId = ctld.getGroupId(_unit)
                                 if _groupId then
@@ -17919,7 +18285,7 @@ ctld.jtacRadioData = {}
         By waiting a bit, the group gets populated before JTACAutoLase is called, hence avoiding a trip to cleanupJTAC.
 ]]
 function ctld.JTACStart(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio)
-    CTLD_extAPI.scheduleFunction("ctld.JTACStart()", ctld.JTACAutoLase,
+    timer.scheduleFunction(ctld.JTACAutoLase,
         { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio },
         timer.getTime() + 1)
 end
@@ -19242,16 +19608,18 @@ function ctld.TreatOrbitJTAC(params, t)
 end
 
 ------------------------------------------------------------------------------------
--- Make orbit the group "_grpName", on target "_unitTargetName".  _alti in meters, speed in km/h
+-- Make orbit the _jtacUnitName group, on target "_unitTargetName".  _alti in meters, speed in km/h
 function ctld.StartOrbitGroup(_jtacUnitName, _unitTargetName, _alti, _speed)
     if (Unit.getByName(_unitTargetName) ~= nil) and (Unit.getByName(_jtacUnitName) ~= nil) then -- si target unit and JTAC group exist
         local orbit = {
             id     = 'Orbit',
             params = {
                 pattern = 'Circle',
+                --point = ctld.utils.makeVec2FromVec3OrVec2("ctld.StartOrbitGroup()",
+                --    ctld.utils.getAvgPos("ctld.StartOrbitGroup()",
+                --        CTLD_extAPI.makeUnitTable("ctld.StartOrbitGroup()", { _unitTargetName }))),
                 point = ctld.utils.makeVec2FromVec3OrVec2("ctld.StartOrbitGroup()",
-                    CTLD_extAPI.getAvgPos("ctld.StartOrbitGroup()",
-                        CTLD_extAPI.makeUnitTable("ctld.StartOrbitGroup()", { _unitTargetName }))),
+                    Unit.getByName(_unitTargetName):getPoint()),
                 speed = _speed,
                 altitude = _alti
             }
@@ -19277,15 +19645,15 @@ end
 -- return the WayPoint number (on the JTAC route) the most near from the target
 function ctld.getNearestWP(_referenceUnitName)
     local WP = 0
-    local memoDist = nil                                                                   -- Lower distance checked
+    local memoDist = nil                                                                  -- Lower distance checked
     local refGroupName = Unit.getByName(_referenceUnitName):getGroup():getName()
-    local JTACRoute = CTLD_extAPI.getGroupRoute("ctld.getNearestWP()", refGroupName, true) -- get the initial editor route of the current group
-    if Unit.getByName(_referenceUnitName) ~= nil then                                      --JTAC et unit must exist
+    local JTACRoute = ctld.utils.getGroupRoute("ctld.getNearestWP()", refGroupName, true) -- get the initial editor route of the current group
+    if Unit.getByName(_referenceUnitName) ~= nil then                                     --JTAC et unit must exist
         for i = 1, #JTACRoute do
             local ptWP  = { x = JTACRoute[i].x, y = JTACRoute[i].y }
             local ptRef = ctld.utils.makeVec2FromVec3OrVec2("ctld.getNearestWP()",
                 Unit.getByName(_referenceUnitName):getPoint())
-            local dist  = CTLD_extAPI.utils.get2DDist("ctld.getNearestWP()", ptRef, ptWP) -- distance between 2 points
+            local dist  = ctld.utils.get2DDist("ctld.getNearestWP()", ptRef, ptWP) -- distance between 2 points
             if memoDist == nil then
                 memoDist = dist
                 WP = i
@@ -19302,9 +19670,9 @@ end
 -- Modify the route deleting all the WP before "firstWP" param, for aligne the orbit on the nearest WP of the target
 function ctld.backToRoute(_jtacUnitName)
     local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
-    --local JTACRoute     = CTLD_extAPI.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)   -- get the initial editor route of the current group
+    --local JTACRoute     = ctld.utils.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)   -- get the initial editor route of the current group
     local JTACRoute     = ctld.utils.deepCopy("ctld.backToRoute()",
-        CTLD_extAPI.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)) -- get the initial editor route of the current group
+        ctld.utils.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)) -- get the initial editor route of the current group
     local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
 
     local Mission       = {}
@@ -19551,8 +19919,19 @@ function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRad
             color = { 51 / 255, 51 / 255, 1, 0.2 } -- blue
         end
 
-        local t = CTLD_extAPI.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()", { _playerUnit:getName() }, 180,
-            CTLD_extAPI.makeUnitTable("ctld.reconShowTargetsInLosOnF10Map()", { '[' .. enemyColor .. '][vehicle]' }),
+        local enemyUnitsListNames = {}
+        for i, v in ipairs(coalition.getGroups(coalition.side[string.upper(enemyColor)], Group.Category.GROUND)) do
+            enemyUnitsListNames[#enemyUnitsListNames + 1] = v:getName()
+        end
+
+        --local t = ctld.utils.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()", { _playerUnit:getName() }, 180,
+        --    CTLD_extAPI.makeUnitTable("ctld.reconShowTargetsInLosOnF10Map()", { '[' .. enemyColor .. '][vehicle]' }),
+        --    180, _searchRadius)
+
+        local t = ctld.utils.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()",
+            { _playerUnit:getName() },
+            180,
+            enemyUnitsListNames,
             180, _searchRadius)
 
         local MarkIds = {}
@@ -20222,51 +20601,6 @@ CTLD_extAPI.dynAddStatic     = function(caller, ...)
     return framework.dynAddStatic(...)
 end
 
-CTLD_extAPI.getAvgPos        = function(caller, ...)
-    if not (framework and framework.getAvgPos) then
-        logError('[CTLD_extAPI ERROR] getAvgPos unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.getAvgPos(...)
-end
-
-CTLD_extAPI.getGroupRoute    = function(caller, ...)
-    if not (framework and framework.getGroupRoute) then
-        logError('[CTLD_extAPI ERROR] getGroupRoute unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.getGroupRoute(...)
-end
-
-CTLD_extAPI.getUnitsLOS      = function(caller, ...)
-    if not (framework and framework.getUnitsLOS) then
-        logError('[CTLD_extAPI ERROR] getUnitsLOS unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.getUnitsLOS(...)
-end
-
-CTLD_extAPI.makeUnitTable    = function(caller, ...)
-    if not (framework and framework.makeUnitTable) then
-        logError('[CTLD_extAPI ERROR] makeUnitTable unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.makeUnitTable(...)
-end
-
-CTLD_extAPI.scheduleFunction = function(caller, ...)
-    if not (framework and framework.scheduleFunction) then
-        logError('[CTLD_extAPI ERROR] scheduleFunction unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.scheduleFunction(...)
-end
-
 CTLD_extAPI.tostringLL       = function(caller, ...)
     if not (framework and framework.tostringLL) then
         logError('[CTLD_extAPI ERROR] tostringLL unavailable (' ..
@@ -20283,78 +20617,6 @@ CTLD_extAPI.tostringMGRS     = function(caller, ...)
         return nil
     end
     return framework.tostringMGRS(...)
-end
-
--- ================================================================
--- ground
--- ================================================================
-
-CTLD_extAPI.ground           = CTLD_extAPI.ground or {}
-
-CTLD_extAPI.ground.buildWP   = function(caller, ...)
-    if not (framework and framework.ground and framework.ground.buildWP) then
-        logError('[CTLD_extAPI ERROR] ground.buildWP unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.ground.buildWP(...)
-end
-
--- ================================================================
--- utils
--- ================================================================
-
-CTLD_extAPI.utils            = CTLD_extAPI.utils or {}
-
-CTLD_extAPI.utils.get2DDist  = function(caller, ...)
-    if not (framework and framework.utils and framework.utils.get2DDist) then
-        logError('[CTLD_extAPI ERROR] utils.get2DDist unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.utils.get2DDist(...)
-end
-
-CTLD_extAPI.utils.zoneToVec3 = function(caller, ...)
-    if not (framework and framework.utils and framework.utils.zoneToVec3) then
-        logError('[CTLD_extAPI ERROR] utils.zoneToVec3 unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.utils.zoneToVec3(...)
-end
-
--- ================================================================
--- vec
--- ================================================================
-
-CTLD_extAPI.vec              = CTLD_extAPI.vec or {}
-
-CTLD_extAPI.vec.dp           = function(caller, ...)
-    if not (framework and framework.vec and framework.vec.dp) then
-        logError('[CTLD_extAPI ERROR] vec.dp unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.vec.dp(...)
-end
-
-CTLD_extAPI.vec.mag          = function(caller, ...)
-    if not (framework and framework.vec and framework.vec.mag) then
-        logError('[CTLD_extAPI ERROR] vec.mag unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.vec.mag(...)
-end
-
-CTLD_extAPI.vec.sub          = function(caller, ...)
-    if not (framework and framework.vec and framework.vec.sub) then
-        logError('[CTLD_extAPI ERROR] vec.sub unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.vec.sub(...)
 end
 
 -- ================================================================
