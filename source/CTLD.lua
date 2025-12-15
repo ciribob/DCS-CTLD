@@ -3860,9 +3860,9 @@ end
 function ctld.getFOBPositionString(_fob)
     local _lat, _lon = coord.LOtoLL(_fob:getPosition().p)
 
-    local _latLngStr = CTLD_extAPI.tostringLL("ctld.getFOBPositionString()", _lat, _lon, 3, ctld.location_DMS)
+    local _latLngStr = ctld.utils.tostringLL("ctld.getFOBPositionString()", _lat, _lon, 3, ctld.location_DMS)
 
-    --     local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.getFOBPositionString()", coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
+    --     local _mgrsString = ctld.utils.tostringMGRS("ctld.getFOBPositionString()", coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
 
     local _message = _latLngStr
 
@@ -4321,9 +4321,9 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
 
     local _lat, _lon = coord.LOtoLL(_point)
 
-    local _latLngStr = CTLD_extAPI.tostringLL("ctld.createRadioBeacon()", _lat, _lon, 3, ctld.location_DMS)
+    local _latLngStr = ctld.utils.tostringLL("ctld.createRadioBeacon()", _lat, _lon, 3, ctld.location_DMS)
 
-    --local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.createRadioBeacon()", coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
+    --local _mgrsString = ctld.utils.tostringMGRS("ctld.createRadioBeacon()", coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
 
     local _freqsText = _name
 
@@ -8033,8 +8033,8 @@ function ctld.getPositionString(_unit)
     end
 
     local _lat, _lon  = coord.LOtoLL(_unit:getPosition().p)
-    local _latLngStr  = CTLD_extAPI.tostringLL("ctld.getPositionString()", _lat, _lon, 3, ctld.location_DMS)
-    local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.getPositionString()",
+    local _latLngStr  = ctld.utils.tostringLL("ctld.getPositionString()", _lat, _lon, 3, ctld.location_DMS)
+    local _mgrsString = ctld.utils.tostringMGRS("ctld.getPositionString()",
         coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
     local _TargetAlti = land.getHeight(ctld.utils.makeVec2FromVec3OrVec2("ctld.getPositionString()", _unit:getPoint()))
     return " @ " ..

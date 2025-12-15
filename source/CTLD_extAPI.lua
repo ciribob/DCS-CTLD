@@ -69,24 +69,6 @@ CTLD_extAPI.dynAddStatic     = function(caller, ...)
     return framework.dynAddStatic(...)
 end
 
-CTLD_extAPI.tostringLL       = function(caller, ...)
-    if not (framework and framework.tostringLL) then
-        logError('[CTLD_extAPI ERROR] tostringLL unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.tostringLL(...)
-end
-
-CTLD_extAPI.tostringMGRS     = function(caller, ...)
-    if not (framework and framework.tostringMGRS) then
-        logError('[CTLD_extAPI ERROR] tostringMGRS unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.tostringMGRS(...)
-end
-
 -- ================================================================
 -- End of CTLD_extAPI.lua
 -- ================================================================
