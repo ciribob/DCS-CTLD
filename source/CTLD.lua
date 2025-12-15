@@ -8412,9 +8412,11 @@ function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRad
 
         local enemyUnitsListNames = {}
         for i, v in ipairs(coalition.getGroups(coalition.side[string.upper(enemyColor)], Group.Category.GROUND)) do
-            enemyUnitsListNames[#enemyUnitsListNames + 1] = v:getName()
+            local groupUnits = v:getUnits()
+            for ii, vv in ipairs(groupUnits) do
+                enemyUnitsListNames[#enemyUnitsListNames + 1] = vv:getName()
+            end
         end
-
         --local t = ctld.utils.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()", { _playerUnit:getName() }, 180,
         --    CTLD_extAPI.makeUnitTable("ctld.reconShowTargetsInLosOnF10Map()", { '[' .. enemyColor .. '][vehicle]' }),
         --    180, _searchRadius)
