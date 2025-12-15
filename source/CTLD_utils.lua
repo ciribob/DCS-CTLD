@@ -289,6 +289,21 @@ function ctld.utils.subVec3(caller, vec1, vec2)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Vector dot product.
+-- @tparam Vec3 vec1 first vector
+-- @tparam Vec3 vec2 second vector
+-- @treturn number dot product of given vectors
+function ctld.utils.multVec3(caller, vec1, vec2)
+    if vec1 == nil or vec2 == nil then
+        if env and env.error then
+            env.error("ctld.utils.multVec3()." .. tostring(caller) .. ": Both input values cannot be nil.")
+        end
+        return 0
+    end
+    return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Returns the center of a zone as Vec3.
 -- @-- borrowed from mist
 -- @tparam string|table zone trigger zone name or table

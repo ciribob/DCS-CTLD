@@ -3766,9 +3766,9 @@ function ctld.getClockDirection(_heli, _crate)
             math.pi / 2)
     }
 
-    local _forwardDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection()", _relativePosition, _headingVector)
+    local _forwardDistance = ctld.utils.multVec3("ctld.getClockDirection()", _relativePosition, _headingVector)
 
-    local _rightDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection()", _relativePosition, _headingVectorPerpendicular)
+    local _rightDistance = ctld.utils.multVec3("ctld.getClockDirection()", _relativePosition, _headingVectorPerpendicular)
 
     local _angle = math.atan2(_rightDistance, _forwardDistance) * 180 / math.pi
 

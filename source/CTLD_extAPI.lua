@@ -139,26 +139,5 @@ CTLD_extAPI.ground.buildWP   = function(caller, ...)
 end
 
 -- ================================================================
--- utils
--- ================================================================
-
-CTLD_extAPI.utils            = CTLD_extAPI.utils or {}
-
--- ================================================================
--- vec
--- ================================================================
-
-CTLD_extAPI.vec              = CTLD_extAPI.vec or {}
-
-CTLD_extAPI.vec.dp           = function(caller, ...)
-    if not (framework and framework.vec and framework.vec.dp) then
-        logError('[CTLD_extAPI ERROR] vec.dp unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.vec.dp(...)
-end
-
--- ================================================================
 -- End of CTLD_extAPI.lua
 -- ================================================================
