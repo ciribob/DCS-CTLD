@@ -2020,7 +2020,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
         local c = nil
         pcall(function() c = (u and e and u:getCoalition()) or nil end)
         if u and e and (_coalition == 4 or c == _coalition) then
-            local _dist = CTLD_extAPI.utils.get2DDist("ctld.getNearbyUnits()", u:getPoint(), _point)
+            local _dist = ctld.utils.get2DDist("ctld.getNearbyUnits()", u:getPoint(), _point)
             if _dist <= _radius then
                 unitsByDistance[cpt] = { id = cpt, dist = _dist, unit = _unitName, typeName = u:getTypeName() }
                 cpt = cpt + 1
@@ -8142,7 +8142,7 @@ function ctld.getNearestWP(_referenceUnitName)
             local ptWP  = { x = JTACRoute[i].x, y = JTACRoute[i].y }
             local ptRef = ctld.utils.makeVec2FromVec3OrVec2("ctld.getNearestWP()",
                 Unit.getByName(_referenceUnitName):getPoint())
-            local dist  = CTLD_extAPI.utils.get2DDist("ctld.getNearestWP()", ptRef, ptWP) -- distance between 2 points
+            local dist  = ctld.utils.get2DDist("ctld.getNearestWP()", ptRef, ptWP) -- distance between 2 points
             if memoDist == nil then
                 memoDist = dist
                 WP = i

@@ -326,6 +326,30 @@ function ctld.utils.vec3Mag(caller, vec3)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Returns distance in meters between two points.
+-- @-- borrowed from mist
+-- @tparam Vec2|Vec3 point1 first point
+-- @tparam Vec2|Vec3 point2 second point
+-- @treturn number distance between given points.
+function ctld.utils.get2DDist(caller, point1, point2)
+    if point1 == nil or point2 == nil then
+        if env and env.error then
+            env.error("ctld.utils.get2DDist()." .. tostring(caller) .. ": Both input values cannot be nil.")
+        end
+        return 0
+    end
+    if not point1 then
+        log:warn("mist.utils.get2DDist  1st input value is nil")
+    end
+    if not point2 then
+        log:warn("mist.utils.get2DDist  2nd input value is nil")
+    end
+    point1 = ctld.utils.vec3Mag("mist.utils.get2DDist()", point1)
+    point2 = ctld.utils.vec3Mag("mist.utils.get2DDist()", point2)
+    return mist.vec.mag({ x = point1.x - point2.x, y = 0, z = point1.z - point2.z })
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Simple rounding function.
 -- @-- borrowed from mist
 -- From http://lua-users.org/wiki/SimpleRound

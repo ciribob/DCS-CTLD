@@ -153,15 +153,6 @@ end
 
 CTLD_extAPI.utils            = CTLD_extAPI.utils or {}
 
-CTLD_extAPI.utils.get2DDist  = function(caller, ...)
-    if not (framework and framework.utils and framework.utils.get2DDist) then
-        logError('[CTLD_extAPI ERROR] utils.get2DDist unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.utils.get2DDist(...)
-end
-
 -- ================================================================
 -- vec
 -- ================================================================
@@ -175,15 +166,6 @@ CTLD_extAPI.vec.dp           = function(caller, ...)
         return nil
     end
     return framework.vec.dp(...)
-end
-
-CTLD_extAPI.vec.mag          = function(caller, ...)
-    if not (framework and framework.vec and framework.vec.mag) then
-        logError('[CTLD_extAPI ERROR] vec.mag unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.vec.mag(...)
 end
 
 CTLD_extAPI.vec.sub          = function(caller, ...)
