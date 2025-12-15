@@ -43,13 +43,10 @@ local heliName = "h1-1"
 local triggerUnitObj = Unit.getByName(heliName)
 local vec3StartPoint = triggerUnitObj:getPosition().p
 local vec3EndPoint = {x = vec3StartPoint.x+1000,z=vec3StartPoint.z+1000,y=vec3StartPoint.y}
-
-
 ctld.utils.drawQuad(coalitionId, vec3Points1To4, message)
-return mist.utils.tableShow(ctld.marks)
------------------------------------------------------------- ]] --
+return mist.utils.tableShow(ctld.marks)  ]] -----------------------------
 
----------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
 -- Calculates the absolute coordinates (x, y, heading, altitude) of a target point
 -- based on a reference point and a relative offset, respecting the DCS coordinate system
 -- (X=North, Y=East) and magnetic declination.
@@ -69,7 +66,7 @@ return mist.utils.tableShow(ctld.marks)
 -- @return magneticHeadingInDegrees Magnetic Heading of the target point in degrees.
 -- @return altitude Absolute altitude of the target point.
 ---
-function utils.getRelativeCoords(
+function ctld.utils.getRelativeCoords(
     refX, refY, refHeading, refAltitude,
     offsetAngleInDegrees, offsetDistanceInMeters,
     offsetHeadingInDegrees, offsetAltitudeInMeters,
@@ -124,9 +121,10 @@ function utils.getRelativeCoords(
     return newX, newY, magneticHeadingDeg, newAltitude
 end
 
------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
 -- Return a Vec2 point relative to  a reference point (position & heading DCS)
-function utils.GetRelativeVec2Coords(refVec2Point, refHeadingInRadians, distanceFromRef, angleInDegreesFromRefHeading)
+function ctld.utils.GetRelativeVec2Coords(refVec2Point, refHeadingInRadians, distanceFromRef,
+                                          angleInDegreesFromRefHeading)
     -- absolue Heading in radians
     local absoluteHeadingInRadians = refHeadingInRadians + math.rad(angleInDegreesFromRefHeading)
     -- in DCS : x = Nord (+), z = Est (+)
@@ -141,25 +139,52 @@ function utils.GetRelativeVec2Coords(refVec2Point, refHeadingInRadians, distance
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Returns magnetic variation of given DCS point (vec2 or vec3).
+-- borrowed from mist
+function ctld.utils.getNorthCorrectionInRadians(vec2OrVec3Point) --gets the correction needed for true north (magnetic variation)
+    local point = ctld.utils.deepCopy(vec2OrVec3Point)
+    if not point.z then                                          --Vec2; convert to Vec3
+        point.z = point.y
+        point.y = 0
+    end
+    local lat, lon = coord.LOtoLL(point)
+    local north_posit = coord.LLtoLO(lat + 1, lon)
+    return math.atan(north_posit.z - point.z, north_posit.x - point.x)
+end
+
+--------------------------------------------------------------------------------------------------------
 --- @function ctld.utils:getHeadingInRadians
+-- @-- borrowed from mist
 ---@param unitObject any
 ---@param rawHeading boolean (true=geographic/false=magnetic)
----@return integer       --- @--return "magneticHeading : "..tostring(math.deg(mist.getHeading(triggerUnitObj, false)))..", geographicHeading : "..tostring(math.deg(mist.getHeading(triggerUnitObj, true)))
-function utils.getHeadingInRadians(unitObject, rawHeading) --rawHeading: boolean (true=geographic/false=magnetic)
+---@return integer       --- @--return "magneticHeading : "..tostring(math.deg(ctld.utils.getHeadingInRadians(triggerUnitObj, false)))..", geographicHeading : "..tostring(math.deg(ctld.utils.getHeadingInRadians(triggerUnitObj, true)))
+function ctld.utils.getHeadingInRadians(caller, unitObject, rawHeading) --rawHeading: boolean (true=geographic/false=magnetic)
     if not unitObject then
         if env and env.error then
-            env.error("CTLD.utils:getHeadingInRadians: Invalid unit object provided.")
+            env.error("CTLD.utils:getHeadingInRadians()." .. caller .. ": Invalid unit object provided.")
         end
         return 0
     end
-    return mist.getHeading(unitObject, rawHeading or false) -- default to magnetic if not specified
+    rawHeading = rawHeading or false
+    local unitpos = unitObject:getPosition()
+    if unitpos then
+        local HeadingInRadians = math.atan(unitpos.x.z, unitpos.x.x)
+        if not rawHeading then
+            HeadingInRadians = HeadingInRadians + ctld.utils.getNorthCorrectionInRadians(unitpos.p)
+        end
+        if HeadingInRadians < 0 then
+            HeadingInRadians = HeadingInRadians + 2 * math.pi -- put heading in range of 0 to 2*pi
+        end
+        return HeadingInRadians
+    end
+    return 0
 end
 
 --------------------------------------------------------------------------------------------------------
 --- @function ctld.utils:rotateVec3
 -- Calcule l'offset cartésien absolu en appliquant la rotation du cap de l'appareil.
 -- (Conçu pour le format de données : relative = {x, y, z})
-function utils.rotateVec3(relativeVec, headingDeg)
+function ctld.utils.rotateVec3(relativeVec, headingDeg)
     local x_rel = relativeVec.x
     local z_rel = relativeVec.z
     -- y_rel n'est pas utilisé dans le calcul de rotation, mais sera dans le retour
@@ -189,7 +214,7 @@ end
 
 --------------------------------------------------------------------------------------------------------
 -- Add 2 position vectors (Vec3) of DCS.
-function utils.addVec3(vec1, vec2)
+function ctld.utils.addVec3(vec1, vec2)
     return {
         -- Use or 0 to avoid 'nil'
         x = (vec1.x or 0) + (vec2.x or 0),
@@ -202,7 +227,7 @@ end
 utils.UniqIdCounter = 0 -- Compteur statique pour les ID uniques
 --- @function ctld.utils:getNextUniqId
 -- Génère un ID unique incrémental, comme requis pour 'unitId' dans groupData.
-function utils.getNextUniqId()
+function ctld.utils.getNextUniqId()
     utils.UniqIdCounter = utils.UniqIdCounter + 1
     return utils.UniqIdCounter
 end
@@ -210,7 +235,7 @@ end
 --------------------------------------------------------------------------------------------------------
 --- @function ctld.utils:normalizeHeading
 -- Normalise un cap (heading) entre 0 et 360 degrés.
-function utils.normalizeHeading(h)
+function ctld.utils.normalizeHeading(h)
     local result = h % 360
     if result < 0 then
         result = result + 360
@@ -226,7 +251,7 @@ end
 -- @param relativeAngle number L'angle relatif au point de référence (0 = devant, 90 = droite).
 -- @param headingDeg number Le cap absolu de l'appareil (point de référence).
 -- @return table L'offset cartésien absolu { x, y=0, z }.
-function utils.polarToCartesian(distance, relativeAngle, headingDeg)
+function ctld.utils.polarToCartesian(distance, relativeAngle, headingDeg)
     local absoluteAngle = headingDeg + relativeAngle
     local angleRad = math.rad(absoluteAngle)
 
@@ -244,39 +269,26 @@ function utils.polarToCartesian(distance, relativeAngle, headingDeg)
 end
 
 --------------------------------------------------------------------------------------------------------
---Load table of maps and associated magnetic declinations to calculate the declination applicable to the mission
-utils.mapsAnMagneticDeclin = {
-    ['Caucasus']         = { ['2015-2040'] = -6 },
-    ['Nevada']           = { ['2015-2040'] = -10 },
-    ['Normandy']         = { ['1940-1948'] = 11, ['2010-2040'] = 1 },
-    ['Persian Gulf']     = { ['2010-2040'] = -1 },
-    ['The Channel']      = { ['1940-1948'] = 11, ['2006-2040'] = 0 },
-    ['Syria']            = { ['2016-2040'] = -4 },
-    ['Marianas Islands'] = { ['2013-2040'] = 1 },
-    ['South Atlantic']   = { ['2015-2040'] = 0 },
-    ['Afghanistan']      = { ['2015-2040'] = 0 }
-}
-
---------------------------------------------------------------------------------------------------------
-function utils.getMagneticDeclination()              -- returns the magnetic declination as a function of the mission date and map
-    local missionYear = tostring(mist.time.getDate().y)
-    for k, v in pairs(utils.mapsAnMagneticDeclin) do -- map name of current mission found
-        if k == mist.DBs.missionData.theatre then
-            local mostRecentYearMemo = ''
-            local declinationMostRecentYear = 0
-            for k2, v2 in pairs(v) do
-                local startYear = string.sub(k2, 1, 4)
-                local endYear   = string.sub(k2, 6, 9)
-                if missionYear >= startYear and missionYear <= endYear then --annee trouvée
-                    return v2                                               -- return magnetic declination in degrees
-                else
-                    if endYear > mostRecentYearMemo then                    -- par defaut prendre declinaison de l'année la plus avancée
-                        declinationMostRecentYear = v2
-                        mostRecentYearMemo = endYear
-                    end
-                end
-            end
-            return declinationMostRecentYear -- return magnetic declination in degrees of most recent year found
+--- Creates a deep copy of a object.
+--- -- @-- borrowed from mist
+-- Usually this object is a table.
+-- See also: from http://lua-users.org/wiki/CopyTable
+-- @param object object to copy
+-- @return copy of object
+function ctld.utils.deepCopy(object)
+    local lookup_table = {}
+    local function _copy(object)
+        if type(object) ~= "table" then
+            return object
+        elseif lookup_table[object] then
+            return lookup_table[object]
         end
+        local new_table = {}
+        lookup_table[object] = new_table
+        for index, value in pairs(object) do
+            new_table[_copy(index)] = _copy(value)
+        end
+        return setmetatable(new_table, getmetatable(object))
     end
+    return _copy(object)
 end

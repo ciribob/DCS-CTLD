@@ -2096,7 +2096,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerCoa           = PlayerTransportUnit:getCoalition()
                 local refCountry          = PlayerTransportUnit:getCountry()
                 -- calculate the heading of the spawns to be carried out
-                local playerHeading       = CTLD_extAPI.getHeading("ctld.repackVehicle()", PlayerTransportUnit)
+                local playerHeading       = ctld.utils.getHeadingInRadians("ctld.repackVehicle()", PlayerTransportUnit)
                 local playerPoint         = PlayerTransportUnit:getPoint()
                 local offset              = 5
                 local randomHeading       = ctld.RandomReal(playerHeading - math.pi / 4, playerHeading + math.pi / 4)
@@ -2673,7 +2673,7 @@ end
 
 function ctld.getPointInFrontSector(_unit, _offset)
     if _unit then
-        local playerHeading = CTLD_extAPI.getHeading("ctld.getPointInFrontSector", _unit)
+        local playerHeading = ctld.utils.getHeadingInRadians("ctld.getPointInFrontSector", _unit)
         local randomHeading = ctld.RandomReal(playerHeading - math.pi / 4, playerHeading + math.pi / 4)
         if _offset == nil then
             _offset = 20
@@ -2684,7 +2684,7 @@ end
 
 function ctld.getPointInRearSector(_unit, _offset)
     if _unit then
-        local playerHeading = CTLD_extAPI.getHeading("ctld.getPointInRearSector", _unit)
+        local playerHeading = ctld.utils.getHeadingInRadians("ctld.getPointInRearSector", _unit)
         local randomHeading = ctld.RandomReal(playerHeading + math.pi - math.pi / 4, playerHeading + math.pi + math.pi /
             4)
         if _offset == nil then
@@ -3755,7 +3755,7 @@ function ctld.getClockDirection(_heli, _crate)
     local _playerPosition = _heli:getPosition().p -- get position of helicopter
     local _relativePosition = CTLD_extAPI.vec.sub("ctld.getClockDirection()", _position, _playerPosition)
 
-    local _playerHeading = CTLD_extAPI.getHeading("ctld.getClockDirection()", _heli) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
+    local _playerHeading = ctld.utils.getHeadingInRadians("ctld.getClockDirection()", _heli) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
 
     local _headingVector = { x = math.cos(_playerHeading), y = 0, z = math.sin(_playerHeading) }
 
@@ -4083,7 +4083,7 @@ function ctld.unpackCrates(_arguments)
                         end
                     end
                     local _crateName = _crate.crateUnit:getName()
-                    local _crateHdg  = CTLD_extAPI.getHeading("ctld.unpackCrates()", _crate.crateUnit, true)
+                    local _crateHdg  = ctld.utils.getHeadingInRadians("ctld.unpackCrates()", _crate.crateUnit, true)
 
                     --remove crate
                     --    if ctld.slingLoad == false then
@@ -4278,7 +4278,7 @@ function ctld.dropSlingCrate(_args)
     else
         local _point = _heli:getPoint()
         local _side = _heli:getCoalition()
-        local _hdg = CTLD_extAPI.getHeading("ctld.dropSlingCrate()", _heli, true)
+        local _hdg = ctld.utils.getHeadingInRadians("ctld.dropSlingCrate()", _heli, true)
         local _heightDiff = ctld.heightDiff(_heli)
 
         if _heightDiff > 40.0 then
@@ -4681,7 +4681,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
 
                         table.insert(_points, _units[x]:getPoint())
                         table.insert(_types, _units[x]:getTypeName())
-                        table.insert(_hdgs, CTLD_extAPI.getHeading("ctld.rearmAASystem()", _units[x], true))
+                        table.insert(_hdgs, ctld.utils.getHeadingInRadians("ctld.rearmAASystem()", _units[x], true))
                     end
                 end
             end
@@ -4743,7 +4743,7 @@ function ctld.getAASystemDetails(_hawkGroup, _aaSystemTemplate)
                 name = _unit:getName(),
                 system = _aaSystemTemplate,
                 hdg =
-                    CTLD_extAPI.getHeading("ctld.getAASystemDetails()", _unit, true)
+                    ctld.utils.getHeadingInRadians("ctld.getAASystemDetails()", _unit, true)
             })
     end
 
@@ -4845,7 +4845,7 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempl
                 end
                 table.insert(_systemParts[_name].crates, _nearbyCrate)
                 table.insert(_cratePositions[_name], crateUnit:getPoint())
-                table.insert(_crateHdg[_name], CTLD_extAPI.getHeading("ctld.unpackAASystem()", crateUnit, true))
+                table.insert(_crateHdg[_name], ctld.utils.getHeadingInRadians("ctld.unpackAASystem()", crateUnit, true))
             end
         end
     end
@@ -5138,7 +5138,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
 
         ctld.logError("5134 :ctld.unpackMultiCrate(): _nearestCrate.crateUnit = " ..
             mist.utils.tableShow(_nearestCrate.crateUnit))
-        local _crateHdg = CTLD_extAPI.getHeading("ctld.unpackMultiCrate()", _nearestCrate.crateUnit, true)
+        local _crateHdg = ctld.utils.getHeadingInRadians("ctld.unpackMultiCrate()", _nearestCrate.crateUnit, true)
 
         -- destroy crates
         for _, _crate in pairs(_nearbyMultiCrates) do
