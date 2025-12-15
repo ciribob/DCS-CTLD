@@ -69,15 +69,6 @@ CTLD_extAPI.dynAddStatic     = function(caller, ...)
     return framework.dynAddStatic(...)
 end
 
-CTLD_extAPI.makeUnitTable    = function(caller, ...)
-    if not (framework and framework.makeUnitTable) then
-        logError('[CTLD_extAPI ERROR] makeUnitTable unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.makeUnitTable(...)
-end
-
 CTLD_extAPI.tostringLL       = function(caller, ...)
     if not (framework and framework.tostringLL) then
         logError('[CTLD_extAPI ERROR] tostringLL unavailable (' ..
