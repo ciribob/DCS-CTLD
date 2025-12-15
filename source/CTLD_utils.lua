@@ -171,7 +171,7 @@ function ctld.utils.getHeadingInRadians(caller, unitObject, rawHeading) --rawHea
         local HeadingInRadians = math.atan(unitpos.x.z, unitpos.x.x)
         if not rawHeading then
             HeadingInRadians = HeadingInRadians +
-            ctld.utils.getNorthCorrectionInRadians("ctld.utils.getHeadingInRadians()", unitpos.p)
+                ctld.utils.getNorthCorrectionInRadians("ctld.utils.getHeadingInRadians()", unitpos.p)
         end
         if HeadingInRadians < 0 then
             HeadingInRadians = HeadingInRadians + 2 * math.pi -- put heading in range of 0 to 2*pi
@@ -276,8 +276,14 @@ end
 -- See also: from http://lua-users.org/wiki/CopyTable
 -- @param object object to copy
 -- @return copy of object
-function ctld.utils.deepCopy(object)
+function ctld.utils.deepCopy(caller, object)
     local lookup_table = {}
+    if object == nil then
+        if env and env.error then
+            env.error("CTLD.utils:deepCopy()." .. tostring(caller) .. ": Attempt to deep copy a nil object.")
+        end
+        return nil
+    end
     local function _copy(object)
         if type(object) ~= "table" then
             return object

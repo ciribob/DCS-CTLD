@@ -1999,7 +1999,7 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
         local repackableUnit = ctld.isRepackableUnit(unitsNamesList[i])
         if repackableUnit then
             repackableUnit["repackableUnitGroupID"] = unitObject:getGroup():getID()
-            table.insert(repackableUnits, CTLD_extAPI.utils.deepCopy("ctld.getUnitsInRepackRadius()", repackableUnit))
+            table.insert(repackableUnits, ctld.utils.deepCopy("ctld.getUnitsInRepackRadius()", repackableUnit))
         end
     end
     return repackableUnits
@@ -2044,7 +2044,7 @@ function ctld.isRepackableUnit(_unitName)
         for i = 1, #ctld.spawnableCrates[k] do
             if _unitName then
                 if ctld.spawnableCrates[k][i].unit == unitType then
-                    local repackableUnit = CTLD_extAPI.utils.deepCopy("ctld.isRepackableUnit", ctld.spawnableCrates[k]
+                    local repackableUnit = ctld.utils.deepCopy("ctld.isRepackableUnit", ctld.spawnableCrates[k]
                         [i])
                     repackableUnit["repackableUnitName"] = _unitName
                     return repackableUnit
@@ -2462,11 +2462,11 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _spawnedCrate = Unit.getByName(_name)
     else
         if _model_type ~= nil then
-            _crate = CTLD_extAPI.utils.deepCopy("ctld.spawnCrateStatic", ctld.spawnableCratesModels[_model_type])
+            _crate = ctld.utils.deepCopy("ctld.spawnCrateStatic", ctld.spawnableCratesModels[_model_type])
         elseif ctld.slingLoad then
-            _crate = CTLD_extAPI.utils.deepCopy("ctld.spawnCrateStatic", ctld.spawnableCratesModels["sling"])
+            _crate = ctld.utils.deepCopy("ctld.spawnCrateStatic", ctld.spawnableCratesModels["sling"])
         else
-            _crate = CTLD_extAPI.utils.deepCopy("ctld.spawnCrateStatic", ctld.spawnableCratesModels["load"])
+            _crate = ctld.utils.deepCopy("ctld.spawnCrateStatic", ctld.spawnableCratesModels["load"])
         end
 
         _crate["y"] = _point.z
@@ -3622,7 +3622,7 @@ function ctld.checkHoverStatus()
 
                                 _crate.crateUnit:destroy()
 
-                                local _copiedCrate = CTLD_extAPI.utils.deepCopy("ctld.checkHoverStatus()", _crate
+                                local _copiedCrate = ctld.utils.deepCopy("ctld.checkHoverStatus()", _crate
                                     .details)
                                 _copiedCrate.simulatedSlingload = true
                                 table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
@@ -3689,7 +3689,7 @@ function ctld.loadNearbyCrate(_name)
 
                     _crate.crateUnit:destroy()
 
-                    local _copiedCrate = CTLD_extAPI.utils.deepCopy("ctld.loadNearbyCrate()", _crate.details)
+                    local _copiedCrate = ctld.utils.deepCopy("ctld.loadNearbyCrate()", _crate.details)
                     _copiedCrate.simulatedSlingload = true
                     table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                     loaded = true
@@ -4287,7 +4287,7 @@ function ctld.dropSlingCrate(_args)
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You were too high! The crate has been destroyed"), 10)
             return
         end
-        local _loadedCratesCopy = CTLD_extAPI.utils.deepCopy("ctld.dropSlingCrate()",
+        local _loadedCratesCopy = ctld.utils.deepCopy("ctld.dropSlingCrate()",
             ctld.inTransitSlingLoadCrates[_unitName])
         ctld.logTrace("_loadedCratesCopy = %s", ctld.p(_loadedCratesCopy))
         for _, _crate in pairs(_loadedCratesCopy) do
@@ -6279,7 +6279,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                     local _crateCommands = missionCommands.addSubMenuForGroup(_groupId,
                         ctld.i18n_translate("CTLD Commands"), _rootPath)
                     if ctld.vehicleCommandsPath[_unitName] == nil then
-                        ctld.vehicleCommandsPath[_unitName] = CTLD_extAPI.utils.deepCopy(
+                        ctld.vehicleCommandsPath[_unitName] = ctld.utils.deepCopy(
                             "ctld.addTransportF10MenuOptions()", _crateCommands)
                     end
                     if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
@@ -6358,7 +6358,7 @@ function ctld.buildPaginatedMenu(_menuEntries) --[[ params table :
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
         if #nextSubMenuPath ~= 0 then
-            menu.subMenuPath = CTLD_extAPI.utils.deepCopy("ctld.buildPaginatedMenu()", nextSubMenuPath)
+            menu.subMenuPath = ctld.utils.deepCopy("ctld.buildPaginatedMenu()", nextSubMenuPath)
             --menu.subMenuPath = nextSubMenuPath
         end
         -- add the submenu item
@@ -6368,7 +6368,7 @@ function ctld.buildPaginatedMenu(_menuEntries) --[[ params table :
                 menu.subMenuPath)
             itemNbSubmenu   = 1
         end
-        menu.menuArgsTable.subMenuPath      = CTLD_extAPI.utils.deepCopy("ctld.buildPaginatedMenu()", menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
+        menu.menuArgsTable.subMenuPath      = ctld.utils.deepCopy("ctld.buildPaginatedMenu()", menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
         menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
         --ctld.logTrace("FG_ boucle[%s].groupId = %s", i, menu.groupId)
         --ctld.logTrace("FG_ boucle[%s].menu.text = %s", i, menu.text)
@@ -6376,7 +6376,7 @@ function ctld.buildPaginatedMenu(_menuEntries) --[[ params table :
         --ctld.logTrace("FG_ boucle[%s].menu.menuFunction = %s", i, menu.menuFunction)
         local r                             = missionCommands.addCommandForGroup(menu.groupId, menu.text,
             menu.subMenuPath, menu.menuFunction,
-            CTLD_extAPI.utils.deepCopy("ctld.buildPaginatedMenu()", menu.menuArgsTable))
+            ctld.utils.deepCopy("ctld.buildPaginatedMenu()", menu.menuArgsTable))
         --ctld.logTrace("FG_ boucle[%s].r = %s", i, r)
         --ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
     end
@@ -6407,10 +6407,10 @@ function ctld.updateRepackMenu(_playerUnitName)
                 ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
                 --ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
-                local RepackPreviousMenu                    = CTLD_extAPI.utils.deepCopy("ctld.updateRepackMenu()",
+                local RepackPreviousMenu                    = ctld.utils.deepCopy("ctld.updateRepackMenu()",
                     ctld.vehicleCommandsPath
                     [_playerUnitName])
-                local RepackCommandsPath                    = CTLD_extAPI.utils.deepCopy("ctld.updateRepackMenu()",
+                local RepackCommandsPath                    = ctld.utils.deepCopy("ctld.updateRepackMenu()",
                     ctld.vehicleCommandsPath
                     [_playerUnitName])
                 local repackSubMenuText                     = ctld.i18n_translate("Repack Vehicles")
@@ -6432,7 +6432,7 @@ function ctld.updateRepackMenu(_playerUnitName)
                             groupId       = _groupId,
                             subMenuPath   = RepackMenuPath,
                             menuFunction  = ctld.repackVehicleRequest,
-                            menuArgsTable = CTLD_extAPI.utils.deepCopy("ctld.updateRepackMenu()", _vehicle)
+                            menuArgsTable = ctld.utils.deepCopy("ctld.updateRepackMenu()", _vehicle)
                         })
                     end
                 end
@@ -6601,7 +6601,7 @@ function ctld.addJTACRadioCommand(_side)
                                 --ctld.logTrace(string.format("JTAC - MENU - [%s] - jtacGroupSubMenuPath = %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacGroupSubMenuPath[_jtacGroupName])))
 
                                 --make a copy of the JTAC group submenu's path to insert the target's list on as many pages as required. The JTAC's group submenu path only leads to the first page
-                                local jtacTargetPagePath = CTLD_extAPI.utils.deepCopy("ctld.addJTACRadioCommand()",
+                                local jtacTargetPagePath = ctld.utils.deepCopy("ctld.addJTACRadioCommand()",
                                     ctld.jtacGroupSubMenuPath[_jtacGroupName])
 
                                 --counter to know when to add the next page submenu to fit all of the targets in the JTAC's group submenu. SMay not actually start at 0 due to static items being present on the first page
@@ -8179,7 +8179,7 @@ end
 function ctld.backToRoute(_jtacUnitName)
     local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
     --local JTACRoute     = CTLD_extAPI.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)   -- get the initial editor route of the current group
-    local JTACRoute     = CTLD_extAPI.utils.deepCopy("ctld.backToRoute()",
+    local JTACRoute     = ctld.utils.deepCopy("ctld.backToRoute()",
         CTLD_extAPI.getGroupRoute("ctld.backToRoute()", jtacGroupName, true)) -- get the initial editor route of the current group
     local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
 

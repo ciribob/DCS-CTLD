@@ -153,15 +153,6 @@ end
 
 CTLD_extAPI.utils            = CTLD_extAPI.utils or {}
 
-CTLD_extAPI.utils.deepCopy   = function(caller, ...)
-    if not (framework and framework.utils and framework.utils.deepCopy) then
-        logError('[CTLD_extAPI ERROR] utils.deepCopy unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.utils.deepCopy(...)
-end
-
 CTLD_extAPI.utils.get2DDist  = function(caller, ...)
     if not (framework and framework.utils and framework.utils.get2DDist) then
         logError('[CTLD_extAPI ERROR] utils.get2DDist unavailable (' ..
