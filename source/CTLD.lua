@@ -5703,8 +5703,8 @@ function ctld.orderGroupToMoveToPoint(_leader, _destination)
     local _group = _leader:getGroup()
 
     local _path = {}
-    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint()", _leader:getPoint(), 'Off Road', 50))
-    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint()", _destination, 'Off Road', 50))
+    table.insert(_path, ctld.utils.buildWP("ctld.orderGroupToMoveToPoint()", _leader:getPoint(), 'Off Road', 50))
+    table.insert(_path, ctld.utils.buildWP("ctld.orderGroupToMoveToPoint()", _destination, 'Off Road', 50))
 
     local _mission = {
         id = 'Mission',

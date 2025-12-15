@@ -124,20 +124,5 @@ CTLD_extAPI.tostringMGRS     = function(caller, ...)
 end
 
 -- ================================================================
--- ground
--- ================================================================
-
-CTLD_extAPI.ground           = CTLD_extAPI.ground or {}
-
-CTLD_extAPI.ground.buildWP   = function(caller, ...)
-    if not (framework and framework.ground and framework.ground.buildWP) then
-        logError('[CTLD_extAPI ERROR] ground.buildWP unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.ground.buildWP(...)
-end
-
--- ================================================================
 -- End of CTLD_extAPI.lua
 -- ================================================================

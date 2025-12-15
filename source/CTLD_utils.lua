@@ -462,6 +462,85 @@ function ctld.utils.polarToCartesian(distance, relativeAngle, headingDeg)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Converts kilometers per hour to meters per second.
+-- @param kmph speed in km/h
+-- @return speed in m/s
+function ctld.utils.kmphToMps(caller, kmph)
+    if kmph == nil or type(kmph) ~= "number" then
+        if env and env.error then
+            env.error("ctld.utils.kmphToMps()." .. tostring(caller) .. ": Invalid speed provided.")
+        end
+        return 0
+    end
+    return kmph / 3.6
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Builds a ground waypoint from a point definition.
+-- No longer accepts path
+function ctld.utils.buildWP(caller, point, overRideForm, overRideSpeed)
+    if point == nil then
+        if env and env.error then
+            env.error("ctld.utils.buildWP()." .. tostring(caller) .. ": Invalid point provided.")
+        end
+        return nil
+    end
+
+    local wp = {}
+    wp.x = point.x
+
+    if point.z then
+        wp.y = point.z
+    else
+        wp.y = point.y
+    end
+    local form, speed
+
+    if point.speed and not overRideSpeed then
+        wp.speed = point.speed
+    elseif type(overRideSpeed) == 'number' then
+        wp.speed = overRideSpeed
+    else
+        wp.speed = ctld.utils.kmphToMps("ctld.utils.buildWP()", 20)
+    end
+
+    if point.form and not overRideForm then
+        form = point.form
+    else
+        form = overRideForm
+    end
+
+    if not form then
+        wp.action = 'Cone'
+    else
+        form = string.lower(form)
+        if form == 'off_road' or form == 'off road' then
+            wp.action = 'Off Road'
+        elseif form == 'on_road' or form == 'on road' then
+            wp.action = 'On Road'
+        elseif form == 'rank' or form == 'line_abrest' or form == 'line abrest' or form == 'lineabrest' then
+            wp.action = 'Rank'
+        elseif form == 'cone' then
+            wp.action = 'Cone'
+        elseif form == 'diamond' then
+            wp.action = 'Diamond'
+        elseif form == 'vee' then
+            wp.action = 'Vee'
+        elseif form == 'echelon_left' or form == 'echelon left' or form == 'echelonl' then
+            wp.action = 'EchelonL'
+        elseif form == 'echelon_right' or form == 'echelon right' or form == 'echelonr' then
+            wp.action = 'EchelonR'
+        else
+            wp.action = 'Cone' -- if nothing matched
+        end
+    end
+
+    wp.type = 'Turning Point'
+
+    return wp
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Creates a deep copy of a object.
 -- @-- borrowed from mist
 -- Usually this object is a table.
