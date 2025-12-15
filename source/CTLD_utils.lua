@@ -189,6 +189,30 @@ function ctld.utils.getHeadingInRadians(caller, unitObject, rawHeading) --rawHea
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Converts a Vec2 to a Vec3.
+-- @-- borrowed from mist
+-- @tparam Vec2 vec the 2D vector
+-- @param y optional new y axis (altitude) value. If omitted it's 0.
+function ctld.utils.makeVec3FromVec2OrVec3(caller, vec, y)
+    if not vec then
+        if env and env.error then
+            env.error("CTLD.utils:makeVec3FromVec2OrVec3()." .. tostring(caller) .. ": Invalid vector provided.")
+        end
+        return nil
+    end
+    if not vec.z then
+        if vec.alt and not y then
+            y = vec.alt
+        elseif not y then
+            y = 0
+        end
+        return { x = vec.x, y = y, z = vec.y }
+    else
+        return { x = vec.x, y = vec.y, z = vec.z } -- it was already Vec3, actually.
+    end
+end
+
+--------------------------------------------------------------------------------------------------------
 --- @function ctld.utils:rotateVec3
 -- Calcule l'offset cartésien absolu en appliquant la rotation du cap de l'appareil.
 -- (Conçu pour le format de données : relative = {x, y, z})
@@ -284,7 +308,7 @@ end
 
 --------------------------------------------------------------------------------------------------------
 --- Creates a deep copy of a object.
---- -- @-- borrowed from mist
+-- @-- borrowed from mist
 -- Usually this object is a table.
 -- See also: from http://lua-users.org/wiki/CopyTable
 -- @param object object to copy

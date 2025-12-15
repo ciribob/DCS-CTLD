@@ -180,15 +180,6 @@ CTLD_extAPI.utils.makeVec2   = function(caller, ...)
     return framework.utils.makeVec2(...)
 end
 
-CTLD_extAPI.utils.makeVec3   = function(caller, ...)
-    if not (framework and framework.utils and framework.utils.makeVec3) then
-        logError('[CTLD_extAPI ERROR] utils.makeVec3 unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.utils.makeVec3(...)
-end
-
 CTLD_extAPI.utils.round      = function(caller, ...)
     if not (framework and framework.utils and framework.utils.round) then
         logError('[CTLD_extAPI ERROR] utils.round unavailable (' ..
