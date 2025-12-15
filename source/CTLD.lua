@@ -8099,16 +8099,18 @@ function ctld.TreatOrbitJTAC(params, t)
 end
 
 ------------------------------------------------------------------------------------
--- Make orbit the group "_grpName", on target "_unitTargetName".  _alti in meters, speed in km/h
+-- Make orbit the _jtacUnitName group, on target "_unitTargetName".  _alti in meters, speed in km/h
 function ctld.StartOrbitGroup(_jtacUnitName, _unitTargetName, _alti, _speed)
     if (Unit.getByName(_unitTargetName) ~= nil) and (Unit.getByName(_jtacUnitName) ~= nil) then -- si target unit and JTAC group exist
         local orbit = {
             id     = 'Orbit',
             params = {
                 pattern = 'Circle',
+                --point = ctld.utils.makeVec2FromVec3OrVec2("ctld.StartOrbitGroup()",
+                --    ctld.utils.getAvgPos("ctld.StartOrbitGroup()",
+                --        CTLD_extAPI.makeUnitTable("ctld.StartOrbitGroup()", { _unitTargetName }))),
                 point = ctld.utils.makeVec2FromVec3OrVec2("ctld.StartOrbitGroup()",
-                    ctld.utils.getAvgPos("ctld.StartOrbitGroup()",
-                        CTLD_extAPI.makeUnitTable("ctld.StartOrbitGroup()", { _unitTargetName }))),
+                    Unit.getByName(_unitTargetName):getPoint()),
                 speed = _speed,
                 altitude = _alti
             }
@@ -8408,8 +8410,19 @@ function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRad
             color = { 51 / 255, 51 / 255, 1, 0.2 } -- blue
         end
 
-        local t = ctld.utils.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()", { _playerUnit:getName() }, 180,
-            CTLD_extAPI.makeUnitTable("ctld.reconShowTargetsInLosOnF10Map()", { '[' .. enemyColor .. '][vehicle]' }),
+        local enemyUnitsListNames = {}
+        for i, v in ipairs(coalition.getGroups(coalition.side[string.upper(enemyColor)], Group.Category.GROUND)) do
+            enemyUnitsListNames[#enemyUnitsListNames + 1] = v:getName()
+        end
+
+        --local t = ctld.utils.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()", { _playerUnit:getName() }, 180,
+        --    CTLD_extAPI.makeUnitTable("ctld.reconShowTargetsInLosOnF10Map()", { '[' .. enemyColor .. '][vehicle]' }),
+        --    180, _searchRadius)
+
+        local t = ctld.utils.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()",
+            { _playerUnit:getName() },
+            180,
+            enemyUnitsListNames,
             180, _searchRadius)
 
         local MarkIds = {}
