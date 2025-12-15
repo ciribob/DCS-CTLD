@@ -243,7 +243,13 @@ end
 --------------------------------------------------------------------------------------------------------
 --- @function ctld.utils:normalizeHeading
 -- Normalise a heading between 0 et 360 degrees.
-function ctld.utils.normalizeHeadingInDegrees(offsetHeadingInDegrees)
+function ctld.utils.normalizeHeadingInDegrees(caller, offsetHeadingInDegrees)
+    if offsetHeadingInDegrees == nil then
+        if env and env.error then
+            env.error("CTLD.utils:normalizeHeadingInDegrees()." .. tostring(caller) .. ": Invalid heading provided.")
+        end
+        return 0
+    end
     local result = offsetHeadingInDegrees % 360
     if result < 0 then
         result = result + 360
