@@ -8408,7 +8408,7 @@ function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRad
             color = { 51 / 255, 51 / 255, 1, 0.2 } -- blue
         end
 
-        local t = CTLD_extAPI.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()", { _playerUnit:getName() }, 180,
+        local t = ctld.utils.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()", { _playerUnit:getName() }, 180,
             CTLD_extAPI.makeUnitTable("ctld.reconShowTargetsInLosOnF10Map()", { '[' .. enemyColor .. '][vehicle]' }),
             180, _searchRadius)
 

@@ -369,14 +369,14 @@ function ctld.utils.get2DDist(caller, point1, point2)
         return 0
     end
     if not point1 then
-        log:warn("mist.utils.get2DDist  1st input value is nil")
+        log:warn("ctld.utils.get2DDist()  1st input value is nil")
     end
     if not point2 then
-        log:warn("mist.utils.get2DDist  2nd input value is nil")
+        log:warn("ctld.utils.get2DDist()  2nd input value is nil")
     end
-    point1 = ctld.utils.vec3Mag("mist.utils.get2DDist()", point1)
-    point2 = ctld.utils.vec3Mag("mist.utils.get2DDist()", point2)
-    return mist.vec.mag({ x = point1.x - point2.x, y = 0, z = point1.z - point2.z })
+    point1 = ctld.utils.vec3Mag("ctld.utils.get2DDist()", point1)
+    point2 = ctld.utils.vec3Mag("ctld.utils.get2DDist()", point2)
+    return ctld.utils.vec3Mag("ctld.utils.get2DDist()", { x = point1.x - point2.x, y = 0, z = point1.z - point2.z })
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -541,6 +541,81 @@ function ctld.utils.buildWP(caller, point, overRideForm, overRideSpeed)
 end
 
 --------------------------------------------------------------------------------------------------------
+function ctld.utils.getUnitsLOS(caller, unitset1, altoffset1, unitset2, altoffset2, radius)
+    --log:info("$1, $2, $3, $4, $5", unitset1, altoffset1, unitset2, altoffset2, radius)
+    if unitset1 == nil or unitset2 == nil or altoffset1 == nil or altoffset2 == nil or radius = nil then
+        if env and env.error then
+            env.error("ctld.utils.getUnitsLOS()." .. tostring(caller) .. ": parameters sets cannot be nil.")
+        end
+        return {}
+    end
+
+    radius = radius or math.huge
+    local unit_info1 = {}
+    local unit_info2 = {}
+
+    -- get the positions all in one step, saves execution time.
+    for unitset1_ind = 1, #unitset1 do
+        local unit1 = Unit.getByName(unitset1[unitset1_ind])
+        if unit1 then
+            local lCat = Object.getCategory(unit1)
+            if ((lCat == 1 and unit1:isActive()) or lCat ~= 1) and unit1:isExist() == true then
+                unit_info1[#unit_info1 + 1] = {}
+                unit_info1[#unit_info1].unit = unit1
+                unit_info1[#unit_info1].pos = unit1:getPosition().p
+            end
+        end
+    end
+
+    for unitset2_ind = 1, #unitset2 do
+        local unit2 = Unit.getByName(unitset2[unitset2_ind])
+        if unit2 then
+            local lCat = Object.getCategory(unit2)
+            if ((lCat == 1 and unit2:isActive()) or lCat ~= 1) and unit2:isExist() == true then
+                unit_info2[#unit_info2 + 1] = {}
+                unit_info2[#unit_info2].unit = unit2
+                unit_info2[#unit_info2].pos = unit2:getPosition().p
+            end
+        end
+    end
+
+    local LOS_data = {}
+    -- now compute los
+    for unit1_ind = 1, #unit_info1 do
+        local unit_added = false
+        for unit2_ind = 1, #unit_info2 do
+            if radius == math.huge or (ctld.utils.vec3Mag("ctld.utils.getUnitsLOS()", ctld.utils.subVec3("ctld.utils.getUnitsLOS()", unit_info1[unit1_ind].pos, unit_info2[unit2_ind].pos)) < radius) then -- inside radius
+                local point1 = {
+                    x = unit_info1[unit1_ind].pos.x,
+                    y = unit_info1[unit1_ind].pos.y + altoffset1,
+                    z =
+                        unit_info1[unit1_ind].pos.z
+                }
+                local point2 = {
+                    x = unit_info2[unit2_ind].pos.x,
+                    y = unit_info2[unit2_ind].pos.y + altoffset2,
+                    z =
+                        unit_info2[unit2_ind].pos.z
+                }
+                if land.isVisible(point1, point2) then
+                    if unit_added == false then
+                        unit_added = true
+                        LOS_data[#LOS_data + 1] = {}
+                        LOS_data[#LOS_data].unit = unit_info1[unit1_ind].unit
+                        LOS_data[#LOS_data].vis = {}
+                        LOS_data[#LOS_data].vis[#LOS_data[#LOS_data].vis + 1] = unit_info2[unit2_ind].unit
+                    else
+                        LOS_data[#LOS_data].vis[#LOS_data[#LOS_data].vis + 1] = unit_info2[unit2_ind].unit
+                    end
+                end
+            end
+        end
+    end
+
+    return LOS_data
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Creates a deep copy of a object.
 -- @-- borrowed from mist
 -- Usually this object is a table.
@@ -628,11 +703,11 @@ function ctld.utils.tableShow(caller, tbl, loc, indent, tableshow_tbls) --based 
                     --tableshow_tbls[val] = loc .. '[' .. ctld.utils.basicSerialize("ctld.utils.tableShow()", ind) .. ']'
                     --tbl_str[#tbl_str + 1] = tostring(val) .. ' '
                     --[[
-                    tbl_str[#tbl_str + 1] = mist.utils.tableShow(val,
+                    tbl_str[#tbl_str + 1] = ctld.utils.tableShow(val,
                     loc .. '[' .. ctld.utils.basicSerialize("ctld.utils.tableShow()", ind) .. ']',
                     indent .. '    ',
                     tableshow_tbls) ]] --
-                    tbl_str[#tbl_str + 1] = mist.utils.tableShow(val, loc, indent .. '    ')
+                    tbl_str[#tbl_str + 1] = ctld.utils.tableShow(val, loc, indent .. '    ')
                     tbl_str[#tbl_str + 1] = ',\n'
                 end
             elseif type(val) == 'function' then
