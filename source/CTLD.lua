@@ -3878,7 +3878,7 @@ function ctld.getFOBPositionString(_fob)
 end
 
 function ctld.displayMessageToGroup(_unit, _text, _time, _clear)
-    local _groupId = ctld.getGroupId(_unit)
+    local _groupId = ctld.utils.getGroupId("ctld.displayMessageToGroup()", _unit)
     if _groupId then
         if _clear == true then
             trigger.action.outTextForGroup(_groupId, _text, _time, _clear)
@@ -6127,7 +6127,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
 
     if _unit then
         local _unitTypename = _unit:getTypeName()
-        local _groupId = ctld.getGroupId(_unit)
+        local _groupId = ctld.utils.getGroupId("ctld.addTransportF10MenuOptions()", _unit)
         if _groupId then
             -- ctld.logTrace("_groupId = %s", ctld.p(_groupId))
             -- ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo[tostring(_groupId)]))
@@ -6378,7 +6378,7 @@ end
 function ctld.updateRepackMenu(_playerUnitName)
     local playerUnit = ctld.getTransportUnit(_playerUnitName)
     if playerUnit then
-        local _groupId = ctld.getGroupId(playerUnit)
+        local _groupId = ctld.utils.getGroupId("ctld.updateRepackMenu()", playerUnit)
         if _groupId == nil then
             return
         end
@@ -6438,7 +6438,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                             -- if transport unit landed => update repack menus
                             if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and ctld.utils.vec3Mag("ctld.autoUpdateRepackMenu()", _unit:getVelocity()) < 0.1)) then
                                 local _unitTypename = _unit:getTypeName()
-                                local _groupId = ctld.getGroupId(_unit)
+                                local _groupId = ctld.utils.getGroupId("ctld.autoUpdateRepackMenu()", _unit)
                                 if _groupId then
                                     if ctld.addedTo[tostring(_groupId)] ~= nil then -- if groupMenu on loaded => add RepackMenus
                                         ctld.updateRepackMenu(_unitName)
@@ -6492,7 +6492,7 @@ function ctld.addRadioListCommand(_side)
 
     if _players ~= nil then
         for _, _playerUnit in pairs(_players) do
-            local _groupId = ctld.getGroupId(_playerUnit)
+            local _groupId = ctld.utils.getGroupId("ctld.addOtherF10MenuOptions()", _playerUnit)
 
             if _groupId then
                 --ctld.logTrace("ctld.addedTo = %s", ctld.p(ctld.addedTo))
@@ -6512,7 +6512,7 @@ function ctld.addJTACRadioCommand(_side)
 
     if _players ~= nil then
         for _, _playerUnit in pairs(_players) do
-            local _groupId = ctld.getGroupId(_playerUnit)
+            local _groupId = ctld.utils.getGroupId("ctld.addJTACRadioCommand()", _playerUnit)
 
             if _groupId then
                 local newGroup = false
@@ -6695,15 +6695,6 @@ function ctld.addJTACRadioCommand(_side)
             ctld.refreshJTACmenu[_side] = false
         end
     end
-end
-
-function ctld.getGroupId(_unit)
-    local _unitDB = CTLD_extAPI.DBs.unitsById[tonumber(_unit:getID())]
-    if _unitDB ~= nil and _unitDB.groupId then
-        return _unitDB.groupId
-    end
-
-    return nil
 end
 
 --get distance in meters assuming a Flat world
@@ -7135,7 +7126,7 @@ function ctld.cleanupJTAC(_jtacGroupName)
 
         if _players ~= nil then
             for _, _playerUnit in pairs(_players) do
-                local _groupId = ctld.getGroupId(_playerUnit)
+                local _groupId = ctld.utils.getGroupId("ctld.cleanupJTAC()", _playerUnit)
 
                 if _groupId then
                     missionCommands.removeItemForGroup(_groupId, ctld.jtacGroupSubMenuPath[_jtacGroupName])
@@ -8307,7 +8298,7 @@ function ctld.addReconRadioCommand(_side) -- _side = 1 or 2 (red    or blue)
             local _players = coalition.getPlayers(_side)
             if _players ~= nil then
                 for _, _playerUnit in pairs(_players) do
-                    local _groupId = ctld.getGroupId(_playerUnit)
+                    local _groupId = ctld.utils.getGroupId("ctld.addReconRadioCommand()", _playerUnit)
                     if _groupId then
                         if ctld.reconRadioAdded[tostring(_groupId)] == nil then
                             --ctld.logDebug("ctld.addReconRadioCommand - adding RECON radio menu for unit [%s]", ctld.p(_playerUnit:getName()))

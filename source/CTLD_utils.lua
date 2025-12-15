@@ -814,6 +814,19 @@ function ctld.utils.getGroupRoute(caller, groupIdent, task)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Returns the groupId for a given unit.
+function ctld.utils.getGroupId(caller, _unitId)
+    if _unitId == nil then
+        if env and env.error then
+            env.error("ctld.utils.getGroupId()." .. tostring(caller) .. ": Invalid unit provided.")
+        end
+        return nil
+    end
+
+    return _unitId:getGroup():getID()
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Returns GroundUnitsListNames for a given coalition
 function ctld.utils.getGroundUnitsListNames(caller, coalitionId)
     if coalitionId == nil then
