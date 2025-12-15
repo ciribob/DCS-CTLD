@@ -2775,7 +2775,7 @@ function ctld.safeToFastRope(_heli)
     end
 
     --landed or speed is less than 8 km/h and height is less than fast rope height
-    if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and CTLD_extAPI.vec.mag("ctld.safeToFastRope()", _heli:getVelocity()) < 2.2)) then
+    if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and ctld.utils.vec3Mag("ctld.safeToFastRope()", _heli:getVelocity()) < 2.2)) then
         return true
     end
 end
@@ -2793,7 +2793,7 @@ function ctld.inAir(_heli)
 
     -- less than 5 cm/s a second so landed
     -- BUT AI can hold a perfect hover so ignore AI
-    if CTLD_extAPI.vec.mag("ctld.inAir)", _heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
+    if ctld.utils.vec3Mag("ctld.inAir)", _heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
         return false
     end
     return true
@@ -6436,7 +6436,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                         local _unit = ctld.getTransportUnit(_unitName)
                         if _unit then
                             -- if transport unit landed => update repack menus
-                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and CTLD_extAPI.vec.mag("ctld.autoUpdateRepackMenu()", _unit:getVelocity()) < 0.1)) then
+                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and ctld.utils.vec3Mag("ctld.autoUpdateRepackMenu()", _unit:getVelocity()) < 0.1)) then
                                 local _unitTypename = _unit:getTypeName()
                                 local _groupId = ctld.getGroupId(_unit)
                                 if _groupId then

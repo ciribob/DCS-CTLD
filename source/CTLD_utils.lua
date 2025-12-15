@@ -311,6 +311,21 @@ function ctld.utils.zoneToVec3(caller, zone, gl)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Vector magnitude
+-- @tparam Vec3 (3D with x,y,z)vec vector
+-- @treturn number magnitude of vector vec
+function ctld.utils.vec3Mag(caller, vec3)
+    if vec3 == nil or vec3.x == nil or vec3.y == nil or vec3.z == nil then
+        if env and env.error then
+            env.error("ctld.utils.vec3Mag()." .. tostring(caller) .. ": Invalid vector provided.")
+        end
+        return 0
+    end
+
+    return (vec3.x ^ 2 + vec3.y ^ 2 + vec3.z ^ 2) ^ 0.5
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Simple rounding function.
 -- @-- borrowed from mist
 -- From http://lua-users.org/wiki/SimpleRound
