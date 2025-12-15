@@ -1388,7 +1388,7 @@ function ctld.cratesInZone(_zone, _flagNumber)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.cratesInZone()", _zone)
+    local _zonePos = ctld.utils.zoneToVec3("ctld.cratesInZone()", _zone)
 
     --ignore side, if crate has been used its discounted from the count
     local _crateTables = { ctld.spawnedCratesRED, ctld.spawnedCratesBLUE, ctld.missionEditorCargoCrates }
@@ -1512,7 +1512,7 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
+    local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
 
     local _redCount = 0;
     local _blueCount = 0;
@@ -1524,7 +1524,7 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
             local _groupUnits = ctld.getGroup(_groupName)
 
             if #_groupUnits > 0 then
-                local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
+                local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
                 local _dist = ctld.getDistance(_groupUnits[1]:getPoint(), _zonePos)
 
                 if _dist <= _triggerZone.radius then
@@ -1557,7 +1557,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
+    local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
 
     local _redCount = 0;
     local _blueCount = 0;
@@ -1570,7 +1570,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
             local _groupUnits = ctld.getGroup(_groupName)
 
             if #_groupUnits > 0 then
-                local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
+                local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
                 for _, _unit in pairs(_groupUnits) do
                     local _dist = ctld.getDistance(_unit:getPoint(), _zonePos)
 
@@ -1615,7 +1615,7 @@ function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife, _name)
         return
     end
 
-    local _zonePos = CTLD_extAPI.utils.zoneToVec3("ctld.createRadioBeaconAtZone()", _zone)
+    local _zonePos = ctld.utils.zoneToVec3("ctld.createRadioBeaconAtZone()", _zone)
 
     ctld.beaconCount = ctld.beaconCount + 1
 

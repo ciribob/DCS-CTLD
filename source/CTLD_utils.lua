@@ -274,6 +274,43 @@ function ctld.utils.addVec3(vec1, vec2)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Returns the center of a zone as Vec3.
+-- @-- borrowed from mist
+-- @tparam string|table zone trigger zone name or table
+-- @treturn Vec3 center of the zone
+function ctld.utils.zoneToVec3(caller, zone, gl)
+    if zone == nil then
+        if env and env.error then
+            env.error("ctld.utils.zoneToVec3()." .. tostring(caller) .. ": Invalid zone provided.")
+        end
+        return nil
+    end
+
+    local new = {}
+    if type(zone) == 'table' then
+        if zone.point then
+            new.x = zone.point.x
+            new.y = zone.point.y
+            new.z = zone.point.z
+        elseif zone.x and zone.y and zone.z then
+            new = ctld.utils.deepCopy("ctld.utils.zoneToVec3()", zone)
+        end
+        return new
+    elseif type(zone) == 'string' then
+        zone = trigger.misc.getZone(zone)
+        if zone then
+            new.x = zone.point.x
+            new.y = zone.point.y
+            new.z = zone.point.z
+        end
+    end
+    if new.x and gl then
+        new.y = land.getHeight({ x = new.x, y = new.z })
+    end
+    return new
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Simple rounding function.
 -- @-- borrowed from mist
 -- From http://lua-users.org/wiki/SimpleRound
