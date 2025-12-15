@@ -3783,19 +3783,6 @@ function ctld.getClockDirection(_heli, _crate)
     return _angle
 end
 
-function ctld.getCompassBearing(_ref, _unitPos)
-    _ref = ctld.utils.makeVec3FromVec2OrVec3("ctld.getCompassBearing()", _ref, 0)         -- turn it into Vec3 if it is not already.
-    _unitPos = ctld.utils.makeVec3FromVec2OrVec3("ctld.getCompassBearing()", _unitPos, 0) -- turn it into Vec3 if it is not already.
-
-    local _vec = { x = _unitPos.x - _ref.x, y = _unitPos.y - _ref.y, z = _unitPos.z - _ref.z }
-
-    local _dir = CTLD_extAPI.utils.getDir("ctld.getCompassBearing()", _vec, _ref)
-
-    local _bearing = CTLD_extAPI.utils.round("ctld.getCompassBearing()",
-        ctld.utils.radianToDegree("ctld.getCompassBearing()", _dir), 0)
-    return _bearing
-end
-
 function ctld.listNearbyCrates(_args)
     local _message = ""
 
