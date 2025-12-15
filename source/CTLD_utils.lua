@@ -274,6 +274,21 @@ function ctld.utils.addVec3(vec1, vec2)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Vector substraction.
+-- @tparam Vec3 vec1 first vector
+-- @tparam Vec3 vec2 second vector
+-- @treturn Vec3 new vector, vec2 substracted from vec1.
+function ctld.utils.subVec3(caller, vec1, vec2)
+    if vec1 == nil or vec2 == nil then
+        if env and env.error then
+            env.error("ctld.utils.subVec3()." .. tostring(caller) .. ": Both input values cannot be nil.")
+        end
+        return nil
+    end
+    return { x = vec1.x - vec2.x, y = vec1.y - vec2.y, z = vec1.z - vec2.z }
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Returns the center of a zone as Vec3.
 -- @-- borrowed from mist
 -- @tparam string|table zone trigger zone name or table

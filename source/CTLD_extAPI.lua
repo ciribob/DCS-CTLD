@@ -159,15 +159,6 @@ CTLD_extAPI.vec.dp           = function(caller, ...)
     return framework.vec.dp(...)
 end
 
-CTLD_extAPI.vec.sub          = function(caller, ...)
-    if not (framework and framework.vec and framework.vec.sub) then
-        logError('[CTLD_extAPI ERROR] vec.sub unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.vec.sub(...)
-end
-
 -- ================================================================
 -- End of CTLD_extAPI.lua
 -- ================================================================
