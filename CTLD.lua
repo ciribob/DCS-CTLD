@@ -10772,7 +10772,7 @@ function ctld.utils.getNorthCorrectionInRadians(caller, vec2OrVec3Point) --gets 
         return 0
     end
 
-    local point = ctld.utils.deepCopy(vec2OrVec3Point)
+    local point = ctld.utils.deepCopy("ctld.utils.getNorthCorrectionInRadians()", vec2OrVec3Point)
     if not point.z then --Vec2; convert to Vec3
         point.z = point.y
         point.y = 0
