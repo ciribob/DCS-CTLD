@@ -69,15 +69,6 @@ CTLD_extAPI.dynAddStatic     = function(caller, ...)
     return framework.dynAddStatic(...)
 end
 
-CTLD_extAPI.getAvgPos        = function(caller, ...)
-    if not (framework and framework.getAvgPos) then
-        logError('[CTLD_extAPI ERROR] getAvgPos unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.getAvgPos(...)
-end
-
 CTLD_extAPI.getGroupRoute    = function(caller, ...)
     if not (framework and framework.getGroupRoute) then
         logError('[CTLD_extAPI ERROR] getGroupRoute unavailable (' ..

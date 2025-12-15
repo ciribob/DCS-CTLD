@@ -8107,7 +8107,7 @@ function ctld.StartOrbitGroup(_jtacUnitName, _unitTargetName, _alti, _speed)
             params = {
                 pattern = 'Circle',
                 point = ctld.utils.makeVec2FromVec3OrVec2("ctld.StartOrbitGroup()",
-                    CTLD_extAPI.getAvgPos("ctld.StartOrbitGroup()",
+                    ctld.utils.getAvgPos("ctld.StartOrbitGroup()",
                         CTLD_extAPI.makeUnitTable("ctld.StartOrbitGroup()", { _unitTargetName }))),
                 speed = _speed,
                 altitude = _alti

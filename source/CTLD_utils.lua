@@ -616,6 +616,39 @@ function ctld.utils.getUnitsLOS(caller, unitset1, altoffset1, unitset2, altoffse
 end
 
 --------------------------------------------------------------------------------------------------------
+--Gets the average position of a group of units (by name)
+function ctld.utils.getAvgPos(caller, unitNames)
+    if unitNames == nil or #unitNames == 0 then
+        if env and env.error then
+            env.error("ctld.utils.getAvgPos()." .. tostring(caller) .. ": Invalid unit names provided.")
+        end
+        return nil
+    end
+
+    local avgX, avgY, avgZ, totNum = 0, 0, 0, 0
+    for i = 1, #unitNames do
+        local unit
+        if Unit.getByName(unitNames[i]) then
+            unit = Unit.getByName(unitNames[i])
+        elseif StaticObject.getByName(unitNames[i]) then
+            unit = StaticObject.getByName(unitNames[i])
+        end
+        if unit and unit:isExist() == true then
+            local pos = unit:getPosition().p
+            if pos then -- you never know O.o
+                avgX = avgX + pos.x
+                avgY = avgY + pos.y
+                avgZ = avgZ + pos.z
+                totNum = totNum + 1
+            end
+        end
+    end
+    if totNum ~= 0 then
+        return { x = avgX / totNum, y = avgY / totNum, z = avgZ / totNum }
+    end
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Creates a deep copy of a object.
 -- @-- borrowed from mist
 -- Usually this object is a table.
