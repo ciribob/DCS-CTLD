@@ -43,34 +43,7 @@ if ctld.path then
 		m = m + 1
 		trigger.action.outText(tostring(m) .. ": CTLD_utils.lua Loaded", 10)
 	end
-	dofile(ctld.path .. "CTLD_DCSWeaponsDb.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": CTLD_DCSWeaponsDb.lua Loaded",
-			10)
-	end
 
-	-- Scenes datas and Classes
-	dofile(ctld.path .. "dcsObjectsDescDb.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": dcsObjectsDescDb.lua Loaded", 10);
-	end
-	dofile(ctld.path .. "CTLD_scene.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": CTLD_scene.lua Loaded", 10);
-	end
-	dofile(ctld.path .. "farpSceneDatas.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": farpSceneDatas.lua Loaded", 10);
-	end
-	dofile(ctld.path .. "mineFieldSceneDatas.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": mineFieldSceneDatas.lua Loaded", 10);
-	end
 	if loadMsg then trigger.action.outText("CTLD loader END -> CTLD loaded", 10) end
 else
 	trigger.action.outText("No ctld.path found -> CTLD Not loaded !", 10)

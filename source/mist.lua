@@ -2085,7 +2085,9 @@ do -- the main scope
 			newGroup.units[unitIndex].unitName = nil
 		end
 
-		--coalition.addGroup(country.id[newCountry], Unit.Category[newCat], newGroup)
+		ctld.logTrace("mist.dynAdd().nexGroup =  %s", ctld.p(newGroup))
+		ctld.logTrace("mist.dynAdd().nexGroup =  %s", mist.utils.tableShow(newGroup))
+		coalition.addGroup(country.id[newCountry], Unit.Category[newCat], newGroup)
 
 		return newGroup
 	end

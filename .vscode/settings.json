@@ -1,5 +1,7 @@
 {
     "Lua.diagnostics.globals": [
-        "ctld"
-    ]
+        "ctld",
+        "timer"
+    ],
+    "Lua.workspace.preloadFileSize": 2000
 }

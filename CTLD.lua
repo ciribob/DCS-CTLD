@@ -10618,6 +10618,291 @@ ctld.i18n["ko"]["Reset TGT Selection"] = "TGT 선택 초기화"
 --========================================================================================================================
 -- End : CTLD-i18n.lua 
 -- ==================================================================================================== 
+-- Start : CTLD_utils.lua 
+-- Fichier: ctld_module.lua (Classes complètes et mises à jour)
+
+-- 1. Définition du namespace global 'ctld'
+ctld = ctld or {}
+
+-- ====================================================================================================
+-- CLASSE ctld.utils
+-- ====================================================================================================
+
+local utils = {}
+ctld.utils = utils
+if not ctld.utils.marks then ctld.utils.marks = {}; end
+
+function ctld.utils.drawQuad(coalitionId, vec3Points1To4, message)
+    local coalitionId = coalitionId or 2
+    local markId = ctld.utils.getNextUniqId()
+
+    -- Color
+    local tableColor = { 0, 0, 255, 0.4 }  --blue  by default
+    if coalitionId == 1 then
+        tableColor = { 1, 0, 0, 0.4 }      --red  % of (r,g,b,alpha)    red
+    elseif coalitionId == 2 then
+        tableColor = { 0, 0, 255, 0.4 }    --blue  % of (r,g,b,alpha)   blue
+    elseif coalitionId == 0 then
+        tableColor = { 2, 173, 33, 0.4 }   --green  % of (r,g,b,alpha)  neutral
+    elseif coalitionId == -1 then
+        tableColor = { 247, 179, 30, 0.4 } --orange  % of (r,g,b,alpha) All
+    end
+
+    local tableFillColor = { 0, 0, 255, 0.4 } --tableColor
+    local lineType = 1                        --solid
+    local message = message or ""
+    ctld.utils.marks[markId] = message
+
+    --trigger.action.quadToAll(number coalition , number id , vec3 point1 , vec3 point2 , vec3 point3 , vec3 point4 , table color , table fillColor , number lineType , boolean readOnly, string message)
+    trigger.action.quadToAll(coalitionId, markId,
+        vec3Points1To4[1], vec3Points1To4[2], vec3Points1To4[3], vec3Points1To4[4],
+        tableColor, tableFillColor, lineType, true, message)
+end
+
+--[[-example ------------------------------------------------------------
+local heliName = "h1-1"
+local triggerUnitObj = Unit.getByName(heliName)
+local vec3StartPoint = triggerUnitObj:getPosition().p
+local vec3EndPoint = {x = vec3StartPoint.x+1000,z=vec3StartPoint.z+1000,y=vec3StartPoint.y}
+
+
+ctld.utils.drawQuad(coalitionId, vec3Points1To4, message)
+return mist.utils.tableShow(ctld.marks)
+------------------------------------------------------------ ]] --
+
+---------------------------------------------------------------------------------------------
+-- Calculates the absolute coordinates (x, y, heading, altitude) of a target point
+-- based on a reference point and a relative offset, respecting the DCS coordinate system
+-- (X=North, Y=East) and magnetic declination.
+---------------------------------------------------------------------------------------------
+-- @param refX X coordinate (North) of the reference point.
+-- @param refY Y coordinate (East) of the reference point.
+-- @param refHeading True/Geographic Heading of the reference unit in degrees.
+-- @param refAltitude Altitude of the reference unit.
+-- @param offsetAngleInDegrees Angle of the offset relative to the reference heading (0 = directly ahead).
+-- @param offsetDistance Distance of the offset.
+-- @param offsetHeading True/Geographic Heading for the final point.
+-- @param offsetAltitude Altitude difference to add to the reference altitude.
+-- @param magneticDeclinationInDegrees Magnetic Declination (subtract from True Heading to get Magnetic Heading).
+--
+-- @return x Absolute X coordinate (North) of the target point.
+-- @return y Absolute Y coordinate (East) of the target point.
+-- @return magneticHeadingInDegrees Magnetic Heading of the target point in degrees.
+-- @return altitude Absolute altitude of the target point.
+---
+function utils.getRelativeCoords(
+    refX, refY, refHeading, refAltitude,
+    offsetAngleInDegrees, offsetDistanceInMeters,
+    offsetHeadingInDegrees, offsetAltitudeInMeters,
+    magneticDeclinationInDegrees
+)
+    -------------------------------------------------------------------------
+    -- 1. Convert reference heading (radians → degrees)
+    --    refHeading is a DCS true heading in radians, clockwise, 0 = North.
+    -------------------------------------------------------------------------
+    local refHeadingDeg = math.deg(refHeading)
+
+    -------------------------------------------------------------------------
+    -- 2. Compute the world angle used to project the new position.
+    --    offsetAngleInDegrees is relative to the aircraft's heading.
+    -------------------------------------------------------------------------
+    local worldAngleDeg = refHeadingDeg + offsetAngleInDegrees
+
+    -- Convert to radians for math.sin/cos (DCS uses clockwise headings)
+    local worldAngleRad = math.rad(worldAngleDeg)
+
+    -------------------------------------------------------------------------
+    -- 3. Compute position deltas using DCS Cartesian coordinates:
+    --    X axis = South/North, positive to the North.
+    --    Y axis (vec3.z) = West/East, positive to the East.
+    -------------------------------------------------------------------------
+    local dx = math.cos(worldAngleRad) * offsetDistanceInMeters
+    local dy = math.sin(worldAngleRad) * offsetDistanceInMeters
+
+    local newX = refX + dx
+    local newY = refY + dy
+
+    -------------------------------------------------------------------------
+    -- 4. Compute the object's final magnetic heading.
+    --
+    --    refHeadingDeg            = reference TRUE heading
+    --    + offsetHeadingInDegrees = rotation relative to the reference
+    --    - magneticDeclination    = convert true → magnetic
+    -------------------------------------------------------------------------
+    local magneticHeadingDeg =
+        refHeadingDeg +
+        offsetHeadingInDegrees -
+        magneticDeclinationInDegrees
+
+    -- Normalize to 0–360°
+    magneticHeadingDeg = (magneticHeadingDeg % 360 + 360) % 360
+
+    -------------------------------------------------------------------------
+    -- 5. Compute altitude
+    -------------------------------------------------------------------------
+    local newAltitude = refAltitude + offsetAltitudeInMeters
+
+    return newX, newY, magneticHeadingDeg, newAltitude
+end
+
+-----------------------------------------------------------------------------------------------
+-- Return a Vec2 point relative to  a reference point (position & heading DCS)
+function utils.GetRelativeVec2Coords(refVec2Point, refHeadingInRadians, distanceFromRef, angleInDegreesFromRefHeading)
+    -- absolue Heading in radians
+    local absoluteHeadingInRadians = refHeadingInRadians + math.rad(angleInDegreesFromRefHeading)
+    -- in DCS : x = Nord (+), z = Est (+)
+    local dx = math.cos(absoluteHeadingInRadians) * distanceFromRef -- displacement North/South
+    local dy = math.sin(absoluteHeadingInRadians) * distanceFromRef -- displacement Est/West
+
+    local newCoords = {
+        x = refVec2Point.x + dx,
+        y = refVec2Point.y + dy,
+    }
+    return newCoords
+end
+
+--------------------------------------------------------------------------------------------------------
+--- @function ctld.utils:getHeadingInRadians
+---@param unitObject any
+---@param rawHeading boolean (true=geographic/false=magnetic)
+---@return integer       --- @--return "magneticHeading : "..tostring(math.deg(mist.getHeading(triggerUnitObj, false)))..", geographicHeading : "..tostring(math.deg(mist.getHeading(triggerUnitObj, true)))
+function utils.getHeadingInRadians(unitObject, rawHeading) --rawHeading: boolean (true=geographic/false=magnetic)
+    if not unitObject then
+        if env and env.error then
+            env.error("CTLD.utils:getHeadingInRadians: Invalid unit object provided.")
+        end
+        return 0
+    end
+    return mist.getHeading(unitObject, rawHeading or false) -- default to magnetic if not specified
+end
+
+--------------------------------------------------------------------------------------------------------
+--- @function ctld.utils:rotateVec3
+-- Calcule l'offset cartésien absolu en appliquant la rotation du cap de l'appareil.
+-- (Conçu pour le format de données : relative = {x, y, z})
+function utils.rotateVec3(relativeVec, headingDeg)
+    local x_rel = relativeVec.x
+    local z_rel = relativeVec.z
+    -- y_rel n'est pas utilisé dans le calcul de rotation, mais sera dans le retour
+    local y_rel = relativeVec.y or 0
+
+    -- Vérification des données (X et Z sont obligatoires)
+    if x_rel == nil or z_rel == nil then
+        local msg = "CTLD.utils:rotateVec3: Missing X or Z component in relative position data."
+        if env and env.error then
+            env.error(msg)
+            -- Lève une erreur qui sera capturée par pcall (si appelé)
+            error(msg)
+        else
+            error(msg)
+        end
+    end
+
+    local headingRad = math.rad(headingDeg)
+    local cos_h = math.cos(headingRad)
+    local sin_h = math.sin(headingRad)
+
+    local x_rot = (z_rel * sin_h) + (x_rel * cos_h)
+    local z_rot = (z_rel * cos_h) - (x_rel * sin_h)
+
+    return { x = x_rot, y = y_rel, z = z_rot }
+end
+
+--------------------------------------------------------------------------------------------------------
+-- Add 2 position vectors (Vec3) of DCS.
+function utils.addVec3(vec1, vec2)
+    return {
+        -- Use or 0 to avoid 'nil'
+        x = (vec1.x or 0) + (vec2.x or 0),
+        y = (vec1.y or 0) + (vec2.y or 0),
+        z = (vec1.z or 0) + (vec2.z or 0),
+    }
+end
+
+--------------------------------------------------------------------------------------------------------
+utils.UniqIdCounter = 0 -- Compteur statique pour les ID uniques
+--- @function ctld.utils:getNextUniqId
+-- Génère un ID unique incrémental, comme requis pour 'unitId' dans groupData.
+function utils.getNextUniqId()
+    utils.UniqIdCounter = utils.UniqIdCounter + 1
+    return utils.UniqIdCounter
+end
+
+--------------------------------------------------------------------------------------------------------
+--- @function ctld.utils:normalizeHeading
+-- Normalise un cap (heading) entre 0 et 360 degrés.
+function utils.normalizeHeading(h)
+    local result = h % 360
+    if result < 0 then
+        result = result + 360
+    end
+    return result
+end
+
+--------------------------------------------------------------------------------------------------------
+--- @function ctld.utils:polarToCartesian
+-- Convertit une distance (rho), un angle (theta) et un cap de référence (headingDeg)
+-- en coordonnées cartésiennes absolues (x, z) de la carte DCS.
+-- @param distance number La distance au point de référence.
+-- @param relativeAngle number L'angle relatif au point de référence (0 = devant, 90 = droite).
+-- @param headingDeg number Le cap absolu de l'appareil (point de référence).
+-- @return table L'offset cartésien absolu { x, y=0, z }.
+function utils.polarToCartesian(distance, relativeAngle, headingDeg)
+    local absoluteAngle = headingDeg + relativeAngle
+    local angleRad = math.rad(absoluteAngle)
+
+    -- Correction du facteur distance (20m -> 10m)
+    local dist = (distance or 0) * 2
+
+    -- X (Nord/Sud, l'axe de référence du cap 0°) : Utilise COS
+    local x_rot = dist * math.cos(angleRad)
+
+    -- Z (Est/Ouest) : Utilise SIN. La trigonométrie standard sin(angle) augmente CCW.
+    -- Nous ne touchons pas au signe car la trigonométrie de DCS peut être non standard.
+    local z_rot = dist * math.sin(angleRad)
+
+    return { x = x_rot, y = 0, z = z_rot }
+end
+
+--------------------------------------------------------------------------------------------------------
+--Load table of maps and associated magnetic declinations to calculate the declination applicable to the mission
+utils.mapsAnMagneticDeclin = {
+    ['Caucasus']         = { ['2015-2040'] = -6 },
+    ['Nevada']           = { ['2015-2040'] = -10 },
+    ['Normandy']         = { ['1940-1948'] = 11, ['2010-2040'] = 1 },
+    ['Persian Gulf']     = { ['2010-2040'] = -1 },
+    ['The Channel']      = { ['1940-1948'] = 11, ['2006-2040'] = 0 },
+    ['Syria']            = { ['2016-2040'] = -4 },
+    ['Marianas Islands'] = { ['2013-2040'] = 1 },
+    ['South Atlantic']   = { ['2015-2040'] = 0 },
+    ['Afghanistan']      = { ['2015-2040'] = 0 }
+}
+
+--------------------------------------------------------------------------------------------------------
+function utils.getMagneticDeclination()              -- returns the magnetic declination as a function of the mission date and map
+    local missionYear = tostring(mist.time.getDate().y)
+    for k, v in pairs(utils.mapsAnMagneticDeclin) do -- map name of current mission found
+        if k == mist.DBs.missionData.theatre then
+            local mostRecentYearMemo = ''
+            local declinationMostRecentYear = 0
+            for k2, v2 in pairs(v) do
+                local startYear = string.sub(k2, 1, 4)
+                local endYear   = string.sub(k2, 6, 9)
+                if missionYear >= startYear and missionYear <= endYear then --annee trouvée
+                    return v2                                               -- return magnetic declination in degrees
+                else
+                    if endYear > mostRecentYearMemo then                    -- par defaut prendre declinaison de l'année la plus avancée
+                        declinationMostRecentYear = v2
+                        mostRecentYearMemo = endYear
+                    end
+                end
+            end
+            return declinationMostRecentYear -- return magnetic declination in degrees of most recent year found
+        end
+    end
+end
+-- End : CTLD_utils.lua 
+-- ==================================================================================================== 
 -- Start : CTLD.lua 
 --[[ ! IMPORTANT : You must must use the version of MIST supplied in the CTLD pack to correctly manage dynamic spwans
 
@@ -10662,7 +10947,7 @@ end
 ctld.Id = "CTLD - "
 
 --- Version.
-ctld.Version = "1.6.1"
+ctld.Version = "1.6.4"
 
 -- To add debugging messages to dcs.log, change the following log levels to `true`; `Debug` is less detailed than `Trace`
 ctld.Debug = false
@@ -10670,9 +10955,6 @@ ctld.Trace = true
 
 if ctld.Debug then
     env.info(ctld.Id .. "Debug logging is ENABLED")
-
-    require "CTLD_complt"          -- load the complete version with debug functions
-    require "FARP_spwanSceneDatas" -- load sample FARP spawn scene data
 end
 
 ctld.dontInitialize = false -- if true, ctld.initialize() will not run; instead, you'll have to run it from your own code - it's useful when you want to override some functions/parameters before the initialization takes place
@@ -12017,7 +12299,7 @@ function ctld.cratesInZone(_zone, _flagNumber)
         return
     end
 
-    local _zonePos = mist.utils.zoneToVec3(_zone)
+    local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
 
     --ignore side, if crate has been used its discounted from the count
     local _crateTables = { ctld.spawnedCratesRED, ctld.spawnedCratesBLUE, ctld.missionEditorCargoCrates }
@@ -12141,7 +12423,7 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
         return
     end
 
-    local _zonePos = mist.utils.zoneToVec3(_zone)
+    local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
 
     local _redCount = 0;
     local _blueCount = 0;
@@ -12153,7 +12435,7 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
             local _groupUnits = ctld.getGroup(_groupName)
 
             if #_groupUnits > 0 then
-                local _zonePos = mist.utils.zoneToVec3(_zone)
+                local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
                 local _dist = ctld.getDistance(_groupUnits[1]:getPoint(), _zonePos)
 
                 if _dist <= _triggerZone.radius then
@@ -12186,7 +12468,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
         return
     end
 
-    local _zonePos = mist.utils.zoneToVec3(_zone)
+    local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
 
     local _redCount = 0;
     local _blueCount = 0;
@@ -12199,7 +12481,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
             local _groupUnits = ctld.getGroup(_groupName)
 
             if #_groupUnits > 0 then
-                local _zonePos = mist.utils.zoneToVec3(_zone)
+                local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
                 for _, _unit in pairs(_groupUnits) do
                     local _dist = ctld.getDistance(_unit:getPoint(), _zonePos)
 
@@ -12244,7 +12526,7 @@ function ctld.createRadioBeaconAtZone(_zone, _coalition, _batteryLife, _name)
         return
     end
 
-    local _zonePos = mist.utils.zoneToVec3(_zone)
+    local _zonePos = CTLD_extAPI.utils.zoneToVec3("GLOBAL_SCOPE", _zone)
 
     ctld.beaconCount = ctld.beaconCount + 1
 
@@ -12628,7 +12910,7 @@ function ctld.getUnitsInRepackRadius(_PlayerTransportUnitName, _radius)
         local repackableUnit = ctld.isRepackableUnit(unitsNamesList[i])
         if repackableUnit then
             repackableUnit["repackableUnitGroupID"] = unitObject:getGroup():getID()
-            table.insert(repackableUnits, mist.utils.deepCopy(repackableUnit))
+            table.insert(repackableUnits, CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", repackableUnit))
         end
     end
     return repackableUnits
@@ -12642,14 +12924,14 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     local unitsByDistance = {}
     local cpt = 1
     local _units = {}
-    for _unitName, _ in pairs(mist.DBs.unitsByName) do
+    for _unitName, _ in pairs(CTLD_extAPI.DBs.unitsByName) do
         local u = Unit.getByName(_unitName)
         local e = (u and u:isExist()) or false
         -- pcall is needed because getCoalition() fails if the unit is an object without coalition (like a smoke effect)
         local c = nil
         pcall(function() c = (u and e and u:getCoalition()) or nil end)
         if u and e and (_coalition == 4 or c == _coalition) then
-            local _dist = mist.utils.get2DDist(u:getPoint(), _point)
+            local _dist = CTLD_extAPI.utils.get2DDist("GLOBAL_SCOPE", u:getPoint(), _point)
             if _dist <= _radius then
                 unitsByDistance[cpt] = { id = cpt, dist = _dist, unit = _unitName, typeName = u:getTypeName() }
                 cpt = cpt + 1
@@ -12673,7 +12955,8 @@ function ctld.isRepackableUnit(_unitName)
         for i = 1, #ctld.spawnableCrates[k] do
             if _unitName then
                 if ctld.spawnableCrates[k][i].unit == unitType then
-                    local repackableUnit = mist.utils.deepCopy(ctld.spawnableCrates[k][i])
+                    local repackableUnit = CTLD_extAPI.utils.deepCopy("ctld.isRepackableUnit", ctld.spawnableCrates[k]
+                        [i])
                     repackableUnit["repackableUnitName"] = _unitName
                     return repackableUnit
                 end
@@ -12724,7 +13007,7 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerCoa           = PlayerTransportUnit:getCoalition()
                 local refCountry          = PlayerTransportUnit:getCountry()
                 -- calculate the heading of the spawns to be carried out
-                local playerHeading       = mist.getHeading(PlayerTransportUnit)
+                local playerHeading       = CTLD_extAPI.getHeading("GLOBAL_SCOPE", PlayerTransportUnit)
                 local playerPoint         = PlayerTransportUnit:getPoint()
                 local offset              = 5
                 local randomHeading       = ctld.RandomReal(playerHeading - math.pi / 4, playerHeading + math.pi / 4)
@@ -12779,7 +13062,7 @@ function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logi
         ["heading"] = 0,
     }
     LogUnit["country"] = _country
-    mist.dynAddStatic(LogUnit)
+    CTLD_extAPI.dynAddStatic("ctld.addStaticLogisticUnit", LogUnit)
     return StaticObject.getByName(LogUnit["name"])
 end
 
@@ -13082,7 +13365,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _group.category = Group.Category.GROUND;
         _group.country = _country;
 
-        local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
+        local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnCrateStatic", _group).name)
 
         -- Turn off AI
         trigger.action.setGroupAIOff(_spawnedGroup)
@@ -13090,11 +13373,11 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _spawnedCrate = Unit.getByName(_name)
     else
         if _model_type ~= nil then
-            _crate = mist.utils.deepCopy(ctld.spawnableCratesModels[_model_type])
+            _crate = CTLD_extAPI.utils.deepCopy("ctld.spawnCrateStatic", ctld.spawnableCratesModels[_model_type])
         elseif ctld.slingLoad then
-            _crate = mist.utils.deepCopy(ctld.spawnableCratesModels["sling"])
+            _crate = CTLD_extAPI.utils.deepCopy("ctld.spawnCrateStatic", ctld.spawnableCratesModels["sling"])
         else
-            _crate = mist.utils.deepCopy(ctld.spawnableCratesModels["load"])
+            _crate = CTLD_extAPI.utils.deepCopy("ctld.spawnCrateStatic", ctld.spawnableCratesModels["load"])
         end
 
         _crate["y"] = _point.z
@@ -13104,7 +13387,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _crate["heading"] = hdg
         _crate["country"] = _country
 
-        mist.dynAddStatic(_crate)
+        CTLD_extAPI.dynAddStatic("GLOBAL_SCOPE", _crate)
 
         _spawnedCrate = StaticObject.getByName(_crate["name"])
     end
@@ -13136,7 +13419,7 @@ function ctld.spawnFOBCrateStatic(_country, _unitId, _point, _name)
 
     _crate["country"] = _country
 
-    mist.dynAddStatic(_crate)
+    CTLD_extAPI.dynAddStatic("ctld.spawnFOBCrateStatic", _crate)
 
     local _spawnedCrate = StaticObject.getByName(_crate["name"])
     --local _spawnedCrate = coalition.addStaticObject(_country, _crate)
@@ -13157,7 +13440,7 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     }
 
     _crate["country"] = _country
-    mist.dynAddStatic(_crate)
+    CTLD_extAPI.dynAddStatic("ctld.spawnFOB", _crate)
     local _spawnedCrate = StaticObject.getByName(_crate["name"])
     --local _spawnedCrate = coalition.addStaticObject(_country, _crate)
 
@@ -13176,7 +13459,7 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     --coalition.addStaticObject(_country, _tower)
     _tower["country"] = _country
 
-    mist.dynAddStatic(_tower)
+    CTLD_extAPI.dynAddStatic("ctld.spawnFOB", _tower)
 
     return _spawnedCrate
 end
@@ -13301,7 +13584,7 @@ end
 
 function ctld.getPointInFrontSector(_unit, _offset)
     if _unit then
-        local playerHeading = mist.getHeading(_unit)
+        local playerHeading = CTLD_extAPI.getHeading("ctld.getPointInFrontSector", _unit)
         local randomHeading = ctld.RandomReal(playerHeading - math.pi / 4, playerHeading + math.pi / 4)
         if _offset == nil then
             _offset = 20
@@ -13312,7 +13595,7 @@ end
 
 function ctld.getPointInRearSector(_unit, _offset)
     if _unit then
-        local playerHeading = mist.getHeading(_unit)
+        local playerHeading = CTLD_extAPI.getHeading("ctld.getPointInRearSector", _unit)
         local randomHeading = ctld.RandomReal(playerHeading + math.pi - math.pi / 4, playerHeading + math.pi + math.pi /
             4)
         if _offset == nil then
@@ -13403,7 +13686,7 @@ function ctld.safeToFastRope(_heli)
     end
 
     --landed or speed is less than 8 km/h and height is less than fast rope height
-    if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and mist.vec.mag(_heli:getVelocity()) < 2.2)) then
+    if (ctld.inAir(_heli) == false or (ctld.heightDiff(_heli) <= ctld.fastRopeMaximumHeight + 3.0 and CTLD_extAPI.vec.mag("GLOBAL_SCOPE", _heli:getVelocity()) < 2.2)) then
         return true
     end
 end
@@ -13411,7 +13694,7 @@ end
 function ctld.metersToFeet(_meters)
     local _feet = _meters * 3.2808399
 
-    return mist.utils.round(_feet)
+    return CTLD_extAPI.utils.round("ctld.metersToFeet", _feet)
 end
 
 function ctld.inAir(_heli)
@@ -13421,7 +13704,7 @@ function ctld.inAir(_heli)
 
     -- less than 5 cm/s a second so landed
     -- BUT AI can hold a perfect hover so ignore AI
-    if mist.vec.mag(_heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
+    if CTLD_extAPI.vec.mag("GLOBAL_SCOPE", _heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
         return false
     end
     return true
@@ -14250,7 +14533,7 @@ function ctld.checkHoverStatus()
 
                                 _crate.crateUnit:destroy()
 
-                                local _copiedCrate = mist.utils.deepCopy(_crate.details)
+                                local _copiedCrate = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", _crate.details)
                                 _copiedCrate.simulatedSlingload = true
                                 table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                                 ctld.adaptWeightToCargo(_name)
@@ -14316,7 +14599,7 @@ function ctld.loadNearbyCrate(_name)
 
                     _crate.crateUnit:destroy()
 
-                    local _copiedCrate = mist.utils.deepCopy(_crate.details)
+                    local _copiedCrate = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", _crate.details)
                     _copiedCrate.simulatedSlingload = true
                     table.insert(ctld.inTransitSlingLoadCrates[_name], _copiedCrate)
                     loaded = true
@@ -14380,9 +14663,9 @@ function ctld.getClockDirection(_heli, _crate)
 
     local _position = _crate:getPosition().p      -- get position of crate
     local _playerPosition = _heli:getPosition().p -- get position of helicopter
-    local _relativePosition = mist.vec.sub(_position, _playerPosition)
+    local _relativePosition = CTLD_extAPI.vec.sub("ctld.getClockDirection", _position, _playerPosition)
 
-    local _playerHeading = mist.getHeading(_heli) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
+    local _playerHeading = CTLD_extAPI.getHeading("ctld.getClockDirection", _heli) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
 
     local _headingVector = { x = math.cos(_playerHeading), y = 0, z = math.sin(_playerHeading) }
 
@@ -14393,9 +14676,9 @@ function ctld.getClockDirection(_heli, _crate)
             math.pi / 2)
     }
 
-    local _forwardDistance = mist.vec.dp(_relativePosition, _headingVector)
+    local _forwardDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection", _relativePosition, _headingVector)
 
-    local _rightDistance = mist.vec.dp(_relativePosition, _headingVectorPerpendicular)
+    local _rightDistance = CTLD_extAPI.vec.dp("ctld.getClockDirection", _relativePosition, _headingVectorPerpendicular)
 
     local _angle = math.atan2(_rightDistance, _forwardDistance) * 180 / math.pi
 
@@ -14411,14 +14694,14 @@ function ctld.getClockDirection(_heli, _crate)
 end
 
 function ctld.getCompassBearing(_ref, _unitPos)
-    _ref = mist.utils.makeVec3(_ref, 0)         -- turn it into Vec3 if it is not already.
-    _unitPos = mist.utils.makeVec3(_unitPos, 0) -- turn it into Vec3 if it is not already.
+    _ref = CTLD_extAPI.utils.makeVec3("ctld.getCompassBearing", _ref, 0)         -- turn it into Vec3 if it is not already.
+    _unitPos = CTLD_extAPI.utils.makeVec3("ctld.getCompassBearing", _unitPos, 0) -- turn it into Vec3 if it is not already.
 
     local _vec = { x = _unitPos.x - _ref.x, y = _unitPos.y - _ref.y, z = _unitPos.z - _ref.z }
 
-    local _dir = mist.utils.getDir(_vec, _ref)
+    local _dir = CTLD_extAPI.utils.getDir("ctld.getCompassBearing", _vec, _ref)
 
-    local _bearing = mist.utils.round(mist.utils.toDegree(_dir), 0)
+    local _bearing = CTLD_extAPI.utils.round("ctld.getCompassBearing", CTLD_extAPI.utils.toDegree(_dir), 0)
 
     return _bearing
 end
@@ -14500,9 +14783,9 @@ end
 function ctld.getFOBPositionString(_fob)
     local _lat, _lon = coord.LOtoLL(_fob:getPosition().p)
 
-    local _latLngStr = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
+    local _latLngStr = CTLD_extAPI.tostringLL("ctld.getFOBPositionString", _lat, _lon, 3, ctld.location_DMS)
 
-    --     local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
+    --     local _mgrsString = CTLD_extAPI.tostringMGRS("ctld.getFOBPositionString", coord.LLtoMGRS(coord.LOtoLL(_fob:getPosition().p)), 5)
 
     local _message = _latLngStr
 
@@ -14614,7 +14897,7 @@ function ctld.findNearestAASystem(_heli, _aaSystem)
     for _groupName, _hawkDetails in pairs(ctld.completeAASystems) do
         local _hawkGroup = Group.getByName(_groupName)
 
-        --    env.info(_groupName..": "..mist.utils.tableShow(_hawkDetails))
+        --    env.info(_groupName..": "..CTLD_extAPI.utils.tableShow("ctld.findNearestAASystem", _hawkDetails))
         if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() and _hawkDetails[1].system.name == _aaSystem.name then
             local _units = _hawkGroup:getUnits()
 
@@ -14705,7 +14988,7 @@ function ctld.unpackCrates(_arguments)
                         _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
                     end
                     local _crateName = _crate.crateUnit:getName()
-                    local _crateHdg  = mist.getHeading(_crate.crateUnit, true)
+                    local _crateHdg  = CTLD_extAPI.getHeading("GLOBAL_SCOPE", _crate.crateUnit, true)
 
                     --remove crate
                     --    if ctld.slingLoad == false then
@@ -14897,7 +15180,7 @@ function ctld.dropSlingCrate(_args)
     else
         local _point = _heli:getPoint()
         local _side = _heli:getCoalition()
-        local _hdg = mist.getHeading(_heli, true)
+        local _hdg = CTLD_extAPI.getHeading("GLOBAL_SCOPE", _heli, true)
         local _heightDiff = ctld.heightDiff(_heli)
 
         if _heightDiff > 40.0 then
@@ -14906,7 +15189,7 @@ function ctld.dropSlingCrate(_args)
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You were too high! The crate has been destroyed"), 10)
             return
         end
-        local _loadedCratesCopy = mist.utils.deepCopy(ctld.inTransitSlingLoadCrates[_unitName])
+        local _loadedCratesCopy = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", ctld.inTransitSlingLoadCrates[_unitName])
         ctld.logTrace("_loadedCratesCopy = %s", ctld.p(_loadedCratesCopy))
         for _, _crate in pairs(_loadedCratesCopy) do
             ctld.logTrace("_crate = %s", ctld.p(_crate))
@@ -14955,9 +15238,9 @@ function ctld.createRadioBeacon(_point, _coalition, _country, _name, _batteryTim
 
     local _lat, _lon = coord.LOtoLL(_point)
 
-    local _latLngStr = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
+    local _latLngStr = CTLD_extAPI.tostringLL("GLOBAL_SCOPE", _lat, _lon, 3, ctld.location_DMS)
 
-    --local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
+    --local _mgrsString = CTLD_extAPI.tostringMGRS("GLOBAL_SCOPE", coord.LLtoMGRS(coord.LOtoLL(_point)), 5)
 
     local _freqsText = _name
 
@@ -15056,7 +15339,7 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
     }
 
     -- return coalition.addGroup(_country, Group.Category.GROUND, _radioGroup)
-    return Group.getByName(mist.dynAdd(_radioGroup).name)
+    return Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnRadioBeaconUnit", _radioGroup).name)
 end
 
 function ctld.updateRadioBeacon(_beaconDetails)
@@ -15102,7 +15385,7 @@ function ctld.updateRadioBeacon(_beaconDetails)
 
     --fobs have unlimited battery life
     --        if _battery ~= -1 then
-    --                _text = _text.." "..mist.utils.round(_batLife).." seconds of battery"
+    --                _text = _text.." "..CTLD_extAPI.utils.round("GLOBAL_SCOPE", _batLife).." seconds of battery"
     --        end
 
     for _, _radio in pairs(_radioLoop) do
@@ -15299,7 +15582,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
 
                         table.insert(_points, _units[x]:getPoint())
                         table.insert(_types, _units[x]:getTypeName())
-                        table.insert(_hdgs, mist.getHeading(_units[x], true))
+                        table.insert(_hdgs, CTLD_extAPI.getHeading("ctld.rearmAASystem", _units[x], true))
                     end
                 end
             end
@@ -15361,7 +15644,7 @@ function ctld.getAASystemDetails(_hawkGroup, _aaSystemTemplate)
                 name = _unit:getName(),
                 system = _aaSystemTemplate,
                 hdg =
-                    mist.getHeading(_unit, true)
+                    CTLD_extAPI.getHeading("ctld.getAASystemDetails", _unit, true)
             })
     end
 
@@ -15463,7 +15746,7 @@ function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempl
                 end
                 table.insert(_systemParts[_name].crates, _nearbyCrate)
                 table.insert(_cratePositions[_name], crateUnit:getPoint())
-                table.insert(_crateHdg[_name], mist.getHeading(crateUnit, true))
+                table.insert(_crateHdg[_name], CTLD_extAPI.getHeading("GLOBAL_SCOPE", crateUnit, true))
             end
         end
     end
@@ -15641,7 +15924,7 @@ function ctld.countCompleteAASystems(_heli)
     for _groupName, _hawkDetails in pairs(ctld.completeAASystems) do
         local _hawkGroup = Group.getByName(_groupName)
 
-        --    env.info(_groupName..": "..mist.utils.tableShow(_hawkDetails))
+        --    env.info(_groupName..": "..CTLD_extAPI.utils.tableShow("ctld.countCompleteAASystems", _hawkDetails))
         if _hawkGroup ~= nil and _hawkGroup:getCoalition() == _heli:getCoalition() then
             local _units = _hawkGroup:getUnits()
 
@@ -15754,7 +16037,7 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
             _point = ctld.getPointInRearSector(_heli, ctld.getSecureDistanceFromUnit(_heli:getName()))
         end
 
-        local _crateHdg = mist.getHeading(_nearestCrate.crateUnit, true)
+        local _crateHdg = CTLD_extAPI.getHeading("GLOBAL_SCOPE", _nearestCrate.crateUnit, true)
 
         -- destroy crates
         for _, _crate in pairs(_nearbyMultiCrates) do
@@ -15952,7 +16235,7 @@ function ctld.spawnCrateGroup_old(_heli, _positions, _types, _hdgs)
     end
 
     _group.country = _heli:getCountry()
-    local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
+    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("GLOBAL_SCOPE", _group).name)
     return _spawnedGroup
 end ]] --#region
 
@@ -15981,7 +16264,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
     local _hdg = 120 * math.pi / 180 -- radians = 120 degrees
 
     --------------------------------------------------------------------------------------
-    if ctld.Scene.SceneModels[_types[1]] == nil then -- if DCS standard typeName
+    if ctld.scene.SceneModels[_types[1]] == nil then -- if DCS standard typeName
         local _spreadMin = 5
         local _spreadMax = 5
         local _spreadMult = 1
@@ -16004,10 +16287,10 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
         end
         _group.category = Group.Category.GROUND
         _group.country = _heli:getCountry()
-        local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
+        local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("GLOBAL_SCOPE", _group).name)
         return _spawnedGroup
     else -- if scene crate requested
-        return ctld.Scene.playScene(_heli, ctld.Scene.SceneModels[_types[1]])
+        return ctld.scene.playScene(_heli, ctld.scene.SceneModels[_types[1]])
     end
 end
 
@@ -16058,7 +16341,7 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
     _group.category = Group.Category.GROUND;
     _group.country = _details.country;
 
-    local _spawnedGroup = Group.getByName(mist.dynAdd(_group).name)
+    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("GLOBAL_SCOPE", _group).name)
 
     --local _spawnedGroup = coalition.addGroup(_details.country, Group.Category.GROUND, _group)
 
@@ -16242,8 +16525,8 @@ function ctld.orderGroupToMoveToPoint(_leader, _destination)
     local _group = _leader:getGroup()
 
     local _path = {}
-    table.insert(_path, mist.ground.buildWP(_leader:getPoint(), 'Off Road', 50))
-    table.insert(_path, mist.ground.buildWP(_destination, 'Off Road', 50))
+    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint", _leader:getPoint(), 'Off Road', 50))
+    table.insert(_path, CTLD_extAPI.ground.buildWP("ctld.orderGroupToMoveToPoint", _destination, 'Off Road', 50))
 
     local _mission = {
         id = 'Mission',
@@ -16798,7 +17081,7 @@ function ctld.addTransportF10MenuOptions(_unitName)
                     local _crateCommands = missionCommands.addSubMenuForGroup(_groupId,
                         ctld.i18n_translate("CTLD Commands"), _rootPath)
                     if ctld.vehicleCommandsPath[_unitName] == nil then
-                        ctld.vehicleCommandsPath[_unitName] = mist.utils.deepCopy(_crateCommands)
+                        ctld.vehicleCommandsPath[_unitName] = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", _crateCommands)
                     end
                     if ctld.hoverPickup == false or ctld.loadCrateFromMenu == true then
                         if ctld.loadCrateFromMenu then
@@ -16876,7 +17159,7 @@ function ctld.buildPaginatedMenu(_menuEntries) --[[ params table :
     local itemNbSubmenu   = 0
     for i, menu in ipairs(_menuEntries) do
         if #nextSubMenuPath ~= 0 then
-            menu.subMenuPath = mist.utils.deepCopy(nextSubMenuPath)
+            menu.subMenuPath = CTLD_extAPI.utils.deepCopy("ctld.buildPaginatedMenu", nextSubMenuPath)
             --menu.subMenuPath = nextSubMenuPath
         end
         -- add the submenu item
@@ -16886,14 +17169,14 @@ function ctld.buildPaginatedMenu(_menuEntries) --[[ params table :
                 menu.subMenuPath)
             itemNbSubmenu   = 1
         end
-        menu.menuArgsTable.subMenuPath      = mist.utils.deepCopy(menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
+        menu.menuArgsTable.subMenuPath      = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", menu.subMenuPath) -- copy the table to avoid overwriting the same table in the next loop
         menu.menuArgsTable.subMenuLineIndex = itemNbSubmenu
         ctld.logTrace("FG_ boucle[%s].groupId = %s", i, menu.groupId)
         ctld.logTrace("FG_ boucle[%s].menu.text = %s", i, menu.text)
         ctld.logTrace("FG_ boucle[%s].menu.subMenuPath = %s", i, menu.subMenuPath)
         ctld.logTrace("FG_ boucle[%s].menu.menuFunction = %s", i, menu.menuFunction)
         local r = missionCommands.addCommandForGroup(menu.groupId, menu.text, menu.subMenuPath, menu.menuFunction,
-            mist.utils.deepCopy(menu.menuArgsTable))
+            CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", menu.menuArgsTable))
         ctld.logTrace("FG_ boucle[%s].r = %s", i, r)
         ctld.logTrace("FG_ boucle[%s].menu.menuArgsTable =  %s", i, ctld.p(menu.menuArgsTable))
     end
@@ -16924,9 +17207,11 @@ function ctld.updateRepackMenu(_playerUnitName)
                 ctld.maximumDistanceRepackableUnitsSearch)
             if repackableVehicles then
                 --ctld.logTrace("FG_ ctld.vehicleCommandsPath[_playerUnitName] = %s", ctld.p(ctld.vehicleCommandsPath[_playerUnitName]))
-                local RepackPreviousMenu                    = mist.utils.deepCopy(ctld.vehicleCommandsPath
+                local RepackPreviousMenu                    = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE",
+                    ctld.vehicleCommandsPath
                     [_playerUnitName])
-                local RepackCommandsPath                    = mist.utils.deepCopy(ctld.vehicleCommandsPath
+                local RepackCommandsPath                    = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE",
+                    ctld.vehicleCommandsPath
                     [_playerUnitName])
                 local repackSubMenuText                     = ctld.i18n_translate("Repack Vehicles")
                 RepackCommandsPath[#RepackCommandsPath + 1] =
@@ -16948,7 +17233,7 @@ function ctld.updateRepackMenu(_playerUnitName)
                             groupId       = _groupId,
                             subMenuPath   = RepackMenuPath,
                             menuFunction  = ctld.repackVehicleRequest,
-                            menuArgsTable = mist.utils.deepCopy(_vehicle)
+                            menuArgsTable = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE", _vehicle)
                         })
                     end
                 end
@@ -16972,7 +17257,7 @@ function ctld.autoUpdateRepackMenu(p, t) -- auto update repack menus for each tr
                         local _unit = ctld.getTransportUnit(_unitName)
                         if _unit then
                             -- if transport unit landed => update repack menus
-                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and mist.vec.mag(_unit:getVelocity()) < 0.1)) then
+                            if (ctld.inAir(_unit) == false or (ctld.heightDiff(_unit) <= 0.1 + 3.0 and CTLD_extAPI.vec.mag("ctld.autoUpdateRepackMenu", _unit:getVelocity()) < 0.1)) then
                                 local _unitTypename = _unit:getTypeName()
                                 local _groupId = ctld.getGroupId(_unit)
                                 if _groupId then
@@ -17117,7 +17402,8 @@ function ctld.addJTACRadioCommand(_side)
                                 --ctld.logTrace(string.format("JTAC - MENU - [%s] - jtacGroupSubMenuPath = %s", ctld.p(_jtacGroupName), ctld.p(ctld.jtacGroupSubMenuPath[_jtacGroupName])))
 
                                 --make a copy of the JTAC group submenu's path to insert the target's list on as many pages as required. The JTAC's group submenu path only leads to the first page
-                                local jtacTargetPagePath = mist.utils.deepCopy(ctld.jtacGroupSubMenuPath[_jtacGroupName])
+                                local jtacTargetPagePath = CTLD_extAPI.utils.deepCopy("GLOBAL_SCOPE",
+                                    ctld.jtacGroupSubMenuPath[_jtacGroupName])
 
                                 --counter to know when to add the next page submenu to fit all of the targets in the JTAC's group submenu. SMay not actually start at 0 due to static items being present on the first page
                                 local itemCounter = 0
@@ -17233,7 +17519,7 @@ function ctld.addJTACRadioCommand(_side)
 end
 
 function ctld.getGroupId(_unit)
-    local _unitDB = mist.DBs.unitsById[tonumber(_unit:getID())]
+    local _unitDB = CTLD_extAPI.DBs.unitsById[tonumber(_unit:getID())]
     if _unitDB ~= nil and _unitDB.groupId then
         return _unitDB.groupId
     end
@@ -17311,7 +17597,8 @@ ctld.jtacRadioData = {}
         By waiting a bit, the group gets populated before JTACAutoLase is called, hence avoiding a trip to cleanupJTAC.
 ]]
 function ctld.JTACStart(_jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio)
-    mist.scheduleFunction(ctld.JTACAutoLase, { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio },
+    CTLD_extAPI.scheduleFunction("ctld.JTACStart", ctld.JTACAutoLase,
+        { _jtacGroupName, _laserCode, _smoke, _lock, _colour, _radio },
         timer.getTime() + 1)
 end
 
@@ -18567,14 +18854,16 @@ function ctld.getPositionString(_unit)
     end
 
     local _lat, _lon  = coord.LOtoLL(_unit:getPosition().p)
-    local _latLngStr  = mist.tostringLL(_lat, _lon, 3, ctld.location_DMS)
-    local _mgrsString = mist.tostringMGRS(coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
-    local _TargetAlti = land.getHeight(mist.utils.makeVec2(_unit:getPoint()))
+    local _latLngStr  = CTLD_extAPI.tostringLL("GLOBAL_SCOPE", _lat, _lon, 3, ctld.location_DMS)
+    local _mgrsString = CTLD_extAPI.tostringMGRS("GLOBAL_SCOPE", coord.LLtoMGRS(coord.LOtoLL(_unit:getPosition().p)), 5)
+    local _TargetAlti = land.getHeight(CTLD_extAPI.utils.makeVec2("GLOBAL_SCOPE", _unit:getPoint()))
     return " @ " ..
         _latLngStr ..
         " - MGRS " ..
         _mgrsString ..
-        " - ALTI: " .. mist.utils.round(_TargetAlti, 0) .. " m / " .. mist.utils.round(_TargetAlti / 0.3048, 0) .. " ft"
+        " - ALTI: " ..
+        CTLD_extAPI.utils.round("GLOBAL_SCOPE", _TargetAlti, 0) ..
+        " m / " .. CTLD_extAPI.utils.round(_TargetAlti / 0.3048, 0) .. " ft"
 end
 
 --**********************************************************************
@@ -18637,7 +18926,8 @@ function ctld.StartOrbitGroup(_jtacUnitName, _unitTargetName, _alti, _speed)
             id     = 'Orbit',
             params = {
                 pattern = 'Circle',
-                point = mist.utils.makeVec2(mist.getAvgPos(mist.makeUnitTable({ _unitTargetName }))),
+                point = CTLD_extAPI.utils.makeVec2("ctld.StartOrbitGroup",
+                    CTLD_extAPI.getAvgPos(CTLD_extAPI.makeUnitTable({ _unitTargetName }))),
                 speed = _speed,
                 altitude = _alti
             }
@@ -18663,14 +18953,14 @@ end
 -- return the WayPoint number (on the JTAC route) the most near from the target
 function ctld.getNearestWP(_referenceUnitName)
     local WP = 0
-    local memoDist = nil                                     -- Lower distance checked
+    local memoDist = nil                                                                 -- Lower distance checked
     local refGroupName = Unit.getByName(_referenceUnitName):getGroup():getName()
-    local JTACRoute = mist.getGroupRoute(refGroupName, true) -- get the initial editor route of the current group
-    if Unit.getByName(_referenceUnitName) ~= nil then        --JTAC et unit must exist
+    local JTACRoute = CTLD_extAPI.getGroupRoute("ctld.getNearestWP", refGroupName, true) -- get the initial editor route of the current group
+    if Unit.getByName(_referenceUnitName) ~= nil then                                    --JTAC et unit must exist
         for i = 1, #JTACRoute do
             local ptWP  = { x = JTACRoute[i].x, y = JTACRoute[i].y }
-            local ptRef = mist.utils.makeVec2(Unit.getByName(_referenceUnitName):getPoint())
-            local dist  = mist.utils.get2DDist(ptRef, ptWP) -- distance between 2 points
+            local ptRef = CTLD_extAPI.utils.makeVec2("ctld.getNearestWP", Unit.getByName(_referenceUnitName):getPoint())
+            local dist  = CTLD_extAPI.utils.get2DDist("ctld.getNearestWP", ptRef, ptWP) -- distance between 2 points
             if memoDist == nil then
                 memoDist = dist
                 WP = i
@@ -18687,8 +18977,8 @@ end
 -- Modify the route deleting all the WP before "firstWP" param, for aligne the orbit on the nearest WP of the target
 function ctld.backToRoute(_jtacUnitName)
     local jtacGroupName = Unit.getByName(_jtacUnitName):getGroup():getName()
-    --local JTACRoute     = mist.getGroupRoute(jtacGroupName, true)   -- get the initial editor route of the current group
-    local JTACRoute     = mist.utils.deepCopy(mist.getGroupRoute(jtacGroupName, true)) -- get the initial editor route of the current group
+    --local JTACRoute     = CTLD_extAPI.getGroupRoute("ctld.backToRoute", jtacGroupName, true)   -- get the initial editor route of the current group
+    local JTACRoute     = CTLD_extAPI.utils.deepCopy("ctld.backToRoute", CTLD_extAPI.getGroupRoute(jtacGroupName, true)) -- get the initial editor route of the current group
     local newJTACRoute  = ctld.adjustRoute(JTACRoute, ctld.getNearestWP(_jtacUnitName))
 
     local Mission       = {}
@@ -18935,8 +19225,8 @@ function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRad
             color = { 51 / 255, 51 / 255, 1, 0.2 } -- blue
         end
 
-        local t = mist.getUnitsLOS({ _playerUnit:getName() }, 180,
-            mist.makeUnitTable({ '[' .. enemyColor .. '][vehicle]' }),
+        local t = CTLD_extAPI.getUnitsLOS("GLOBAL_SCOPE", { _playerUnit:getName() }, 180,
+            CTLD_extAPI.makeUnitTable("GLOBAL_SCOPE", { '[' .. enemyColor .. '][vehicle]' }),
             180, _searchRadius)
 
         local MarkIds = {}
@@ -18956,7 +19246,7 @@ function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRad
                 end
             end
         end
-        mist.DBs.humansByName[_playerUnit:getName()].losMarkIds =
+        CTLD_extAPI.DBs.humansByName[_playerUnit:getName()].losMarkIds =
             MarkIds -- store list of marksIds generated and showed on F10 map
         return TargetsInLOS
     else
@@ -18967,11 +19257,11 @@ end
 ---------------------------------------------------------
 function ctld.reconRemoveTargetsInLosOnF10Map(_playerUnit)
     local unitName = _playerUnit:getName()
-    if mist.DBs.humansByName[unitName].losMarkIds then
-        for i = 1, #mist.DBs.humansByName[unitName].losMarkIds do -- for each unit having los on enemies
-            trigger.action.removeMark(mist.DBs.humansByName[unitName].losMarkIds[i])
+    if CTLD_extAPI.DBs.humansByName[unitName].losMarkIds then
+        for i = 1, #CTLD_extAPI.DBs.humansByName[unitName].losMarkIds do -- for each unit having los on enemies
+            trigger.action.removeMark(CTLD_extAPI.DBs.humansByName[unitName].losMarkIds[i])
         end
-        mist.DBs.humansByName[unitName].losMarkIds = nil
+        CTLD_extAPI.DBs.humansByName[unitName].losMarkIds = nil
     end
 end
 
@@ -19362,8 +19652,8 @@ function ctld.eventHandler:onEvent(event)
 
     local function processHumanPlayer()
         ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- unitName = %s", ctld.p(unitName))
-        --ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- mist.DBs.humansByName[unitName] = %s", ctld.p(mist.DBs.humansByName[unitName]))
-        if mist.DBs.humansByName[unitName] then -- it's a human unit
+        --ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- CTLD_extAPI.DBs.humansByName[unitName] = %s", ctld.p(CTLD_extAPI.DBs.humansByName[unitName]))
+        if CTLD_extAPI.DBs.humansByName[unitName] then -- it's a human unit
             ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
             local _unit = Unit.getByName(unitName)
             if _unit ~= nil then
@@ -19401,7 +19691,7 @@ function ctld.eventHandler:onEvent(event)
         end
     end
 
-    if not mist.DBs.humansByName[unitName] then
+    if not CTLD_extAPI.DBs.humansByName[unitName] then
         -- give a few milliseconds for MiST to handle the BIRTH event too
         ctld.logTrace("give MiST some time to handle the BIRTH event too")
         timer.scheduleFunction(function()
@@ -19534,2341 +19824,526 @@ else
 end
 -- End : CTLD.lua 
 -- ==================================================================================================== 
--- Start : CTLD_complt.lua 
--- Fichier: ctld_module.lua (Classes complètes et mises à jour)
-
--- 1. Définition du namespace global 'ctld'
-ctld = ctld or {}
-
--- ====================================================================================================
--- CLASSE ctld.Utils
--- ====================================================================================================
-
-local Utils = {}
-ctld.Utils = Utils
-if not ctld.Utils.marks then ctld.Utils.marks = {}; end
-
-function ctld.Utils.drawQuad(coalitionId, vec3Points1To4, message)
-    local coalitionId = coalitionId or 2
-    local markId = ctld.Utils.getNextUniqId()
-
-    -- Color
-    local tableColor = { 0, 0, 255, 0.4 }  --blue  by default
-    if coalitionId == 1 then
-        tableColor = { 1, 0, 0, 0.4 }      --red  % of (r,g,b,alpha)    red
-    elseif coalitionId == 2 then
-        tableColor = { 0, 0, 255, 0.4 }    --blue  % of (r,g,b,alpha)   blue
-    elseif coalitionId == 0 then
-        tableColor = { 2, 173, 33, 0.4 }   --green  % of (r,g,b,alpha)  neutral
-    elseif coalitionId == -1 then
-        tableColor = { 247, 179, 30, 0.4 } --orange  % of (r,g,b,alpha) All
-    end
-
-    local tableFillColor = { 0, 0, 255, 0.4 } --tableColor
-    local lineType = 1                        --solid
-    local message = message or ""
-    ctld.Utils.marks[markId] = message
-
-    --trigger.action.quadToAll(number coalition , number id , vec3 point1 , vec3 point2 , vec3 point3 , vec3 point4 , table color , table fillColor , number lineType , boolean readOnly, string message)
-    trigger.action.quadToAll(coalitionId, markId,
-        vec3Points1To4[1], vec3Points1To4[2], vec3Points1To4[3], vec3Points1To4[4],
-        tableColor, tableFillColor, lineType, true, message)
+-- Start : CTLD_extAPI.lua 
+-- ================================================================
+-- CTLD_extAPI.lua (auto-generated)
+-- Mirrors used mist/Moose paths with wrappers (caller-as-first-arg)
+-- ================================================================
+if trigger == nil then
+    trigger = { action = { outText = function(msg, time) print('[DCS outText] ' .. msg) end } }
 end
 
---[[-example ------------------------------------------------------------
-local heliName = "h1-1"
-local triggerUnitObj = Unit.getByName(heliName)
-local vec3StartPoint = triggerUnitObj:getPosition().p
-local vec3EndPoint = {x = vec3StartPoint.x+1000,z=vec3StartPoint.z+1000,y=vec3StartPoint.y}
-
-
-ctld.Utils.drawQuad(coalitionId, vec3Points1To4, message)
-return mist.utils.tableShow(ctld.marks)
------------------------------------------------------------- ]] --
-
----------------------------------------------------------------------------------------------
--- Calculates the absolute coordinates (x, y, heading, altitude) of a target point
--- based on a reference point and a relative offset, respecting the DCS coordinate system
--- (X=North, Y=East) and magnetic declination.
----------------------------------------------------------------------------------------------
--- @param refX X coordinate (North) of the reference point.
--- @param refY Y coordinate (East) of the reference point.
--- @param refHeading True/Geographic Heading of the reference unit in degrees.
--- @param refAltitude Altitude of the reference unit.
--- @param offsetAngleInDegrees Angle of the offset relative to the reference heading (0 = directly ahead).
--- @param offsetDistance Distance of the offset.
--- @param offsetHeading True/Geographic Heading for the final point.
--- @param offsetAltitude Altitude difference to add to the reference altitude.
--- @param magneticDeclinationInDegrees Magnetic Declination (subtract from True Heading to get Magnetic Heading).
---
--- @return x Absolute X coordinate (North) of the target point.
--- @return y Absolute Y coordinate (East) of the target point.
--- @return magneticHeadingInDegrees Magnetic Heading of the target point in degrees.
--- @return altitude Absolute altitude of the target point.
----
-function Utils.getRelativeCoords(
-    refX, refY, refHeading, refAltitude,
-    offsetAngleInDegrees, offsetDistanceInMeters,
-    offsetHeadingInDegrees, offsetAltitudeInMeters,
-    magneticDeclinationInDegrees
-)
-    -------------------------------------------------------------------------
-    -- 1. Convert reference heading (radians → degrees)
-    --    refHeading is a DCS true heading in radians, clockwise, 0 = North.
-    -------------------------------------------------------------------------
-    local refHeadingDeg = math.deg(refHeading)
-
-    -------------------------------------------------------------------------
-    -- 2. Compute the world angle used to project the new position.
-    --    offsetAngleInDegrees is relative to the aircraft's heading.
-    -------------------------------------------------------------------------
-    local worldAngleDeg = refHeadingDeg + offsetAngleInDegrees
-
-    -- Convert to radians for math.sin/cos (DCS uses clockwise headings)
-    local worldAngleRad = math.rad(worldAngleDeg)
-
-    -------------------------------------------------------------------------
-    -- 3. Compute position deltas using DCS Cartesian coordinates:
-    --    X axis = South/North, positive to the North.
-    --    Y axis (vec3.z) = West/East, positive to the East.
-    -------------------------------------------------------------------------
-    local dx = math.cos(worldAngleRad) * offsetDistanceInMeters
-    local dy = math.sin(worldAngleRad) * offsetDistanceInMeters
-
-    local newX = refX + dx
-    local newY = refY + dy
-
-    -------------------------------------------------------------------------
-    -- 4. Compute the object's final magnetic heading.
-    --
-    --    refHeadingDeg            = reference TRUE heading
-    --    + offsetHeadingInDegrees = rotation relative to the reference
-    --    - magneticDeclination    = convert true → magnetic
-    -------------------------------------------------------------------------
-    local magneticHeadingDeg =
-        refHeadingDeg +
-        offsetHeadingInDegrees -
-        magneticDeclinationInDegrees
-
-    -- Normalize to 0–360°
-    magneticHeadingDeg = (magneticHeadingDeg % 360 + 360) % 360
-
-    -------------------------------------------------------------------------
-    -- 5. Compute altitude
-    -------------------------------------------------------------------------
-    local newAltitude = refAltitude + offsetAltitudeInMeters
-
-    return newX, newY, magneticHeadingDeg, newAltitude
+CTLD_extAPI = CTLD_extAPI or {}
+local framework = nil
+local frameworkName = nil
+if mist ~= nil then
+    framework = mist
+    frameworkName = 'MIST'
+elseif Moose ~= nil then
+    framework = Moose
+    frameworkName = 'MOOSE'
 end
 
------------------------------------------------------------------------------------------------
--- Return a Vec2 point relative to  a reference point (position & heading DCS)
-function Utils.GetRelativeVec2Coords(refVec2Point, refHeadingInRadians, distanceFromRef, angleInDegreesFromRefHeading)
-    -- absolue Heading in radians
-    local absoluteHeadingInRadians = refHeadingInRadians + math.rad(angleInDegreesFromRefHeading)
-    -- in DCS : x = Nord (+), z = Est (+)
-    local dx = math.cos(absoluteHeadingInRadians) * distanceFromRef -- displacement North/South
-    local dy = math.sin(absoluteHeadingInRadians) * distanceFromRef -- displacement Est/West
-
-    local newCoords = {
-        x = refVec2Point.x + dx,
-        y = refVec2Point.y + dy,
-    }
-    return newCoords
-end
-
---------------------------------------------------------------------------------------------------------
---- @function ctld.Utils:getHeadingInRadians
----@param unitObject any
----@param rawHeading boolean (true=geographic/false=magnetic)
----@return integer       --- @--return "magneticHeading : "..tostring(math.deg(mist.getHeading(triggerUnitObj, false)))..", geographicHeading : "..tostring(math.deg(mist.getHeading(triggerUnitObj, true)))
-function Utils.getHeadingInRadians(unitObject, rawHeading) --rawHeading: boolean (true=geographic/false=magnetic)
-    if not unitObject then
-        if env and env.error then
-            env.error("CTLD.Utils:getHeadingInRadians: Invalid unit object provided.")
-        end
-        return 0
-    end
-    return mist.getHeading(unitObject, rawHeading or false) -- default to magnetic if not specified
-end
-
---------------------------------------------------------------------------------------------------------
---- @function ctld.Utils:rotateVec3
--- Calcule l'offset cartésien absolu en appliquant la rotation du cap de l'appareil.
--- (Conçu pour le format de données : relative = {x, y, z})
-function Utils.rotateVec3(relativeVec, headingDeg)
-    local x_rel = relativeVec.x
-    local z_rel = relativeVec.z
-    -- y_rel n'est pas utilisé dans le calcul de rotation, mais sera dans le retour
-    local y_rel = relativeVec.y or 0
-
-    -- Vérification des données (X et Z sont obligatoires)
-    if x_rel == nil or z_rel == nil then
-        local msg = "CTLD.Utils:rotateVec3: Missing X or Z component in relative position data."
-        if env and env.error then
-            env.error(msg)
-            -- Lève une erreur qui sera capturée par pcall (si appelé)
-            error(msg)
-        else
-            error(msg)
-        end
-    end
-
-    local headingRad = math.rad(headingDeg)
-    local cos_h = math.cos(headingRad)
-    local sin_h = math.sin(headingRad)
-
-    local x_rot = (z_rel * sin_h) + (x_rel * cos_h)
-    local z_rot = (z_rel * cos_h) - (x_rel * sin_h)
-
-    return { x = x_rot, y = y_rel, z = z_rot }
-end
-
---------------------------------------------------------------------------------------------------------
--- Additionne deux vecteurs de position (Vec3) de DCS.
-function Utils.addVec3(vec1, vec2)
-    return {
-        -- Utilise or 0 pour garantir qu'aucune addition ne donne 'nil'
-        x = (vec1.x or 0) + (vec2.x or 0),
-        y = (vec1.y or 0) + (vec2.y or 0),
-        z = (vec1.z or 0) + (vec2.z or 0),
-    }
-end
-
---------------------------------------------------------------------------------------------------------
-Utils.UniqIdCounter = 0 -- Compteur statique pour les ID uniques
---- @function ctld.Utils:getNextUniqId
--- Génère un ID unique incrémental, comme requis pour 'unitId' dans groupData.
-function Utils.getNextUniqId()
-    Utils.UniqIdCounter = Utils.UniqIdCounter + 1
-    return Utils.UniqIdCounter
-end
-
---------------------------------------------------------------------------------------------------------
---- @function ctld.Utils:normalizeHeading
--- Normalise un cap (heading) entre 0 et 360 degrés.
-function Utils.normalizeHeading(h)
-    local result = h % 360
-    if result < 0 then
-        result = result + 360
-    end
-    return result
-end
-
---------------------------------------------------------------------------------------------------------
---- @function ctld.Utils:polarToCartesian
--- Convertit une distance (rho), un angle (theta) et un cap de référence (headingDeg)
--- en coordonnées cartésiennes absolues (x, z) de la carte DCS.
--- @param distance number La distance au point de référence.
--- @param relativeAngle number L'angle relatif au point de référence (0 = devant, 90 = droite).
--- @param headingDeg number Le cap absolu de l'appareil (point de référence).
--- @return table L'offset cartésien absolu { x, y=0, z }.
-function Utils.polarToCartesian(distance, relativeAngle, headingDeg)
-    local absoluteAngle = headingDeg + relativeAngle
-    local angleRad = math.rad(absoluteAngle)
-
-    -- Correction du facteur distance (20m -> 10m)
-    local dist = (distance or 0) * 2
-
-    -- X (Nord/Sud, l'axe de référence du cap 0°) : Utilise COS
-    local x_rot = dist * math.cos(angleRad)
-
-    -- Z (Est/Ouest) : Utilise SIN. La trigonométrie standard sin(angle) augmente CCW.
-    -- Nous ne touchons pas au signe car la trigonométrie de DCS peut être non standard.
-    local z_rot = dist * math.sin(angleRad)
-
-    return { x = x_rot, y = 0, z = z_rot }
-end
-
---------------------------------------------------------------------------------------------------------
---Load table of maps and associated magnetic declinations to calculate the declination applicable to the mission
-Utils.mapsAnMagneticDeclin = {
-    ['Caucasus']         = { ['2015-2040'] = -6 },
-    ['Nevada']           = { ['2015-2040'] = -10 },
-    ['Normandy']         = { ['1940-1948'] = 11, ['2010-2040'] = 1 },
-    ['Persian Gulf']     = { ['2010-2040'] = -1 },
-    ['The Channel']      = { ['1940-1948'] = 11, ['2006-2040'] = 0 },
-    ['Syria']            = { ['2016-2040'] = -4 },
-    ['Marianas Islands'] = { ['2013-2040'] = 1 },
-    ['South Atlantic']   = { ['2015-2040'] = 0 },
-    ['Afghanistan']      = { ['2015-2040'] = 0 }
-}
---------------------------------------------------------------------------------------------------------
-function Utils.getMagneticDeclination()              -- returns the magnetic declination as a function of the mission date and map
-    local missionYear = tostring(mist.time.getDate().y)
-    for k, v in pairs(Utils.mapsAnMagneticDeclin) do -- map name of current mission found
-        if k == mist.DBs.missionData.theatre then
-            local mostRecentYearMemo = ''
-            local declinationMostRecentYear = 0
-            for k2, v2 in pairs(v) do
-                local startYear = string.sub(k2, 1, 4)
-                local endYear   = string.sub(k2, 6, 9)
-                if missionYear >= startYear and missionYear <= endYear then --annee trouvée
-                    return v2                                               -- return magnetic declination in degrees
-                else
-                    if endYear > mostRecentYearMemo then                    -- par defaut prendre declinaison de l'année la plus avancée
-                        declinationMostRecentYear = v2
-                        mostRecentYearMemo = endYear
-                    end
-                end
-            end
-            return declinationMostRecentYear -- return magnetic declination in degrees of most recent year found
-        end
-    end
-end
--- End : CTLD_complt.lua 
--- ==================================================================================================== 
--- Start : CTLD_DCSWeaponsDb.lua 
--- ======================================================================
---  Extracted Weapons Database from https://github.com/Quaggles/dcs-lua-datamine/ (version: 2.9.22.17913)
--- ======================================================================
-ctld.WeaponsDb = {
-    [""] = "{RKL609_R}",
-    ["1100L Tank"] = "DIS_TANK1100",
-    ["1100L Tank Empty"] = "DIS_TANK1100_EMPTY",
-    ["16c_hts_pod"] = "{AN_ASQ_213}",
-    ["4xSPIKE_ER"] = "4xSPIKE_ER",
-    ["800L Tank"] = "DIS_TANK800",
-    ["800L Tank Empty"] = "DIS_TANK800_EMPTY",
-    ["AAQ-28_LITENING"] = "{A111396E-D3E8-4b9c-8AC9-2432489304D5}",
-    ["ALQ-131"] = "{6D21ECEA-F85B-4E8D-9D51-31DC9B8AA4EF}",
-    ["ALQ-184"] = "ALQ_184",
-    ["ANAWW_13"] = "{AWW-13}",
-    ["AN_AAQ_33"] = "{AN_AAQ_33}",
-    ["AN_ASQ_228"] = "{AN_ASQ_228}",
-    ["APK-9"] = "{APK_9}",
-    ["ASO-2"] = "{ASO-2}",
-    ["AV8BNA_AERO1D"] = "{AV8BNA_AERO1D}",
-    ["AV8BNA_AERO1D_EMPTY"] = "{AV8BNA_AERO1D_EMPTY}",
-    ["AV8BNA_ALQ164"] = "{ALQ_164_RF_Jammer}",
-    ["B-1B_Mk-84*8"] = "B-1B_Mk-84*8",
-    ["BARAX"] = "BARAX_ECM",
-    ["BOZ-100"] = "{8C3F26A1-FA0F-11d5-9190-00A0249B6F00}",
-    ["Beer_Bomb_(D)_on_LH_Spitfire_Wing_Carrier"] = "Beer_Bomb_(D)_on_LH_Spitfire_Wing_Carrier",
-    ["Beer_Bomb_(D)_on_RH_Spitfire_Wing_Carrier"] = "Beer_Bomb_(D)_on_RH_Spitfire_Wing_Carrier",
-    ["Beer_Bomb_(L)_on_LH_Spitfire_Wing_Carrier"] = "Beer_Bomb_(L)_on_LH_Spitfire_Wing_Carrier",
-    ["Beer_Bomb_(L)_on_RH_Spitfire_Wing_Carrier"] = "Beer_Bomb_(L)_on_RH_Spitfire_Wing_Carrier",
-    ["British_GP_250LBS_Bomb_MK4_on_LH_Spitfire_Wing_Carrier"] = "British_GP_250LBS_Bomb_MK4_on_LH_Spitfire_Wing_Carrier",
-    ["British_GP_250LBS_Bomb_MK4_on_RH_Spitfire_Wing_Carrier"] = "British_GP_250LBS_Bomb_MK4_on_RH_Spitfire_Wing_Carrier",
-    ["British_GP_500LBS_Bomb_MK4_on_British_UniversalBC_MK3"] = "British_GP_500LBS_Bomb_MK4_on_British_UniversalBC_MK3",
-    ["C130J_Ext_Tank_L"] = "{C130J_Ext_Tank_L}",
-    ["C130J_Ext_Tank_R"] = "{C130J_Ext_Tank_R}",
-    ["CBU87*10"] = "CBU87*10",
-    ["CBU97*10"] = "CBU97*10",
-    ["DIS_BRM1_90"] = "DIS_BRM1_90",
-    ["DIS_DF4A_KD20"] = "DIS_DF4A_KD20",
-    ["DIS_DF4B_YJ12"] = "DIS_DF4B_YJ12",
-    ["DIS_GBU_12_DUAL_GDJ_II19_L"] = "DIS_GBU_12_DUAL_GDJ_II19_L",
-    ["DIS_GBU_12_DUAL_GDJ_II19_R"] = "DIS_GBU_12_DUAL_GDJ_II19_R",
-    ["DIS_GDJ_KD63"] = "DIS_GDJ_KD63",
-    ["DIS_GDJ_KD63B"] = "DIS_GDJ_KD63B",
-    ["DIS_GDJ_YJ83K"] = "DIS_GDJ_YJ83K",
-    ["DIS_H6_250_2_N12"] = "DIS_H6_250_2_N12",
-    ["DIS_H6_250_2_N24"] = "DIS_H6_250_2_N24",
-    ["DIS_HJ-12"] = "DIS_HJ-12",
-    ["DIS_LAU68_MK5_DUAL_GDJ_II19_L"] = "DIS_LAU68_MK5_DUAL_GDJ_II19_L",
-    ["DIS_LD-10_DUAL_L"] = "DIS_LD-10_DUAL_L",
-    ["DIS_LD-10_DUAL_R"] = "DIS_LD-10_DUAL_R",
-    ["DIS_LS_6_100_DUAL_L"] = "DIS_LS_6_100_DUAL_L",
-    ["DIS_LS_6_100_DUAL_R"] = "DIS_LS_6_100_DUAL_R",
-    ["DIS_LS_6_250_DUAL_L"] = "DIS_LS_6_250_DUAL_L",
-    ["DIS_LS_6_250_DUAL_R"] = "DIS_LS_6_250_DUAL_R",
-    ["DIS_MER6_250_2_N6"] = "DIS_MER6_250_2_N6",
-    ["DIS_MER6_250_3_N6"] = "DIS_MER6_250_3_N6",
-    ["DIS_MK_20_DUAL_GDJ_II19_L"] = "DIS_MK_20_DUAL_GDJ_II19_L",
-    ["DIS_MK_20_DUAL_GDJ_II19_R"] = "DIS_MK_20_DUAL_GDJ_II19_R",
-    ["DIS_MK_82S_DUAL_GDJ_II19_L"] = "DIS_MK_82S_DUAL_GDJ_II19_L",
-    ["DIS_MK_82S_DUAL_GDJ_II19_R"] = "DIS_MK_82S_DUAL_GDJ_II19_R",
-    ["DIS_MK_82_DUAL_GDJ_II19_L"] = "DIS_MK_82_DUAL_GDJ_II19_L",
-    ["DIS_MK_82_DUAL_GDJ_II19_R"] = "DIS_MK_82_DUAL_GDJ_II19_R",
-    ["DIS_PL-12_DUAL_L"] = "DIS_PL-12_DUAL_L",
-    ["DIS_PL-12_DUAL_R"] = "DIS_PL-12_DUAL_R",
-    ["DIS_RKT_90_UG"] = "DIS_RKT_90_UG",
-    ["DIS_SD-10_DUAL_L"] = "DIS_SD-10_DUAL_L",
-    ["DIS_SD-10_DUAL_R"] = "DIS_SD-10_DUAL_R",
-    ["DIS_TYPE200_DUAL_L"] = "DIS_TYPE200_DUAL_L",
-    ["DIS_TYPE200_DUAL_R"] = "DIS_TYPE200_DUAL_R",
-    ["Drop_Tank_300_Liter"] = "BF109K_4_FUEL_TANK",
-    ["ER_4_SC50"] = "ER_4_SC50",
-    ["ETHER"] = "{0519A261-0AB6-11d6-9193-00A0249B6F00}",
-    ["F-15E_AAQ-13_LANTIRN"] = "{F-15E_AAQ-13_LANTIRN}",
-    ["F-15E_AAQ-14_LANTIRN"] = "{F-15E_AAQ-14_LANTIRN}",
-    ["F-15E_AAQ-28_LITENING"] = "{F-15E_AAQ-28_LITENING}",
-    ["F-15E_AAQ-33_XR_ATP-SE"] = "{F-15E_AAQ-33_XR_ATP-SE}",
-    ["F-15E_AXQ-14_DATALINK"] = "{AN_AXQ_14}",
-    ["F-15E_Drop_Tank"] = "{F15E_EXTTANK}",
-    ["F-15E_Drop_Tank_Empty"] = "{F15E_EXTTANK_EMPTY}",
-    ["F-18-FLIR-POD"] = "{6C0D552F-570B-42ff-9F6D-F10D9C1D4E1C}",
-    ["F-18-LDT-POD"] = "{1C2B16EB-8EB0-43de-8788-8EBB2D70B8BC}",
-    ["F4-PILON"] = "{LAU-7_AIS_ASQ_T50}",
-    ["F4U-1D_Drop_Tank_Aux"] = "{175_USgal_Corsair_droptank_aux}",
-    ["F4U-1D_Drop_Tank_Mk5"] = "{150_USgal_Corsair_droptank_mk5}",
-    ["F4U-1D_Drop_Tank_Mk6"] = "{150_USgal_Corsair_droptank_mk6}",
-    ["FAS"] = "{FAS}",
-    ["FPU_8A"] = "{FPU_8A_FUEL_TANK}",
-    ["FW-190_Fuel-Tank"] = "FW109_FUEL_TANK",
-    ["Fantasm"] = "{0519A264-0AB6-11d6-9193-00A0249B6F00}",
-    ["FuelTank_150L"] = "{PTB_150L_L39}",
-    ["FuelTank_350L"] = "{PTB_350L_L39}",
-    ["GBU-31*8"] = "GBU-31*8",
-    ["GBU-31V3B*8"] = "GBU-31V3B*8",
-    ["GBU-38*16"] = "GBU-38*16",
-    ["HB_ALE_40_0_0"] = "{HB_ALE_40_0_0}",
-    ["HB_ALE_40_0_120"] = "{HB_ALE_40_0_120}",
-    ["HB_ALE_40_15_90"] = "{HB_ALE_40_15_90}",
-    ["HB_ALE_40_30_0"] = "{HB_ALE_40_30_0}",
-    ["HB_ALE_40_30_60"] = "{HB_ALE_40_30_60}",
-    ["HB_F-4E_EXT_Center_Fuel_Tank"] = "{F4_SARGENT_TANK_600_GAL}",
-    ["HB_F-4E_EXT_Center_Fuel_Tank_EMPTY"] = "{F4_SARGENT_TANK_600_GAL_EMPTY}",
-    ["HB_F-4E_EXT_WingTank"] = "{F4_SARGENT_TANK_370_GAL}",
-    ["HB_F-4E_EXT_WingTank_EMPTY"] = "{F4_SARGENT_TANK_370_GAL_EMPTY}",
-    ["HB_F-4E_EXT_WingTank_R"] = "{F4_SARGENT_TANK_370_GAL_R}",
-    ["HB_F-4E_EXT_WingTank_R_EMPTY"] = "{F4_SARGENT_TANK_370_GAL_R_EMPTY}",
-    ["HB_F14_EXT_AN_APQ-167"] = "{F14-ALQ167-POD}",
-    ["HB_F14_EXT_BRU34"] = "{F14-ALQ167}",
-    ["HB_F14_EXT_DROPTANK"] = "{F14-300gal}",
-    ["HB_F14_EXT_DROPTANK_EMPTY"] = "{F14-300gal-empty}",
-    ["HB_F14_EXT_ECA"] = "{F14-ECA}",
-    ["HB_F14_EXT_LAU-7"] = "{LAU-7 - TCTS}",
-    ["HB_F14_EXT_TARPS"] = "{F14-TARPS}",
-    ["HB_HIGH_PERFORMANCE_CENTERLINE_600_GAL"] = "{F4_HIGH_PERFORMANCE_CENTERLINE_600_GAL}",
-    ["HB_ORD_MER"] = "{HB_F4E_CBU-1A_MER_1x_Right}",
-    ["HB_ORD_Missile_Well_Adapter"] = "{HB_PAVE_SPIKE_ON_ADAPTER_IN_AERO7}",
-    ["HB_ORD_Pave_Spike"] = "{HB_PAVE_SPIKE}",
-    ["HB_ORD_Pave_Spike_Fast"] = "{HB_PAVE_SPIKE_FAST_TRACK}",
-    ["HVAR_rocket"] = "{HVAR_SMOKE_2}",
-    ["IRDeflector"] = "{IR_Deflector}",
-    ["KBpod"] = "{KB}",
-    ["KINGAL"] = "{B1EF6B0E-3D91-4047-A7A5-A99E7D8B4A8B}",
-    ["Kh-65"] = "#Index",
-    ["LANTIRN"] = "{CAAC1CFD-6745-416B-AFA4-CB57414856D0}",
-    ["LANTIRN-F14-TARGET"] = "{D1744B93-2A8A-4C4D-B004-7A09CD8C8F3F}",
-    ["LAU-115_2*LAU-127_AIM-120B"] = "LAU-115_2*LAU-127_AIM-120B",
-    ["LAU-115_2*LAU-127_AIM-120C"] = "LAU-115_2*LAU-127_AIM-120C",
-    ["LAU-127_AIM-9L"] = "LAU-127_AIM-9L",
-    ["LAU-127_AIM-9M"] = "LAU-127_AIM-9M",
-    ["LAU-127_AIM-9X"] = "LAU-127_AIM-9X",
-    ["LAU-127_CATM-9M"] = "LAU-127_CATM-9M",
-    ["LAU_117_AGM_65A"] = "LAU_117_AGM_65A",
-    ["LAU_117_AGM_65B"] = "LAU_117_AGM_65B",
-    ["LAU_117_AGM_65F"] = "LAU_117_AGM_65F",
-    ["LAU_117_AGM_65L"] = "LAU_117_AGM_65L",
-    ["LNS_VIG_XTANK"] = "{VIGGEN_X-TANK}",
-    ["M261_MK151"] = "M261_MK151",
-    ["M261_MK156"] = "M261_MK156",
-    ["M2KC_02_RPL541"] = "{M2KC_02_RPL541}",
-    ["M2KC_02_RPL541_EMPTY"] = "{M2KC_02_RPL541_EMPTY}",
-    ["M2KC_08_RPL541"] = "{M2KC_08_RPL541}",
-    ["M2KC_08_RPL541_EMPTY"] = "{M2KC_08_RPL541_EMPTY}",
-    ["M2KC_RPL_522"] = "{M2KC_RPL_522}",
-    ["M2KC_RPL_522_EMPTY"] = "{M2KC_RPL_522_EMPTY}",
-    ["MATRA-PHIMAT"] = "PHIMAT_CM",
-    ["MB339_FT330"] = "{FUEL-SUBAL_TANK-330}",
-    ["MB339_SMOKE-POD"] = "{SMOKE-GREEN-MB339}",
-    ["MB339_TT320_L"] = "{FUEL-TIP-ELLITTIC-L}",
-    ["MB339_TT320_R"] = "{FUEL-TIP-ELLITTIC-R}",
-    ["MB339_TT500_L"] = "{FUEL-TIP-TANK-500-L}",
-    ["MB339_TT500_R"] = "{FUEL-TIP-TANK-500-R}",
-    ["MB339_TravelPod"] = "{MB339_TRAVELPOD}",
-    ["MB339_Vinten"] = "{MB339_VINTEN}",
-    ["MK_82*28"] = "MK_82*28",
-    ["MPS-410"] = "{44EE8698-89F9-48EE-AF36-5FD31896A82C}",
-    ["Mosquito_Drop_Tank_100gal"] = "{MOSQUITO_100GAL_SLIPPER_TANK}",
-    ["Mosquito_Drop_Tank_50gal"] = "{MOSQUITO_50GAL_SLIPPER_TANK}",
-    ["OH58D_AGM_114_L"] = "OH58D_AGM_114_L",
-    ["OH58D_AGM_114_L1"] = "OH58D_AGM_114_L1",
-    ["OH58D_AGM_114_R"] = "OH58D_AGM_114_R",
-    ["OH58D_AGM_114_R1"] = "OH58D_AGM_114_R1",
-    ["OH58D_FIM_92_L"] = "OH58D_FIM_92_L",
-    ["OH58D_FIM_92_R"] = "OH58D_FIM_92_R",
-    ["PAVETACK"] = "{199D6D51-1764-497E-9AE5-7D07C8D4D87E}",
-    ["PTB-450"] = "{B99EE8A8-99BC-4a8d-89AC-A26831920DCE}",
-    ["PTB-490-MIG21"] = "{PTB_490_MIG21}",
-    ["PTB-490C-MIG21"] = "{PTB_490C_MIG21}",
-    ["PTB-800-MIG21"] = "{PTB_800_MIG21}",
-    ["PTB300_MIG15"] = "PTB300_MIG15",
-    ["PTB400_MIG15"] = "PTB400_MIG15",
-    ["PTB400_MIG19"] = "PTB400_MIG19",
-    ["PTB600_MIG15"] = "PTB600_MIG15",
-    ["PTB760_MIG19"] = "PTB760_MIG19",
-    ["PTB_1200_F1"] = "PTB-1200-F1-EMPTY",
-    ["PTB_120_F86F35"] = "{PTB_120_F86F35}",
-    ["PTB_1500_MIG29A"] = "{PTB_1500_MIG29A}",
-    ["PTB_200_F86F35"] = "{PTB_200_F86F35}",
-    ["PTB_580G_F1"] = "PTB-580G-F1",
-    ["SHPIL"] = "{0519A263-0AB6-11d6-9193-00A0249B6F00}",
-    ["SKY_SHADOW"] = "{8C3F26A2-FA0F-11d5-9190-00A0249B6F00}",
-    ["SORBCIJA_L"] = "{44EE8698-89F9-48EE-AF36-5FD31896A82F}",
-    ["SORBCIJA_R"] = "{44EE8698-89F9-48EE-AF36-5FD31896A82A}",
-    ["SPS-141"] = "{F75187EF-1D9E-4DA9-84B4-1A1A14A3973A}",
-    ["SPS-141-100"] = "{SPS-141-100}",
-    ["Spear"] = "{F4920E62-A99A-11d8-9897-000476191836}",
-    ["Spitfire_slipper_tank"] = "SPITFIRE_45GAL_SLIPPER_TANK",
-    ["Spitfire_tank_1"] = "SPITFIRE_45GAL_TORPEDO_TANK",
-    ["TANGAZH"] = "{0519A262-0AB6-11d6-9193-00A0249B6F00}",
-    ["TYPE-200A"] = "#Index",
-    ["U22"] = "{U22}",
-    ["U22A"] = "{U22A}",
-    ["aaq-28LEFT litening"] = "{AAQ-28_LEFT}",
-    ["ah-64d_radar"] = "{AN_APG_78}",
-    ["ais-pod-t50"] = "{AIS_ASQ_T50}",
-    ["ais-pod-t50_l"] = "{LAU-138 wtip - TCTS L}",
-    ["ais-pod-t50_r"] = "{LAU-138 wtip - TCTS R}",
-    ["alq-184long"] = "ALQ_184_Long",
-    ["dlpod_akg"] = "DIS_AKG_DLPOD",
-    ["droptank_108_gal"] = "{US_108GAL_PAPER_FUEL_TANK}",
-    ["droptank_110_gal"] = "{US_110GAL_FUEL_TANK}",
-    ["droptank_150_gal"] = "{US_150GAL_FUEL_TANK}",
-    ["fuel_tank_230"] = "{EFT_230GAL}",
-    ["i16_eft"] = "I16_DROP_FUEL_TANK",
-    ["kg600"] = "DIS_SPJ_POD",
-    ["lau-105"] = "LAU-105_AIS_ASQ_T50_L",
-    ["oiltank"] = "{COLOR-TANK}",
-    ["pl5eii"] = "DIS_SMOKE_GENERATOR_R",
-    ["sa342_dipole_antenna"] = "{SA342_Dipole}",
-    ["smoke_pod"] = "{SMOKE-ORANGE-MB339}",
-    ["wmd7"] = "DIS_WMD7",
-    ["{2x9M120F_Ataka_V_with_adapter}"] = "{2x9M120F_Ataka_V_with_adapter}",
-    ["{2x9M120F_Ataka_V}"] = "{2x9M120F_Ataka_V}",
-    ["{2x9M120_Ataka_V_with_adapter}"] = "{2x9M120_Ataka_V_with_adapter}",
-    ["{2x9M120_Ataka_V}"] = "{2x9M120_Ataka_V}",
-    ["{2x9M220_Ataka_V_with_adapter}"] = "{2x9M220_Ataka_V_with_adapter}",
-    ["{2x9M220_Ataka_V}"] = "{2x9M220_Ataka_V}",
-    ["{3E6B632D-65EB-44D2-9501-1C2D04515405}"] = "{3E6B632D-65EB-44D2-9501-1C2D04515405}",
-    ["{3xM8_ROCKETS_IN_TUBES}"] = "{3xM8_ROCKETS_IN_TUBES}",
-    ["{88D18A5E-99C8-4B04-B40B-1C02F2018B6E}"] = "{88D18A5E-99C8-4B04-B40B-1C02F2018B6E}",
-    ["{8DCAF3A3-7FCF-41B8-BB88-58DEDA878EDE}"] = "{8DCAF3A3-7FCF-41B8-BB88-58DEDA878EDE}",
-    ["{8_x_AGM_86C}"] = "{8_x_AGM_86C}",
-    ["{9M114 Shturm-V-2 Rack}"] = "{9M114 Shturm-V-2 Rack}",
-    ["{AABA1A14-78A1-4E85-94DD-463CF75BD9E4}"] = "{AABA1A14-78A1-4E85-94DD-463CF75BD9E4}",
-    ["{AGM_12A_SWA}"] = "{AGM_12A_SWA}",
-    ["{AGM_12A}"] = "{AGM_12A}",
-    ["{AGM_12B_SWA}"] = "{AGM_12B_SWA}",
-    ["{AGM_12B}"] = "{AGM_12B}",
-    ["{APU_13MT_R_3S}"] = "{APU_13MT_R_3S}",
-    ["{APU_68_S-24}"] = "{APU_68_S-24}",
-    ["{ASM_N_2}"] = "{ASM_N_2}",
-    ["{AUF2_BLG66_AC}"] = "{AUF2_BLG66_AC}",
-    ["{AUF2_BLG66_EG}"] = "{AUF2_BLG66_EG}",
-    ["{AUF2_BLG66}"] = "{AUF2_BLG66}",
-    ["{AUF2_BLU107}"] = "{AUF2_BLU107}",
-    ["{AUF2_BR250}"] = "{AUF2_BR250}",
-    ["{AUF2_GBU12}"] = "{AUF2_GBU12}",
-    ["{AUF2_MK82}"] = "{AUF2_MK82}",
-    ["{AUF2_SAMP125LD}"] = "{AUF2_SAMP125LD}",
-    ["{AUF2_SAMP250HD}"] = "{AUF2_SAMP250HD}",
-    ["{AUF2_SAMP250LD}"] = "{AUF2_SAMP250LD}",
-    ["{B13_5_S13OF_DUAL_L}"] = "{B13_5_S13OF_DUAL_L}",
-    ["{B8M1_20_S8KOM_DUAL_L}"] = "{B8M1_20_S8KOM_DUAL_L}",
-    ["{B8M1_20_S8OFP2_DUAL_L}"] = "{B8M1_20_S8OFP2_DUAL_L}",
-    ["{B8M1_20_S8TsM_DUAL_L}"] = "{B8M1_20_S8TsM_DUAL_L}",
-    ["{B8M1_S8OM}"] = "{B8M1_S8OM}",
-    ["{BETAB-500M}"] = "{BETAB-500M}",
-    ["{BETAB-500S}"] = "{BETAB-500S}",
-    ["{BKF_AO2_5RT}"] = "{BKF_AO2_5RT}",
-    ["{BKF_PTAB2_5KO}"] = "{BKF_PTAB2_5KO}",
-    ["{BRU-32 BDU-45B}"] = "{BRU-32 BDU-45B}",
-    ["{BRU-32 BDU-45}"] = "{BRU-32 BDU-45}",
-    ["{BRU-32 CBU-99}"] = "{BRU-32 CBU-99}",
-    ["{BRU-32 GBU-10}"] = "{BRU-32 GBU-10}",
-    ["{BRU-32 GBU-12}"] = "{BRU-32 GBU-12}",
-    ["{BRU-32 GBU-16}"] = "{BRU-32 GBU-16}",
-    ["{BRU-32 GBU-24}"] = "{BRU-32 GBU-24}",
-    ["{BRU-32 MK-20}"] = "{BRU-32 MK-20}",
-    ["{BRU-32 MK-82AIR}"] = "{BRU-32 MK-82AIR}",
-    ["{BRU-32 MK-82SE}"] = "{BRU-32 MK-82SE}",
-    ["{BRU-32 MK-82}"] = "{BRU-32 MK-82}",
-    ["{BRU-32 MK-83}"] = "{BRU-32 MK-83}",
-    ["{BRU-32 MK-84}"] = "{BRU-32 MK-84}",
-    ["{BRU-42_LS_1*SUU-25_8*LUU-2}"] = "{BRU-42_LS_1*SUU-25_8*LUU-2}",
-    ["{BRU-42_LS_2*SUU-25_8*LUU-2_L}"] = "{BRU-42_LS_2*SUU-25_8*LUU-2_L}",
-    ["{BRU-42_LS_2*SUU-25_8*LUU-2_R}"] = "{BRU-42_LS_2*SUU-25_8*LUU-2_R}",
-    ["{BRU3242_2*BDU45 LS}"] = "{BRU3242_2*BDU45 LS}",
-    ["{BRU3242_2*BDU45 RS}"] = "{BRU3242_2*BDU45 RS}",
-    ["{BRU3242_2*BDU45B LS}"] = "{BRU3242_2*BDU45B LS}",
-    ["{BRU3242_2*BDU45B RS}"] = "{BRU3242_2*BDU45B RS}",
-    ["{BRU3242_2*CBU99 LS}"] = "{BRU3242_2*CBU99 LS}",
-    ["{BRU3242_2*CBU99 RS}"] = "{BRU3242_2*CBU99 RS}",
-    ["{BRU3242_2*LAU10 LS}"] = "{BRU3242_2*LAU10 LS}",
-    ["{BRU3242_2*LAU10 L}"] = "{BRU3242_2*LAU10 L}",
-    ["{BRU3242_2*LAU10 RS}"] = "{BRU3242_2*LAU10 RS}",
-    ["{BRU3242_2*LAU10 R}"] = "{BRU3242_2*LAU10 R}",
-    ["{BRU3242_2*LUU2 L}"] = "{BRU3242_2*LUU2 L}",
-    ["{BRU3242_2*LUU2 R}"] = "{BRU3242_2*LUU2 R}",
-    ["{BRU3242_2*MK20 LS}"] = "{BRU3242_2*MK20 LS}",
-    ["{BRU3242_2*MK20 RS}"] = "{BRU3242_2*MK20 RS}",
-    ["{BRU3242_2*MK81 LS}"] = "{BRU3242_2*MK81 LS}",
-    ["{BRU3242_2*MK81 RS}"] = "{BRU3242_2*MK81 RS}",
-    ["{BRU3242_2*MK82 LS}"] = "{BRU3242_2*MK82 LS}",
-    ["{BRU3242_2*MK82 RS}"] = "{BRU3242_2*MK82 RS}",
-    ["{BRU3242_2*MK82AIR LS}"] = "{BRU3242_2*MK82AIR LS}",
-    ["{BRU3242_2*MK82AIR RS}"] = "{BRU3242_2*MK82AIR RS}",
-    ["{BRU3242_2*MK82SE LS}"] = "{BRU3242_2*MK82SE LS}",
-    ["{BRU3242_2*MK82SE RS}"] = "{BRU3242_2*MK82SE RS}",
-    ["{BRU3242_2*SUU25 L}"] = "{BRU3242_2*SUU25 L}",
-    ["{BRU3242_2*SUU25 R}"] = "{BRU3242_2*SUU25 R}",
-    ["{BRU3242_3*BDU33_N}"] = "{BRU3242_3*BDU33_N}",
-    ["{BRU3242_3*BDU33}"] = "{BRU3242_3*BDU33}",
-    ["{BRU3242_ADM141}"] = "{BRU3242_ADM141}",
-    ["{BRU3242_LAU10}"] = "{BRU3242_LAU10}",
-    ["{BRU3242_MK83 LS}"] = "{BRU3242_MK83 LS}",
-    ["{BRU3242_MK83 RS}"] = "{BRU3242_MK83 RS}",
-    ["{BRU3242_SUU25}"] = "{BRU3242_SUU25}",
-    ["{BRU33_2*LAU10}"] = "{BRU33_2*LAU10}",
-    ["{BRU33_2*LAU61}"] = "{BRU33_2*LAU61}",
-    ["{BRU33_2*LAU68_MK5}"] = "{BRU33_2*LAU68_MK5}",
-    ["{BRU33_2*LAU68}"] = "{BRU33_2*LAU68}",
-    ["{BRU33_2X_BDU-45B}"] = "{BRU33_2X_BDU-45B}",
-    ["{BRU33_2X_BDU-45}"] = "{BRU33_2X_BDU-45}",
-    ["{BRU33_2X_BDU_45LG}"] = "{BRU33_2X_BDU_45LG}",
-    ["{BRU33_2X_CBU-99}"] = "{BRU33_2X_CBU-99}",
-    ["{BRU33_2X_GBU-12}"] = "{BRU33_2X_GBU-12}",
-    ["{BRU33_2X_GBU-16}"] = "{BRU33_2X_GBU-16}",
-    ["{BRU33_2X_MK-82Y}"] = "{BRU33_2X_MK-82Y}",
-    ["{BRU33_2X_MK-82_Snakeye}"] = "{BRU33_2X_MK-82_Snakeye}",
-    ["{BRU33_2X_MK-82}"] = "{BRU33_2X_MK-82}",
-    ["{BRU33_2X_MK-83AIR}"] = "{BRU33_2X_MK-83AIR}",
-    ["{BRU33_2X_MK-83}"] = "{BRU33_2X_MK-83}",
-    ["{BRU33_2X_ROCKEYE}"] = "{BRU33_2X_ROCKEYE}",
-    ["{BRU33_LAU10}"] = "{BRU33_LAU10}",
-    ["{BRU33_LAU61}"] = "{BRU33_LAU61}",
-    ["{BRU33_LAU68_MK5}"] = "{BRU33_LAU68_MK5}",
-    ["{BRU33_LAU68}"] = "{BRU33_LAU68}",
-    ["{BRU41_6X_MK-82}"] = "{BRU41_6X_MK-82}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_M151_L}"] = "{BRU42LS_2*LAU131_HYDRA_70_M151_L}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_M151_R}"] = "{BRU42LS_2*LAU131_HYDRA_70_M151_R}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_M156_L}"] = "{BRU42LS_2*LAU131_HYDRA_70_M156_L}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_M156_R}"] = "{BRU42LS_2*LAU131_HYDRA_70_M156_R}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_M257_L}"] = "{BRU42LS_2*LAU131_HYDRA_70_M257_L}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_M257_R}"] = "{BRU42LS_2*LAU131_HYDRA_70_M257_R}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_M274_L}"] = "{BRU42LS_2*LAU131_HYDRA_70_M274_L}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_M274_R}"] = "{BRU42LS_2*LAU131_HYDRA_70_M274_R}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_MK1_L}"] = "{BRU42LS_2*LAU131_HYDRA_70_MK1_L}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_MK1_R}"] = "{BRU42LS_2*LAU131_HYDRA_70_MK1_R}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_MK5_L}"] = "{BRU42LS_2*LAU131_HYDRA_70_MK5_L}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_MK5_R}"] = "{BRU42LS_2*LAU131_HYDRA_70_MK5_R}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_MK61_L}"] = "{BRU42LS_2*LAU131_HYDRA_70_MK61_L}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_MK61_R}"] = "{BRU42LS_2*LAU131_HYDRA_70_MK61_R}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_WTU1B_L}"] = "{BRU42LS_2*LAU131_HYDRA_70_WTU1B_L}",
-    ["{BRU42LS_2*LAU131_HYDRA_70_WTU1B_R}"] = "{BRU42LS_2*LAU131_HYDRA_70_WTU1B_R}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_M151_L}"] = "{BRU42LS_2*LAU68_HYDRA_70_M151_L}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_M151_R}"] = "{BRU42LS_2*LAU68_HYDRA_70_M151_R}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_M156_L}"] = "{BRU42LS_2*LAU68_HYDRA_70_M156_L}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_M156_R}"] = "{BRU42LS_2*LAU68_HYDRA_70_M156_R}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_M257_L}"] = "{BRU42LS_2*LAU68_HYDRA_70_M257_L}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_M257_R}"] = "{BRU42LS_2*LAU68_HYDRA_70_M257_R}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_M274_L}"] = "{BRU42LS_2*LAU68_HYDRA_70_M274_L}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_M274_R}"] = "{BRU42LS_2*LAU68_HYDRA_70_M274_R}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_MK1_L}"] = "{BRU42LS_2*LAU68_HYDRA_70_MK1_L}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_MK1_R}"] = "{BRU42LS_2*LAU68_HYDRA_70_MK1_R}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_MK5_L}"] = "{BRU42LS_2*LAU68_HYDRA_70_MK5_L}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_MK5_R}"] = "{BRU42LS_2*LAU68_HYDRA_70_MK5_R}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_MK61_L}"] = "{BRU42LS_2*LAU68_HYDRA_70_MK61_L}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_MK61_R}"] = "{BRU42LS_2*LAU68_HYDRA_70_MK61_R}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_WTU1B_L}"] = "{BRU42LS_2*LAU68_HYDRA_70_WTU1B_L}",
-    ["{BRU42LS_2*LAU68_HYDRA_70_WTU1B_R}"] = "{BRU42LS_2*LAU68_HYDRA_70_WTU1B_R}",
-    ["{BRU42_1X_GBU-12}"] = "{BRU42_1X_GBU-12}",
-    ["{BRU42_1X_MK-82AIR}"] = "{BRU42_1X_MK-82AIR}",
-    ["{BRU42_1X_MK-82}"] = "{BRU42_1X_MK-82}",
-    ["{BRU42_2*BDU45 LS}"] = "{BRU42_2*BDU45 LS}",
-    ["{BRU42_2*BDU45 RS}"] = "{BRU42_2*BDU45 RS}",
-    ["{BRU42_2*BDU45B LS}"] = "{BRU42_2*BDU45B LS}",
-    ["{BRU42_2*BDU45B RS}"] = "{BRU42_2*BDU45B RS}",
-    ["{BRU42_2*CBU99 LS}"] = "{BRU42_2*CBU99 LS}",
-    ["{BRU42_2*CBU99 RS}"] = "{BRU42_2*CBU99 RS}",
-    ["{BRU42_2*LAU10 LS}"] = "{BRU42_2*LAU10 LS}",
-    ["{BRU42_2*LAU10 L}"] = "{BRU42_2*LAU10 L}",
-    ["{BRU42_2*LAU10 RS}"] = "{BRU42_2*LAU10 RS}",
-    ["{BRU42_2*LAU10 R}"] = "{BRU42_2*LAU10 R}",
-    ["{BRU42_2*LUU2 L}"] = "{BRU42_2*LUU2 L}",
-    ["{BRU42_2*LUU2 R}"] = "{BRU42_2*LUU2 R}",
-    ["{BRU42_2*MK20 LS}"] = "{BRU42_2*MK20 LS}",
-    ["{BRU42_2*MK20 RS}"] = "{BRU42_2*MK20 RS}",
-    ["{BRU42_2*MK81 LS}"] = "{BRU42_2*MK81 LS}",
-    ["{BRU42_2*MK81 RS}"] = "{BRU42_2*MK81 RS}",
-    ["{BRU42_2*MK82 LS}"] = "{BRU42_2*MK82 LS}",
-    ["{BRU42_2*MK82 RS}"] = "{BRU42_2*MK82 RS}",
-    ["{BRU42_2*MK82AIR LS}"] = "{BRU42_2*MK82AIR LS}",
-    ["{BRU42_2*MK82AIR RS}"] = "{BRU42_2*MK82AIR RS}",
-    ["{BRU42_2*MK82SE LS}"] = "{BRU42_2*MK82SE LS}",
-    ["{BRU42_2*MK82SE RS}"] = "{BRU42_2*MK82SE RS}",
-    ["{BRU42_2X_GBU-12_L}"] = "{BRU42_2X_GBU-12_L}",
-    ["{BRU42_2X_GBU-12_R}"] = "{BRU42_2X_GBU-12_R}",
-    ["{BRU42_2X_MK-82AIR_L}"] = "{BRU42_2X_MK-82AIR_L}",
-    ["{BRU42_2X_MK-82AIR_R}"] = "{BRU42_2X_MK-82AIR_R}",
-    ["{BRU42_2X_MK-82_L}"] = "{BRU42_2X_MK-82_L}",
-    ["{BRU42_2X_MK-82_R}"] = "{BRU42_2X_MK-82_R}",
-    ["{BRU42_ADM141}"] = "{BRU42_ADM141}",
-    ["{BRU42_LAU10}"] = "{BRU42_LAU10}",
-    ["{BRU42_MK83 LS}"] = "{BRU42_MK83 LS}",
-    ["{BRU42_MK83 RS}"] = "{BRU42_MK83 RS}",
-    ["{BRU42_SUU25}"] = "{BRU42_SUU25}",
-    ["{BRU55_2*AGM-154A}"] = "{BRU55_2*AGM-154A}",
-    ["{BRU55_2*AGM-154C}"] = "{BRU55_2*AGM-154C}",
-    ["{BRU55_2*GBU-32}"] = "{BRU55_2*GBU-32}",
-    ["{BRU55_2*GBU-38}"] = "{BRU55_2*GBU-38}",
-    ["{BRU57_2*AGM-154A}"] = "{BRU57_2*AGM-154A}",
-    ["{BRU57_2*AGM-154B}"] = "{BRU57_2*AGM-154B}",
-    ["{BRU57_2*CBU-103}"] = "{BRU57_2*CBU-103}",
-    ["{BRU57_2*CBU-105}"] = "{BRU57_2*CBU-105}",
-    ["{BRU57_2*GBU-38}"] = "{BRU57_2*GBU-38}",
-    ["{BRU_42A_x1_ADM_141A}"] = "{BRU_42A_x1_ADM_141A}",
-    ["{BRU_42A_x2_ADM_141A}"] = "{BRU_42A_x2_ADM_141A}",
-    ["{BRU_42A_x3_ADM_141A}"] = "{BRU_42A_x3_ADM_141A}",
-    ["{British_AP_25LBNo1_3INCHNo1}"] = "{British_AP_25LBNo1_3INCHNo1}",
-    ["{British_GP_250LB_Bomb_Mk4_on_Handley_Page_Type_B_Cut_Bar}"] =
-    "{British_GP_250LB_Bomb_Mk4_on_Handley_Page_Type_B_Cut_Bar}",
-    ["{British_GP_250LB_Bomb_Mk5_on_Handley_Page_Type_B_Cut_Bar}"] =
-    "{British_GP_250LB_Bomb_Mk5_on_Handley_Page_Type_B_Cut_Bar}",
-    ["{British_GP_500LB_Bomb_Mk4_Short_on_Handley_Page_Type_B_Cut_Bar}"] =
-    "{British_GP_500LB_Bomb_Mk4_Short_on_Handley_Page_Type_B_Cut_Bar}",
-    ["{British_HE_60LBFNo1_3INCHNo1}"] = "{British_HE_60LBFNo1_3INCHNo1}",
-    ["{British_HE_60LBSAPNo2_3INCHNo1}"] = "{British_HE_60LBSAPNo2_3INCHNo1}",
-    ["{British_MC_250LB_Bomb_Mk1_on_Handley_Page_Type_B_Cut_Bar}"] =
-    "{British_MC_250LB_Bomb_Mk1_on_Handley_Page_Type_B_Cut_Bar}",
-    ["{British_MC_250LB_Bomb_Mk2_on_Handley_Page_Type_B_Cut_Bar}"] =
-    "{British_MC_250LB_Bomb_Mk2_on_Handley_Page_Type_B_Cut_Bar}",
-    ["{British_MC_500LB_Bomb_Mk1_Short_on_Handley_Page_Type_B_Cut_Bar}"] =
-    "{British_MC_500LB_Bomb_Mk1_Short_on_Handley_Page_Type_B_Cut_Bar}",
-    ["{British_SAP_250LB_Bomb_Mk5_on_Handley_Page_Type_B_Cut_Bar}"] =
-    "{British_SAP_250LB_Bomb_Mk5_on_Handley_Page_Type_B_Cut_Bar}",
-    ["{CBM_Mk82AIR}"] = "{CBM_Mk82AIR}",
-    ["{CE2_SMOKE_WHITE}"] = "{CE2_SMOKE_WHITE}",
-    ["{CHAP_8x9M120F_Ataka_V}"] = "{CHAP_8x9M120F_Ataka_V}",
-    ["{CHAP_8x9M120_Ataka_V}"] = "{CHAP_8x9M120_Ataka_V}",
-    ["{CHAP_Kh555x6}"] = "{CHAP_Kh555x6}",
-    ["{CLB30_MK83}"] = "{CLB30_MK83}",
-    ["{CSRL_GBU12}"] = "{CSRL_GBU12}",
-    ["{CSRL_GBU31V1}"] = "{CSRL_GBU31V1}",
-    ["{CSRL_GBU31V3}"] = "{CSRL_GBU31V3}",
-    ["{CSRL_GBU38V1}"] = "{CSRL_GBU38V1}",
-    ["{CSRL_GBU54V1}"] = "{CSRL_GBU54V1}",
-    ["{ECM_POD_L_175V}"] = "{ECM_POD_L_175V}",
-    ["{EclairM_06}"] = "{EclairM_06}",
-    ["{EclairM_15}"] = "{EclairM_15}",
-    ["{EclairM_24}"] = "{EclairM_24}",
-    ["{EclairM_33}"] = "{EclairM_33}",
-    ["{EclairM_42}"] = "{EclairM_42}",
-    ["{EclairM_51}"] = "{EclairM_51}",
-    ["{EclairM_60}"] = "{EclairM_60}",
-    ["{Eclair}"] = "{Eclair}",
-    ["{F14-LANTIRN-TP}"] = "{F14-LANTIRN-TP}",
-    ["{F4U1D_SMOKE_WHITE}"] = "{F4U1D_SMOKE_WHITE}",
-    ["{FAB-100-4}"] = "{FAB-100-4}",
-    ["{FAB-100x2}"] = "{FAB-100x2}",
-    ["{FAB-250-M54-TU}"] = "{FAB-250-M54-TU}",
-    ["{FAB-250-M54}"] = "{FAB-250-M54}",
-    ["{FAB-500-M54-TU}"] = "{FAB-500-M54-TU}",
-    ["{FAB-500-M54}"] = "{FAB-500-M54}",
-    ["{FAB-500-SL}"] = "{FAB-500-SL}",
-    ["{FAB-500-TA}"] = "{FAB-500-TA}",
-    ["{FAB_250_DUAL_L}"] = "{FAB_250_DUAL_L}",
-    ["{FAB_500_DUAL_L}"] = "{FAB_500_DUAL_L}",
-    ["{HB_F4EAGM-65A_LAU88_2x_Left}"] = "{HB_F4EAGM-65A_LAU88_2x_Left}",
-    ["{HB_F4EAGM-65A_LAU88_2x_Right}"] = "{HB_F4EAGM-65A_LAU88_2x_Right}",
-    ["{HB_F4EAGM-65A_LAU88_3x_Left}"] = "{HB_F4EAGM-65A_LAU88_3x_Left}",
-    ["{HB_F4EAGM-65A_LAU88_3x_Right}"] = "{HB_F4EAGM-65A_LAU88_3x_Right}",
-    ["{HB_F4EAGM-65B_LAU88_2x_Left}"] = "{HB_F4EAGM-65B_LAU88_2x_Left}",
-    ["{HB_F4EAGM-65B_LAU88_2x_Right}"] = "{HB_F4EAGM-65B_LAU88_2x_Right}",
-    ["{HB_F4EAGM-65B_LAU88_3x_Left}"] = "{HB_F4EAGM-65B_LAU88_3x_Left}",
-    ["{HB_F4EAGM-65B_LAU88_3x_Right}"] = "{HB_F4EAGM-65B_LAU88_3x_Right}",
-    ["{HB_F4EAGM-65D_LAU88_2x_Left}"] = "{HB_F4EAGM-65D_LAU88_2x_Left}",
-    ["{HB_F4EAGM-65D_LAU88_2x_Right}"] = "{HB_F4EAGM-65D_LAU88_2x_Right}",
-    ["{HB_F4EAGM-65D_LAU88_3x_Left}"] = "{HB_F4EAGM-65D_LAU88_3x_Left}",
-    ["{HB_F4EAGM-65D_LAU88_3x_Right}"] = "{HB_F4EAGM-65D_LAU88_3x_Right}",
-    ["{HB_F4E_AGM-65A_LAU117_SWA}"] = "{HB_F4E_AGM-65A_LAU117_SWA}",
-    ["{HB_F4E_AGM-65A_LAU117}"] = "{HB_F4E_AGM-65A_LAU117}",
-    ["{HB_F4E_AGM-65B_LAU117_SWA}"] = "{HB_F4E_AGM-65B_LAU117_SWA}",
-    ["{HB_F4E_AGM-65B_LAU117}"] = "{HB_F4E_AGM-65B_LAU117}",
-    ["{HB_F4E_AGM-65D_LAU117_SWA}"] = "{HB_F4E_AGM-65D_LAU117_SWA}",
-    ["{HB_F4E_AGM-65D_LAU117}"] = "{HB_F4E_AGM-65D_LAU117}",
-    ["{HB_F4E_AGM-65G_LAU117}"] = "{HB_F4E_AGM-65G_LAU117}",
-    ["{HB_F4E_BDU-33_2x_SWA}"] = "{HB_F4E_BDU-33_2x_SWA}",
-    ["{HB_F4E_BDU-33_2x}"] = "{HB_F4E_BDU-33_2x}",
-    ["{HB_F4E_BDU-33_3x}"] = "{HB_F4E_BDU-33_3x}",
-    ["{HB_F4E_BDU-33_6x}"] = "{HB_F4E_BDU-33_6x}",
-    ["{HB_F4E_BDU-50HD_2x_SWA}"] = "{HB_F4E_BDU-50HD_2x_SWA}",
-    ["{HB_F4E_BDU-50HD_2x}"] = "{HB_F4E_BDU-50HD_2x}",
-    ["{HB_F4E_BDU-50HD_3x}"] = "{HB_F4E_BDU-50HD_3x}",
-    ["{HB_F4E_BDU-50HD_6x}"] = "{HB_F4E_BDU-50HD_6x}",
-    ["{HB_F4E_BDU-50LD_2x_SWA}"] = "{HB_F4E_BDU-50LD_2x_SWA}",
-    ["{HB_F4E_BDU-50LD_2x}"] = "{HB_F4E_BDU-50LD_2x}",
-    ["{HB_F4E_BDU-50LD_3x}"] = "{HB_F4E_BDU-50LD_3x}",
-    ["{HB_F4E_BDU-50LD_6x}"] = "{HB_F4E_BDU-50LD_6x}",
-    ["{HB_F4E_BDU_45LGB_2x_SWA}"] = "{HB_F4E_BDU_45LGB_2x_SWA}",
-    ["{HB_F4E_BDU_45LGB_2x}"] = "{HB_F4E_BDU_45LGB_2x}",
-    ["{HB_F4E_BL755_TER_1x_SingleLeft}"] = "{HB_F4E_BL755_TER_1x_SingleLeft}",
-    ["{HB_F4E_BL755_TER_1x_SingleRight}"] = "{HB_F4E_BL755_TER_1x_SingleRight}",
-    ["{HB_F4E_BL755_TER_2x_Left}"] = "{HB_F4E_BL755_TER_2x_Left}",
-    ["{HB_F4E_BL755_TER_2x_Right}"] = "{HB_F4E_BL755_TER_2x_Right}",
-    ["{HB_F4E_BL755_TER_2x_opposed}"] = "{HB_F4E_BL755_TER_2x_opposed}",
-    ["{HB_F4E_BL755_TER_3x}"] = "{HB_F4E_BL755_TER_3x}",
-    ["{HB_F4E_BLU-107B_3x_SWA}"] = "{HB_F4E_BLU-107B_3x_SWA}",
-    ["{HB_F4E_BLU-107B_3x}"] = "{HB_F4E_BLU-107B_3x}",
-    ["{HB_F4E_BLU-107B_6x}"] = "{HB_F4E_BLU-107B_6x}",
-    ["{HB_F4E_CBU-1/A}"] = "{HB_F4E_CBU-1/A}",
-    ["{HB_F4E_CBU-2/A}"] = "{HB_F4E_CBU-2/A}",
-    ["{HB_F4E_CBU-2B/A}"] = "{HB_F4E_CBU-2B/A}",
-    ["{HB_F4E_CBU-52B_2x_SWA}"] = "{HB_F4E_CBU-52B_2x_SWA}",
-    ["{HB_F4E_CBU-52B_2x}"] = "{HB_F4E_CBU-52B_2x}",
-    ["{HB_F4E_CBU-52B_MER_3x_Left}"] = "{HB_F4E_CBU-52B_MER_3x_Left}",
-    ["{HB_F4E_CBU-52B_MER_3x_Right}"] = "{HB_F4E_CBU-52B_MER_3x_Right}",
-    ["{HB_F4E_CBU-52B_MER_6x}"] = "{HB_F4E_CBU-52B_MER_6x}",
-    ["{HB_F4E_CBU-87_2x_SWA}"] = "{HB_F4E_CBU-87_2x_SWA}",
-    ["{HB_F4E_CBU-87_2x}"] = "{HB_F4E_CBU-87_2x}",
-    ["{HB_F4E_CBU-87_MER_3x_Left}"] = "{HB_F4E_CBU-87_MER_3x_Left}",
-    ["{HB_F4E_CBU-87_MER_3x_Right}"] = "{HB_F4E_CBU-87_MER_3x_Right}",
-    ["{HB_F4E_CBU-87_MER_4x}"] = "{HB_F4E_CBU-87_MER_4x}",
-    ["{HB_F4E_GBU-12_2x_SWA}"] = "{HB_F4E_GBU-12_2x_SWA}",
-    ["{HB_F4E_GBU-12_2x}"] = "{HB_F4E_GBU-12_2x}",
-    ["{HB_F4E_LAU-10_ZUNI_1x}"] = "{HB_F4E_LAU-10_ZUNI_1x}",
-    ["{HB_F4E_LAU-10_ZUNI_2x_Left}"] = "{HB_F4E_LAU-10_ZUNI_2x_Left}",
-    ["{HB_F4E_LAU-10_ZUNI_2x_Opposed}"] = "{HB_F4E_LAU-10_ZUNI_2x_Opposed}",
-    ["{HB_F4E_LAU-10_ZUNI_2x_Right}"] = "{HB_F4E_LAU-10_ZUNI_2x_Right}",
-    ["{HB_F4E_LAU-10_ZUNI_3x}"] = "{HB_F4E_LAU-10_ZUNI_3x}",
-    ["{HB_F4E_LAU-10_ZUNI_MER_1x}"] = "{HB_F4E_LAU-10_ZUNI_MER_1x}",
-    ["{HB_F4E_LAU-10_ZUNI_MER_2x}"] = "{HB_F4E_LAU-10_ZUNI_MER_2x}",
-    ["{HB_F4E_LAU-10_ZUNI_MER_3x}"] = "{HB_F4E_LAU-10_ZUNI_MER_3x}",
-    ["{HB_F4E_LAU-3_MK1_1x}"] = "{HB_F4E_LAU-3_MK1_1x}",
-    ["{HB_F4E_LAU-3_MK1_2x_Left}"] = "{HB_F4E_LAU-3_MK1_2x_Left}",
-    ["{HB_F4E_LAU-3_MK1_2x_Right}"] = "{HB_F4E_LAU-3_MK1_2x_Right}",
-    ["{HB_F4E_LAU-3_MK1_3x}"] = "{HB_F4E_LAU-3_MK1_3x}",
-    ["{HB_F4E_LAU-3_MK1_MER_3x}"] = "{HB_F4E_LAU-3_MK1_MER_3x}",
-    ["{HB_F4E_LAU-3_MK5_1x}"] = "{HB_F4E_LAU-3_MK5_1x}",
-    ["{HB_F4E_LAU-3_MK5_2x_Left}"] = "{HB_F4E_LAU-3_MK5_2x_Left}",
-    ["{HB_F4E_LAU-3_MK5_2x_Right}"] = "{HB_F4E_LAU-3_MK5_2x_Right}",
-    ["{HB_F4E_LAU-3_MK5_3x}"] = "{HB_F4E_LAU-3_MK5_3x}",
-    ["{HB_F4E_LAU-3_MK5_MER_3x}"] = "{HB_F4E_LAU-3_MK5_MER_3x}",
-    ["{HB_F4E_LAU-3_WP156_1x}"] = "{HB_F4E_LAU-3_WP156_1x}",
-    ["{HB_F4E_LAU-3_WP156_2x_Left}"] = "{HB_F4E_LAU-3_WP156_2x_Left}",
-    ["{HB_F4E_LAU-3_WP156_2x_Right}"] = "{HB_F4E_LAU-3_WP156_2x_Right}",
-    ["{HB_F4E_LAU-3_WP156_3x}"] = "{HB_F4E_LAU-3_WP156_3x}",
-    ["{HB_F4E_LAU-3_WP156_MER_3x}"] = "{HB_F4E_LAU-3_WP156_MER_3x}",
-    ["{HB_F4E_LAU-68_MK1_1x}"] = "{HB_F4E_LAU-68_MK1_1x}",
-    ["{HB_F4E_LAU-68_MK1_2x_Left}"] = "{HB_F4E_LAU-68_MK1_2x_Left}",
-    ["{HB_F4E_LAU-68_MK1_2x_Right}"] = "{HB_F4E_LAU-68_MK1_2x_Right}",
-    ["{HB_F4E_LAU-68_MK1_3x}"] = "{HB_F4E_LAU-68_MK1_3x}",
-    ["{HB_F4E_LAU-68_MK1_MER_3x}"] = "{HB_F4E_LAU-68_MK1_MER_3x}",
-    ["{HB_F4E_LAU-68_MK5_1x}"] = "{HB_F4E_LAU-68_MK5_1x}",
-    ["{HB_F4E_LAU-68_MK5_2x_Left}"] = "{HB_F4E_LAU-68_MK5_2x_Left}",
-    ["{HB_F4E_LAU-68_MK5_2x_Right}"] = "{HB_F4E_LAU-68_MK5_2x_Right}",
-    ["{HB_F4E_LAU-68_MK5_3x}"] = "{HB_F4E_LAU-68_MK5_3x}",
-    ["{HB_F4E_LAU-68_MK5_MER_3x}"] = "{HB_F4E_LAU-68_MK5_MER_3x}",
-    ["{HB_F4E_LAU-68_WP156_1x}"] = "{HB_F4E_LAU-68_WP156_1x}",
-    ["{HB_F4E_LAU-68_WP156_2x_Left}"] = "{HB_F4E_LAU-68_WP156_2x_Left}",
-    ["{HB_F4E_LAU-68_WP156_2x_Right}"] = "{HB_F4E_LAU-68_WP156_2x_Right}",
-    ["{HB_F4E_LAU-68_WP156_3x}"] = "{HB_F4E_LAU-68_WP156_3x}",
-    ["{HB_F4E_LAU-68_WP156_MER_3x}"] = "{HB_F4E_LAU-68_WP156_MER_3x}",
-    ["{HB_F4E_M117_2x_Left}"] = "{HB_F4E_M117_2x_Left}",
-    ["{HB_F4E_M117_2x_Right}"] = "{HB_F4E_M117_2x_Right}",
-    ["{HB_F4E_M117_3x}"] = "{HB_F4E_M117_3x}",
-    ["{HB_F4E_M117_MER_3x_Left}"] = "{HB_F4E_M117_MER_3x_Left}",
-    ["{HB_F4E_M117_MER_3x_Right}"] = "{HB_F4E_M117_MER_3x_Right}",
-    ["{HB_F4E_M117_MER_5x}"] = "{HB_F4E_M117_MER_5x}",
-    ["{HB_F4E_MK-81_2x_SWA}"] = "{HB_F4E_MK-81_2x_SWA}",
-    ["{HB_F4E_MK-81_2x}"] = "{HB_F4E_MK-81_2x}",
-    ["{HB_F4E_MK-81_3x}"] = "{HB_F4E_MK-81_3x}",
-    ["{HB_F4E_MK-81_6x}"] = "{HB_F4E_MK-81_6x}",
-    ["{HB_F4E_MK-82AIR_2x_SWA}"] = "{HB_F4E_MK-82AIR_2x_SWA}",
-    ["{HB_F4E_MK-82AIR_2x}"] = "{HB_F4E_MK-82AIR_2x}",
-    ["{HB_F4E_MK-82AIR_3x}"] = "{HB_F4E_MK-82AIR_3x}",
-    ["{HB_F4E_MK-82AIR_6x}"] = "{HB_F4E_MK-82AIR_6x}",
-    ["{HB_F4E_MK-82_2x_SWA}"] = "{HB_F4E_MK-82_2x_SWA}",
-    ["{HB_F4E_MK-82_2x}"] = "{HB_F4E_MK-82_2x}",
-    ["{HB_F4E_MK-82_3x}"] = "{HB_F4E_MK-82_3x}",
-    ["{HB_F4E_MK-82_6x}"] = "{HB_F4E_MK-82_6x}",
-    ["{HB_F4E_MK-82_Snakeye_2x_SWA}"] = "{HB_F4E_MK-82_Snakeye_2x_SWA}",
-    ["{HB_F4E_MK-82_Snakeye_2x}"] = "{HB_F4E_MK-82_Snakeye_2x}",
-    ["{HB_F4E_MK-82_Snakeye_3x}"] = "{HB_F4E_MK-82_Snakeye_3x}",
-    ["{HB_F4E_MK-82_Snakeye_6x}"] = "{HB_F4E_MK-82_Snakeye_6x}",
-    ["{HB_F4E_MK-83_2x_Left}"] = "{HB_F4E_MK-83_2x_Left}",
-    ["{HB_F4E_MK-83_2x_Right}"] = "{HB_F4E_MK-83_2x_Right}",
-    ["{HB_F4E_MK-83_3x}"] = "{HB_F4E_MK-83_3x}",
-    ["{HB_F4E_MK-83_MER_1x_Left_Ripple}"] = "{HB_F4E_MK-83_MER_1x_Left_Ripple}",
-    ["{HB_F4E_MK-83_MER_1x_Right_Ripple}"] = "{HB_F4E_MK-83_MER_1x_Right_Ripple}",
-    ["{HB_F4E_MK-83_MER_2x}"] = "{HB_F4E_MK-83_MER_2x}",
-    ["{HB_F4E_MK-83_MER_3x_Ripple}"] = "{HB_F4E_MK-83_MER_3x_Ripple}",
-    ["{HB_F4E_MK-83_MER_3x}"] = "{HB_F4E_MK-83_MER_3x}",
-    ["{HB_F4E_ROCKEYE_2x_SWA}"] = "{HB_F4E_ROCKEYE_2x_SWA}",
-    ["{HB_F4E_ROCKEYE_2x}"] = "{HB_F4E_ROCKEYE_2x}",
-    ["{HB_F4E_ROCKEYE_3x}"] = "{HB_F4E_ROCKEYE_3x}",
-    ["{HB_F4E_ROCKEYE_6x}"] = "{HB_F4E_ROCKEYE_6x}",
-    ["{HB_F4E_SAMP250HD_TER_1x_SingleLeft}"] = "{HB_F4E_SAMP250HD_TER_1x_SingleLeft}",
-    ["{HB_F4E_SAMP250HD_TER_1x_SingleRight}"] = "{HB_F4E_SAMP250HD_TER_1x_SingleRight}",
-    ["{HB_F4E_SAMP250HD_TER_2x_Left}"] = "{HB_F4E_SAMP250HD_TER_2x_Left}",
-    ["{HB_F4E_SAMP250HD_TER_2x_Right}"] = "{HB_F4E_SAMP250HD_TER_2x_Right}",
-    ["{HB_F4E_SAMP250HD_TER_2x_opposed}"] = "{HB_F4E_SAMP250HD_TER_2x_opposed}",
-    ["{HB_F4E_SAMP250HD_TER_3x}"] = "{HB_F4E_SAMP250HD_TER_3x}",
-    ["{HB_F4E_SAMP250LD_TER_1x_SingleLeft}"] = "{HB_F4E_SAMP250LD_TER_1x_SingleLeft}",
-    ["{HB_F4E_SAMP250LD_TER_1x_SingleRight}"] = "{HB_F4E_SAMP250LD_TER_1x_SingleRight}",
-    ["{HB_F4E_SAMP250LD_TER_2x_Left}"] = "{HB_F4E_SAMP250LD_TER_2x_Left}",
-    ["{HB_F4E_SAMP250LD_TER_2x_Right}"] = "{HB_F4E_SAMP250LD_TER_2x_Right}",
-    ["{HB_F4E_SAMP250LD_TER_2x_opposed}"] = "{HB_F4E_SAMP250LD_TER_2x_opposed}",
-    ["{HB_F4E_SAMP250LD_TER_3x}"] = "{HB_F4E_SAMP250LD_TER_3x}",
-    ["{HOT3_L1_M}"] = "{HOT3_L1_M}",
-    ["{HOT3_L1}"] = "{HOT3_L1}",
-    ["{HOT3_L2_M}"] = "{HOT3_L2_M}",
-    ["{HOT3_L2}"] = "{HOT3_L2}",
-    ["{HOT3_R1_M}"] = "{HOT3_R1_M}",
-    ["{HOT3_R1}"] = "{HOT3_R1}",
-    ["{HOT3_R2_M}"] = "{HOT3_R2_M}",
-    ["{HOT3_R2}"] = "{HOT3_R2}",
-    ["{HSAB-6xAGM-84}"] = "{HSAB-6xAGM-84}",
-    ["{HSAB_2x_GBU28}"] = "{HSAB_2x_GBU28}",
-    ["{HSAB_4x_AGM84D_L}"] = "{HSAB_4x_AGM84D_L}",
-    ["{HSAB_4x_AGM84D_R}"] = "{HSAB_4x_AGM84D_R}",
-    ["{HSAB_5x_GBU10}"] = "{HSAB_5x_GBU10}",
-    ["{HSAB_5x_GBU12}"] = "{HSAB_5x_GBU12}",
-    ["{HSAB_6x_AGM154A_L}"] = "{HSAB_6x_AGM154A_L}",
-    ["{HSAB_6x_AGM154A_R}"] = "{HSAB_6x_AGM154A_R}",
-    ["{HSAB_6x_GBU31V1_L}"] = "{HSAB_6x_GBU31V1_L}",
-    ["{HSAB_6x_GBU31V1_R}"] = "{HSAB_6x_GBU31V1_R}",
-    ["{HSAB_6x_GBU31V3_L}"] = "{HSAB_6x_GBU31V3_L}",
-    ["{HSAB_6x_GBU31V3_R}"] = "{HSAB_6x_GBU31V3_R}",
-    ["{HSAB_6x_GBU38V1_L}"] = "{HSAB_6x_GBU38V1_L}",
-    ["{HSAB_6x_GBU38V1_R}"] = "{HSAB_6x_GBU38V1_R}",
-    ["{HSAB_8x_CBU103_L}"] = "{HSAB_8x_CBU103_L}",
-    ["{HSAB_8x_CBU103_R}"] = "{HSAB_8x_CBU103_R}",
-    ["{HSAB_8x_CBU105_L}"] = "{HSAB_8x_CBU105_L}",
-    ["{HSAB_8x_CBU105_R}"] = "{HSAB_8x_CBU105_R}",
-    ["{HSAB_8x_GBU38V1_L}"] = "{HSAB_8x_GBU38V1_L}",
-    ["{HSAB_8x_GBU38V1_R}"] = "{HSAB_8x_GBU38V1_R}",
-    ["{HSAB_8x_GBU54V1_L}"] = "{HSAB_8x_GBU54V1_L}",
-    ["{HSAB_8x_GBU54V1_R}"] = "{HSAB_8x_GBU54V1_R}",
-    ["{HSAB_CBU87}"] = "{HSAB_CBU87}",
-    ["{HSAB_M117}"] = "{HSAB_M117}",
-    ["{HSAB_Mk82AIR}"] = "{HSAB_Mk82AIR}",
-    ["{HVAR_USN_Mk28_Mod4_Corsair}"] = "{HVAR_USN_Mk28_Mod4_Corsair}",
-    ["{IAB-500}"] = "{IAB-500}",
-    ["{Kh-25MP}"] = "{Kh-25MP}",
-    ["{Kh-66_Grom}"] = "{Kh-66_Grom}",
-    ["{LAU-115 - AIM-120B_R}"] = "{LAU-115 - AIM-120B_R}",
-    ["{LAU-115 - AIM-120B}"] = "{LAU-115 - AIM-120B}",
-    ["{LAU-115 - AIM-120C_R}"] = "{LAU-115 - AIM-120C_R}",
-    ["{LAU-115 - AIM-120C}"] = "{LAU-115 - AIM-120C}",
-    ["{LAU-115 - AIM-7E-2}"] = "{LAU-115 - AIM-7E-2}",
-    ["{LAU-115 - AIM-7E}"] = "{LAU-115 - AIM-7E}",
-    ["{LAU-115 - AIM-7F}"] = "{LAU-115 - AIM-7F}",
-    ["{LAU-115 - AIM-7H}"] = "{LAU-115 - AIM-7H}",
-    ["{LAU-115 - AIM-7M}"] = "{LAU-115 - AIM-7M}",
-    ["{LAU-115 - AIM-7P}"] = "{LAU-115 - AIM-7P}",
-    ["{LAU-131 - 7 AGR-20 M282}"] = "{LAU-131 - 7 AGR-20 M282}",
-    ["{LAU-131 - 7 AGR-20A}"] = "{LAU-131 - 7 AGR-20A}",
-    ["{LAU-131x2 - 7 AGR-20 M282 L}"] = "{LAU-131x2 - 7 AGR-20 M282 L}",
-    ["{LAU-131x2 - 7 AGR-20 M282 R}"] = "{LAU-131x2 - 7 AGR-20 M282 R}",
-    ["{LAU-131x2 - 7 AGR-20A L}"] = "{LAU-131x2 - 7 AGR-20A L}",
-    ["{LAU-131x2 - 7 AGR-20A R}"] = "{LAU-131x2 - 7 AGR-20A R}",
-    ["{LAU-131x3 - 7 AGR-20 M282}"] = "{LAU-131x3 - 7 AGR-20 M282}",
-    ["{LAU-131x3 - 7 AGR-20A}"] = "{LAU-131x3 - 7 AGR-20A}",
-    ["{LAU-7_AIM-9L_Left}"] = "{LAU-7_AIM-9L_Left}",
-    ["{LAU-7_AIM-9L_Right}"] = "{LAU-7_AIM-9L_Right}",
-    ["{LAU-7_AIM-9M_Left}"] = "{LAU-7_AIM-9M_Left}",
-    ["{LAU-7_AIM-9M_Right}"] = "{LAU-7_AIM-9M_Right}",
-    ["{LAU118_AGM_45A}"] = "{LAU118_AGM_45A}",
-    ["{LAU3_FFAR_MK1HE}"] = "{LAU3_FFAR_MK1HE}",
-    ["{LAU3_FFAR_MK5HEAT}"] = "{LAU3_FFAR_MK5HEAT}",
-    ["{LAU3_FFAR_MK61}"] = "{LAU3_FFAR_MK61}",
-    ["{LAU3_FFAR_WP156}"] = "{LAU3_FFAR_WP156}",
-    ["{LAU68_FFAR_MK1HE}"] = "{LAU68_FFAR_MK1HE}",
-    ["{LAU68_FFAR_MK5HEAT}"] = "{LAU68_FFAR_MK5HEAT}",
-    ["{LAU68_FFAR_MK61}"] = "{LAU68_FFAR_MK61}",
-    ["{LAU68_FFAR_WP156}"] = "{LAU68_FFAR_WP156}",
-    ["{LAU_117A_AGM_65D}"] = "{LAU_117A_AGM_65D}",
-    ["{LAU_117A_AGM_65G}"] = "{LAU_117A_AGM_65G}",
-    ["{LAU_117A_AGM_65H}"] = "{LAU_117A_AGM_65H}",
-    ["{LAU_117A_AGM_65K}"] = "{LAU_117A_AGM_65K}",
-    ["{LAU_117A_CATM_65K}"] = "{LAU_117A_CATM_65K}",
-    ["{LAU_117A_TGM_65D}"] = "{LAU_117A_TGM_65D}",
-    ["{LAU_117A_TGM_65G}"] = "{LAU_117A_TGM_65G}",
-    ["{LAU_117A_TGM_65H}"] = "{LAU_117A_TGM_65H}",
-    ["{LAU_34_AGM_45A_SWA}"] = "{LAU_34_AGM_45A_SWA}",
-    ["{LAU_34_AGM_45A}"] = "{LAU_34_AGM_45A}",
-    ["{LAU_88A_AGM_65Dx3}"] = "{LAU_88A_AGM_65Dx3}",
-    ["{LAU_88A_AGM_65Hx3}"] = "{LAU_88A_AGM_65Hx3}",
-    ["{LAU_88A_AGM_65Kx3}"] = "{LAU_88A_AGM_65Kx3}",
-    ["{LAU_SNEB68G}"] = "{LAU_SNEB68G}",
-    ["{LAU_SNEB68_WP}"] = "{LAU_SNEB68_WP}",
-    ["{LR25_ARF8M3_API}"] = "{LR25_ARF8M3_API}",
-    ["{LR25_ARF8M3_HEI}"] = "{LR25_ARF8M3_HEI}",
-    ["{LR25_ARF8M3_TPSM}"] = "{LR25_ARF8M3_TPSM}",
-    ["{M260_APKWS_M151}"] = "{M260_APKWS_M151}",
-    ["{M260_A_M151_B_M156}"] = "{M260_A_M151_B_M156}",
-    ["{M260_A_M151_B_M257}"] = "{M260_A_M151_B_M257}",
-    ["{M260_A_M151_B_M259}"] = "{M260_A_M151_B_M259}",
-    ["{M260_A_M151_B_M274}"] = "{M260_A_M151_B_M274}",
-    ["{M260_A_M229_B_M156}"] = "{M260_A_M229_B_M156}",
-    ["{M260_A_M229_B_M257}"] = "{M260_A_M229_B_M257}",
-    ["{M260_A_M229_B_M259}"] = "{M260_A_M229_B_M259}",
-    ["{M260_M151}"] = "{M260_M151}",
-    ["{M260_M156}"] = "{M260_M156}",
-    ["{M260_M229}"] = "{M260_M229}",
-    ["{M260_M257}"] = "{M260_M257}",
-    ["{M260_M259}"] = "{M260_M259}",
-    ["{M260_M274}"] = "{M260_M274}",
-    ["{M261_INBOARD_DE_M151_C_M257}"] = "{M261_INBOARD_DE_M151_C_M257}",
-    ["{M261_INBOARD_DE_M151_C_M274}"] = "{M261_INBOARD_DE_M151_C_M274}",
-    ["{M261_M151_M433}"] = "{M261_M151_M433}",
-    ["{M261_M229}"] = "{M261_M229}",
-    ["{M261_M257}"] = "{M261_M257}",
-    ["{M261_M259}"] = "{M261_M259}",
-    ["{M261_M274}"] = "{M261_M274}",
-    ["{M261_M282}"] = "{M261_M282}",
-    ["{M261_OUTBOARD_AB_M151_E_M257}"] = "{M261_OUTBOARD_AB_M151_E_M257}",
-    ["{M261_OUTBOARD_AB_M151_E_M274}"] = "{M261_OUTBOARD_AB_M151_E_M274}",
-    ["{M299_1xAGM_114K_3xAGM_114L_PRT}"] = "{M299_1xAGM_114K_3xAGM_114L_PRT}",
-    ["{M299_1xAGM_114K_3xAGM_114L_STRBRD}"] = "{M299_1xAGM_114K_3xAGM_114L_STRBRD}",
-    ["{M299_1xAGM_114K_OUTBOARD_PORT}"] = "{M299_1xAGM_114K_OUTBOARD_PORT}",
-    ["{M299_1xAGM_114K_OUTBOARD_STARBOARD}"] = "{M299_1xAGM_114K_OUTBOARD_STARBOARD}",
-    ["{M299_1xAGM_114L_OUTBOARD_PORT}"] = "{M299_1xAGM_114L_OUTBOARD_PORT}",
-    ["{M299_1xAGM_114L_OUTBOARD_STARBOARD}"] = "{M299_1xAGM_114L_OUTBOARD_STARBOARD}",
-    ["{M299_2xAGM_114K_2xAGM_114L}"] = "{M299_2xAGM_114K_2xAGM_114L}",
-    ["{M299_2xAGM_114K}"] = "{M299_2xAGM_114K}",
-    ["{M299_2xAGM_114L}"] = "{M299_2xAGM_114L}",
-    ["{M299_3xAGM_114K_1xAGM_114L_PRT}"] = "{M299_3xAGM_114K_1xAGM_114L_PRT}",
-    ["{M299_3xAGM_114K_1xAGM_114L_STRBRD}"] = "{M299_3xAGM_114K_1xAGM_114L_STRBRD}",
-    ["{M299_3xAGM_114K_OUTBOARD_PORT}"] = "{M299_3xAGM_114K_OUTBOARD_PORT}",
-    ["{M299_3xAGM_114K_OUTBOARD_STARBOARD}"] = "{M299_3xAGM_114K_OUTBOARD_STARBOARD}",
-    ["{M299_3xAGM_114L_OUTBOARD_PORT}"] = "{M299_3xAGM_114L_OUTBOARD_PORT}",
-    ["{M299_3xAGM_114L_OUTBOARD_STARBOARD}"] = "{M299_3xAGM_114L_OUTBOARD_STARBOARD}",
-    ["{M299_4xAGM_114L}"] = "{M299_4xAGM_114L}",
-    ["{M299_EMPTY}"] = "{M299_EMPTY}",
-    ["{M2KC_AAF}"] = "{M2KC_AAF}",
-    ["{M2KC_AGF}"] = "{M2KC_AGF}",
-    ["{M2KC_RAFAUT_BLG66}"] = "{M2KC_RAFAUT_BLG66}",
-    ["{M2KC_RAFAUT_GBU12}"] = "{M2KC_RAFAUT_GBU12}",
-    ["{M2KC_RAFAUT_MK82A}"] = "{M2KC_RAFAUT_MK82A}",
-    ["{M2KC_RAFAUT_MK82S}"] = "{M2KC_RAFAUT_MK82S}",
-    ["{M2KC_RAFAUT_MK82}"] = "{M2KC_RAFAUT_MK82}",
-    ["{M2KC_RAFAUT_ROCKEYE}"] = "{M2KC_RAFAUT_ROCKEYE}",
-    ["{M2KC_RAFAUT_SAMP250HD}"] = "{M2KC_RAFAUT_SAMP250HD}",
-    ["{M2KC_RAFAUT_SAMP250LD}"] = "{M2KC_RAFAUT_SAMP250LD}",
-    ["{MAK79_BDU45 3L}"] = "{MAK79_BDU45 3L}",
-    ["{MAK79_BDU45 3R}"] = "{MAK79_BDU45 3R}",
-    ["{MAK79_BDU45 4}"] = "{MAK79_BDU45 4}",
-    ["{MAK79_BDU45B 3L}"] = "{MAK79_BDU45B 3L}",
-    ["{MAK79_BDU45B 3R}"] = "{MAK79_BDU45B 3R}",
-    ["{MAK79_BDU45B 4}"] = "{MAK79_BDU45B 4}",
-    ["{MAK79_CBU99 1L}"] = "{MAK79_CBU99 1L}",
-    ["{MAK79_CBU99 1R}"] = "{MAK79_CBU99 1R}",
-    ["{MAK79_CBU99 2L}"] = "{MAK79_CBU99 2L}",
-    ["{MAK79_CBU99 2R}"] = "{MAK79_CBU99 2R}",
-    ["{MAK79_MK20 1L}"] = "{MAK79_MK20 1L}",
-    ["{MAK79_MK20 1R}"] = "{MAK79_MK20 1R}",
-    ["{MAK79_MK20 2L}"] = "{MAK79_MK20 2L}",
-    ["{MAK79_MK20 2R}"] = "{MAK79_MK20 2R}",
-    ["{MAK79_MK81 3L}"] = "{MAK79_MK81 3L}",
-    ["{MAK79_MK81 3R}"] = "{MAK79_MK81 3R}",
-    ["{MAK79_MK81 4}"] = "{MAK79_MK81 4}",
-    ["{MAK79_MK82 3L}"] = "{MAK79_MK82 3L}",
-    ["{MAK79_MK82 3R}"] = "{MAK79_MK82 3R}",
-    ["{MAK79_MK82 4}"] = "{MAK79_MK82 4}",
-    ["{MAK79_MK82AIR 3L}"] = "{MAK79_MK82AIR 3L}",
-    ["{MAK79_MK82AIR 3R}"] = "{MAK79_MK82AIR 3R}",
-    ["{MAK79_MK82AIR 4}"] = "{MAK79_MK82AIR 4}",
-    ["{MAK79_MK82SE 3L}"] = "{MAK79_MK82SE 3L}",
-    ["{MAK79_MK82SE 3R}"] = "{MAK79_MK82SE 3R}",
-    ["{MAK79_MK82SE 4}"] = "{MAK79_MK82SE 4}",
-    ["{MAK79_MK83 1L}"] = "{MAK79_MK83 1L}",
-    ["{MAK79_MK83 1R}"] = "{MAK79_MK83 1R}",
-    ["{MAK79_MK83 3L}"] = "{MAK79_MK83 3L}",
-    ["{MAK79_MK83 3R}"] = "{MAK79_MK83 3R}",
-    ["{MATRA_F1_SNEBT250}"] = "{MATRA_F1_SNEBT250}",
-    ["{MATRA_F1_SNEBT251}"] = "{MATRA_F1_SNEBT251}",
-    ["{MATRA_F1_SNEBT252}"] = "{MATRA_F1_SNEBT252}",
-    ["{MATRA_F1_SNEBT253}"] = "{MATRA_F1_SNEBT253}",
-    ["{MATRA_F1_SNEBT254_GREEN}"] = "{MATRA_F1_SNEBT254_GREEN}",
-    ["{MATRA_F1_SNEBT254_RED}"] = "{MATRA_F1_SNEBT254_RED}",
-    ["{MATRA_F1_SNEBT254_YELLOW}"] = "{MATRA_F1_SNEBT254_YELLOW}",
-    ["{MATRA_F1_SNEBT256}"] = "{MATRA_F1_SNEBT256}",
-    ["{MATRA_F1_SNEBT257}"] = "{MATRA_F1_SNEBT257}",
-    ["{MATRA_F1_SNEBT259E}"] = "{MATRA_F1_SNEBT259E}",
-    ["{MATRA_F4_SNEBT250}"] = "{MATRA_F4_SNEBT250}",
-    ["{MATRA_F4_SNEBT251}"] = "{MATRA_F4_SNEBT251}",
-    ["{MATRA_F4_SNEBT252}"] = "{MATRA_F4_SNEBT252}",
-    ["{MATRA_F4_SNEBT253}"] = "{MATRA_F4_SNEBT253}",
-    ["{MATRA_F4_SNEBT254_GREEN}"] = "{MATRA_F4_SNEBT254_GREEN}",
-    ["{MATRA_F4_SNEBT254_RED}"] = "{MATRA_F4_SNEBT254_RED}",
-    ["{MATRA_F4_SNEBT254_YELLOW}"] = "{MATRA_F4_SNEBT254_YELLOW}",
-    ["{MATRA_F4_SNEBT256}"] = "{MATRA_F4_SNEBT256}",
-    ["{MATRA_F4_SNEBT257}"] = "{MATRA_F4_SNEBT257}",
-    ["{MATRA_F4_SNEBT259E}"] = "{MATRA_F4_SNEBT259E}",
-    ["{MBD3_U6_3*FAB-250_fwd}"] = "{MBD3_U6_3*FAB-250_fwd}",
-    ["{MBD3_U6_4*FAB-250_fwd}"] = "{MBD3_U6_4*FAB-250_fwd}",
-    ["{MBD3_U6_5*FAB-250}"] = "{MBD3_U6_5*FAB-250}",
-    ["{MIG21_SMOKE_RED}"] = "{MIG21_SMOKE_RED}",
-    ["{MIG21_SMOKE_WHITE}"] = "{MIG21_SMOKE_WHITE}",
-    ["{MPRL_4x_AGM154A}"] = "{MPRL_4x_AGM154A}",
-    ["{MPRL_Mk84AIR}"] = "{MPRL_Mk84AIR}",
-    ["{Matra155RocketPod}"] = "{Matra155RocketPod}",
-    ["{ODAB-500PM}"] = "{ODAB-500PM}",
-    ["{OFAB-100-120-TU}"] = "{OFAB-100-120-TU}",
-    ["{ORO57K_S5M1_HEFRAG}"] = "{ORO57K_S5M1_HEFRAG}",
-    ["{ORO57K_S5MO_HEFRAG}"] = "{ORO57K_S5MO_HEFRAG}",
-    ["{ORO57K_S5M_HEFRAG}"] = "{ORO57K_S5M_HEFRAG}",
-    ["{PHXBRU3242_2*BDU45 LS}"] = "{PHXBRU3242_2*BDU45 LS}",
-    ["{PHXBRU3242_2*BDU45 RS}"] = "{PHXBRU3242_2*BDU45 RS}",
-    ["{PHXBRU3242_2*BDU45B LS}"] = "{PHXBRU3242_2*BDU45B LS}",
-    ["{PHXBRU3242_2*BDU45B RS}"] = "{PHXBRU3242_2*BDU45B RS}",
-    ["{PHXBRU3242_2*CBU99 LS}"] = "{PHXBRU3242_2*CBU99 LS}",
-    ["{PHXBRU3242_2*CBU99 RS}"] = "{PHXBRU3242_2*CBU99 RS}",
-    ["{PHXBRU3242_2*LAU10 LS}"] = "{PHXBRU3242_2*LAU10 LS}",
-    ["{PHXBRU3242_2*LAU10 RS}"] = "{PHXBRU3242_2*LAU10 RS}",
-    ["{PHXBRU3242_2*MK20 LS}"] = "{PHXBRU3242_2*MK20 LS}",
-    ["{PHXBRU3242_2*MK20 RS}"] = "{PHXBRU3242_2*MK20 RS}",
-    ["{PHXBRU3242_2*MK81 LS}"] = "{PHXBRU3242_2*MK81 LS}",
-    ["{PHXBRU3242_2*MK81 RS}"] = "{PHXBRU3242_2*MK81 RS}",
-    ["{PHXBRU3242_2*MK82 LS}"] = "{PHXBRU3242_2*MK82 LS}",
-    ["{PHXBRU3242_2*MK82 RS}"] = "{PHXBRU3242_2*MK82 RS}",
-    ["{PHXBRU3242_2*MK82AIR LS}"] = "{PHXBRU3242_2*MK82AIR LS}",
-    ["{PHXBRU3242_2*MK82AIR RS}"] = "{PHXBRU3242_2*MK82AIR RS}",
-    ["{PHXBRU3242_2*MK82SE LS}"] = "{PHXBRU3242_2*MK82SE LS}",
-    ["{PHXBRU3242_2*MK82SE RS}"] = "{PHXBRU3242_2*MK82SE RS}",
-    ["{PHXBRU3242_BDU33}"] = "{PHXBRU3242_BDU33}",
-    ["{PHXBRU3242_MK83 LS}"] = "{PHXBRU3242_MK83 LS}",
-    ["{PHXBRU3242_MK83 RS}"] = "{PHXBRU3242_MK83 RS}",
-    ["{R-13M1}"] = "{R-13M1}",
-    ["{R-13M}"] = "{R-13M}",
-    ["{R-3R}"] = "{R-3R}",
-    ["{R-3S}"] = "{R-3S}",
-    ["{R-55}"] = "{R-55}",
-    ["{RBK_250_PTAB25M_DUAL_L}"] = "{RBK_250_PTAB25M_DUAL_L}",
-    ["{RBK_500_PTAB105_DUAL_L}"] = "{RBK_500_PTAB105_DUAL_L}",
-    ["{RN-24}"] = "{RN-24}",
-    ["{RN-28}"] = "{RN-28}",
-    ["{RS-2US}"] = "{RS-2US}",
-    ["{S-24A}"] = "{S-24A}",
-    ["{S-24B}"] = "{S-24B}",
-    ["{S25_DUAL_L}"] = "{S25_DUAL_L}",
-    ["{SA342_Mistral_L1}"] = "{SA342_Mistral_L1}",
-    ["{SA342_Mistral_L2}"] = "{SA342_Mistral_L2}",
-    ["{SA342_Mistral_R1}"] = "{SA342_Mistral_R1}",
-    ["{SA342_Mistral_R2}"] = "{SA342_Mistral_R2}",
-    ["{SECBM_3x_GBU38V1}"] = "{SECBM_3x_GBU38V1}",
-    ["{SECBM_3x_GBU54V1}"] = "{SECBM_3x_GBU54V1}",
-    ["{SECBM_6x_GBU38V1}"] = "{SECBM_6x_GBU38V1}",
-    ["{SECBM_6x_GBU54V1}"] = "{SECBM_6x_GBU54V1}",
-    ["{SECBM_CBU103}"] = "{SECBM_CBU103}",
-    ["{SECBM_CBU105}"] = "{SECBM_CBU105}",
-    ["{SHOULDER AIM-7E}"] = "{SHOULDER AIM-7E}",
-    ["{SHOULDER AIM-7F}"] = "{SHOULDER AIM-7F}",
-    ["{SHOULDER AIM-7MH}"] = "{SHOULDER AIM-7MH}",
-    ["{SHOULDER AIM-7M}"] = "{SHOULDER AIM-7M}",
-    ["{SHOULDER AIM-7P}"] = "{SHOULDER AIM-7P}",
-    ["{SHOULDER AIM_54A_Mk47 L}"] = "{SHOULDER AIM_54A_Mk47 L}",
-    ["{SHOULDER AIM_54A_Mk47 R}"] = "{SHOULDER AIM_54A_Mk47 R}",
-    ["{SHOULDER AIM_54A_Mk60 L}"] = "{SHOULDER AIM_54A_Mk60 L}",
-    ["{SHOULDER AIM_54A_Mk60 R}"] = "{SHOULDER AIM_54A_Mk60 R}",
-    ["{SHOULDER AIM_54C_Mk47 L}"] = "{SHOULDER AIM_54C_Mk47 L}",
-    ["{SHOULDER AIM_54C_Mk47 R}"] = "{SHOULDER AIM_54C_Mk47 R}",
-    ["{SHOULDER AIM_54C_Mk60 L}"] = "{SHOULDER AIM_54C_Mk60 L}",
-    ["{SHOULDER AIM_54C_Mk60 R}"] = "{SHOULDER AIM_54C_Mk60 R}",
-    ["{SMOKE_WHITE}"] = "{SMOKE_WHITE}",
-    ["{S_25_O}"] = "{S_25_O}",
-    ["{Schloss500XIIC1_SC_250_T3_J}"] = "{Schloss500XIIC1_SC_250_T3_J}",
-    ["{TELSON8_SNEBT250}"] = "{TELSON8_SNEBT250}",
-    ["{TELSON8_SNEBT251}"] = "{TELSON8_SNEBT251}",
-    ["{TELSON8_SNEBT252}"] = "{TELSON8_SNEBT252}",
-    ["{TELSON8_SNEBT253}"] = "{TELSON8_SNEBT253}",
-    ["{TELSON8_SNEBT254_GREEN}"] = "{TELSON8_SNEBT254_GREEN}",
-    ["{TELSON8_SNEBT254_RED}"] = "{TELSON8_SNEBT254_RED}",
-    ["{TELSON8_SNEBT254_YELLOW}"] = "{TELSON8_SNEBT254_YELLOW}",
-    ["{TELSON8_SNEBT256}"] = "{TELSON8_SNEBT256}",
-    ["{TELSON8_SNEBT257}"] = "{TELSON8_SNEBT257}",
-    ["{TELSON8_SNEBT259E}"] = "{TELSON8_SNEBT259E}",
-    ["{TER_9A_2L*BDU-50LGB}"] = "{TER_9A_2L*BDU-50LGB}",
-    ["{TER_9A_2L*CBU-87}"] = "{TER_9A_2L*CBU-87}",
-    ["{TER_9A_2L*CBU-97}"] = "{TER_9A_2L*CBU-97}",
-    ["{TER_9A_2L*GBU-12}"] = "{TER_9A_2L*GBU-12}",
-    ["{TER_9A_2L*LAU-131_M151}"] = "{TER_9A_2L*LAU-131_M151}",
-    ["{TER_9A_2L*LAU-131_M156}"] = "{TER_9A_2L*LAU-131_M156}",
-    ["{TER_9A_2L*LAU-131_MK5}"] = "{TER_9A_2L*LAU-131_MK5}",
-    ["{TER_9A_2L*LAU-131_MK61}"] = "{TER_9A_2L*LAU-131_MK61}",
-    ["{TER_9A_2L*LAU-131_WTU-1/B}"] = "{TER_9A_2L*LAU-131_WTU-1/B}",
-    ["{TER_9A_2L*LAU-68_M151}"] = "{TER_9A_2L*LAU-68_M151}",
-    ["{TER_9A_2L*LAU-68_M156}"] = "{TER_9A_2L*LAU-68_M156}",
-    ["{TER_9A_2L*LAU-68_MK5}"] = "{TER_9A_2L*LAU-68_MK5}",
-    ["{TER_9A_2L*LAU-68_MK61}"] = "{TER_9A_2L*LAU-68_MK61}",
-    ["{TER_9A_2L*LAU-68_WTU-1/B}"] = "{TER_9A_2L*LAU-68_WTU-1/B}",
-    ["{TER_9A_2L*MK-82AIR}"] = "{TER_9A_2L*MK-82AIR}",
-    ["{TER_9A_2L*MK-82_Snakeye}"] = "{TER_9A_2L*MK-82_Snakeye}",
-    ["{TER_9A_2L*MK-82}"] = "{TER_9A_2L*MK-82}",
-    ["{TER_9A_2R*BDU-50LGB}"] = "{TER_9A_2R*BDU-50LGB}",
-    ["{TER_9A_2R*CBU-87}"] = "{TER_9A_2R*CBU-87}",
-    ["{TER_9A_2R*CBU-97}"] = "{TER_9A_2R*CBU-97}",
-    ["{TER_9A_2R*GBU-12}"] = "{TER_9A_2R*GBU-12}",
-    ["{TER_9A_2R*LAU-131_M151}"] = "{TER_9A_2R*LAU-131_M151}",
-    ["{TER_9A_2R*LAU-131_M156}"] = "{TER_9A_2R*LAU-131_M156}",
-    ["{TER_9A_2R*LAU-131_MK5}"] = "{TER_9A_2R*LAU-131_MK5}",
-    ["{TER_9A_2R*LAU-131_MK61}"] = "{TER_9A_2R*LAU-131_MK61}",
-    ["{TER_9A_2R*LAU-131_WTU-1/B}"] = "{TER_9A_2R*LAU-131_WTU-1/B}",
-    ["{TER_9A_2R*LAU-68_M151}"] = "{TER_9A_2R*LAU-68_M151}",
-    ["{TER_9A_2R*LAU-68_M156}"] = "{TER_9A_2R*LAU-68_M156}",
-    ["{TER_9A_2R*LAU-68_MK5}"] = "{TER_9A_2R*LAU-68_MK5}",
-    ["{TER_9A_2R*LAU-68_MK61}"] = "{TER_9A_2R*LAU-68_MK61}",
-    ["{TER_9A_2R*LAU-68_WTU-1/B}"] = "{TER_9A_2R*LAU-68_WTU-1/B}",
-    ["{TER_9A_2R*MK-82AIR}"] = "{TER_9A_2R*MK-82AIR}",
-    ["{TER_9A_2R*MK-82_Snakeye}"] = "{TER_9A_2R*MK-82_Snakeye}",
-    ["{TER_9A_2R*MK-82}"] = "{TER_9A_2R*MK-82}",
-    ["{TER_9A_3*BDU-50HD}"] = "{TER_9A_3*BDU-50HD}",
-    ["{TER_9A_3*BDU-50LD}"] = "{TER_9A_3*BDU-50LD}",
-    ["{TER_9A_3*CBU-87}"] = "{TER_9A_3*CBU-87}",
-    ["{TER_9A_3*CBU-97}"] = "{TER_9A_3*CBU-97}",
-    ["{TER_9A_3*MK-82AIR}"] = "{TER_9A_3*MK-82AIR}",
-    ["{TER_9A_3*MK-82_Snakeye}"] = "{TER_9A_3*MK-82_Snakeye}",
-    ["{TER_9A_3*MK-82}"] = "{TER_9A_3*MK-82}",
-    ["{TWIN_B13L_5OF}"] = "{TWIN_B13L_5OF}",
-    ["{TWIN_B_8M1_S_8KOM}"] = "{TWIN_B_8M1_S_8KOM}",
-    ["{TWIN_B_8M1_S_8TsM}"] = "{TWIN_B_8M1_S_8TsM}",
-    ["{TWIN_B_8M1_S_8_OFP2}"] = "{TWIN_B_8M1_S_8_OFP2}",
-    ["{TWIN_S25_O}"] = "{TWIN_S25_O}",
-    ["{UB-16-57UMP}"] = "{UB-16-57UMP}",
-    ["{UB-32A-24}"] = "{UB-32A-24}",
-    ["{UB16_S5KP}"] = "{UB16_S5KP}",
-    ["{UB16_S5M}"] = "{UB16_S5M}",
-    ["{UB32A24_S5KP}"] = "{UB32A24_S5KP}",
-    ["{UB32A24_S5M}"] = "{UB32A24_S5M}",
-    ["{UB32A_S5KP}"] = "{UB32A_S5KP}",
-    ["{UB32A_S5M}"] = "{UB32A_S5M}",
-    ["{US_M10_SMOKE_TANK_BLUE}"] = "{US_M10_SMOKE_TANK_BLUE}",
-    ["{US_M10_SMOKE_TANK_GREEN}"] = "{US_M10_SMOKE_TANK_GREEN}",
-    ["{US_M10_SMOKE_TANK_ORANGE}"] = "{US_M10_SMOKE_TANK_ORANGE}",
-    ["{US_M10_SMOKE_TANK_RED}"] = "{US_M10_SMOKE_TANK_RED}",
-    ["{US_M10_SMOKE_TANK_WHITE}"] = "{US_M10_SMOKE_TANK_WHITE}",
-    ["{US_M10_SMOKE_TANK_YELLOW}"] = "{US_M10_SMOKE_TANK_YELLOW}",
-    ["{WGr21}"] = "{WGr21}",
-}
--- End : CTLD_DCSWeaponsDb.lua 
--- ==================================================================================================== 
--- Start : dcsObjectsDescDb.lua 
--- DcsObjectsDescDb.lua
--- Database of DCS objects descriptions for CTLD object spawning
-----------------------------------------------------------------
-ctld.objectsDescDb = {}
-ctld.objectsDescDb["FARP"] = {
-    desc =
-        function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-            return {
-                groupType = "STATIC",
-                shape_name = "FARPS",
-                type = "FARP",
-                name = "FARP", -- groupName Prefix
-                category = "Heliports",
-                countryId = countryId,
-                x = x,
-                y = y, --vec3.z
-                task = "Ground Nothing",
-                skill = "High",
-                start_time = 0,                  -- If 0 the group will spawn immediately
-                transportable = { randomTransportable = false },
-                heading = headingInRadians or 0, -- In Radians
-                heliport_frequency = "127.5",
-                heliport_callsign_id = 1,
-                heliport_modulation = 0,
-            } -- groupData
-        end
-}
------------------------------------------------------------
-ctld.objectsDescDb["SINGLE_HELIPAD"] = {
-    desc =
-        function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-            return {
-                groupType = "STATIC",
-                name = "SINGLE_HELIPAD", -- groupName Prefix
-                category = "Heliports",
-                countryId = countryId,
-                x = x,
-                y = y, -- vec3.z
-                task = "Ground Nothing",
-                skill = "High",
-                start_time = 0, -- If 0 the group will spawn immediately
-                shape_name = "FARP",
-                type = "SINGLE_HELIPAD",
-                unitName = "SINGLE_HELIPAD_Unit", -- unitNamePrefix
-                transportable = { randomTransportable = false },
-                heading = headingInRadians or 0,  -- In Radians
-                heliport_frequency = "127.5",
-                heliport_callsign_id = 1,
-                heliport_modulation = 0,
-            } -- groupData
-        end
-}
------------------------------------------------------------
-ctld.objectsDescDb["Farp_FG_Petit_Helipad"] = {
-    desc =
-        function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- specific mod !
-            return {
-                groupType = "STATIC",
-                shape_name = "Farp_FG_Petit_Helipad.edm",
-                type = "Farp_FG_Petit_Helipad",
-                name = "FARP_Helipad", -- groupName Prefix
-                category = "Heliports",
-                countryId = countryId,
-                x = x,
-                y = y, -- vec3.z
-                task = "Ground Nothing",
-                skill = "High",
-                start_time = 0,                  -- If 0 the group will spawn immediately
-                transportable = { randomTransportable = false },
-                heading = headingInRadians or 0, -- In Radians
-                heliport_frequency = "127.5",
-                heliport_callsign_id = 1,
-                heliport_modulation = 0,
-            } -- groupData
-        end
-}
------------------------------------------------------------
-ctld.objectsDescDb["FARP_Tent"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        return {
-            groupType = "STATIC",
-            name = "FARP_Tent", -- groupName Prefix
-            category = Object.Category.STATIC,
-            countryId = countryId,
-            x = x,
-            y = y,          -- vec3.z
-            task = "Ground Nothing",
-            start_time = 0, -- If 0 the group will spawn immediately
-            skill = "High",
-            type = "FARP Tent",
-            transportable = { randomTransportable = false },
-            heading = headingInRadians or 0, -- In Radians
-        }                                    -- groupData
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["FARP_Ammo_Storage"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        return {
-            groupType = "STATIC",
-            name = "FARP_Ammo_Storage", -- groupName Prefix
-            category = Object.Category.STATIC,
-            countryId = countryId,
-            x = x,
-            y = y,          --vec3.z
-            task = "Ground Nothing",
-            start_time = 0, -- If 0 the group will spawn immediately
-            skill = "High",
-            type = "FARP Ammo Dump Coating",
-            transportable = { randomTransportable = false },
-            heading = headingInRadians or 0, -- In Radians
-        }                                    -- groupData
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["barrels_cargo"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        return {
-            groupType = "STATIC",
-            name = "barrels_cargo", -- groupName Prefix
-            category = "Cargos",
-            countryId = countryId,
-            x = x,
-            y = y,          --vec3.z
-            task = "Ground Nothing",
-            start_time = 0, -- If 0 the group will spawn immediately
-            skill = "High",
-            rate = 100,
-            type = "barrels_cargo",
-            shape_name = "barrels_cargo",
-            transportable = { randomTransportable = false },
-            heading = headingInRadians or 0, -- In Radians
-        }                                    -- groupData
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["ammo_cargo"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        return {
-            groupType = "STATIC",
-            name = "ammo_box_cargo", -- groupName Prefix
-            category = "Cargos",
-            countryId = countryId,
-            x = x,
-            y = y,          --vec3.z
-            task = "Ground Nothing",
-            start_time = 0, -- If 0 the group will spawn immediately
-            skill = "High",
-            rate = 1,
-            type = "ammo_cargo",
-            shape_name = "ammo_box_cargo",
-            transportable = { randomTransportable = false },
-            heading = headingInRadians or 0, -- In Radians
-        }                                    -- groupData
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["Cargo06"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        return {
-            groupType = "STATIC",
-            name = "ammo_box06", -- groupName Prefix
-            category = "Cargos",
-            countryId = countryId,
-            x = x,
-            y = y,          --vec3.z
-            task = "Ground Nothing",
-            start_time = 0, -- If 0 the group will spawn immediately
-            skill = "High",
-            rate = 1,
-            type = "Cargo06",
-            shape_name = "M92_Cargo06",
-            transportable = { randomTransportable = false },
-            heading = headingInRadians or 0, -- In Radians
-        }                                    -- groupData
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["us carrier shooter"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        return {
-            groupType     = "STATIC",
-            name          = "carrier_shooter", -- groupName Prefix
-            category      = "Personnel",
-            countryId     = countryId,
-            x             = x,
-            y             = y, --vec3.z
-            task          = "Ground Nothing",
-            start_time    = 0, -- If 0 the group will spawn immediately
-            skill         = "High",
-            rate          = 20,
-            type          = "us carrier shooter",
-            shape_name    = "carrier_shooter",
-            livery_id     = "blue",
-            transportable = { randomTransportable = false },
-            heading       = headingInRadians or 0, -- In Radians
-        }                                          -- groupData
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["Tower Crane"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        return {
-            groupType     = "STATIC",
-            name          = "TowerCrane", -- groupName Prefix
-            category      = "Fortifications",
-            countryId     = countryId,
-            x             = x,
-            y             = y, --vec3.z
-            task          = "Ground Nothing",
-            start_time    = 0, -- If 0 the group will spawn immediately
-            rate          = 100,
-            type          = "Tower Crane",
-            shape_name    = "TowerCrane_01",
-            transportable = { randomTransportable = false },
-            heading       = headingInRadians or 0, -- In Radians
-        }                                          -- groupData
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["NF-2_LightOn"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        return {
-            groupType     = "STATIC",
-            name          = "LightOn", -- groupName Prefix
-            category      = "Fortifications",
-            countryId     = countryId,
-            x             = x,
-            y             = y, --vec3.z
-            task          = "Ground Nothing",
-            start_time    = 0, -- If 0 the group will spawn immediately
-            rate          = 100,
-            type          = "NF-2_LightOn",
-            shape_name    = "M92_NF-2_LightOn",
-            transportable = { randomTransportable = false },
-            heading       = headingInRadians or 0, -- In Radians
-        }                                          -- groupData
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["Windsock"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        return {
-            groupType     = "STATIC",
-            name          = "Windsock", -- groupName Prefix
-            category      = "Fortifications",
-            countryId     = countryId,
-            x             = x,
-            y             = y, --vec3.z
-            task          = "Ground Nothing",
-            start_time    = 0, -- If 0 the group will spawn immediately
-            rate          = 3,
-            type          = "Windsock",
-            shape_name    = "H-Windsock_RW",
-            transportable = { randomTransportable = false },
-            heading       = headingInRadians or 0, -- In Radians
-        }                                          -- groupData
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["Fuel_Truck"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        local unitType = "M978 HEMTT Tanker"                                          -- by default blueSide
-        if coalitionId == coalition.side.RED then
-            unitType = "ATZ-10"
-        end
-
-        return {
-            groupType = "GROUND",
-            name = "Fuel_Truck_Grp",         -- groupName Prefixes},
-            category = Unit.Category["GROUND_UNIT"],
-            coalitionId = coalitionId,
-            countryId = countryId,
-            hidden = false,
-            task = "Ground Nothing",
-            visible = false,
-            tasks = {},
-            startTime = 0,
-            start_time = 0,         -- If 0 the group will spawn immediately
-            units = {
-                [1] = {
-                    type = unitType,                  -- DCS typeName
-                    category = Unit.Category["GROUND_UNIT"],
-                    name = "Fuel_Truck_Unit",         -- unitNamePrefix
-                    transportable = { randomTransportable = false },
-                    skill = "High",
-                    playerCanDrive = false,
-                    x = x,
-                    y = y,                                   -- vec3.z
-                    heading = headingInRadians or 0,         -- In Radians
-                }
-            }
-        }
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["repare_Truck"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        local unitType = "M 818"                                                      -- by default blueSide
-        if coalitionId == coalition.side.RED then
-            unitType = "Ural-375"
-        end
-
-        return {
-            groupType = "GROUND",
-            name = "repare_Truck_Grp", -- groupName Prefixes},
-            category = Unit.Category["GROUND_UNIT"],
-            visible = false,
-            --coalition = "blue",
-            coalitionId = coalitionId,
-            countryId = countryId,
-            hidden = false,
-            task = "Ground Nothing",
-            visible = false,
-            tasks = {},
-            startTime = 0,
-            start_time = 0, -- If 0 the group will spawn immediately
-            units = {
-                [1] = {
-                    type = unitType,            -- DCS typeName
-                    category = Unit.Category["GROUND_UNIT"],
-                    name = "repare_Truck_Unit", -- unitNamePrefix
-                    transportable = { randomTransportable = false },
-                    skill = "High",
-                    playerCanDrive = false,
-                    x = x,
-                    y = y,                           -- vec3.z
-                    heading = headingInRadians or 0, -- In Radians
-                }
-            }
-        }
-    end
-}
---------------------------------------------------------
-ctld.objectsDescDb["FARP_Security_Guard"] = {
-    desc = function(coalitionId, countryId, x, y, headingInRadians, altitudeInMeters) -- DCS standard object
-        local unitType = "Soldier M4"                                                 -- by default blueSide
-        if coalitionId == coalition.side.RED then
-            unitType = "Infantry AK"
-        end
-
-        return {
-            groupType = "GROUND",
-            name = "FARP_Guard_Grp", -- groupName Prefixes},
-            category = Unit.Category["GROUND_UNIT"],
-            visible = false,
-            --coalition = "blue",
-            coalitionId = coalitionId,
-            countryId = countryId,
-            hidden = false,
-            task = "Ground Nothing",
-            visible = false,
-            tasks = {},
-            startTime = 0,
-            start_time = 0, -- If 0 the group will spawn immediately
-            units = {
-                { name = "Guard_Infantry", type = unitType, x = x,     y = y,     alt = altitudeInMeters, heading = headingInRadians or 0,                       playerCanDrive = false, skill = "High" },
-                { name = "Guard_Infantry", type = unitType, x = x + 3, y = y + 1, alt = altitudeInMeters, heading = headingInRadians + 0.610865 or 0 + 0.610865, playerCanDrive = false, skill = "High" }, --headingInRadians+0,610865 or 0+0,610865
-                { name = "Guard_Infantry", type = unitType, x = x + 6, y = y,     alt = altitudeInMeters, heading = headingInRadians + 3.49066 or 0 + 3.49066,   playerCanDrive = false, skill = "High" }, --heading = headingInRadians+3.49066 or 0+3.49066
-            }
-        }
-    end
-}
-
---[[ ---- TEST -----------------------------------------------------
-function ctld.spwanObject(coalitionId, objectKey, countryId, x, y, headinInRadians, altitudeInMeters)
-    if objectKey and countryId and x and y then
-        local groupData = ctld.objectsDescDb[objectKey].desc(coalitionId, countryId, x or 0, y or 0, headinInRadians or 0,
-            altitudeInMeters or 0)
-
-        groupData.groupId = ctld.Utils.getNextUniqId()
-        groupData.name = groupData.name .. '-' .. tostring(groupData.groupId)
-
-        local success, obj = ""
-        if string.upper(groupData.groupType) == "STATIC" then
-            success, obj = pcall(coalition.addStaticObject, countryId, groupData)
-        else -- non-STATIC
-            if groupData.units then
-                for i, v in ipairs(groupData.units) do
-                    groupData.units[i].unitId = ctld.Utils.getNextUniqId()
-                    groupData.units[i].name = groupData.units[i].name .. '-' .. tostring(groupData.units[i].unitId)
-                end
-            end
-            ms("spawnObject():Pass...1 groupData = " .. mist.utils.tableShow(groupData))
-            success, obj = pcall(coalition.addGroup, countryId, groupData.category, groupData)
-        end
-
-        if not success then
-            if trigger and trigger.action and trigger.action.outText then
-                trigger.action.outText(
-                    "spwanObject()" .. objectKey .. " Deployment: Failed to spawn Object " ..
-                    groupData.name .. ". Error: " .. tostring(obj), 15)
-            end
-            if env and env.error then env.error("coalition.addStaticObject failed: " .. tostring(obj)) end
-            return false
-        else
-            return obj
-        end
-    else
+local function logError(msg)
+    local ok, err = pcall(function()
         if trigger and trigger.action and trigger.action.outText then
-            trigger.action.outText(
-                "spwanObject() Deployment: Failed to spawn object. Missing parameters.", 15)
-        end
-    end
-end ]]
-
---[[ ---------------------------------------------------
-local heliName = "h1-1"
-local oHeli = Unit.getByName(heliName)
-local heliPoint = oHeli:getPoint()
-local heliCoalition = oHeli:getCoalition()
-local heliHeadingInRadians = mist.getHeading(oHeli, false) -- rawHeading
-local heliHeadingInDegrees = math.deg(heliHeadingInRadians)
-
---local obj = ctld.spwanObject(heliCoalition, "FARP", 2, heliPoint.x - 200, heliPoint.z, heliHeadingInRadians, 100)
---local obj = ctld.spwanObject(heliCoalition, "SINGLE_HELIPAD", 2, heliPoint.x - 400, heliPoint.z, heliHeadingInRadians, 100)
---local obj = ctld.spwanObject(heliCoalition, "Farp_FG_Petit_Helipad", 2, heliPoint.x - 800, heliPoint.z, heliHeadingInRadians, 100)
---local obj = ctld.spwanObject(heliCoalition, "FARP_Tent", 2, heliPoint.x - 40, heliPoint.z, heliHeadingInRadians, 100)
---local obj = ctld.spwanObject(heliCoalition, "FARP_Ammo_Storage", 2, heliPoint.x - 50, heliPoint.z, heliHeadingInRadians, 100)
---local obj = ctld.spwanObject(heliCoalition, "Fuel_Truck", 2, heliPoint.x - 60, heliPoint.z + 50, heliHeadingInRadians, 100)
-local obj = ctld.spwanObject(heliCoalition, "FARP_Security_Guard", 2, heliPoint.x - 60, heliPoint.z + 50,
-    heliHeadingInRadians, 100)
-
-return mist.utils.tableShow(obj)
- ]]
--- End : dcsObjectsDescDb.lua 
--- ==================================================================================================== 
--- Start : CTLD_Scene.lua 
--- ====================================================================================================
--- CLASSE ctld.Scene
--- ====================================================================================================
-
-local Scene = {}
-ctld.Scene = Scene
-
-Scene.__index = Scene
-Scene.Counter = 0
-Scene.SceneModels = {}
-Scene.Scenes = {}
-
-function Scene.getNextSceneNumber()
-    Scene.Counter = Scene.Counter + 1
-    return Scene.Counter
-end
-
-function Scene.getByName(name)
-    if Scene.Scenes[name] then
-        return Scene.Scenes[name]
-    end
-    return nil
-end
-
-function Scene.getScenesList()
-    return Scene.Scenes
-end
-
---- @function Scene:playScene registerScenModel
--- register a scene model defined by sceneTable into Scene.SceneModels
--- @param sceneTable complete scene datas (name, stepsDatas, etc.).
-function Scene.registerSceneModel(sceneTable)
-    if sceneTable.name and sceneTable.name ~= "" and Scene.SceneModels[sceneTable.name] == nil then
-        Scene.SceneModels[sceneTable.name] = sceneTable
-        return true
-    else
-        return false
-    end
-end
-
---- @function Scene:playScene
--- create a scene defined by sceneTable and add steps to scene sequencer
--- @param triggerUnitObj  unit object who trigged the scene
--- @param sceneTable complete scene datas (name, stepsDatas, etc.).
-function Scene.playScene(triggerUnitObj, sceneTable)
-    if triggerUnitObj == nil then
-        trigger.action.outText(ctld.i18n_translate("CTLD_Scene.lua/Scene.playScene - ERROR: Can't find triggerUnitObj"),
-            10)
-        return
-    end
-
-    local triggerUnitName = triggerUnitObj:getName()
-    local heliPoint = triggerUnitObj:getPoint()
-    local heliHeadingInRadians = ctld.Utils.getHeadingInRadians(triggerUnitObj)
-    local scn = ctld.Scene:new(sceneTable.name, triggerUnitObj) --:createScene()
-    scn:addStepToScene(sceneTable.stepsDatas)
-    scn:executeScene(triggerUnitObj)
-    return scn
-end
-
-function Scene:new(name, triggerUnitObj)
-    local newScene = {}
-    setmetatable(newScene, Scene)
-    if name and name ~= "" and Scene.Scenes[name] == nil then
-        newScene.name = name
-    else
-        newScene.name = string.format("CTLD Scene #%d", Scene.getNextSceneNumber())
-    end
-    newScene.steps = {}
-    newScene.isRunning = false
-    newScene.currentStepIndex = 1
-    newScene.basePosition = nil
-    newScene.baseHeading = 0 -- Nouveau champ pour le cap de l'appareil déclencheur
-    newScene.triggerUnitObj = triggerUnitObj
-    newScene.spawnedGroupObjects = {}
-    Scene.Scenes[name] = newScene
-    return newScene
-end
-
-function Scene:addSpwanedGroup(triggerUnitObj, spawnedGroupObjects)
-    self.triggerUnitObj = triggerUnitObj
-    self.spawnedGroupObjects[#self.spawnedGroupObjects + 1] = spawnedGroupObjects
-    return true
-end
-
---- @function Scene:addStepToScene
--- Add steps to scene sequencer
--- @param stepsTable  complete steps datas (groupData, type, polar, etc.).
-function Scene:addStepToScene(stepsTable)
-    if type(stepsTable) ~= 'table' then -- control
-        return self
-    end
-
-    for i, v in ipairs(stepsTable) do
-        table.insert(self.steps, v)
-    end
-    return self
-end
-
---- @function Scene:executeScene
--- start the scene execution
--- @param triggerUnitObj unit object that trigger the scene
-function Scene:executeScene(triggerUnitObj)
-    self.triggerUnitObj = triggerUnitObj
-    self.refVec3Point = triggerUnitObj:getPoint() -- vec3
-    self.refHeadingInRadians = ctld.Utils.getHeadingInRadians(triggerUnitObj)
-    self.isRunning = true
-    self.currentStepIndex = 0
-    self.timeProgressMarker = 0
-
-    -- Set up the timer for the 1st step based on delayAfterPreviousStep
-    self.timeProgressMarker = timer.getTime() + (tonumber(self.steps[1].delayAfterPreviousStep) or 0)
-
-    if self.timeProgressMarker > timer.getTime() then
-        local function bound_runNextStep()
-            self:runNextStep()
-        end
-        timer.scheduleFunction(bound_runNextStep, nil, self.timeProgressMarker)
-    else
-        self:runNextStep()
-    end
-end
-
---===================================================================================================
-function Scene:runNextStep()
-    self.currentStepIndex = self.currentStepIndex + 1 -- next step to execute
-
-    -- run current step
-    local step = self.steps[self.currentStepIndex]
-    local refHeadingInRadians = self.refHeadingInRadians
-
-    if step.objectsDescDbKey then
-        if step.polar and step.polar.distance ~= nil then
-            local relativedistance = step.polar.distance or 0
-            local relativeAngle = step.polar.angle or 0
-            local relativeHeadingInDegrees = step.relativeHeadingInDegrees or 0
-            local relativeAltitudeInMeters = step.relativeAltitudeInMeters or 0
-            local magneticDeclinationInDegrees = ctld.Utils.getMagneticDeclination()
-            local coalitionId = self.triggerUnitObj:getCoalition()
-            local countryId = self.triggerUnitObj:getCountry()
-
-            local x, y, magneticHeadingInDegrees, altitude = ctld.Utils.getRelativeCoords(self.refVec3Point.x,
-                self.refVec3Point.z,
-                refHeadingInRadians,
-                self.refVec3Point.y,
-                relativeAngle,
-                relativedistance,
-                relativeHeadingInDegrees,
-                relativeAltitudeInMeters,
-                magneticDeclinationInDegrees)
-
-            --Scene:spwanObject(coalitionId, objectKey, countryId, x, y, headinInRadians, altitudeInMeters)
-            local ok, success, spawnedObj = pcall(self.spwanObject, self, coalitionId, step.objectsDescDbKey, countryId,
-                x, y,
-                math.rad(magneticHeadingInDegrees), altitude)
-            if not ok then
-                --env.info("Runtime error: " .. tostring(success)) -- success = message d’erreur
-                local errorMsg = string.format("ctld.Scene:runNextStep() ERROR: Failed to spawn step %d. Reason: %s",
-                    self.currentStepIndex, step.objectsDescDbKey or "N/A", success)
-                trigger.action.outText(errorMsg, 20)
-                return nil
-            elseif success then
-                -- ms("Scene:runNextStep().step.objectsDescDbKey.success ok ")
-                -- env.info("Object nb spawned: " .. tostring(#spawnedObj))
-                -- ms("Scene:runNextStep().step.objectsDescDbKey: spawnedObj = " .. mist.utils.tableShow(spawnedObj))
-                if step.func then
-                    -- Gère les fonctions personnalisées
-                    local okFunc, successFunc, spawnedObjFunc = pcall(step.func, self.triggerUnitObj, spawnedObj, step)
-                    if not okFunc then
-                        --env.info("Runtime error: " .. tostring(successFunc)) -- success = message d’erreur
-                        local errorMsg = string.format(
-                            "CTLD ERROR: Failed to execute function for step %d. Reason: %s",
-                            self.currentStepIndex, successFunc)
-                        if trigger and trigger.action and trigger.action.outText then
-                            trigger.action.outText(errorMsg, 20)
-                        end
-                        return false, nil
-                    elseif successFunc then
-                        --ms("Logic successFunc: " .. tostring(spawnedObjFunc))
-                    else
-                        --ms("Logic failure: " .. tostring(spawnedObjFunc))
-                        return "Logic failure: " .. tostring(spawnedObjFunc)
-                    end
-                end
-            else
-                --ms("Logic failure: " .. tostring(spawnedObj))
-                return "Logic failure: " .. tostring(spawnedObj)
-            end
-        end
-    elseif step.func then
-        -- Gère les fonctions personnalisées
-        local ok, success, spawnedObj = pcall(step.func, self.triggerUnitObj, nil, step)
-        if not ok then
-            --ms("Scene:runNextStep().step.func: not ok ")
-            --env.info("Runtime error: " .. tostring(success)) -- success = message d’erreur
-            local errorMsg = string.format("CTLD ERROR: Failed to execute function for step %d. Reason: %s",
-                self.currentStepIndex, success)
-            if trigger and trigger.action and trigger.action.outText then
-                trigger.action.outText(errorMsg, 20)
-            end
-            return false, nil
-        elseif success then
-            --ms("Logic successFunc: " .. tostring(spawnedObjFunc))
+            trigger.action.outText(msg, 15)
         else
-            --ms("Logic failure: " .. tostring(spawnedObj))
-            return "Logic failure: " .. tostring(spawnedObj)
+            print(msg)
         end
-    end
-
-    if self.steps[self.currentStepIndex + 1] then
-        local nextStep = self.steps[self.currentStepIndex + 1]
-        self.timeProgressMarker = self.timeProgressMarker + (tonumber(step.delayAfterPreviousStep) or 0)
-        if self.timeProgressMarker > timer.getTime() then
-            -- We use an anonymous function to securely capture 'self' (the instance)
-            -- and ensure that the call self:runNextStep() is executed after the required delay.
-            local function bound_runNextStep()
-                self:runNextStep()
-            end
-            timer.scheduleFunction(bound_runNextStep, nil, self.timeProgressMarker)
-        else
-            self:runNextStep()
-        end
-    else --if self.currentStepIndex + 1 > #self.steps then
-        self.isRunning = false
-        if env and env.info then env.info(string.format("CTLD.SCENE: Execution of %s finished.", self.name)) end
-        return
-    end
+        if env and env.info then env.info(msg) end
+    end)
 end
 
---- @function Scene:spawnObject
-function Scene:spwanObject(coalitionId, objectKey, countryId, x, y, headinInRadians, altitudeInMeters)
-    if objectKey and countryId and x and y then
-        local groupData = ctld.objectsDescDb[objectKey].desc(coalitionId, countryId, x or 0, y or 0, headinInRadians or 0,
-            altitudeInMeters or 0)
-        groupData.groupId = ctld.Utils.getNextUniqId()
-        groupData.name = groupData.name .. '-' .. tostring(groupData.groupId)
-        --ms("Scene:spwanObject():groupData = " .. mist.utils.tableShow(groupData))
-
-        local success, spawnedObj = ""
-        if string.upper(groupData.groupType) == "STATIC" then
-            success, spawnedObj = pcall(coalition.addStaticObject, countryId, groupData)
-        else -- non-STATIC
-            if groupData.units then
-                for i, v in ipairs(groupData.units) do
-                    groupData.units[i].unitId = ctld.Utils.getNextUniqId()
-                    groupData.units[i].name = groupData.units[i].name .. '-' .. tostring(groupData.units[i].unitId)
-                end
-            end
-            success, spawnedObj = pcall(coalition.addGroup, countryId, groupData.category, groupData)
-        end
-
-        if not success then
-            trigger.action.outText(
-                "spwanObject()" .. objectKey .. " Deployment: Failed to spawn Object " ..
-                groupData.name .. ". Error: " .. tostring(spawnedObj), 15)
-            return false, nil
-        else
-            self:addSpwanedGroup(self.triggerUnitObj, spawnedObj) -- store  spwaned object table
-            return true, spawnedObj
-        end
-    else
-        if trigger and trigger.action and trigger.action.outText then
-            trigger.action.outText(
-                "spwanObject() Deployment: Failed to spawn object. Missing parameters.", 15)
-        end
+CTLD_extAPI.DBs = CTLD_extAPI.DBs or {}
+CTLD_extAPI.DBs.humansByName = (framework.DBs.humansByName) or nil
+CTLD_extAPI.DBs.unitsById = (framework.DBs.unitsById) or nil
+CTLD_extAPI.DBs.unitsByName = (framework.DBs.unitsByName) or nil
+CTLD_extAPI.dynAdd = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for dynAdd. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
     end
+    local target = framework.dynAdd
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: dynAdd (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: dynAdd (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
 end
 
---===================================================================================================
-if false then
-    ---------------------------------------------------
-    --- Testing the FARP Deployment Scene
-    --- ---------------------------------------------------
-    if false then
-        local heliName = "h1-1"
-        local triggerUnitObj = Unit.getByName(heliName)
-        ctld.Scene.playScene(Unit.getByName(heliName), ctld.Scene.SceneModels["FARP Alpha"])
-        return ctld.lmsg
+CTLD_extAPI.dynAddStatic = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for dynAddStatic. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
     end
-    if false then
-        local heliName = "h1-1"
-        local heliName = "h2-1"
-        local triggerUnitObj = Unit.getByName(heliName)
-        ctld.Scene.playScene(Unit.getByName(heliName), ctld.Scene.SceneModels["FARP Alpha"])
-        return ctld.lmsg
-    else
-        ---------------------------------------------------------------------------------
-        local ware = {}
-        if false then
-            local s = StaticObject.getByName("ammo_box_cargo-14")
-            ware = Warehouse.getCargoAsWarehouse(s)
-        else
-            local ab = StaticObject.getByName("SINGLE_HELIPAD-1")
-            ware = ab:getWarehouse()
-        end
-
-
-        ware:setItem({ 4, 6, 10, 160 }, 20) --_G["launcher"]["M134_L"] = {CLSID = "M134_L",
-
-        ware:setItem("M134_L", 20)          -- launcher Minigun: name = "M134_L", _unique_resource_name = "weapons.gunmounts.M134_R",
-        ware:setItem("M134_7_62_T", 10000)  -- _unique_resource_name = "weapons.shells.M134_7_62_T",name = "M134_7_62_T",
-
-        ware:setItem("launcher.M134_L", 5)
-        ware:setItem("gunmounts.M134_L", 20)      -- launcher Minigun: name = "M134_L", _unique_resource_name = "weapons.gunmounts.M134_L",
-        ware:setItem("shells.M134_7_62_T", 10000) -- _unique_resource_name = "weapons.shells.M134_7_62_T",name = "M134_7_62_T",
-
-
-        ware:setItem("weapons.launcher.M134_L", 5)
-        ware:setItem("weapons.gunmounts.M134_L", 20)      -- launcher Minigun: name = "M134_L", _unique_resource_name = "weapons.gunmounts.M134_L",
-        ware:setItem("weapons.shells.M134_7_62_T", 10000) -- _unique_resource_name = "weapons.shells.M134_7_62_T",name = "M134_7_62_T",
-
-        -- roquettes ----------------------
-        ware:setItem("weapons.launcher.XM158_M151", 20) --_G["launcher"]["XM158_M151"] = {CLSID = "XM158_M151",
-        ware:setItem("weapons.launcher.XM158_M151", 20) --_G["launcher"]["XM158_M151"] = {CLSID = "XM158_M151",
-
-        ware:setItem("weapons.containers.ab-212_cargo", 20)
-        ware:setItem("weapons.adapters.lau-88", 20)
-        ------------------------------------------
-        ware:setItem("weapons.shells.HYDRA_70_M151", 20) -- Charger 20 pods M151
-        ware:setItem("weapons.shells.HYDRA_70_M156", 20) -- Charger 20 pods M156
-        ware:setItem("weapons.shells.HYDRA_70_M274", 20)
-        ware:setItem("weapons.shells.HYDRA_70_M257", 20)
-
-        return ware:getInventory()
+    local target = framework.dynAddStatic
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: dynAddStatic (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
     end
-end
--- End : CTLD_Scene.lua 
--- ==================================================================================================== 
--- Start : farpSceneDatas.lua 
--- ====================================================================================================
--- scene datas for farp deployment:
--- ====================================================================================================
-------- Dictionary-------------------------------------------------------------
-ctld.i18n["en"]["--- FARP Dynamic Deployment by %1 : Complete! ---"] = ""
-ctld.i18n["fr"]["--- FARP Dynamic Deployment by %1 : Complete! ---"] = "--- Deploiement du FARP par %1 : Terminé! ---"
-ctld.i18n["es"]["--- FARP Dynamic Deployment by %1 : Complete! ---"] =
-"--- Implementación de FARP por %1: ¡Completada! ---"
--------------------------------------------------------------------------------
-local farpScene = {}
-farpScene.name = "FARP Alpha"
-farpScene.stepsDatas = {
-    -- Étape 1: FARP Principal (STATIC)
-    {
-        polar = { distance = 100, angle = 0 },
-        delayAfterPreviousStep = 0,
-        relativeHeadingInDegrees = 180,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "SINGLE_HELIPAD", -- key for ctld.objectsDescDb table
-        -- local script to run after spawning this step
-        -- @params: triggerUnitObj - the unit that triggered the sceneTable
-        --          spwanedObject - the object that was just spawned in this step ( here the FARP helipad)
-        --          stepDatas - the datas of this step
-        func = function(triggerUnitObj, spwanedObject, stepDatas) -- spwanedObject is the object that was just spawned in this step ( here the FARP helipad)
-            local farpName = spwanedObject:getName()
-            if Airbase.getByName(farpName) then
-                local w = Airbase.getByName(farpName):getWarehouse()
-                --Warehouse.addLiquid(class self , number liquidType , number count )
-                w:addLiquid(0, 10000) --0    : jetfuel
-                w:addLiquid(1, 10000) --1    : Aviation gasoline
-                w:addLiquid(2, 10000) --2    : MW50
-                w:addLiquid(3, 10000) --3    : Diesel
-
-                -- warehouse addAmmo ( number ammoType , number count )
-                --Warehouse.setItem(class self , string/table itemName/wsType , number count )
-                --[[
-                local w = Airbase.getByName("SINGLE_HELIPAD-1"):getWarehouse()
-                --for k,v in pairs(ctld.WeaponsDb) do
-                    --Warehouse.setItem(class self , string/table itemName/wsType , number count )
-                    --w:setItem("250-2 - 250kg GP Bombs HD", 500)
-                    --w:setItem({ 4, 5, 9, "Redacted" }, 500)
-                    --w:setItem({4, 4, 8,"Redacted",}, 500)
-                    --w:setItem("weapons.missiles.AIM_54C_Mk47", 500)
-                    --w:setItem("weapons.bombs.Type_200A", 500)
-
-                w:setItem("weapons.launcher.M134_R", 00)   			-- miniGun UH   KO
-                    --w:setItem("M134_R", 500)   							-- miniGun UH   KO
-                    --w:setItem("M134 - 6 x 7.62mm MiniGun right", 500)   	-- miniGun UH   KO
-                    --w:setItem({4, 15, 46,"Redacted"}, 500)   				-- miniGun UH   KO
-                    --w:setItem("AB-212_m134_r", 500)   				-- miniGun UH   KO
-                    --w:setItem({4, 6, 10 }, 500)   				-- miniGun UH   KO
-                    --w:setItem("weapons.launcher.{SHOULDER AIM_54C_Mk47 L}", 500)     --KO
-                    --w:setItem("SHOULDER AIM_54C_Mk47 L}", 500)     --KO
-                    --w:setItem("weapons.shells.M134_7_62_T", 500)    --KO shells._unique_resource_name
-                    --w:setItem("M134_SIDE_R", 500)    -- KO
-                    --w:setItem("weapons.gunmounts.M134_SIDE_R", 500)   -- KO
-                    --w:setItem("M134 Minigun", 500)   --mounts.display_name  KO
-                --w:setItem(175, 500)   --mounts.display_name  KO
-                --end ]] --
-            end
-            return true
-        end
-    },
-    -- Étape 2: Tente de Commandement (STATIC)
-    {
-        polar = { distance = 130, angle = 5 },
-        delayAfterPreviousStep = 3,
-        relativeHeadingInDegrees = 90,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "FARP_Tent" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 3: Stock de Munitions (STATIC)
-    {
-        polar = { distance = 110, angle = 340 },
-        delayAfterPreviousStep = 3,
-        relativeHeadingInDegrees = 0,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "FARP_Ammo_Storage" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 4a: Camion Citerne de Ravitaillement (GROUP)
-    {
-        polar                    = { distance = 110, angle = 15, altitude = 0 },
-        delayAfterPreviousStep   = 5,
-        relativeHeadingInDegrees = 0,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey         = "Fuel_Truck" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 4b: Camion armement + reparation (GROUP)
-    {
-        polar                    = { distance = 125, angle = 15, altitude = 0 },
-        delayAfterPreviousStep   = 5,
-        relativeHeadingInDegrees = 0,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey         = "repare_Truck" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 5: Groupe de Sécurité (GROUP)
-    {
-        polar                    = { distance = 90, angle = 15, altitude = 0 },
-        delayAfterPreviousStep   = 0,
-        relativeHeadingInDegrees = 0,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey         = "FARP_Security_Guard" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 6abarrels (STATIC)
-    {
-        polar = { distance = 100, angle = 350 },
-        delayAfterPreviousStep = 3,
-        relativeHeadingInDegrees = 0,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "barrels_cargo" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 6b1:Cargo06 (STATIC)
-    {
-        polar = { distance = 95, angle = 349 },
-        delayAfterPreviousStep = 3,
-        relativeHeadingInDegrees = 0,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "Cargo06" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 6b2:ammo_cargo (STATIC)
-    {
-        polar = { distance = 105, angle = 351.2 },
-        delayAfterPreviousStep = 3,
-        relativeHeadingInDegrees = 0,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "ammo_cargo" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 6c:ammo_cargo2 (STATIC)
-    {
-        polar = { distance = 106.5, angle = 351.3 },
-        delayAfterPreviousStep = 3,
-        relativeHeadingInDegrees = 5,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "ammo_cargo" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 6d:carrier_shooter
-    {
-        polar = { distance = 115, angle = 5 },
-        delayAfterPreviousStep = 3,
-        relativeHeadingInDegrees = 220,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "us carrier shooter" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 6e:LightOn
-    {
-        polar = { distance = 116.7, angle = 353 },
-        delayAfterPreviousStep = 3,
-        relativeHeadingInDegrees = 220,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "NF-2_LightOn" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 6e:Windsock
-    {
-        polar = { distance = 80, angle = 10 },
-        delayAfterPreviousStep = 3,
-        relativeHeadingInDegrees = 220,
-        relativeAltitudeInMeters = 0,
-        objectsDescDbKey = "Windsock" -- key for ctld.objectsDescDb table
-    },
-    -- Étape 7: Fin de la scène (FUNCTION)
-    {
-        delayAfterPreviousStep = 0,
-        polar = { distance = 0, angle = 0, altitude = 0 },
-        relativeHeadingInDegrees = 0,
-        relativeAltitudeInMeters = 0,
-        -- @params: triggerUnitObj - the unit that triggered the sceneTable
-        --          spwanedObject - the object that was just spawned in this step (here nil)
-        --          stepDatas - the datas of this step
-        func = function(triggerUnitObj, spwanedObject, stepDatas)
-            if trigger and trigger.action and trigger.action.outText then
-                trigger.action.outText(
-                    ctld.i18n_translate("--- FARP Dynamic Deployment by %1 : Complete! ---", triggerUnitObj:getName()),
-                    10)
-            end
-            return nil
-        end
-    }
-}
-
-ctld.farpScene = farpScene
-ctld.Scene.registerSceneModel(ctld.farpScene) -- Register the scene model in the Scene class
--- ====================================================================================================
--- End : farpSceneDatas.lua 
--- ==================================================================================================== 
--- Start : mineFieldSceneDatas.lua 
--- ====================================================================================================
--- scene datas for mineField deployment: mineFieldSceneDatas.lua
--- ====================================================================================================
-------- Dictionary-------------------------------------------------------------
-ctld.i18n["en"]["--- mineField Deployed by %1 ---"] = ""
-ctld.i18n["en"]["ERROR mineFieldScene.setLandMine(): no triggerUnitObj or nbLines <= 0"] = ""
-
------------------------------------------------------------------
-local mineFieldScene = {}
-mineFieldScene.name = "mineField"
-mineFieldScene.stepsDatas = {
-    -- step 1: mineField (FUNCTION)
-    {
-        delayAfterPreviousStep = 0,
-        polar = { distance = 0, angle = 0, altitude = 0 },
-        relativeHeadingInDegrees = 0,
-        relativeAltitudeInMeters = 0,
-        func = function(triggerUnitObj, stepdatas)
-            if trigger and trigger.action and trigger.action.outText then
-                local success, spwanedObjs = mineFieldScene.setLandMine(triggerUnitObj, 20, 5, 15, 6, 12)
-                --local success, spwanedObjs = mineFieldScene.setLandMine(triggerUnitObj, 20, 1, 1, 6, 12)        -- only 1 mine for test
-                trigger.action.outText(
-                    ctld.i18n_translate("--- mineField Deployed by %1 ---", triggerUnitObj:getName()),
-                    10)
-                return success, spwanedObjs
-            end
-        end
-    }
-}
-----------------------------------------------------------------------------------------------------------
-
-function mineFieldScene.setLandMine(triggerUnitObj, distanceOf1stMineFromHeliInMeter, nbMinesColumns, nbMinesPerColumns,
-                                    distanceBetweenColumnsInMeters, distanceBetweenLinesInMeters)
-    if triggerUnitObj then
-        local triggerUnitPosition = triggerUnitObj:getPosition()
-        local triggerUnitHeadingInRadians = ctld.Utils.getHeadingInRadians(triggerUnitObj, true)
-        local MinesCoord = {}
-        local nbMines = nbMinesColumns * nbMinesPerColumns
-        local spwanedObjs = {}
-
-        if nbMines > 0 then
-            local vec3Points1To4 = {} -- points for draw
-            if nbMines == 1 then      --------- 1 Landmine coordinates
-                local newVec2Point = ctld.Utils.GetRelativeVec2Coords(
-                    { x = triggerUnitPosition.p.x, y = triggerUnitPosition.p.z }, triggerUnitHeadingInRadians,
-                    distanceOf1stMineFromHeliInMeter, 0)
-                MinesCoord[1] = {}
-                MinesCoord[1][1] = {
-                    ["x"] = newVec2Point.x,
-                    ["y"] = newVec2Point.y
-                }
-                -- points for draw
-                local ofs = 3
-                vec3Points1To4[1] = { x = MinesCoord[1][1].x - ofs, y = 0, z = MinesCoord[1][1].y }
-                vec3Points1To4[2] = { x = MinesCoord[1][1].x, y = 0, z = MinesCoord[1][1].y + ofs }
-                vec3Points1To4[3] = { x = MinesCoord[1][1].x + ofs, y = 0, z = MinesCoord[1][1].y }
-                vec3Points1To4[4] = { x = MinesCoord[1][1].x, y = 0, z = MinesCoord[1][1].y - ofs }
-            else                                                                  ------------------------- create minefield coordinates
-                local memoR                  = distanceOf1stMineFromHeliInMeter
-                lineOffsetInMeters           = lineOffsetInMeters or 6            --	en metres
-                distanceBetweenLinesInMeters = distanceBetweenLinesInMeters or 12 --	en metres
-
-                -- get 1st point coord of each column
-                local Vec2CentralPoint       = ctld.Utils.GetRelativeVec2Coords(
-                    { x = triggerUnitPosition.p.x, y = triggerUnitPosition.p.z }, triggerUnitHeadingInRadians,
-                    distanceOf1stMineFromHeliInMeter, 0)
-
-                if nbMinesColumns % 2 == 0 then --nbMinesColumns is even
-                    for i = 1, nbMinesColumns do
-                        MinesCoord[i] = {}
-                        if i == 1 then
-                            MinesCoord[i][1] = ctld.Utils.GetRelativeVec2Coords(Vec2CentralPoint,
-                                triggerUnitHeadingInRadians,
-                                (((nbMinesColumns - 1) / 2) * distanceBetweenColumnsInMeters) +
-                                (distanceBetweenColumnsInMeters / 2), 90)
-                        else
-                            MinesCoord[i][1] = ctld.Utils.GetRelativeVec2Coords(MinesCoord[i - 1][1],
-                                triggerUnitHeadingInRadians, distanceBetweenColumnsInMeters, -90)
-                        end
-
-                        for line = 2, nbMinesPerColumns do
-                            MinesCoord[i][line] = ctld.Utils.GetRelativeVec2Coords(MinesCoord[i][line - 1],
-                                triggerUnitHeadingInRadians, distanceBetweenLinesInMeters, 0)
-                        end
-                    end
-                else --nbMinesColumns is odd
-                    for i = 1, nbMinesColumns do
-                        MinesCoord[i] = {}
-                        if i == 1 then
-                            MinesCoord[i][1] = ctld.Utils.GetRelativeVec2Coords(Vec2CentralPoint,
-                                triggerUnitHeadingInRadians,
-                                (((nbMinesColumns - 1) / 2) * distanceBetweenColumnsInMeters), 90)
-                        else
-                            MinesCoord[i][1] = ctld.Utils.GetRelativeVec2Coords(MinesCoord[i - 1][1],
-                                triggerUnitHeadingInRadians, distanceBetweenColumnsInMeters, -90)
-                        end
-
-                        for line = 2, nbMinesPerColumns do
-                            MinesCoord[i][line] = ctld.Utils.GetRelativeVec2Coords(MinesCoord[i][line - 1],
-                                triggerUnitHeadingInRadians, distanceBetweenLinesInMeters, 0)
-                        end
-                    end
-                end
-
-                if nbMinesColumns < 2 then
-                    vec3Points1To4[1] = { x = MinesCoord[1][1].x - 3, z = MinesCoord[1][1].y - 3, y = 0 }
-                    vec3Points1To4[2] = { x = MinesCoord[1][1].x + 3, z = MinesCoord[1][1].y + 3, y = 0 }
-                    vec3Points1To4[4] = {
-                        x = MinesCoord[#MinesCoord][#MinesCoord[1]].x - 3,
-                        z = MinesCoord[#MinesCoord]
-                            [#MinesCoord[1]].y - 3,
-                        y = 0
-                    }
-                    vec3Points1To4[3] = {
-                        x = MinesCoord[#MinesCoord][#MinesCoord[1]].x + 3,
-                        z = MinesCoord[#MinesCoord]
-                            [#MinesCoord[1]].y + 3,
-                        y = 0
-                    }
-                else
-                    vec3Points1To4[1] = { x = MinesCoord[1][1].x, z = MinesCoord[1][1].y, y = 0 }
-                    vec3Points1To4[2] = { x = MinesCoord[#MinesCoord][1].x, z = MinesCoord[#MinesCoord][1].y, y = 0 }
-                    vec3Points1To4[3] = {
-                        x = MinesCoord[#MinesCoord][#MinesCoord[1]].x,
-                        z = MinesCoord[#MinesCoord]
-                            [#MinesCoord[1]].y,
-                        y = 0
-                    }
-                    vec3Points1To4[4] = { x = MinesCoord[1][#MinesCoord[1]].x, z = MinesCoord[1][#MinesCoord[1]].y, y = 0 }
-                end
-                if nbMinesPerColumns < 2 then
-                    vec3Points1To4[1] = { x = MinesCoord[1][1].x, z = MinesCoord[1][1].y - 3, y = 0 }
-                    vec3Points1To4[2] = { x = MinesCoord[1][1].x, z = MinesCoord[1][1].y + 3, y = 0 }
-                    vec3Points1To4[3] = {
-                        x = MinesCoord[#MinesCoord][#MinesCoord[1]].x,
-                        z = MinesCoord[#MinesCoord]
-                            [#MinesCoord[1]].y + 3,
-                        y = 0
-                    }
-                    vec3Points1To4[4] = {
-                        x = MinesCoord[#MinesCoord][#MinesCoord[1]].x,
-                        z = MinesCoord[#MinesCoord]
-                            [#MinesCoord[1]].y - 3,
-                        y = 0
-                    }
-                end
-            end
-
-            -------- spwan mines -------------------------------------------------
-            for j = 1, #MinesCoord do
-                for i = 1, #MinesCoord[j] do
-                    local vars = {
-                        country  = triggerUnitObj:getCountry(),
-                        category = 'Fortifications',
-                        x        = MinesCoord[j][i].x,
-                        y        = MinesCoord[j][i].y,
-                        type     = "Landmine",
-                        name     = "Landmine-" .. ctld.Utils.getNextUniqId(),
-                        dead     = false,
-                        heading  = 0
-                    }
-                    _spawnedGroup = mist.dynAddStatic(vars)
-                    spwanedObjs[#spwanedObjs + 1] = _spawnedGroup
-                end
-            end
-
-            -------- draw rectangle around minefield on F10 map -----------------------------
-            ctld.Utils.drawQuad(coalitionId, vec3Points1To4, spwanedObjs[#spwanedObjs].name)
-            return true, spwanedObjs
-        end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: dynAddStatic (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
     end
-    return false, "ERROR mineFieldScene.setLandMine(): no triggerUnitObj or nbLines <= 0" -- fail
+    return target(...)
 end
 
-ctld.mineFieldScene = mineFieldScene
-ctld.Scene.registerSceneModel(ctld.mineFieldScene) -- Register the scene model in the Scene class
--- ====================================================================================================
-
---[[ ---- TEST -----------------------------------------------------
---ex: setLandMine(triggerUnitObj, distanceOf1stMineFromHeli, nbMinesColumns, nbMinesPerColumns, lineOffsetInMeters, distanceBetweenLinesInMeters )
-
-if true then
-    local heliName = "h1-1"
-    local triggerUnitObj = Unit.getByName(heliName)
-    --ctld.Scene.playScene(Unit.getByName(heliName), ctld.farpScene)
-    ctld.Scene.playScene(Unit.getByName(heliName), ctld.mineFieldScene)
-    return ctld.lmsg
+CTLD_extAPI.getAvgPos = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for getAvgPos. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.getAvgPos
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: getAvgPos (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: getAvgPos (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
 end
------------------------------------------------------------------ ]] --
--- End : mineFieldSceneDatas.lua 
+
+CTLD_extAPI.getGroupRoute = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for getGroupRoute. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.getGroupRoute
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: getGroupRoute (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: getGroupRoute (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.getHeading = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for getHeading. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.getHeading
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: getHeading (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: getHeading (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.getUnitsLOS = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for getUnitsLOS. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.getUnitsLOS
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: getUnitsLOS (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: getUnitsLOS (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.ground = CTLD_extAPI.ground or {}
+CTLD_extAPI.ground.buildWP = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for ground.buildWP. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.ground.buildWP
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: ground.buildWP (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: ground.buildWP (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.makeUnitTable = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for makeUnitTable. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.makeUnitTable
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: makeUnitTable (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: makeUnitTable (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.scheduleFunction = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for scheduleFunction. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.scheduleFunction
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: scheduleFunction (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: scheduleFunction (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.tostringLL = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for tostringLL. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.tostringLL
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: tostringLL (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: tostringLL (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.tostringMGRS = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for tostringMGRS. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.tostringMGRS
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: tostringMGRS (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: tostringMGRS (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.utils = CTLD_extAPI.utils or {}
+CTLD_extAPI.utils.deepCopy = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for utils.deepCopy. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.utils.deepCopy
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: utils.deepCopy (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: utils.deepCopy (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.utils.get2DDist = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for utils.get2DDist. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.utils.get2DDist
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: utils.get2DDist (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: utils.get2DDist (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.utils.getDir = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for utils.getDir. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.utils.getDir
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: utils.getDir (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: utils.getDir (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.utils.makeVec2 = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for utils.makeVec2. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.utils.makeVec2
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: utils.makeVec2 (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: utils.makeVec2 (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.utils.makeVec3 = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for utils.makeVec3. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.utils.makeVec3
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: utils.makeVec3 (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: utils.makeVec3 (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.utils.round = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for utils.round. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.utils.round
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: utils.round (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: utils.round (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.utils.tableShow = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for utils.tableShow. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.utils.tableShow
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: utils.tableShow (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: utils.tableShow (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.utils.toDegree = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for utils.toDegree. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.utils.toDegree
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: utils.toDegree (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: utils.toDegree (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.utils.zoneToVec3 = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for utils.zoneToVec3. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.utils.zoneToVec3
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: utils.zoneToVec3 (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: utils.zoneToVec3 (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.vec = CTLD_extAPI.vec or {}
+CTLD_extAPI.vec.dp = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for vec.dp. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.vec.dp
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: vec.dp (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: vec.dp (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.vec.mag = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for vec.mag. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.vec.mag
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: vec.mag (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: vec.mag (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+CTLD_extAPI.vec.sub = function(caller, ...)
+    -- wrapper: check framework and target function existence
+    if framework == nil then
+        logError('[CTLD_extAPI ERROR] Missing framework for vec.sub. Required: MIST or MOOSE. Caller: ' ..
+        tostring(caller))
+        return nil
+    end
+    local target = framework.vec.sub
+    if target == nil then
+        logError('[CTLD_extAPI ERROR] Missing path: vec.sub (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    if type(target) ~= 'function' then
+        logError('[CTLD_extAPI ERROR] Target is not a function: vec.sub (framework: ' ..
+        tostring(frameworkName) .. '). Caller: ' .. tostring(caller))
+        return nil
+    end
+    return target(...)
+end
+
+-- End of CTLD_extAPI.lua
+-- End : CTLD_extAPI.lua 

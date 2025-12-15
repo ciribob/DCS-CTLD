@@ -1,10 +1,7 @@
-cde pour lancer la fusion sous powershell en admin
+Command to run the merge under PowerShell
 ------------------------------------------
-Set-ExecutionPolicy RemoteSigned
-cd D:\Documents_2To\Git\CTLD_CodeFusion
-.\merge.ps1 liste.txt script_final.lua
+1> Shift + clic on the folder contanining merger.cmd and select "Open Powershell windows here"
+2> In PowerShell, enter the command: ./merger.cmd
+   confirm the execution
 
-lancer la fusion depauis invite de commande merge.ps1 doit etre dans meme dossier que liste.txt :
----------------------------------------------------------------------------------------------------
-powershell -ExecutionPolicy Bypass -File merge.ps1 liste.txt fusion.lua
-powershell -ExecutionPolicy Bypass -File merge.ps1 liste.txt fusion.lua
+The merger will merge all source files and generate CTLD.lua in the parent folder.

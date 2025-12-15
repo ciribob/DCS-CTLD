@@ -1,446 +1,282 @@
 -- ================================================================
--- CTLD_extAPI.lua (auto-generated)
--- Mirrors used mist/Moose paths with wrappers (caller-as-first-arg)
+-- CTLD_extAPI.lua
+-- Explicit indirections to MIST / MOOSE (no wrapper system)
 -- ================================================================
+
 if trigger == nil then
-    trigger = { action = { outText = function(msg, time) print('[DCS outText] '..msg) end } }
+    trigger = { action = { outText = function(msg, time) print('[DCS outText] ' .. msg) end } }
 end
 
 CTLD_extAPI = CTLD_extAPI or {}
+
 local framework = nil
 local frameworkName = nil
-if mist ~= nil then framework = mist frameworkName = 'MIST' elseif Moose ~= nil then framework = Moose frameworkName = 'MOOSE' end
+
+if mist ~= nil then
+    framework = mist
+    frameworkName = 'MIST'
+elseif Moose ~= nil then
+    framework = Moose
+    frameworkName = 'MOOSE'
+else
+    local msg = '[CTLD_extAPI ERROR] No framework detected (mist == nil and Moose == nil)'
+    if trigger and trigger.action and trigger.action.outText then
+        trigger.action.outText(msg, 20)
+    else
+        print(msg)
+    end
+    if env and env.info then env.info(msg) end
+end
 
 local function logError(msg)
-    local ok, err = pcall(function()
-        if trigger and trigger.action and trigger.action.outText then
-            trigger.action.outText(msg, 15)
-        else
-            print(msg)
-        end
-        if env and env.info then env.info(msg) end
-    end)
+    if trigger and trigger.action and trigger.action.outText then
+        trigger.action.outText(msg, 15)
+    else
+        print(msg)
+    end
+    if env and env.info then env.info(msg) end
 end
 
-CTLD_extAPI.DBs = CTLD_extAPI.DBs or {}
-CTLD_extAPI.DBs.humansByName = (framework.DBs.humansByName) or nil
-CTLD_extAPI.DBs.unitsById = (framework.DBs.unitsById) or nil
-CTLD_extAPI.DBs.unitsByName = (framework.DBs.unitsByName) or nil
-CTLD_extAPI.dynAdd = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for dynAdd. Required: MIST or MOOSE. Caller: '..tostring(caller))
+-- ================================================================
+-- DBs
+-- ================================================================
+
+CTLD_extAPI.DBs              = CTLD_extAPI.DBs or {}
+
+CTLD_extAPI.DBs.humansByName = framework and framework.DBs and framework.DBs.humansByName or nil
+CTLD_extAPI.DBs.unitsById    = framework and framework.DBs and framework.DBs.unitsById or nil
+CTLD_extAPI.DBs.unitsByName  = framework and framework.DBs and framework.DBs.unitsByName or nil
+
+-- ================================================================
+-- Top-level functions
+-- ================================================================
+
+CTLD_extAPI.dynAdd           = function(caller, ...)
+    if not (framework and framework.dynAdd) then
+        logError('[CTLD_extAPI ERROR] dynAdd unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.dynAdd
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: dynAdd (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: dynAdd (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.dynAdd(...)
 end
 
-CTLD_extAPI.dynAddStatic = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for dynAddStatic. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.dynAddStatic     = function(caller, ...)
+    if not (framework and framework.dynAddStatic) then
+        logError('[CTLD_extAPI ERROR] dynAddStatic unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.dynAddStatic
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: dynAddStatic (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: dynAddStatic (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.dynAddStatic(...)
 end
 
-CTLD_extAPI.getAvgPos = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for getAvgPos. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.getAvgPos        = function(caller, ...)
+    if not (framework and framework.getAvgPos) then
+        logError('[CTLD_extAPI ERROR] getAvgPos unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.getAvgPos
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: getAvgPos (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: getAvgPos (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.getAvgPos(...)
 end
 
-CTLD_extAPI.getGroupRoute = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for getGroupRoute. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.getGroupRoute    = function(caller, ...)
+    if not (framework and framework.getGroupRoute) then
+        logError('[CTLD_extAPI ERROR] getGroupRoute unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.getGroupRoute
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: getGroupRoute (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: getGroupRoute (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.getGroupRoute(...)
 end
 
-CTLD_extAPI.getHeading = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for getHeading. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.getHeading       = function(caller, ...)
+    if not (framework and framework.getHeading) then
+        logError('[CTLD_extAPI ERROR] getHeading unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.getHeading
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: getHeading (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: getHeading (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+
+    return framework.getHeading(...)
 end
 
-CTLD_extAPI.getUnitsLOS = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for getUnitsLOS. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.getUnitsLOS      = function(caller, ...)
+    if not (framework and framework.getUnitsLOS) then
+        logError('[CTLD_extAPI ERROR] getUnitsLOS unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.getUnitsLOS
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: getUnitsLOS (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: getUnitsLOS (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.getUnitsLOS(...)
 end
 
-CTLD_extAPI.ground = CTLD_extAPI.ground or {}
-CTLD_extAPI.ground.buildWP = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for ground.buildWP. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.makeUnitTable    = function(caller, ...)
+    if not (framework and framework.makeUnitTable) then
+        logError('[CTLD_extAPI ERROR] makeUnitTable unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.ground.buildWP
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: ground.buildWP (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: ground.buildWP (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
-end
-
-CTLD_extAPI.makeUnitTable = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for makeUnitTable. Required: MIST or MOOSE. Caller: '..tostring(caller))
-        return nil
-    end
-    local target = framework.makeUnitTable
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: makeUnitTable (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: makeUnitTable (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.makeUnitTable(...)
 end
 
 CTLD_extAPI.scheduleFunction = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for scheduleFunction. Required: MIST or MOOSE. Caller: '..tostring(caller))
+    if not (framework and framework.scheduleFunction) then
+        logError('[CTLD_extAPI ERROR] scheduleFunction unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.scheduleFunction
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: scheduleFunction (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: scheduleFunction (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.scheduleFunction(...)
 end
 
-CTLD_extAPI.tostringLL = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for tostringLL. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.tostringLL       = function(caller, ...)
+    if not (framework and framework.tostringLL) then
+        logError('[CTLD_extAPI ERROR] tostringLL unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.tostringLL
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: tostringLL (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: tostringLL (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.tostringLL(...)
 end
 
-CTLD_extAPI.tostringMGRS = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for tostringMGRS. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.tostringMGRS     = function(caller, ...)
+    if not (framework and framework.tostringMGRS) then
+        logError('[CTLD_extAPI ERROR] tostringMGRS unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.tostringMGRS
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: tostringMGRS (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: tostringMGRS (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.tostringMGRS(...)
 end
 
-CTLD_extAPI.utils = CTLD_extAPI.utils or {}
-CTLD_extAPI.utils.deepCopy = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.deepCopy. Required: MIST or MOOSE. Caller: '..tostring(caller))
+-- ================================================================
+-- ground
+-- ================================================================
+
+CTLD_extAPI.ground           = CTLD_extAPI.ground or {}
+
+CTLD_extAPI.ground.buildWP   = function(caller, ...)
+    if not (framework and framework.ground and framework.ground.buildWP) then
+        logError('[CTLD_extAPI ERROR] ground.buildWP unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.deepCopy
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.deepCopy (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.deepCopy (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.ground.buildWP(...)
 end
 
-CTLD_extAPI.utils.get2DDist = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.get2DDist. Required: MIST or MOOSE. Caller: '..tostring(caller))
+-- ================================================================
+-- utils
+-- ================================================================
+
+CTLD_extAPI.utils            = CTLD_extAPI.utils or {}
+
+CTLD_extAPI.utils.deepCopy   = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.deepCopy) then
+        logError('[CTLD_extAPI ERROR] utils.deepCopy unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.get2DDist
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.get2DDist (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.get2DDist (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.deepCopy(...)
 end
 
-CTLD_extAPI.utils.getDir = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.getDir. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.utils.get2DDist  = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.get2DDist) then
+        logError('[CTLD_extAPI ERROR] utils.get2DDist unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.getDir
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.getDir (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.getDir (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.get2DDist(...)
 end
 
-CTLD_extAPI.utils.makeVec2 = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.makeVec2. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.utils.getDir     = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.getDir) then
+        logError('[CTLD_extAPI ERROR] utils.getDir unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.makeVec2
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.makeVec2 (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.makeVec2 (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.getDir(...)
 end
 
-CTLD_extAPI.utils.makeVec3 = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.makeVec3. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.utils.makeVec2   = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.makeVec2) then
+        logError('[CTLD_extAPI ERROR] utils.makeVec2 unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.makeVec3
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.makeVec3 (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.makeVec3 (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.makeVec2(...)
 end
 
-CTLD_extAPI.utils.round = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.round. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.utils.makeVec3   = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.makeVec3) then
+        logError('[CTLD_extAPI ERROR] utils.makeVec3 unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.round
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.round (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.round (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.makeVec3(...)
 end
 
-CTLD_extAPI.utils.tableShow = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.tableShow. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.utils.round      = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.round) then
+        logError('[CTLD_extAPI ERROR] utils.round unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.tableShow
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.tableShow (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.tableShow (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.round(...)
 end
 
-CTLD_extAPI.utils.toDegree = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.toDegree. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.utils.tableShow  = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.tableShow) then
+        logError('[CTLD_extAPI ERROR] utils.tableShow unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.toDegree
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.toDegree (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
+    return framework.utils.tableShow(...)
+end
+
+CTLD_extAPI.utils.toDegree   = function(caller, ...)
+    if not (framework and framework.utils and framework.utils.toDegree) then
+        logError('[CTLD_extAPI ERROR] utils.toDegree unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.toDegree (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.toDegree(...)
 end
 
 CTLD_extAPI.utils.zoneToVec3 = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for utils.zoneToVec3. Required: MIST or MOOSE. Caller: '..tostring(caller))
+    if not (framework and framework.utils and framework.utils.zoneToVec3) then
+        logError('[CTLD_extAPI ERROR] utils.zoneToVec3 unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.utils.zoneToVec3
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: utils.zoneToVec3 (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: utils.zoneToVec3 (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.utils.zoneToVec3(...)
 end
 
-CTLD_extAPI.vec = CTLD_extAPI.vec or {}
-CTLD_extAPI.vec.dp = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for vec.dp. Required: MIST or MOOSE. Caller: '..tostring(caller))
+-- ================================================================
+-- vec
+-- ================================================================
+
+CTLD_extAPI.vec              = CTLD_extAPI.vec or {}
+
+CTLD_extAPI.vec.dp           = function(caller, ...)
+    if not (framework and framework.vec and framework.vec.dp) then
+        logError('[CTLD_extAPI ERROR] vec.dp unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.vec.dp
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: vec.dp (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: vec.dp (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.vec.dp(...)
 end
 
-CTLD_extAPI.vec.mag = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for vec.mag. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.vec.mag          = function(caller, ...)
+    if not (framework and framework.vec and framework.vec.mag) then
+        logError('[CTLD_extAPI ERROR] vec.mag unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.vec.mag
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: vec.mag (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: vec.mag (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.vec.mag(...)
 end
 
-CTLD_extAPI.vec.sub = function(caller, ...)
-    -- wrapper: check framework and target function existence
-    if framework == nil then
-        logError('[CTLD_extAPI ERROR] Missing framework for vec.sub. Required: MIST or MOOSE. Caller: '..tostring(caller))
+CTLD_extAPI.vec.sub          = function(caller, ...)
+    if not (framework and framework.vec and framework.vec.sub) then
+        logError('[CTLD_extAPI ERROR] vec.sub unavailable (' ..
+            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
         return nil
     end
-    local target = framework.vec.sub
-    if target == nil then
-        logError('[CTLD_extAPI ERROR] Missing path: vec.sub (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    if type(target) ~= 'function' then
-        logError('[CTLD_extAPI ERROR] Target is not a function: vec.sub (framework: '..tostring(frameworkName)..'). Caller: '..tostring(caller))
-        return nil
-    end
-    return target(...)
+    return framework.vec.sub(...)
 end
 
+-- ================================================================
 -- End of CTLD_extAPI.lua
+-- ================================================================
