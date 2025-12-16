@@ -1,5 +1,5 @@
 mist.lua
 CTLD-i18n.lua
 CTLD_utils.lua
-CTLD.lua
+CTLD_core.lua
 CTLD_extAPI.lua
