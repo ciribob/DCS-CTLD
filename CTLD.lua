@@ -11532,7 +11532,24 @@ function ctld.utils.deepCopy(caller, object)
     return _copy(object)
 end
 
---======================================================================================================
+--------------------------------------------------------------------------------------------------------
+--- return table as a lua script string
+function ctld.utils.tableShowScript(caller, tblObj, tblName)
+    if tblObj == nil then
+        if env and env.error then
+            env.error("ctld.utils.tableShowScript(): Attempt to show a nil table.")
+        end
+        return "nil"
+    end
+    if tblName == nil then
+        tblName = "tbl"
+    end
+
+    local tScript = "local " .. tblName .. " = " .. ctld.utils.tableShow("ctld.utils.tableShowScript()", tblObj)
+    return tScript
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Returns table in a easy readable string representation.
 -- borrowed from mist
 -- this function is not meant for serialization because it uses
@@ -11555,9 +11572,7 @@ function ctld.utils.tableShow(caller, tbl, loc, indent, tableshow_tbls) --based 
     indent = indent or ""
     if type(tbl) == 'table' then --function only works for tables!
         tableshow_tbls[tbl] = loc
-
         local tbl_str = {}
-
         --tbl_str[#tbl_str + 1] = indent .. '{\n'
         tbl_str[#tbl_str + 1] = '{\n'
 
