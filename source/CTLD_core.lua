@@ -2013,7 +2013,7 @@ function ctld.getNearbyUnits(_point, _radius, _coalition)
     local unitsByDistance = {}
     local cpt = 1
     local _units = {}
-    for _, _unitName in pairs(ctld.utils.getGroundUnitsListNames("ctld.getNearbyUnits()", _coalition)) do
+    for _, _unitName in pairs(ctld.utils.getUnitsListNamesByCategory("ctld.getNearbyUnits()", _coalition, { Group.Category.GROUND })) do
         local u = Unit.getByName(_unitName)
         local e = (u and u:isExist()) or false
         -- pcall is needed because getCoalition() fails if the unit is an object without coalition (like a smoke effect)

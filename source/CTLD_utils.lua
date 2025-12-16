@@ -741,6 +741,47 @@ function ctld.utils.getUnitsLOS(caller, unitset1, altoffset1, unitset2, altoffse
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Returns GroundUnitsListNames for a given coalition
+function ctld.utils.getUnitsListNamesByCategory(caller, coalitionId, categoryTable)
+    if coalitionId == nil then
+        if env and env.error then
+            env.error("ctld.utils.getUnitsListNamesByCategory()." ..
+                tostring(caller) .. ": Invalid coalition ID provided.")
+        end
+        return {}
+    end
+
+    if categoryTable == nil then -- all categories requested
+        categoryTable = {
+            Group.Category.AIRPLANE,
+            Group.Category.HELICOPTER,
+            Group.Category.GROUND,
+            Group.Category.SHIP,
+            Group.Category.TRAIN,
+        }
+    end
+
+    local groupList = {}
+    for _, v in ipairs(categoryTable) do
+        local categGroupList = coalition.getGroups(coalitionId, v)
+        if categGroupList then
+            for _, group in ipairs(categGroupList) do
+                table.insert(groupList, group)
+            end
+        end
+    end
+
+    local UnitsListNames = {}
+    for _, v in ipairs(groupList) do
+        local groupUnits = v:getUnits()
+        for _, vv in ipairs(groupUnits) do
+            UnitsListNames[#UnitsListNames + 1] = vv:getName()
+        end
+    end
+    return UnitsListNames
+end
+
+--------------------------------------------------------------------------------------------------------
 -- same as getGroupPoints but returns speed and formation type along with vec2 of point}
 function ctld.utils.getGroupRoute(caller, groupName, task)
     if groupName == nil then
@@ -1128,25 +1169,6 @@ function ctld.utils.dynAdd(caller, ng)
     coalition.addGroup(country.id[newCountry], Unit.Category[newCat], newGroup)
 
     return newGroup
-end
-
---------------------------------------------------------------------------------------------------------
---- Returns GroundUnitsListNames for a given coalition
-function ctld.utils.getGroundUnitsListNames(caller, coalitionId)
-    if coalitionId == nil then
-        if env and env.error then
-            env.error("ctld.utils.getGroundUnitsListNames()." .. tostring(caller) .. ": Invalid coalition ID provided.")
-        end
-        return {}
-    end
-    local UnitsListNames = {}
-    for i, v in ipairs(coalition.getGroups(coalitionId, Group.Category.GROUND)) do
-        local groupUnits = v:getUnits()
-        for ii, vv in ipairs(groupUnits) do
-            UnitsListNames[#UnitsListNames + 1] = vv:getName()
-        end
-    end
-    return UnitsListNames
 end
 
 --------------------------------------------------------------------------------------------------------

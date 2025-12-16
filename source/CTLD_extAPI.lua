@@ -40,12 +40,8 @@ end
 -- ================================================================
 -- DBs
 -- ================================================================
-
 CTLD_extAPI.DBs              = CTLD_extAPI.DBs or {}
-
 CTLD_extAPI.DBs.humansByName = framework and framework.DBs and framework.DBs.humansByName or nil
-CTLD_extAPI.DBs.unitsById    = framework and framework.DBs and framework.DBs.unitsById or nil
-CTLD_extAPI.DBs.unitsByName  = framework and framework.DBs and framework.DBs.unitsByName or nil
 
 -- ================================================================
 -- End of CTLD_extAPI.lua
