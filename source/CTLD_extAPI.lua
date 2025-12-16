@@ -60,15 +60,6 @@ CTLD_extAPI.dynAdd           = function(caller, ...)
     return framework.dynAdd(...)
 end
 
-CTLD_extAPI.dynAddStatic     = function(caller, ...)
-    if not (framework and framework.dynAddStatic) then
-        logError('[CTLD_extAPI ERROR] dynAddStatic unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.dynAddStatic(...)
-end
-
 -- ================================================================
 -- End of CTLD_extAPI.lua
 -- ================================================================

@@ -11146,12 +11146,12 @@ function ctld.utils.tostringMGRS(caller, MGRS, acc)
 end
 
 --------------------------------------------------------------------------------------------------------
-utils.UniqIdCounter = 0 -- Compteur statique pour les ID uniques
+ctld.utils.UniqIdCounter = 0 -- Compteur statique pour les ID uniques
 --- @function ctld.utils:getNextUniqId
 -- Génère un ID unique incrémental, comme requis pour 'unitId' dans groupData.
 function ctld.utils.getNextUniqId()
-    utils.UniqIdCounter = utils.UniqIdCounter + 1
-    return utils.UniqIdCounter
+    ctld.utils.UniqIdCounter = ctld.utils.UniqIdCounter + 1
+    return ctld.utils.UniqIdCounter
 end
 
 --- Converts angle in radians to degrees.
@@ -11447,6 +11447,105 @@ function ctld.utils.getGroupId(caller, _unitId)
     end
 
     return _unitId:getGroup():getID()
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Spawns a static object to the game world.
+-- Borrowed from mist.dynAddStatic
+-- @todo write good docs
+-- @tparam table staticObj table containing data needed for the object creation
+function ctld.utils.dynAddStatic(caller, n)
+    if n == nil then
+        if env and env.error then
+            env.error("ctld.utils.dynAddStatic()." .. tostring(caller) .. ": Invalid static object data provided.")
+        end
+        return false
+    end
+    --local newObj = mist.utils.deepCopy(n)
+    local newObj = ctld.utils.deepCopy("ctld.utils.dynAddStatic()", n)
+    --log:warn(newObj)
+    if newObj.units and newObj.units[1] then -- if its mist format
+        for entry, val in pairs(newObj.units[1]) do
+            if newObj[entry] and newObj[entry] ~= val or not newObj[entry] then
+                newObj[entry] = val
+            end
+        end
+    end
+    --log:info(newObj)
+
+    local cntry = newObj.country
+    if newObj.countryId then
+        cntry = newObj.countryId
+    end
+
+    local newCountry = ''
+
+    for countryId, countryName in pairs(country.name) do
+        if type(cntry) == 'string' then
+            cntry = cntry:gsub("%s+", "_")
+            if tostring(countryName) == string.upper(cntry) then
+                newCountry = countryName
+            end
+        elseif type(cntry) == 'number' then
+            if countryId == cntry then
+                newCountry = countryName
+            end
+        end
+    end
+
+    if newCountry == '' then
+        log:error("Country not found: $1", cntry)
+        return false
+    end
+
+    if newObj.clone or not newObj.groupId then
+        newObj.groupId = ctld.utils.getNextUniqId()
+    end
+
+    if newObj.clone or not newObj.unitId then
+        newObj.unitId = ctld.utils.getNextUniqId()
+    end
+
+    newObj.name = newObj.name or newObj.unitName
+
+    if newObj.clone or not newObj.name then
+        newObj.name = (newCountry .. ' static ' .. tostring(newObj.unitId))
+    end
+
+    if not newObj.dead then
+        newObj.dead = false
+    end
+
+    if not newObj.heading then
+        newObj.heading = math.rad(math.random(360))
+    end
+
+    if newObj.categoryStatic then
+        newObj.category = newObj.categoryStatic
+    end
+    if newObj.mass then
+        newObj.category = 'Cargos'
+    end
+
+    if newObj.shapeName then
+        newObj.shape_name = newObj.shapeName
+    end
+
+    if not newObj.shape_name then
+        log:info('shape_name not present')
+        -- if mist.DBs.const.shapeNames[newObj.type] then
+        --     newObj.shape_name = mist.DBs.const.shapeNames[newObj.type]
+        -- end
+    end
+    if newObj.x and newObj.y and newObj.type and type(newObj.x) == 'number' and type(newObj.y) == 'number' and type(newObj.type) == 'string' then
+        --log:warn(newObj)
+        coalition.addStaticObject(country.id[newCountry], newObj)
+
+        return newObj
+    end
+    log:error("Failed to add static object due to missing or incorrect value. X: $1, Y: $2, Type: $3", newObj.x,
+        newObj.y, newObj.type)
+    return false
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -13832,7 +13931,7 @@ function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logi
         ["heading"] = 0,
     }
     LogUnit["country"] = _country
-    CTLD_extAPI.dynAddStatic("ctld.addStaticLogisticUnit", LogUnit)
+    ctld.utils.dynAddStatic("ctld.addStaticLogisticUnit", LogUnit)
     return StaticObject.getByName(LogUnit["name"])
 end
 
@@ -14157,7 +14256,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _crate["heading"] = hdg
         _crate["country"] = _country
 
-        CTLD_extAPI.dynAddStatic("ctld.spawnCrateStatic()", _crate)
+        ctld.utils.dynAddStatic("ctld.spawnCrateStatic()", _crate)
 
         _spawnedCrate = StaticObject.getByName(_crate["name"])
     end
@@ -14189,7 +14288,7 @@ function ctld.spawnFOBCrateStatic(_country, _unitId, _point, _name)
 
     _crate["country"] = _country
 
-    CTLD_extAPI.dynAddStatic("ctld.spawnFOBCrateStatic", _crate)
+    ctld.utils.dynAddStatic("ctld.spawnFOBCrateStatic", _crate)
 
     local _spawnedCrate = StaticObject.getByName(_crate["name"])
     --local _spawnedCrate = coalition.addStaticObject(_country, _crate)
@@ -14210,7 +14309,7 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     }
 
     _crate["country"] = _country
-    CTLD_extAPI.dynAddStatic("ctld.spawnFOB", _crate)
+    ctld.utils.dynAddStatic("ctld.spawnFOB", _crate)
     local _spawnedCrate = StaticObject.getByName(_crate["name"])
     --local _spawnedCrate = coalition.addStaticObject(_country, _crate)
 
@@ -14229,7 +14328,7 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     --coalition.addStaticObject(_country, _tower)
     _tower["country"] = _country
 
-    CTLD_extAPI.dynAddStatic("ctld.spawnFOB", _tower)
+    ctld.utils.dynAddStatic("ctld.spawnFOB", _tower)
 
     return _spawnedCrate
 end
@@ -15902,7 +16001,7 @@ function ctld.unpackFOBCrates(_crates, _heli)
         trigger.action.outTextForCoalition(_heli:getCoalition(),
             ctld.i18n_translate(
                 "%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke.",
-                ctld.getPlayerNameOrType(_heli), _totalCrates, ctld.buildTimeFOB, 10))
+                ctld.getPlayerNameOrType(_heli), _totalCrates, ctld.buildTimeFOB), 10)
     else
         local _txt = ctld.i18n_translate(
             "Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other",
@@ -20755,15 +20854,6 @@ CTLD_extAPI.dynAdd           = function(caller, ...)
         return nil
     end
     return framework.dynAdd(...)
-end
-
-CTLD_extAPI.dynAddStatic     = function(caller, ...)
-    if not (framework and framework.dynAddStatic) then
-        logError('[CTLD_extAPI ERROR] dynAddStatic unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.dynAddStatic(...)
 end
 
 -- ================================================================

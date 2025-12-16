@@ -2151,7 +2151,7 @@ function ctld.addStaticLogisticUnit(_point, _country) -- create a temporary logi
         ["heading"] = 0,
     }
     LogUnit["country"] = _country
-    CTLD_extAPI.dynAddStatic("ctld.addStaticLogisticUnit", LogUnit)
+    ctld.utils.dynAddStatic("ctld.addStaticLogisticUnit", LogUnit)
     return StaticObject.getByName(LogUnit["name"])
 end
 
@@ -2476,7 +2476,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _crate["heading"] = hdg
         _crate["country"] = _country
 
-        CTLD_extAPI.dynAddStatic("ctld.spawnCrateStatic()", _crate)
+        ctld.utils.dynAddStatic("ctld.spawnCrateStatic()", _crate)
 
         _spawnedCrate = StaticObject.getByName(_crate["name"])
     end
@@ -2508,7 +2508,7 @@ function ctld.spawnFOBCrateStatic(_country, _unitId, _point, _name)
 
     _crate["country"] = _country
 
-    CTLD_extAPI.dynAddStatic("ctld.spawnFOBCrateStatic", _crate)
+    ctld.utils.dynAddStatic("ctld.spawnFOBCrateStatic", _crate)
 
     local _spawnedCrate = StaticObject.getByName(_crate["name"])
     --local _spawnedCrate = coalition.addStaticObject(_country, _crate)
@@ -2529,7 +2529,7 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     }
 
     _crate["country"] = _country
-    CTLD_extAPI.dynAddStatic("ctld.spawnFOB", _crate)
+    ctld.utils.dynAddStatic("ctld.spawnFOB", _crate)
     local _spawnedCrate = StaticObject.getByName(_crate["name"])
     --local _spawnedCrate = coalition.addStaticObject(_country, _crate)
 
@@ -2548,7 +2548,7 @@ function ctld.spawnFOB(_country, _unitId, _point, _name)
     --coalition.addStaticObject(_country, _tower)
     _tower["country"] = _country
 
-    CTLD_extAPI.dynAddStatic("ctld.spawnFOB", _tower)
+    ctld.utils.dynAddStatic("ctld.spawnFOB", _tower)
 
     return _spawnedCrate
 end
@@ -4221,7 +4221,7 @@ function ctld.unpackFOBCrates(_crates, _heli)
         trigger.action.outTextForCoalition(_heli:getCoalition(),
             ctld.i18n_translate(
                 "%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke.",
-                ctld.getPlayerNameOrType(_heli), _totalCrates, ctld.buildTimeFOB, 10))
+                ctld.getPlayerNameOrType(_heli), _totalCrates, ctld.buildTimeFOB), 10)
     else
         local _txt = ctld.i18n_translate(
             "Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other",

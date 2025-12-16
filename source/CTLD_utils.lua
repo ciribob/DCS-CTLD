@@ -523,12 +523,12 @@ function ctld.utils.tostringMGRS(caller, MGRS, acc)
 end
 
 --------------------------------------------------------------------------------------------------------
-utils.UniqIdCounter = 0 -- Compteur statique pour les ID uniques
+ctld.utils.UniqIdCounter = 0 -- Compteur statique pour les ID uniques
 --- @function ctld.utils:getNextUniqId
 -- Génère un ID unique incrémental, comme requis pour 'unitId' dans groupData.
 function ctld.utils.getNextUniqId()
-    utils.UniqIdCounter = utils.UniqIdCounter + 1
-    return utils.UniqIdCounter
+    ctld.utils.UniqIdCounter = ctld.utils.UniqIdCounter + 1
+    return ctld.utils.UniqIdCounter
 end
 
 --- Converts angle in radians to degrees.
@@ -824,6 +824,105 @@ function ctld.utils.getGroupId(caller, _unitId)
     end
 
     return _unitId:getGroup():getID()
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Spawns a static object to the game world.
+-- Borrowed from mist.dynAddStatic
+-- @todo write good docs
+-- @tparam table staticObj table containing data needed for the object creation
+function ctld.utils.dynAddStatic(caller, n)
+    if n == nil then
+        if env and env.error then
+            env.error("ctld.utils.dynAddStatic()." .. tostring(caller) .. ": Invalid static object data provided.")
+        end
+        return false
+    end
+    --local newObj = mist.utils.deepCopy(n)
+    local newObj = ctld.utils.deepCopy("ctld.utils.dynAddStatic()", n)
+    --log:warn(newObj)
+    if newObj.units and newObj.units[1] then -- if its mist format
+        for entry, val in pairs(newObj.units[1]) do
+            if newObj[entry] and newObj[entry] ~= val or not newObj[entry] then
+                newObj[entry] = val
+            end
+        end
+    end
+    --log:info(newObj)
+
+    local cntry = newObj.country
+    if newObj.countryId then
+        cntry = newObj.countryId
+    end
+
+    local newCountry = ''
+
+    for countryId, countryName in pairs(country.name) do
+        if type(cntry) == 'string' then
+            cntry = cntry:gsub("%s+", "_")
+            if tostring(countryName) == string.upper(cntry) then
+                newCountry = countryName
+            end
+        elseif type(cntry) == 'number' then
+            if countryId == cntry then
+                newCountry = countryName
+            end
+        end
+    end
+
+    if newCountry == '' then
+        log:error("Country not found: $1", cntry)
+        return false
+    end
+
+    if newObj.clone or not newObj.groupId then
+        newObj.groupId = ctld.utils.getNextUniqId()
+    end
+
+    if newObj.clone or not newObj.unitId then
+        newObj.unitId = ctld.utils.getNextUniqId()
+    end
+
+    newObj.name = newObj.name or newObj.unitName
+
+    if newObj.clone or not newObj.name then
+        newObj.name = (newCountry .. ' static ' .. tostring(newObj.unitId))
+    end
+
+    if not newObj.dead then
+        newObj.dead = false
+    end
+
+    if not newObj.heading then
+        newObj.heading = math.rad(math.random(360))
+    end
+
+    if newObj.categoryStatic then
+        newObj.category = newObj.categoryStatic
+    end
+    if newObj.mass then
+        newObj.category = 'Cargos'
+    end
+
+    if newObj.shapeName then
+        newObj.shape_name = newObj.shapeName
+    end
+
+    if not newObj.shape_name then
+        log:info('shape_name not present')
+        -- if mist.DBs.const.shapeNames[newObj.type] then
+        --     newObj.shape_name = mist.DBs.const.shapeNames[newObj.type]
+        -- end
+    end
+    if newObj.x and newObj.y and newObj.type and type(newObj.x) == 'number' and type(newObj.y) == 'number' and type(newObj.type) == 'string' then
+        --log:warn(newObj)
+        coalition.addStaticObject(country.id[newCountry], newObj)
+
+        return newObj
+    end
+    log:error("Failed to add static object due to missing or incorrect value. X: $1, Y: $2, Type: $3", newObj.x,
+        newObj.y, newObj.type)
+    return false
 end
 
 --------------------------------------------------------------------------------------------------------
