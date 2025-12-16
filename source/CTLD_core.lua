@@ -2641,8 +2641,8 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
             local refPoint = _heli:getPoint()
             local refLat, refLon = coord.LOtoLL(refPoint)
             local unitPos = _heli:getPosition()
-            local refHeading = math.deg(math.atan2(unitPos.x.z, unitPos.x.x))
-
+            --local refHeading = math.deg(math.atan2(unitPos.x.z, unitPos.x.x))
+            local refHeading = math.deg(ctld.utils.getHeadingInRadians("ctld.spawnCrate", _heli, true))
             local destLat, destLon, destAlt = coord.LOtoLL(_point)
 
             local relativePos, forma = ctld.utils.getRelativeBearing("ctld.spawnCrate", refLat, refLon, refHeading,
@@ -8330,8 +8330,8 @@ end
 function ctld.initialize()
     ctld.logInfo(string.format("Initializing version %s", ctld.Version))
 
-    assert(mist ~= nil,
-        "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
+    -- assert(mist ~= nil,
+    --     "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
 
     ctld.unitsWithPlayer = {}     -- stores units that have players in them
     ctld.addedTo = {}             -- stores units that have had the CTLD F10 menu added
@@ -8668,9 +8668,12 @@ function ctld.eventHandler:onEvent(event)
     -- find the originator unit
     local unitName = nil
     if event.initiator ~= nil and event.initiator.getName then
+        ctld.logDebug(" event.initiator = [%s]", ctld.p(event.initiator))
+        ctld.logDebug("event.initiator.getName = [%s]", ctld.p(event.initiator:getName()))
         unitName = event.initiator:getName()
         ctld.logDebug("unitName = [%s]", ctld.p(unitName))
-        if Unit.getByName(unitName) then
+        local unit = Unit.getByName(unitName)
+        if unit and unit.getPlayerName then
             if Unit.getByName(unitName):getPlayerName() ~= nil then -- it's a human player
                 --ctld.logTrace("calling the 'processHumanPlayer' function immediately")
                 ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- unitName = %s",

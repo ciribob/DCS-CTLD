@@ -1,4 +1,3 @@
-mist.lua
 CTLD-i18n.lua
 CTLD_utils.lua
 CTLD_core.lua

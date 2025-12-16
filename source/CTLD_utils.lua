@@ -139,64 +139,100 @@ function ctld.utils.GetRelativeVec2Coords(refVec2Point, refHeadingInRadians, dis
 end
 
 ------------------------------------------------------------------------------------
---- Calculates the orientation of an end point relative to a reference point.
---- The calculation takes into account the current orientation of the reference point.
+--- Calculates the relative bearing of a destination point from a reference point.
+--- The bearing is expressed relative to the reference heading.
 ---
---- @param refLat number Latitude of the reference point in degrees.
---- @param refLon number Longitude of the reference point in degrees.
---- @param refHeading number Current orientation of the reference point in degrees (0 = North, 90 = East).
---- @param destLat number Latitude of the arrival point in degrees.
---- @param destLon number Longitude of the arrival point in degrees.
---- @param resultFormat string The desired output format: "radian", "degree" or "clock".
---- @return number The relative orientation in the specified resultFormat.
-function ctld.utils.getRelativeBearing(caller, refLat, refLon, refHeading, destLat, destLon, resultFormat)
-    if refLat == nil or refLon == nil or refHeading == nil or destLat == nil or destLon == nil then
+--- Input conventions (DCS-compatible):
+---  - refLat / destLat are in decimal degrees
+---  - refLon / destLon are in decimal degrees
+---  - refHeading is in DEGREES (user-facing), converted to radians internally
+---  - bearing output can be in radians, degrees, or clock position
+---
+--- Output formats:
+---  - "radian" : relative bearing in radians [-pi .. +pi]
+---  - "degree" : relative bearing in degrees [0 .. 360[
+---  - "clock"  : clock position (12 = ahead, 3 = right, 6 = behind, etc.)
+---
+--- @param caller string Calling context (for logging)
+--- @param refLat number Reference latitude in decimal degrees
+--- @param refLon number Reference longitude in decimal degrees
+--- @param refHeading number Heading in degrees (0-360)
+--- @param destLat number Destination latitude in decimal degrees
+--- @param destLon number Destination longitude in decimal degrees
+--- @param resultFormat string Output format ("radian", "degree", "clock")
+--- @return number, string Relative bearing and format
+------------------------------------------------------------------------------------
+function ctld.utils.getRelativeBearing(
+    caller,
+    refLat,
+    refLon,
+    refHeadingInDegrees,
+    destLat,
+    destLon,
+    resultFormat
+)
+    -- Input validation
+    if not refLat or not refLon or not refHeadingInDegrees or not destLat or not destLon then
         if env and env.error then
-            env.error("ctld.utils.getRelativeBearing()." .. tostring(caller) .. ": All input values must be provided.")
+            env.error("ctld.utils.getRelativeBearing()." .. tostring(caller) ..
+                ": All input values (refLat, refLon, refHeadingInDegrees, destLat, destLon) must be provided.")
         end
         return 0, resultFormat
     end
-    -- Converting degrees to radians for geometric calculations
-    local radrefLat = math.rad(refLat)
-    local raddestLat = math.rad(destLat)
-    local radrefLon = math.rad(refLon)
-    local raddestLon = math.rad(destLon)
-    local radrefHeading = math.rad(refHeading)
 
-    -- Calculating the longitude difference between the two points
-    local deltaLon = raddestLon - radrefLon
+    -- Convert degrees to radians for calculations
+    local refLatRad = math.rad(refLat)
+    local refLonRad = math.rad(refLon)
+    local destLatRad = math.rad(destLat)
+    local destLonRad = math.rad(destLon)
 
-    -- Using the great circle formula for azimuth (bearing)
-    -- This formula is based on spherical trigonometry and uses atan2
-    -- to correctly handle all quadrants.
-    local y = math.sin(deltaLon) * math.cos(raddestLat)
-    local x = math.cos(radrefLat) * math.sin(raddestLat) -
-        math.sin(radrefLat) * math.cos(raddestLat) * math.cos(deltaLon)
-    local absoluteBearingRad = math.atan(y, x)
+    -- Calculate delta in radians
+    local dLat = destLatRad - refLatRad
+    local dLon = destLonRad - refLonRad
 
-    -- Calculate relative orientation by subtracting the reference refHeading
-    local relativeBearingRad = absoluteBearingRad - radrefHeading
+    -- Calculate bearing using haversine-like formula (forward azimuth)
+    -- atan2(sin(dLon) * cos(destLat), cos(refLat) * sin(destLat) - sin(refLat) * cos(destLat) * cos(dLon))
+    local trueBearingRad = math.atan2(
+        math.sin(dLon) * math.cos(destLatRad),
+        math.cos(refLatRad) * math.sin(destLatRad) -
+        math.sin(refLatRad) * math.cos(destLatRad) * math.cos(dLon)
+    )
 
-    -- Normalizes the angle to be in the range [-pi, pi]
-    -- This ensures a consistent angle, whether positive or negative.
-    local normalizedRad = (relativeBearingRad + math.pi) % (2 * math.pi) - math.pi
-
-    -- Returns the value in the requested resultFormat
-    if resultFormat == "radian" then
-        return normalizedRad, resultFormat
-    elseif resultFormat == "clock" then
-        -- Convert to clock position (12h = front, 3h = right, 6h = back, etc..)
-        local bearingDeg = math.deg(normalizedRad)
-        local clockPosition = ((bearingDeg + 360) % 360) / 30
-        clockPosition = clockPosition >= 0 and math.floor(clockPosition + 0.5) or math.ceil(clockPosition - 0.5),
-            resultFormat -- rounded clockPosition
-        if clockPosition == 0 then clockPosition = 12 end
-        return clockPosition, resultFormat
-    else -- By default, the resultFormat is "degree"
-        resultFormat = "degree"
-        local bearingDeg = math.deg(normalizedRad)
-        return (bearingDeg + 360) % 360, resultFormat
+    -- Normalize true bearing to [0, 2π)
+    if trueBearingRad < 0 then
+        trueBearingRad = trueBearingRad + 2 * math.pi
     end
+
+    -- Convert reference heading from degrees to radians
+    local refHeadingRad = math.rad(refHeadingInDegrees)
+
+    -- Compute relative bearing (subtract reference heading)
+    local relativeRad = trueBearingRad - refHeadingRad
+
+    -- Normalize relative bearing to [-π, +π]
+    relativeRad = (relativeRad + math.pi) % (2 * math.pi) - math.pi
+
+    -- Output formats
+    if resultFormat == "radian" then
+        return relativeRad, resultFormat
+    end
+
+    -- Convert to degrees [0, 360)
+    local relativeDeg = math.deg(relativeRad)
+    if relativeDeg < 0 then
+        relativeDeg = relativeDeg + 360
+    end
+
+    if resultFormat == "clock" then
+        -- 12 o'clock = ahead (0°), each hour = 30 degrees
+        -- Clock 3 = right (90°), 6 = behind (180°), 9 = left (270°)
+        local clock = math.floor((relativeDeg + 15) / 30) % 12
+        if clock == 0 then clock = 12 end
+        return clock, resultFormat
+    end
+
+    -- Default: degrees [0, 360)
+    return relativeDeg, "degree"
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -236,7 +272,7 @@ function ctld.utils.getHeadingInRadians(caller, unitObject, rawHeading) --rawHea
     rawHeading = rawHeading or false
     local unitpos = unitObject:getPosition()
     if unitpos then
-        local HeadingInRadians = math.atan(unitpos.x.z, unitpos.x.x)
+        local HeadingInRadians = math.atan2(unitpos.x.z, unitpos.x.x)
         if not rawHeading then
             HeadingInRadians = HeadingInRadians +
                 ctld.utils.getNorthCorrectionInRadians("ctld.utils.getHeadingInRadians()", unitpos.p)

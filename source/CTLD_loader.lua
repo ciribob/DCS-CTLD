@@ -18,16 +18,7 @@ if ctld.path then
 	local loadMsg = false -- true to enable load messages
 	if loadMsg then trigger.action.outText("CTLD loader START !", 10) end
 	local m = 0
-	dofile(ctld.path .. "mist.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": mist.lua Loaded", 10)
-	end
-	dofile(ctld.path .. "CTLD_extAPI.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": CTLD_extAPI.lua Loaded", 10)
-	end
+	-----------------------------------------------------------------------
 	dofile(ctld.path .. "CTLD-i18n.lua")
 	if loadMsg then
 		m = m + 1
