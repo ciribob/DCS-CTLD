@@ -742,20 +742,21 @@ end
 
 --------------------------------------------------------------------------------------------------------
 -- same as getGroupPoints but returns speed and formation type along with vec2 of point}
-function ctld.utils.getGroupRoute(caller, groupIdent, task)
-    if groupIdent == nil then
+function ctld.utils.getGroupRoute(caller, groupName, task)
+    if groupName == nil then
         if env and env.error then
-            env.error("ctld.utils.getGroupRoute()." .. tostring(caller) .. ": Invalid group identifier provided.")
+            env.error("ctld.utils.getGroupRoute()." .. tostring(caller) .. ": Invalid group name provided.")
         end
         return nil
     end
     -- refactor to search by groupId and allow groupId and groupName as inputs
-    local gpId = groupIdent
-    if mist.DBs.MEgroupsByName[groupIdent] then
-        gpId = mist.DBs.MEgroupsByName[groupIdent].groupId
+    local gpId = groupName
+    --if mist.DBs.MEgroupsByName[groupName] then
+    if Group.getByName[groupName] then
+        gpId = Group.getByName[groupName]:getID()
     else
         log:error("ctld.utils.getGroupRoute()." .. tostring(caller) .. '$1 not found in mist.DBs.MEgroupsByName',
-            groupIdent)
+            groupName)
     end
 
     for coa_name, coa_data in pairs(env.mission.coalition) do
