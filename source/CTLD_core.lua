@@ -2645,7 +2645,8 @@ function ctld.spawnCrate(_arguments, bypassCrateWaitTime)
 
             local destLat, destLon, destAlt = coord.LOtoLL(_point)
 
-            local relativePos, forma = ctld.tools.getRelativeBearing(refLat, refLon, refHeading, destLat, destLon,
+            local relativePos, forma = ctld.utils.getRelativeBearing("ctld.spawnCrate", refLat, refLon, refHeading,
+                destLat, destLon,
                 'clock')
 
             ctld.displayMessageToGroup(_heli,
@@ -8274,7 +8275,7 @@ function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRad
                 end
             end
         end
-        CTLD_extAPI.DBs.humansByName[_playerUnit:getName()].losMarkIds =
+        ctld.unitsWithPlayer[_playerUnit:getName()].losMarkIds =
             MarkIds -- store list of marksIds generated and showed on F10 map
         return TargetsInLOS
     else
@@ -8285,11 +8286,11 @@ end
 ---------------------------------------------------------
 function ctld.reconRemoveTargetsInLosOnF10Map(_playerUnit)
     local unitName = _playerUnit:getName()
-    if CTLD_extAPI.DBs.humansByName[unitName].losMarkIds then
-        for i = 1, #CTLD_extAPI.DBs.humansByName[unitName].losMarkIds do -- for each unit having los on enemies
-            trigger.action.removeMark(CTLD_extAPI.DBs.humansByName[unitName].losMarkIds[i])
+    if ctld.unitsWithPlayer[unitName].losMarkIds then
+        for i = 1, #ctld.unitsWithPlayer[unitName].losMarkIds do -- for each unit having los on enemies
+            trigger.action.removeMark(ctld.unitsWithPlayer[unitName].losMarkIds[i])
         end
-        CTLD_extAPI.DBs.humansByName[unitName].losMarkIds = nil
+        ctld.unitsWithPlayer[unitName].losMarkIds = nil
     end
 end
 
@@ -8332,7 +8333,8 @@ function ctld.initialize()
     assert(mist ~= nil,
         "\n\n** HEY MISSION-DESIGNER! **\n\nMiST has not been loaded!\n\nMake sure MiST 3.6 or higher is running\n*before* running this script!\n")
 
-    ctld.addedTo = {}
+    ctld.unitsWithPlayer = {}     -- stores units that have players in them
+    ctld.addedTo = {}             -- stores units that have had the CTLD F10 menu added
     ctld.spawnedCratesRED = {}    -- use to store crates that have been spawned
     ctld.spawnedCratesBLUE = {}   -- use to store crates that have been spawned
 
@@ -8364,19 +8366,15 @@ function ctld.initialize()
     ctld.usedUHFFrequencies = {}
     ctld.usedVHFFrequencies = {}
     ctld.usedFMFrequencies = {}
-
     ctld.freeUHFFrequencies = {}
     ctld.freeVHFFrequencies = {}
     ctld.freeFMFrequencies = {}
 
     --used to lookup what the crate will contain
     ctld.crateLookupTable = {}
-
     ctld.extractZones = {}             -- stored extract zones
-
     ctld.missionEditorCargoCrates = {} -- crates added by mission editor for triggering cratesinzone
     ctld.hoverStatus = {}              -- tracks status of a helis hover above a crate
-
     ctld.callbacks = {}                -- function callback
     ctld.vehicleCommandsPath = {}      -- memory of F10 c=CTLD menu path bay unitNames
 
@@ -8672,63 +8670,61 @@ function ctld.eventHandler:onEvent(event)
     if event.initiator ~= nil and event.initiator.getName then
         unitName = event.initiator:getName()
         ctld.logDebug("unitName = [%s]", ctld.p(unitName))
-    end
-    if not unitName then
-        ctld.logInfo("no unitname found in event %s", ctld.p(event))
-        return
-    end
+        if Unit.getByName(unitName) then
+            if Unit.getByName(unitName):getPlayerName() ~= nil then -- it's a human player
+                --ctld.logTrace("calling the 'processHumanPlayer' function immediately")
+                ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- unitName = %s",
+                    ctld.p(unitName))
+                ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
+                local _unit = Unit.getByName(unitName)
+                if _unit ~= nil then
+                    local _groupId = _unit:getGroup():getID()
+                    ctld.logTrace("_unit = %s", ctld.p(_unit))
 
-    local function processHumanPlayer()
-        ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- unitName = %s", ctld.p(unitName))
-        --ctld.logTrace("in the 'processHumanPlayer' function processHumanPlayer()- CTLD_extAPI.DBs.humansByName[unitName] = %s", ctld.p(CTLD_extAPI.DBs.humansByName[unitName]))
-        if CTLD_extAPI.DBs.humansByName[unitName] then -- it's a human unit
-            ctld.logDebug("caught event %s for human unit [%s]", ctld.p(eventName), ctld.p(unitName))
-            local _unit = Unit.getByName(unitName)
-            if _unit ~= nil then
-                local _groupId = _unit:getGroup():getID()
-                -- assign transport pilot
-                ctld.logTrace("_unit = %s", ctld.p(_unit))
+                    local playerTypeName = _unit:getTypeName()
+                    ctld.logTrace("playerTypeName = %s", ctld.p(playerTypeName))
 
-                local playerTypeName = _unit:getTypeName()
-                ctld.logTrace("playerTypeName = %s", ctld.p(playerTypeName))
+                    -- update ctld.DB.unitsWithPlayer
+                    ctld.unitsWithPlayer[unitName] = {}
+                    ctld.unitsWithPlayer[unitName].desc = ctld.utils.deepCopy("ctld.eventHandler:onEvent()",
+                        _unit:getDesc())
+                    ctld.unitsWithPlayer[unitName].typeName = playerTypeName
+                    ctld.unitsWithPlayer[unitName].groupId = _groupId
+                    ctld.unitsWithPlayer[unitName].coalition = _unit:getCoalition()
+                    ctld.unitsWithPlayer[unitName].unit = _unit
+                    ctld.unitsWithPlayer[unitName].playerName = _unit:getPlayerName()
+                    ctld.unitsWithPlayer[unitName].F10Menu = {}
 
-                -- Allow units to CTLD by aircraft type and not by pilot name
-                if ctld.addPlayerAircraftByType then
-                    for _, aircraftType in pairs(ctld.aircraftTypeTable) do
-                        if aircraftType == playerTypeName then
-                            ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
-                            if ctld.tools.isValueInIpairTable(ctld.transportPilotNames, unitName) == false then
-                                table.insert(ctld.transportPilotNames, unitName) -- add transport unit to the list
-                            end
-                            if ctld.addedTo[tostring(_groupId)] == nil then      -- only if menu not already set up
-                                ctld.addTransportF10MenuOptions(unitName)        -- add transport radio menu
-                                break
+                    -- Allow units to CTLD by aircraft type and not by pilot name
+                    if ctld.addPlayerAircraftByType then
+                        for _, aircraftType in pairs(ctld.aircraftTypeTable) do
+                            if aircraftType == playerTypeName then
+                                ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
+                                if ctld.tools.isValueInIpairTable(ctld.transportPilotNames, unitName) == false then
+                                    table.insert(ctld.transportPilotNames, unitName) -- add transport unit to the list
+                                end
+                                if ctld.addedTo[tostring(_groupId)] == nil then      -- only if menu not already set up
+                                    ctld.addTransportF10MenuOptions(unitName)        -- add transport radio menu
+                                    break
+                                end
                             end
                         end
-                    end
-                else
-                    for _, _unitName in pairs(ctld.transportPilotNames) do
-                        if _unitName == unitName then
-                            ctld.logTrace("adding by transportPilotNames, unitName = %s", ctld.p(unitName))
-                            ctld.addTransportF10MenuOptions(unitName) -- add transport radio menu
-                            break
+                    else
+                        for _, _unitName in pairs(ctld.transportPilotNames) do
+                            if _unitName == unitName then
+                                ctld.logTrace("adding by transportPilotNames, unitName = %s", ctld.p(unitName))
+                                ctld.addTransportF10MenuOptions(unitName) -- add transport radio menu
+                                break
+                            end
                         end
                     end
                 end
             end
         end
     end
-
-    if not CTLD_extAPI.DBs.humansByName[unitName] then
-        -- give a few milliseconds for MiST to handle the BIRTH event too
-        ctld.logTrace("give MiST some time to handle the BIRTH event too")
-        timer.scheduleFunction(function()
-            ctld.logTrace("calling the 'processHumanPlayer' function in a timer")
-            processHumanPlayer()
-        end, nil, timer.getTime() + 2) --1.5
-    else
-        ctld.logTrace("calling the 'processHumanPlayer' function immediately")
-        processHumanPlayer()
+    if not unitName then
+        ctld.logInfo("no unitname found in event %s", ctld.p(event))
+        return
     end
 end
 
@@ -8783,61 +8779,6 @@ function ctld.tools.isValueInIpairTable(tab, value)
         end
     end
     return false -- La valeur n'existe pas
-end
-
-------------------------------------------------------------------------------------
---- Calculates the orientation of an end point relative to a reference point.
---- The calculation takes into account the current orientation of the reference point.
----
---- @param refLat number Latitude of the reference point in degrees.
---- @param refLon number Longitude of the reference point in degrees.
---- @param refHeading number Current orientation of the reference point in degrees (0 = North, 90 = East).
---- @param destLat number Latitude of the arrival point in degrees.
---- @param destLon number Longitude of the arrival point in degrees.
---- @param resultFormat string The desired output format: "radian", "degree" or "clock".
---- @return number The relative orientation in the specified resultFormat.
-function ctld.tools.getRelativeBearing(refLat, refLon, refHeading, destLat, destLon, resultFormat)
-    -- Converting degrees to radians for geometric calculations
-    local radrefLat = math.rad(refLat)
-    local raddestLat = math.rad(destLat)
-    local radrefLon = math.rad(refLon)
-    local raddestLon = math.rad(destLon)
-    local radrefHeading = math.rad(refHeading)
-
-    -- Calculating the longitude difference between the two points
-    local deltaLon = raddestLon - radrefLon
-
-    -- Using the great circle formula for azimuth (bearing)
-    -- This formula is based on spherical trigonometry and uses atan2
-    -- to correctly handle all quadrants.
-    local y = math.sin(deltaLon) * math.cos(raddestLat)
-    local x = math.cos(radrefLat) * math.sin(raddestLat) -
-        math.sin(radrefLat) * math.cos(raddestLat) * math.cos(deltaLon)
-    local absoluteBearingRad = math.atan2(y, x)
-
-    -- Calculate relative orientation by subtracting the reference refHeading
-    local relativeBearingRad = absoluteBearingRad - radrefHeading
-
-    -- Normalizes the angle to be in the range [-pi, pi]
-    -- This ensures a consistent angle, whether positive or negative.
-    local normalizedRad = (relativeBearingRad + math.pi) % (2 * math.pi) - math.pi
-
-    -- Returns the value in the requested resultFormat
-    if resultFormat == "radian" then
-        return normalizedRad, resultFormat
-    elseif resultFormat == "clock" then
-        -- Convert to clock position (12h = front, 3h = right, 6h = back, etc..)
-        local bearingDeg = math.deg(normalizedRad)
-        local clockPosition = ((bearingDeg + 360) % 360) / 30
-        clockPosition = clockPosition >= 0 and math.floor(clockPosition + 0.5) or math.ceil(clockPosition - 0.5),
-            resultFormat -- rounded clockPosition
-        if clockPosition == 0 then clockPosition = 12 end
-        return clockPosition, resultFormat
-    else -- By default, the resultFormat is "degree"
-        resultFormat = "degree"
-        local bearingDeg = math.deg(normalizedRad)
-        return (bearingDeg + 360) % 360, resultFormat
-    end
 end
 
 --- Enable/Disable error boxes displayed on screen.
