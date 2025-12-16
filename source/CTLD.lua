@@ -2454,7 +2454,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _group.category = Group.Category.GROUND;
         _group.country = _country;
 
-        local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnCrateStatic", _group).name)
+        local _spawnedGroup = Group.getByName(ctld.utils.dynAdd("ctld.spawnCrateStatic", _group).name)
 
         -- Turn off AI
         trigger.action.setGroupAIOff(_spawnedGroup)
@@ -4422,7 +4422,7 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
     }
 
     -- return coalition.addGroup(_country, Group.Category.GROUND, _radioGroup)
-    return Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnRadioBeaconUnit()", _radioGroup).name)
+    return Group.getByName(ctld.utils.dynAdd("ctld.spawnRadioBeaconUnit()", _radioGroup).name)
 end
 
 function ctld.updateRadioBeacon(_beaconDetails)
@@ -5158,167 +5158,6 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
     end
 end
 
---[[
-function ctld.spawnCrateGroup_old(_heli, _positions, _types, _hdgs)
-    -- ctld.logTrace("_heli      =  %s", ctld.p(_heli))
-    -- ctld.logTrace("_positions =  %s", ctld.p(_positions))
-    -- ctld.logTrace("_types     =  %s", ctld.p(_types))
-    -- ctld.logTrace("_hdgs      =  %s", ctld.p(_hdgs))
-
-    local _id = ctld.getNextGroupId()
-    local _groupName = _types[1] .. "    #" .. _id
-    local _side = _heli:getCoalition()
-    local _group = {
-        ["visible"]  = false,
-        -- ["groupId"] = _id,
-        ["hidden"]   = false,
-        ["units"]    = {},
-        --                ["y"] = _positions[1].z,
-        --                ["x"] = _positions[1].x,
-        ["name"]     = _groupName,
-        ["tasks"]    = {},
-        ["radioSet"] = false,
-        ["task"]     = "Reconnaissance",
-        ["route"]    = {},
-    }
-
-    local _hdg = 120 * math.pi / 180                                     -- radians = 120 degrees
-    if _types[1] ~= "MQ-9 Reaper" and _types[1] ~= "RQ-1A Predator" then -- non-drones - JTAC
-        local _spreadMin = 5
-        local _spreadMax = 5
-        local _spreadMult = 1
-        for _i, _pos in ipairs(_positions) do
-            local _unitId = ctld.getNextUnitId()
-            local _details = {
-                type = _types[_i],
-                unitId = _unitId,
-                name = string.format("Unpacked %s #%i", _types[_i],
-                    _unitId)
-            }
-            --ctld.logTrace("Group._details =  %s", ctld.p(_details))
-            if _hdgs and _hdgs[_i] then
-                _hdg = _hdgs[_i]
-            end
-
-            _group.units[_i] = ctld.createUnit(_pos.x + math.random(_spreadMin, _spreadMax) * _spreadMult,
-                _pos.z + math.random(_spreadMin, _spreadMax) * _spreadMult,
-                _hdg,
-                _details)
-        end
-        _group.category = Group.Category.GROUND
-    else -- drones - JTAC
-        local _unitId = ctld.getNextUnitId()
-        local _details = {
-            type      = _types[1],
-            unitId    = _unitId,
-            name      = string.format("Unpacked %s #%i", _types[1], _unitId),
-            livery_id = "'camo' scheme",
-            skill     = "High",
-            speed     = 80,
-            payload   = { pylons = {}, fuel = 1300, flare = 0, chaff = 0, gun = 100 }
-        }
-
-        _group.units[1] = ctld.createUnit(_positions[1].x,
-            _positions[1].z + ctld.jtacDroneRadius,
-            _hdg,
-            _details)
-
-        _group.category = Group.Category.AIRPLANE -- for drones
-
-        -- create drone orbiting route
-        local DroneRoute = {
-            ["points"] =
-            {
-                [1] =
-                {
-                    ["alt"] = 2000,
-                    ["action"] = "Turning Point",
-                    ["alt_type"] = "BARO",
-                    ["properties"] =
-                    {
-                        ["addopt"] = {},
-                    }, -- end of ["properties"]
-                    ["speed"] = 80,
-                    ["task"] =
-                    {
-                        ["id"] = "ComboTask",
-                        ["params"] =
-                        {
-                            ["tasks"] =
-                            {
-                                [1] =
-                                {
-                                    ["enabled"] = true,
-                                    ["auto"] = false,
-                                    ["id"] = "WrappedAction",
-                                    ["number"] = 1,
-                                    ["params"] =
-                                    {
-                                        ["action"] =
-                                        {
-                                            ["id"] = "EPLRS",
-                                            ["params"] =
-                                            {
-                                                ["value"] = true,
-                                                ["groupId"] = 0,
-                                            }, -- end of ["params"]
-                                        },     -- end of ["action"]
-                                    },         -- end of ["params"]
-                                },             -- end of [1]
-                                [2] =
-                                {
-                                    ["number"] = 2,
-                                    ["auto"] = false,
-                                    ["id"] = "Orbit",
-                                    ["enabled"] = true,
-                                    ["params"] =
-                                    {
-                                        ["altitude"] = ctld.jtacDroneAltitude,
-                                        ["pattern"]  = "Circle",
-                                        ["speed"]    = 80,
-                                    }, -- end of ["params"]
-                                },     -- end of [2]
-                                [3] =
-                                {
-                                    ["enabled"] = true,
-                                    ["auto"] = false,
-                                    ["id"] = "WrappedAction",
-                                    ["number"] = 3,
-                                    ["params"] =
-                                    {
-                                        ["action"] =
-                                        {
-                                            ["id"] = "Option",
-                                            ["params"] =
-                                            {
-                                                ["value"] = true,
-                                                ["name"] = 6,
-                                            }, -- end of ["params"]
-                                        },     -- end of ["action"]
-                                    },         -- end of ["params"]
-                                },             -- end of [3]
-                            },                 -- end of ["tasks"]
-                        },                     -- end of ["params"]
-                    },                         -- end of ["task"]
-                    ["type"] = "Turning Point",
-                    ["ETA"] = 0,
-                    ["ETA_locked"] = true,
-                    ["y"] = _positions[1].z,
-                    ["x"] = _positions[1].x,
-                    ["speed_locked"] = true,
-                    ["formation_template"] = "",
-                }, -- end of [1]
-            },     -- end of ["points"]
-        }          -- end of ["route"]
-        ---------------------------------------------------------------------------------
-        _group.route = DroneRoute
-    end
-
-    _group.country = _heli:getCountry()
-    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnCrateGroup_old()", _group).name)
-    return _spawnedGroup
-end ]] --#region
-
 function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
     --ctld.logTrace("_heli      =  %s", ctld.p(_heli))
     --ctld.logTrace("_positions =  %s", ctld.p(_positions))
@@ -5446,7 +5285,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
         end
 
         _group.country = _heli:getCountry()
-        local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnCrateGroup()", _group).name)
+        local _spawnedGroup = Group.getByName(ctld.utils.dynAdd("ctld.spawnCrateGroup()", _group).name)
         return _spawnedGroup
     else -- if scene crate requested
         return ctld.scene.playScene(_heli, ctld.scene.SceneModels[_types[1]])
@@ -5500,7 +5339,7 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
     _group.category = Group.Category.GROUND;
     _group.country = _details.country;
 
-    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnDroppedGroup()", _group).name)
+    local _spawnedGroup = Group.getByName(ctld.utils.dynAdd("ctld.spawnDroppedGroup()", _group).name)
 
     --local _spawnedGroup = coalition.addGroup(_details.country, Group.Category.GROUND, _group)
 

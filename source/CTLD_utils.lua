@@ -828,7 +828,7 @@ end
 
 --------------------------------------------------------------------------------------------------------
 --- Spawns a static object to the game world.
--- Borrowed from mist.dynAddStatic
+-- Borrowed from mist.dynAddStatic and modified.
 -- @todo write good docs
 -- @tparam table staticObj table containing data needed for the object creation
 function ctld.utils.dynAddStatic(caller, n)
@@ -886,7 +886,7 @@ function ctld.utils.dynAddStatic(caller, n)
     newObj.name = newObj.name or newObj.unitName
 
     if newObj.clone or not newObj.name then
-        newObj.name = (newCountry .. ' static ' .. tostring(newObj.unitId))
+        newObj.name = (newCountry .. ' static ' .. tostring(newObj.groupId))
     end
 
     if not newObj.dead then
@@ -910,9 +910,6 @@ function ctld.utils.dynAddStatic(caller, n)
 
     if not newObj.shape_name then
         log:info('shape_name not present')
-        -- if mist.DBs.const.shapeNames[newObj.type] then
-        --     newObj.shape_name = mist.DBs.const.shapeNames[newObj.type]
-        -- end
     end
     if newObj.x and newObj.y and newObj.type and type(newObj.x) == 'number' and type(newObj.y) == 'number' and type(newObj.type) == 'string' then
         --log:warn(newObj)
@@ -923,6 +920,213 @@ function ctld.utils.dynAddStatic(caller, n)
     log:error("Failed to add static object due to missing or incorrect value. X: $1, Y: $2, Type: $3", newObj.x,
         newObj.y, newObj.type)
     return false
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Spawns a dynamic group into the game world.
+-- Borrowed from mist.dynAddStatic and modified.
+-- Will generate groupId, groupName, unitId, and unitName if needed
+-- @tparam table newGroup table containting values needed for spawning a group.
+function ctld.utils.dynAdd(caller, ng)
+    if ng == nil then
+        if env and env.error then
+            env.error("ctld.utils.dynAdd()." .. tostring(caller) .. ": Invalid group data provided.")
+        end
+        return false
+    end
+    local newGroup = ctld.utils.deepCopy(" ctld.utils.dynAdd()", ng)
+    --log:warn(newGroup)
+    --mist.debug.writeData(mist.utils.serialize,{'msg', newGroup}, 'newGroupOrig.lua')
+    local cntry = newGroup.country
+    if newGroup.countryId then
+        cntry = newGroup.countryId
+    end
+
+    local groupType = newGroup.category
+    local newCountry = ''
+    -- validate data
+    for countryId, countryName in pairs(country.name) do
+        if type(cntry) == 'string' then
+            cntry = cntry:gsub("%s+", "_")
+            if tostring(countryName) == string.upper(cntry) then
+                newCountry = countryName
+            end
+        elseif type(cntry) == 'number' then
+            if countryId == cntry then
+                newCountry = countryName
+            end
+        end
+    end
+
+    if newCountry == '' then
+        log:error("Country not found: $1", cntry)
+        return false
+    end
+
+    local newCat = ''
+    for catName, catId in pairs(Unit.Category) do
+        if type(groupType) == 'string' then
+            if tostring(catName) == string.upper(groupType) then
+                newCat = catName
+            end
+        elseif type(groupType) == 'number' then
+            if catId == groupType then
+                newCat = catName
+            end
+        end
+
+        if catName == 'GROUND_UNIT' and (string.upper(groupType) == 'VEHICLE' or string.upper(groupType) == 'GROUND') then
+            newCat = 'GROUND_UNIT'
+        elseif catName == 'AIRPLANE' and string.upper(groupType) == 'PLANE' then
+            newCat = 'AIRPLANE'
+        end
+    end
+    local typeName
+    if newCat == 'GROUND_UNIT' then
+        typeName = ' gnd '
+    elseif newCat == 'AIRPLANE' then
+        typeName = ' air '
+    elseif newCat == 'HELICOPTER' then
+        typeName = ' hel '
+    elseif newCat == 'SHIP' then
+        typeName = ' shp '
+    elseif newCat == 'BUILDING' then
+        typeName = ' bld '
+    end
+    if newGroup.clone or not newGroup.groupId then
+        newGroup.groupId = ctld.utils.getNextUniqId()
+    end
+    if newGroup.groupName or newGroup.name then
+        if newGroup.groupName then
+            newGroup.name = newGroup.groupName
+        elseif newGroup.name then
+            newGroup.name = newGroup.name
+        end
+    else
+        newGroup.name = tostring(newCountry) .. "_" .. tostring(typeName) .. "_" .. tostring(newGroup.groupId)
+    end
+
+    if not newGroup.hidden then
+        newGroup.hidden = false
+    end
+
+    if not newGroup.visible then
+        newGroup.visible = false
+    end
+
+    if (newGroup.start_time and type(newGroup.start_time) ~= 'number') or not newGroup.start_time then
+        if newGroup.startTime then
+            newGroup.start_time = ctld.utils.round("mist.dynAdd()", newGroup.start_time)
+        else
+            newGroup.start_time = 0
+        end
+    end
+
+
+    for unitIndex, unitData in pairs(newGroup.units) do
+        local originalName = newGroup.units[unitIndex].unitName or newGroup.units[unitIndex].name
+        if newGroup.clone or not unitData.unitId then
+            newGroup.units[unitIndex].unitId = ctld.utils.getNextUniqId()
+        end
+        if newGroup.units[unitIndex].unitName or newGroup.units[unitIndex].name then
+            if newGroup.units[unitIndex].unitName then
+                newGroup.units[unitIndex].name = newGroup.units[unitIndex].unitName
+            elseif newGroup.units[unitIndex].name then
+                newGroup.units[unitIndex].name = newGroup.units[unitIndex].name
+            end
+        end
+        if not unitData.name then
+            newGroup.units[unitIndex].name = tostring(newGroup.name) .. '_unit_' .. tostring(unitIndex)
+        end
+
+        if not unitData.skill then
+            newGroup.units[unitIndex].skill = 'Random'
+        end
+
+        if newCat == 'AIRPLANE' or newCat == 'HELICOPTER' then
+            if newGroup.units[unitIndex].alt_type and newGroup.units[unitIndex].alt_type ~= 'BARO' or not newGroup.units[unitIndex].alt_type then
+                newGroup.units[unitIndex].alt_type = 'RADIO'
+            end
+            if not unitData.speed then
+                if newCat == 'AIRPLANE' then
+                    newGroup.units[unitIndex].speed = 150
+                elseif newCat == 'HELICOPTER' then
+                    newGroup.units[unitIndex].speed = 60
+                end
+            end
+            -- if not unitData.payload then
+            --     newGroup.units[unitIndex].payload = mist.getPayload(originalName)
+            -- end
+            if not unitData.alt then
+                if newCat == 'AIRPLANE' then
+                    newGroup.units[unitIndex].alt = 2000
+                    newGroup.units[unitIndex].alt_type = 'RADIO'
+                    newGroup.units[unitIndex].speed = 150
+                elseif newCat == 'HELICOPTER' then
+                    newGroup.units[unitIndex].alt = 500
+                    newGroup.units[unitIndex].alt_type = 'RADIO'
+                    newGroup.units[unitIndex].speed = 60
+                end
+            end
+        elseif newCat == 'GROUND_UNIT' then
+            if nil == unitData.playerCanDrive then
+                unitData.playerCanDrive = true
+            end
+        end
+    end
+    if newGroup.route then
+        if newGroup.route and not newGroup.route.points then
+            if newGroup.route[1] then
+                local copyRoute = ctld.utils.deepCopy("ctld.utils.dynAdd()", newGroup.route)
+                newGroup.route = {}
+                newGroup.route.points = copyRoute
+            end
+        end
+    else -- if aircraft and no route assigned. make a quick and stupid route so AI doesnt RTB immediately
+        --if newCat == 'AIRPLANE' or newCat == 'HELICOPTER' then
+        newGroup.route = {}
+        newGroup.route.points = {}
+        newGroup.route.points[1] = {}
+        --end
+    end
+    newGroup.country = newCountry
+
+    -- update and verify any self tasks
+    if newGroup.route and newGroup.route.points then
+        --log:warn(newGroup.route.points)
+        for i, pData in pairs(newGroup.route.points) do
+            if pData.task and pData.task.params and pData.task.params.tasks and #pData.task.params.tasks > 0 then
+                for tIndex, tData in pairs(pData.task.params.tasks) do
+                    if tData.params and tData.params.action then
+                        if tData.params.action.id == "EPLRS" then
+                            tData.params.action.params.groupId = newGroup.groupId
+                        elseif tData.params.action.id == "ActivateBeacon" or tData.params.action.id == "ActivateICLS" then
+                            tData.params.action.params.unitId = newGroup.units[1].unitId
+                        end
+                    end
+                end
+            end
+        end
+    end
+    --mist.debug.writeData(mist.utils.serialize,{'msg', newGroup}, newGroup.name ..'.lua')
+    --log:warn(newGroup)
+    -- sanitize table
+    newGroup.groupName = nil
+    newGroup.clone = nil
+    newGroup.category = nil
+    newGroup.country = nil
+
+    newGroup.tasks = {}
+
+    for unitIndex, unitData in pairs(newGroup.units) do
+        newGroup.units[unitIndex].unitName = nil
+    end
+
+    ctld.logTrace("ctld.utils.dynAdd().nexGroup =  %s", ctld.p(newGroup))
+    ctld.logTrace("ctld.utils.dynAdd().nexGroup =  %s", mist.utils.tableShow(newGroup))
+    coalition.addGroup(country.id[newCountry], Unit.Category[newCat], newGroup)
+
+    return newGroup
 end
 
 --------------------------------------------------------------------------------------------------------

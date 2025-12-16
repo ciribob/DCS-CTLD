@@ -11451,7 +11451,7 @@ end
 
 --------------------------------------------------------------------------------------------------------
 --- Spawns a static object to the game world.
--- Borrowed from mist.dynAddStatic
+-- Borrowed from mist.dynAddStatic and modified.
 -- @todo write good docs
 -- @tparam table staticObj table containing data needed for the object creation
 function ctld.utils.dynAddStatic(caller, n)
@@ -11509,7 +11509,7 @@ function ctld.utils.dynAddStatic(caller, n)
     newObj.name = newObj.name or newObj.unitName
 
     if newObj.clone or not newObj.name then
-        newObj.name = (newCountry .. ' static ' .. tostring(newObj.unitId))
+        newObj.name = (newCountry .. ' static ' .. tostring(newObj.groupId))
     end
 
     if not newObj.dead then
@@ -11533,9 +11533,6 @@ function ctld.utils.dynAddStatic(caller, n)
 
     if not newObj.shape_name then
         log:info('shape_name not present')
-        -- if mist.DBs.const.shapeNames[newObj.type] then
-        --     newObj.shape_name = mist.DBs.const.shapeNames[newObj.type]
-        -- end
     end
     if newObj.x and newObj.y and newObj.type and type(newObj.x) == 'number' and type(newObj.y) == 'number' and type(newObj.type) == 'string' then
         --log:warn(newObj)
@@ -11546,6 +11543,213 @@ function ctld.utils.dynAddStatic(caller, n)
     log:error("Failed to add static object due to missing or incorrect value. X: $1, Y: $2, Type: $3", newObj.x,
         newObj.y, newObj.type)
     return false
+end
+
+--------------------------------------------------------------------------------------------------------
+--- Spawns a dynamic group into the game world.
+-- Borrowed from mist.dynAddStatic and modified.
+-- Will generate groupId, groupName, unitId, and unitName if needed
+-- @tparam table newGroup table containting values needed for spawning a group.
+function ctld.utils.dynAdd(caller, ng)
+    if ng == nil then
+        if env and env.error then
+            env.error("ctld.utils.dynAdd()." .. tostring(caller) .. ": Invalid group data provided.")
+        end
+        return false
+    end
+    local newGroup = ctld.utils.deepCopy(" ctld.utils.dynAdd()", ng)
+    --log:warn(newGroup)
+    --mist.debug.writeData(mist.utils.serialize,{'msg', newGroup}, 'newGroupOrig.lua')
+    local cntry = newGroup.country
+    if newGroup.countryId then
+        cntry = newGroup.countryId
+    end
+
+    local groupType = newGroup.category
+    local newCountry = ''
+    -- validate data
+    for countryId, countryName in pairs(country.name) do
+        if type(cntry) == 'string' then
+            cntry = cntry:gsub("%s+", "_")
+            if tostring(countryName) == string.upper(cntry) then
+                newCountry = countryName
+            end
+        elseif type(cntry) == 'number' then
+            if countryId == cntry then
+                newCountry = countryName
+            end
+        end
+    end
+
+    if newCountry == '' then
+        log:error("Country not found: $1", cntry)
+        return false
+    end
+
+    local newCat = ''
+    for catName, catId in pairs(Unit.Category) do
+        if type(groupType) == 'string' then
+            if tostring(catName) == string.upper(groupType) then
+                newCat = catName
+            end
+        elseif type(groupType) == 'number' then
+            if catId == groupType then
+                newCat = catName
+            end
+        end
+
+        if catName == 'GROUND_UNIT' and (string.upper(groupType) == 'VEHICLE' or string.upper(groupType) == 'GROUND') then
+            newCat = 'GROUND_UNIT'
+        elseif catName == 'AIRPLANE' and string.upper(groupType) == 'PLANE' then
+            newCat = 'AIRPLANE'
+        end
+    end
+    local typeName
+    if newCat == 'GROUND_UNIT' then
+        typeName = ' gnd '
+    elseif newCat == 'AIRPLANE' then
+        typeName = ' air '
+    elseif newCat == 'HELICOPTER' then
+        typeName = ' hel '
+    elseif newCat == 'SHIP' then
+        typeName = ' shp '
+    elseif newCat == 'BUILDING' then
+        typeName = ' bld '
+    end
+    if newGroup.clone or not newGroup.groupId then
+        newGroup.groupId = ctld.utils.getNextUniqId()
+    end
+    if newGroup.groupName or newGroup.name then
+        if newGroup.groupName then
+            newGroup.name = newGroup.groupName
+        elseif newGroup.name then
+            newGroup.name = newGroup.name
+        end
+    else
+        newGroup.name = tostring(newCountry) .. "_" .. tostring(typeName) .. "_" .. tostring(newGroup.groupId)
+    end
+
+    if not newGroup.hidden then
+        newGroup.hidden = false
+    end
+
+    if not newGroup.visible then
+        newGroup.visible = false
+    end
+
+    if (newGroup.start_time and type(newGroup.start_time) ~= 'number') or not newGroup.start_time then
+        if newGroup.startTime then
+            newGroup.start_time = ctld.utils.round("mist.dynAdd()", newGroup.start_time)
+        else
+            newGroup.start_time = 0
+        end
+    end
+
+
+    for unitIndex, unitData in pairs(newGroup.units) do
+        local originalName = newGroup.units[unitIndex].unitName or newGroup.units[unitIndex].name
+        if newGroup.clone or not unitData.unitId then
+            newGroup.units[unitIndex].unitId = ctld.utils.getNextUniqId()
+        end
+        if newGroup.units[unitIndex].unitName or newGroup.units[unitIndex].name then
+            if newGroup.units[unitIndex].unitName then
+                newGroup.units[unitIndex].name = newGroup.units[unitIndex].unitName
+            elseif newGroup.units[unitIndex].name then
+                newGroup.units[unitIndex].name = newGroup.units[unitIndex].name
+            end
+        end
+        if not unitData.name then
+            newGroup.units[unitIndex].name = tostring(newGroup.name) .. '_unit_' .. tostring(unitIndex)
+        end
+
+        if not unitData.skill then
+            newGroup.units[unitIndex].skill = 'Random'
+        end
+
+        if newCat == 'AIRPLANE' or newCat == 'HELICOPTER' then
+            if newGroup.units[unitIndex].alt_type and newGroup.units[unitIndex].alt_type ~= 'BARO' or not newGroup.units[unitIndex].alt_type then
+                newGroup.units[unitIndex].alt_type = 'RADIO'
+            end
+            if not unitData.speed then
+                if newCat == 'AIRPLANE' then
+                    newGroup.units[unitIndex].speed = 150
+                elseif newCat == 'HELICOPTER' then
+                    newGroup.units[unitIndex].speed = 60
+                end
+            end
+            -- if not unitData.payload then
+            --     newGroup.units[unitIndex].payload = mist.getPayload(originalName)
+            -- end
+            if not unitData.alt then
+                if newCat == 'AIRPLANE' then
+                    newGroup.units[unitIndex].alt = 2000
+                    newGroup.units[unitIndex].alt_type = 'RADIO'
+                    newGroup.units[unitIndex].speed = 150
+                elseif newCat == 'HELICOPTER' then
+                    newGroup.units[unitIndex].alt = 500
+                    newGroup.units[unitIndex].alt_type = 'RADIO'
+                    newGroup.units[unitIndex].speed = 60
+                end
+            end
+        elseif newCat == 'GROUND_UNIT' then
+            if nil == unitData.playerCanDrive then
+                unitData.playerCanDrive = true
+            end
+        end
+    end
+    if newGroup.route then
+        if newGroup.route and not newGroup.route.points then
+            if newGroup.route[1] then
+                local copyRoute = ctld.utils.deepCopy("ctld.utils.dynAdd()", newGroup.route)
+                newGroup.route = {}
+                newGroup.route.points = copyRoute
+            end
+        end
+    else -- if aircraft and no route assigned. make a quick and stupid route so AI doesnt RTB immediately
+        --if newCat == 'AIRPLANE' or newCat == 'HELICOPTER' then
+        newGroup.route = {}
+        newGroup.route.points = {}
+        newGroup.route.points[1] = {}
+        --end
+    end
+    newGroup.country = newCountry
+
+    -- update and verify any self tasks
+    if newGroup.route and newGroup.route.points then
+        --log:warn(newGroup.route.points)
+        for i, pData in pairs(newGroup.route.points) do
+            if pData.task and pData.task.params and pData.task.params.tasks and #pData.task.params.tasks > 0 then
+                for tIndex, tData in pairs(pData.task.params.tasks) do
+                    if tData.params and tData.params.action then
+                        if tData.params.action.id == "EPLRS" then
+                            tData.params.action.params.groupId = newGroup.groupId
+                        elseif tData.params.action.id == "ActivateBeacon" or tData.params.action.id == "ActivateICLS" then
+                            tData.params.action.params.unitId = newGroup.units[1].unitId
+                        end
+                    end
+                end
+            end
+        end
+    end
+    --mist.debug.writeData(mist.utils.serialize,{'msg', newGroup}, newGroup.name ..'.lua')
+    --log:warn(newGroup)
+    -- sanitize table
+    newGroup.groupName = nil
+    newGroup.clone = nil
+    newGroup.category = nil
+    newGroup.country = nil
+
+    newGroup.tasks = {}
+
+    for unitIndex, unitData in pairs(newGroup.units) do
+        newGroup.units[unitIndex].unitName = nil
+    end
+
+    ctld.logTrace("ctld.utils.dynAdd().nexGroup =  %s", ctld.p(newGroup))
+    ctld.logTrace("ctld.utils.dynAdd().nexGroup =  %s", mist.utils.tableShow(newGroup))
+    coalition.addGroup(country.id[newCountry], Unit.Category[newCat], newGroup)
+
+    return newGroup
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -14234,7 +14438,7 @@ function ctld.spawnCrateStatic(_country, _unitId, _point, _name, _weight, _side,
         _group.category = Group.Category.GROUND;
         _group.country = _country;
 
-        local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnCrateStatic", _group).name)
+        local _spawnedGroup = Group.getByName(ctld.utils.dynAdd("ctld.spawnCrateStatic", _group).name)
 
         -- Turn off AI
         trigger.action.setGroupAIOff(_spawnedGroup)
@@ -16202,7 +16406,7 @@ function ctld.spawnRadioBeaconUnit(_point, _country, _name, _freqsText)
     }
 
     -- return coalition.addGroup(_country, Group.Category.GROUND, _radioGroup)
-    return Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnRadioBeaconUnit()", _radioGroup).name)
+    return Group.getByName(ctld.utils.dynAdd("ctld.spawnRadioBeaconUnit()", _radioGroup).name)
 end
 
 function ctld.updateRadioBeacon(_beaconDetails)
@@ -16938,167 +17142,6 @@ function ctld.unpackMultiCrate(_heli, _nearestCrate, _nearbyCrates)
     end
 end
 
---[[
-function ctld.spawnCrateGroup_old(_heli, _positions, _types, _hdgs)
-    -- ctld.logTrace("_heli      =  %s", ctld.p(_heli))
-    -- ctld.logTrace("_positions =  %s", ctld.p(_positions))
-    -- ctld.logTrace("_types     =  %s", ctld.p(_types))
-    -- ctld.logTrace("_hdgs      =  %s", ctld.p(_hdgs))
-
-    local _id = ctld.getNextGroupId()
-    local _groupName = _types[1] .. "    #" .. _id
-    local _side = _heli:getCoalition()
-    local _group = {
-        ["visible"]  = false,
-        -- ["groupId"] = _id,
-        ["hidden"]   = false,
-        ["units"]    = {},
-        --                ["y"] = _positions[1].z,
-        --                ["x"] = _positions[1].x,
-        ["name"]     = _groupName,
-        ["tasks"]    = {},
-        ["radioSet"] = false,
-        ["task"]     = "Reconnaissance",
-        ["route"]    = {},
-    }
-
-    local _hdg = 120 * math.pi / 180                                     -- radians = 120 degrees
-    if _types[1] ~= "MQ-9 Reaper" and _types[1] ~= "RQ-1A Predator" then -- non-drones - JTAC
-        local _spreadMin = 5
-        local _spreadMax = 5
-        local _spreadMult = 1
-        for _i, _pos in ipairs(_positions) do
-            local _unitId = ctld.getNextUnitId()
-            local _details = {
-                type = _types[_i],
-                unitId = _unitId,
-                name = string.format("Unpacked %s #%i", _types[_i],
-                    _unitId)
-            }
-            --ctld.logTrace("Group._details =  %s", ctld.p(_details))
-            if _hdgs and _hdgs[_i] then
-                _hdg = _hdgs[_i]
-            end
-
-            _group.units[_i] = ctld.createUnit(_pos.x + math.random(_spreadMin, _spreadMax) * _spreadMult,
-                _pos.z + math.random(_spreadMin, _spreadMax) * _spreadMult,
-                _hdg,
-                _details)
-        end
-        _group.category = Group.Category.GROUND
-    else -- drones - JTAC
-        local _unitId = ctld.getNextUnitId()
-        local _details = {
-            type      = _types[1],
-            unitId    = _unitId,
-            name      = string.format("Unpacked %s #%i", _types[1], _unitId),
-            livery_id = "'camo' scheme",
-            skill     = "High",
-            speed     = 80,
-            payload   = { pylons = {}, fuel = 1300, flare = 0, chaff = 0, gun = 100 }
-        }
-
-        _group.units[1] = ctld.createUnit(_positions[1].x,
-            _positions[1].z + ctld.jtacDroneRadius,
-            _hdg,
-            _details)
-
-        _group.category = Group.Category.AIRPLANE -- for drones
-
-        -- create drone orbiting route
-        local DroneRoute = {
-            ["points"] =
-            {
-                [1] =
-                {
-                    ["alt"] = 2000,
-                    ["action"] = "Turning Point",
-                    ["alt_type"] = "BARO",
-                    ["properties"] =
-                    {
-                        ["addopt"] = {},
-                    }, -- end of ["properties"]
-                    ["speed"] = 80,
-                    ["task"] =
-                    {
-                        ["id"] = "ComboTask",
-                        ["params"] =
-                        {
-                            ["tasks"] =
-                            {
-                                [1] =
-                                {
-                                    ["enabled"] = true,
-                                    ["auto"] = false,
-                                    ["id"] = "WrappedAction",
-                                    ["number"] = 1,
-                                    ["params"] =
-                                    {
-                                        ["action"] =
-                                        {
-                                            ["id"] = "EPLRS",
-                                            ["params"] =
-                                            {
-                                                ["value"] = true,
-                                                ["groupId"] = 0,
-                                            }, -- end of ["params"]
-                                        },     -- end of ["action"]
-                                    },         -- end of ["params"]
-                                },             -- end of [1]
-                                [2] =
-                                {
-                                    ["number"] = 2,
-                                    ["auto"] = false,
-                                    ["id"] = "Orbit",
-                                    ["enabled"] = true,
-                                    ["params"] =
-                                    {
-                                        ["altitude"] = ctld.jtacDroneAltitude,
-                                        ["pattern"]  = "Circle",
-                                        ["speed"]    = 80,
-                                    }, -- end of ["params"]
-                                },     -- end of [2]
-                                [3] =
-                                {
-                                    ["enabled"] = true,
-                                    ["auto"] = false,
-                                    ["id"] = "WrappedAction",
-                                    ["number"] = 3,
-                                    ["params"] =
-                                    {
-                                        ["action"] =
-                                        {
-                                            ["id"] = "Option",
-                                            ["params"] =
-                                            {
-                                                ["value"] = true,
-                                                ["name"] = 6,
-                                            }, -- end of ["params"]
-                                        },     -- end of ["action"]
-                                    },         -- end of ["params"]
-                                },             -- end of [3]
-                            },                 -- end of ["tasks"]
-                        },                     -- end of ["params"]
-                    },                         -- end of ["task"]
-                    ["type"] = "Turning Point",
-                    ["ETA"] = 0,
-                    ["ETA_locked"] = true,
-                    ["y"] = _positions[1].z,
-                    ["x"] = _positions[1].x,
-                    ["speed_locked"] = true,
-                    ["formation_template"] = "",
-                }, -- end of [1]
-            },     -- end of ["points"]
-        }          -- end of ["route"]
-        ---------------------------------------------------------------------------------
-        _group.route = DroneRoute
-    end
-
-    _group.country = _heli:getCountry()
-    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnCrateGroup_old()", _group).name)
-    return _spawnedGroup
-end ]] --#region
-
 function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
     --ctld.logTrace("_heli      =  %s", ctld.p(_heli))
     --ctld.logTrace("_positions =  %s", ctld.p(_positions))
@@ -17226,7 +17269,7 @@ function ctld.spawnCrateGroup(_heli, _positions, _types, _hdgs)
         end
 
         _group.country = _heli:getCountry()
-        local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnCrateGroup()", _group).name)
+        local _spawnedGroup = Group.getByName(ctld.utils.dynAdd("ctld.spawnCrateGroup()", _group).name)
         return _spawnedGroup
     else -- if scene crate requested
         return ctld.scene.playScene(_heli, ctld.scene.SceneModels[_types[1]])
@@ -17280,7 +17323,7 @@ function ctld.spawnDroppedGroup(_point, _details, _spawnBehind, _maxSearch)
     _group.category = Group.Category.GROUND;
     _group.country = _details.country;
 
-    local _spawnedGroup = Group.getByName(CTLD_extAPI.dynAdd("ctld.spawnDroppedGroup()", _group).name)
+    local _spawnedGroup = Group.getByName(ctld.utils.dynAdd("ctld.spawnDroppedGroup()", _group).name)
 
     --local _spawnedGroup = coalition.addGroup(_details.country, Group.Category.GROUND, _group)
 
@@ -20842,19 +20885,6 @@ CTLD_extAPI.DBs              = CTLD_extAPI.DBs or {}
 CTLD_extAPI.DBs.humansByName = framework and framework.DBs and framework.DBs.humansByName or nil
 CTLD_extAPI.DBs.unitsById    = framework and framework.DBs and framework.DBs.unitsById or nil
 CTLD_extAPI.DBs.unitsByName  = framework and framework.DBs and framework.DBs.unitsByName or nil
-
--- ================================================================
--- Top-level functions
--- ================================================================
-
-CTLD_extAPI.dynAdd           = function(caller, ...)
-    if not (framework and framework.dynAdd) then
-        logError('[CTLD_extAPI ERROR] dynAdd unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.dynAdd(...)
-end
 
 -- ================================================================
 -- End of CTLD_extAPI.lua

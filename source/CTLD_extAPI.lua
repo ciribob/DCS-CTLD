@@ -48,18 +48,5 @@ CTLD_extAPI.DBs.unitsById    = framework and framework.DBs and framework.DBs.uni
 CTLD_extAPI.DBs.unitsByName  = framework and framework.DBs and framework.DBs.unitsByName or nil
 
 -- ================================================================
--- Top-level functions
--- ================================================================
-
-CTLD_extAPI.dynAdd           = function(caller, ...)
-    if not (framework and framework.dynAdd) then
-        logError('[CTLD_extAPI ERROR] dynAdd unavailable (' ..
-            tostring(frameworkName) .. ') Caller: ' .. tostring(caller))
-        return nil
-    end
-    return framework.dynAdd(...)
-end
-
--- ================================================================
 -- End of CTLD_extAPI.lua
 -- ================================================================
