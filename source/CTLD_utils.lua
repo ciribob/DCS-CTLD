@@ -1262,7 +1262,6 @@ function ctld.utils.dynAdd(caller, ng)
     end
 
     ctld.logTrace("ctld.utils.dynAdd().nexGroup =  %s", ctld.p(newGroup))
-    ctld.logTrace("ctld.utils.dynAdd().nexGroup =  %s", mist.utils.tableShow(newGroup))
     coalition.addGroup(country.id[newCountry], Unit.Category[newCat], newGroup)
 
     return newGroup
