@@ -1,17 +1,25 @@
---[[ ---- CTLD_Loader.lua ----------------------------------------------------------------
-To use the CTLD in a mission :
+--[[ ---- Dynamic CTLD_Loader.lua ----------------------------------------------------------------
+Dynamic CTLD loading is designed to streamline the CTLD developer workflow.
+It does not allow CTLD code to be embedded directly into the mission's .miz file.
+Therefore, it is not a suitable method for deploying standalone .miz files.
+
+It is an alternative to static loading via a "DO SCRIPT FILE" trigger,
+which allows for the deployment of standalone .miz files containing CTLD.
+
+To use the dynamic CTLD in a mission :
 > download the entire CTLD pack on https://github.com/ciribob/DCS-CTLD ,
-> paste it in your "Saved Games" folder (e.g : "C:/Users/[yourUserName]/Saved Games/DCS.openbeta/Scripts/CTLD/")
+> paste it in your "Saved Games" folder (e.g : "C:/Users/[yourUserName]/Saved Games/DCS.openbeta/Scripts/CTLD/") or anywhere else
 > add to your mission an "EXECUTE SCRIPT" trigger at start mission
 > copy/paste the small script below,
-> replace the path of the ctld.path variable with the "Saved Games" folder path on your computer:
+> replace the path of the ctld.path variable with the CTLD folder path on your computer:
+
+Each time ou run (LShift + R) the mission CTLD files are relaoded dynamically
 
 --- script to load CTLD in mission editor ------------------------------------------------
-if not ctld then ctld = {} end
-ctld.path = "C:/Users/toto/Saved Games/DCS.openbeta/Scripts/CTLD/"  -- replace with your Saved Games path
-dofile(ctld.path .. "source/CTLD_Loader.lua")
+if ctld == nil then ctld = {}; end
+ctld.path = "F:\\Temp\\CTLD\\"  -- replace with your CTLD folder path
+dofile(ctld.path .. "source\\CTLD_loader.lua")
 ----- end of script ---------------------------------------------------------------------- ]] --
-
 -- CTLD Loader  ------------------------------------
 if ctld.path then
 	ctld.path = ctld.path .. "source/"

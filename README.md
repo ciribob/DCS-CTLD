@@ -119,27 +119,29 @@ You can also edit the CTLD.lua file to change some configuration options. Make s
 
 ### Test mission
 
-You can use the `test-mission.miz` mission as a demonstration on how to use the CTLD script in a DCS mission.
+You can use the `test-mission.miz` mission as a demonstration on how to use the CTLD scripts in a DCS mission whether in static or dynamic loading mode.
 
 This mission includes the CTLD script, a proper configuration, demonstration for some of the main features (including the "JTAC talk over the radio via SRS" functionality).
 
-**Note to developers**: it's quite easy to set the loading of the CTLD script to dynamic, so you can make changes to the script, save it and simply reload the mission (left-shift + R) in the game to test the edits you made.
+### Static load of CTLD (general case)
+Static loading via a "DO SCRIPT FILE" trigger allows the CTLD.lua file downloaded (a merge of all source files) to be integrated into the mission, thus enabling the deployment of standalone .miz files containing CTLD.
+
+### Dynamic load of CTLD sources (to developers)
+Dynamic CTLD loading is designed to streamline the CTLD developers workflow. It does not allow CTLD code to be embedded directly into the mission's .miz file. Therefore, it is not a suitable method for deploying standalone .miz files.
+
+It's quite easy to set the loading of the CTLD script to dynamic, so you can make changes to the script, save it and simply reload the mission (left-shift + R) in the game to test the edits you made.
 
 To do this, simply change the "Define loading mode" trigger (1) so that the condition reads "FLAG IS FALSE" (2), and edit the "DO SCRIPT" action (3) to replace the path with the path to the `CTLD.lua` file on your PC.
 
-Optionaly, you can disable the STTS (text to speech over SRS) feature (4).
+[dynamic_loading]: trigger-dynamic-loading.png
 
-![dynamic_loading]
+If ctld.path is specified, the dynamic load trigger executes CTLD_loader.lua which loads all the source scripts 
+
+[dynamic_loading]: trigger-dynamic-loading2.png
+
+Optionaly, you can disable the STTS (text to speech over SRS).
 
 ### Script Setup
-🔴IMPORTANT: This script requires MIST supplied in the CTLD zipped pack to correctly manage dynamic spwans.
-
-First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a "TIME MORE" of 1. "TIME MORE" means run the actions after X seconds into the mission.
-
-If you want to make use of translations (internationalization features, a.k.a. "i18n"), you need to load the `CTLD-i18n.lua` script _before_ CTLD. Do this by adding a second trigger with a "TIME MORE" and a DO SCRIPT of `CTLD-i18n.lua`. 
-
-Load CTLD using a second (or third) trigger with a "TIME MORE" and a DO SCRIPT of `CTLD.lua`. 
-
 You will also need to load in **both** the **beacon.ogg** sound file and the **beaconsilent.ogg** for Radio beacon homing. This can be done by adding a two Sound To Country actions. Pick an unused country, like Australia so no one actually hears the audio when joining at the start of the mission. If you don't add the **two** Audio files, radio beacons will not work. Make sure not to rename the file as well.
 
 An error will be shown if MIST isn't loaded first.
