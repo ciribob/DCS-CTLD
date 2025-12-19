@@ -1353,6 +1353,27 @@ function ctld.utils.isValueInIpairTable(caller, tab, value)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Counts the number of entries in a table.
+function ctld.utils.countTableEntries(caller, _table)
+    if type(_table) ~= "table" then
+        if env and env.error then
+            env.error("ctld.utils.countTableEntries()." .. tostring(caller) .. ": Invalid table provided.")
+        end
+        return 0
+    end
+    if _table == nil then
+        return 0
+    end
+
+    local _count = 0
+    for _key, _value in pairs(_table) do
+        _count = _count + 1
+    end
+
+    return _count
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Creates a deep copy of a object.
 -- @-- borrowed from mist
 -- Usually this object is a table.
