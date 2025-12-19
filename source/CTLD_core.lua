@@ -6553,11 +6553,6 @@ function ctld.getDistance(_point1, _point2)
     return math.sqrt(xDiff * xDiff + yDiff * yDiff)
 end
 
---- test ------------------------------------------------------
---local unitName = "uh2-1"                    --"uh1-1"    --"uh2-1"
---ctld.reconShowTargetsInLosOnF10Map(Unit.getByName(unitName),2000,200)
-
-
 --**********************************************************************
 
 -- ***************** SETUP SCRIPT ****************
