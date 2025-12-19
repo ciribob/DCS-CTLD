@@ -32,6 +32,11 @@ if ctld.path then
 		m = m + 1
 		trigger.action.outText(tostring(m) .. ": CTLD-i18n.lua Loaded", 10)
 	end
+	dofile(ctld.path .. "CTLD_jtac.lua")
+	if loadMsg then
+		m = m + 1
+		trigger.action.outText(tostring(m) .. ": CTLD_jtac.lua Loaded", 10)
+	end
 	dofile(ctld.path .. "CTLD_recon.lua")
 	if loadMsg then
 		m = m + 1

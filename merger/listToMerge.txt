@@ -1,5 +1,6 @@
 CTLD-i18n.lua
 CTLD_utils.lua
+CTLD_jtac.lua
 CTLD_recon.lua
 CTLD_core.lua
 CTLD_extAPI.lua
