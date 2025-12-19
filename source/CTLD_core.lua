@@ -2099,9 +2099,10 @@ function ctld.repackVehicle(_params, t) -- scan rrs table 'repackRequestsStack' 
                 local playerHeading       = ctld.utils.getHeadingInRadians("ctld.repackVehicle()", PlayerTransportUnit)
                 local playerPoint         = PlayerTransportUnit:getPoint()
                 local offset              = 5
-                local randomHeading       = ctld.RandomReal(playerHeading - math.pi / 4, playerHeading + math.pi / 4)
+                local randomHeading       = ctld.utils.RandomReal("ctld.repackVehicle()", playerHeading - math.pi / 4,
+                    playerHeading + math.pi / 4)
                 if ctld.unitDynamicCargoCapable(PlayerTransportUnit) ~= false then
-                    randomHeading = ctld.RandomReal(playerHeading + math.pi - math.pi / 4,
+                    randomHeading = ctld.utils.RandomReal("ctld.repackVehicle()", playerHeading + math.pi - math.pi / 4,
                         playerHeading + math.pi + math.pi / 4)
                 end
                 repackableUnit:destroy() -- destroy repacked unit
@@ -2675,7 +2676,8 @@ end
 function ctld.getPointInFrontSector(_unit, _offset)
     if _unit then
         local playerHeading = ctld.utils.getHeadingInRadians("ctld.getPointInFrontSector", _unit)
-        local randomHeading = ctld.RandomReal(playerHeading - math.pi / 4, playerHeading + math.pi / 4)
+        local randomHeading = ctld.utils.RandomReal("ctld.getPointInFrontSector", playerHeading - math.pi / 4,
+            playerHeading + math.pi / 4)
         if _offset == nil then
             _offset = 20
         end
@@ -2686,7 +2688,8 @@ end
 function ctld.getPointInRearSector(_unit, _offset)
     if _unit then
         local playerHeading = ctld.utils.getHeadingInRadians("ctld.getPointInRearSector", _unit)
-        local randomHeading = ctld.RandomReal(playerHeading + math.pi - math.pi / 4, playerHeading + math.pi + math.pi /
+        local randomHeading = ctld.utils.RandomReal("ctld.getPointInRearSector", playerHeading + math.pi - math.pi / 4,
+            playerHeading + math.pi + math.pi /
             4)
         if _offset == nil then
             _offset = 30
@@ -8762,16 +8765,6 @@ end
 
 -- example of usage:
 --ctld.i18n_check("fr")
-
-
--- initialize the random number generator to make it almost random
-math.random(); math.random(); math.random()
-
-function ctld.RandomReal(mini, maxi)
-    local rand = math.random()                 --random value between 0 and 1
-    local result = mini + rand * (maxi - mini) --	scale the random value between [mini, maxi]
-    return result
-end
 
 --- Enable/Disable error boxes displayed on screen.
 env.setErrorMessageBoxEnabled(false)

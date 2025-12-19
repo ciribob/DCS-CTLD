@@ -495,6 +495,22 @@ function ctld.utils.round(caller, num, idp)
 end
 
 --------------------------------------------------------------------------------------------------------
+-- initialize the random number generator to make it almost random
+math.random(); math.random(); math.random()
+--------------------------------------------------------------------------------------------------------
+function ctld.utils.RandomReal(caller, mini, maxi)
+    if mini == nil or maxi == nil then
+        if env and env.error then
+            env.error("ctld.RandomReal()." .. tostring(caller) .. ": Both min and max values must be provided.")
+        end
+        return 0
+    end
+    local rand = math.random()                 --random value between 0 and 1
+    local result = mini + rand * (maxi - mini) --	scale the random value between [mini, maxi]
+    return result
+end
+
+--------------------------------------------------------------------------------------------------------
 --[[acc:
 in DM: decimal point of minutes.
 In DMS: decimal point of seconds.
