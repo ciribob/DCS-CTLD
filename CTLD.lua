@@ -2307,6 +2307,27 @@ function ctld.utils.isValueInIpairTable(caller, tab, value)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Counts the number of entries in a table.
+function ctld.utils.countTableEntries(caller, _table)
+    if type(_table) ~= "table" then
+        if env and env.error then
+            env.error("ctld.utils.countTableEntries()." .. tostring(caller) .. ": Invalid table provided.")
+        end
+        return 0
+    end
+    if _table == nil then
+        return 0
+    end
+
+    local _count = 0
+    for _key, _value in pairs(_table) do
+        _count = _count + 1
+    end
+
+    return _count
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Creates a deep copy of a object.
 -- @-- borrowed from mist
 -- Usually this object is a table.
@@ -9522,7 +9543,7 @@ function ctld.rearmAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTempla
             end
 
             -- do we have the correct number of unique pieces and do we have enough points for all the pieces
-            if ctld.countTableEntries(_uniqueTypes) == _aaSystemTemplate.count and #_points >= _aaSystemTemplate.count then
+            if ctld.utils.countTableEntries("ctld.rearmAASystem", _uniqueTypes) == _aaSystemTemplate.count and #_points >= _aaSystemTemplate.count then
                 -- rearm aa system
                 -- destroy old group
                 ctld.completeAASystems[_nearestSystem.group:getName()] = nil
@@ -9583,21 +9604,6 @@ function ctld.getAASystemDetails(_hawkGroup, _aaSystemTemplate)
     end
 
     return _hawkDetails
-end
-
-function ctld.countTableEntries(_table)
-    if _table == nil then
-        return 0
-    end
-
-
-    local _count = 0
-
-    for _key, _value in pairs(_table) do
-        _count = _count + 1
-    end
-
-    return _count
 end
 
 function ctld.unpackAASystem(_heli, _nearestCrate, _nearbyCrates, _aaSystemTemplate)
@@ -9881,7 +9887,7 @@ function ctld.countCompleteAASystems(_heli)
                 end
 
                 -- do we have the correct number of unique pieces and do we have enough points for all the pieces
-                if ctld.countTableEntries(_uniqueTypes) == _aaSystemTemplate.count and #_points >= _aaSystemTemplate.count then
+                if ctld.utils.countTableEntries("ctld.countCompleteAASystems", _uniqueTypes) == _aaSystemTemplate.count and #_points >= _aaSystemTemplate.count then
                     _count = _count + 1
                 end
             end
