@@ -208,3 +208,7 @@ function ctld.reconRefreshTargetsInLosOnF10Map(_params, _t) -- _params._playerUn
 
     return ctld.reconShowTargetsInLosOnF10Map(_params._playerUnit, _params._searchRadius, _params._markRadius) -- returns TargetsInLOS table
 end
+
+--- test ------------------------------------------------------
+--local unitName = "uh2-1"                    --"uh1-1"    --"uh2-1"
+--ctld.reconShowTargetsInLosOnF10Map(Unit.getByName(unitName),2000,200)
