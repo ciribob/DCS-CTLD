@@ -603,7 +603,7 @@ function ctld.getCurrentUnit(_jtacUnit, _jtacGroupName)
         _tempPoint = _unit:getPoint()
         --     tempPosition = unit:getPosition()
 
-        _tempDist = ctld.getDistance(_unit:getPoint(), _jtacUnit:getPoint())
+        _tempDist = ctld.utils.getDistance("ctld.getCurrentUnit()", _unit:getPoint(), _jtacUnit:getPoint())
         if _tempDist < ctld.JTAC_maxDistance then
             -- calc visible
 
@@ -651,7 +651,8 @@ function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType, _distance)
                 local _offsetEnemyPos = { x = _tempPoint.x, y = _tempPoint.y + 2.0, z = _tempPoint.z }
 
                 if land.isVisible(_offsetJTACPos, _offsetEnemyPos) then
-                    local _dist = ctld.getDistance(_offsetJTACPos, _offsetEnemyPos)
+                    local _dist = ctld.utils.getDistance("ctld.findNearestVisibleEnemy()", _offsetJTACPos,
+                        _offsetEnemyPos)
 
                     if _dist < _maxDistance then
                         table.insert(_unitList, { unit = _unit, dist = _dist })

@@ -1430,6 +1430,25 @@ function ctld.utils.get2DDist(caller, point1, point2)
     return ctld.utils.vec3Mag("ctld.utils.get2DDist()", { x = point1.x - point2.x, y = 0, z = point1.z - point2.z })
 end
 
+--get distance in meters assuming a Flat world
+function ctld.utils.getDistance(caller, _point1, _point2)
+    if _point1 == nil or _point2 == nil then
+        if env and env.error then
+            env.error("ctld.utils.getDistance()." .. tostring(caller) .. ": Both input values cannot be nil.")
+        end
+        return 0
+    end
+    local xUnit = _point1.x
+    local yUnit = _point1.z
+    local xZone = _point2.x
+    local yZone = _point2.z
+
+    local xDiff = xUnit - xZone
+    local yDiff = yUnit - yZone
+
+    return math.sqrt(xDiff * xDiff + yDiff * yDiff)
+end
+
 --------------------------------------------------------------------------------------------------------
 --- Simple rounding function.
 -- @-- borrowed from mist
@@ -3070,7 +3089,7 @@ function ctld.getCurrentUnit(_jtacUnit, _jtacGroupName)
         _tempPoint = _unit:getPoint()
         --     tempPosition = unit:getPosition()
 
-        _tempDist = ctld.getDistance(_unit:getPoint(), _jtacUnit:getPoint())
+        _tempDist = ctld.utils.getDistance("ctld.getCurrentUnit()", _unit:getPoint(), _jtacUnit:getPoint())
         if _tempDist < ctld.JTAC_maxDistance then
             -- calc visible
 
@@ -3118,7 +3137,8 @@ function ctld.findNearestVisibleEnemy(_jtacUnit, _targetType, _distance)
                 local _offsetEnemyPos = { x = _tempPoint.x, y = _tempPoint.y + 2.0, z = _tempPoint.z }
 
                 if land.isVisible(_offsetJTACPos, _offsetEnemyPos) then
-                    local _dist = ctld.getDistance(_offsetJTACPos, _offsetEnemyPos)
+                    local _dist = ctld.utils.getDistance("ctld.findNearestVisibleEnemy()", _offsetJTACPos,
+                        _offsetEnemyPos)
 
                     if _dist < _maxDistance then
                         table.insert(_unitList, { unit = _unit, dist = _dist })
@@ -4024,6 +4044,223 @@ function ctld.isFlyingJtac(_jtacUnitName)
     return false
 end
 -- End : CTLD_jtac.lua 
+-- ==================================================================================================== 
+-- Start : CTLD_recon.lua 
+--**********************************************************************
+--                                     RECOGNITION SUPPORT FUNCTIONS
+-- Shows/remove/refresh marks in F10 map on targets in LOS of a unit passed in params
+---------------------------------------------------------------------
+-- examples ---------------------------------------------------------
+--ctld.reconRefreshTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
+--ctld.reconRemoveTargetsInLosOnF10Map(Unit.getByName("uh2-1"))
+--ctld.reconShowTargetsInLosOnF10Map(Unit.getByName("uh2-1"), 2000, 200)
+----------------------------------------------------------------------
+--if ctld == nil then    ctld = {} end
+if ctld.lastMarkId == nil then
+    ctld.lastMarkId = 0
+end
+
+-- ***************** RECON CONFIGURATION *****************
+ctld.reconF10Menu                   = true                         -- enables F10 RECON menu
+ctld.reconMenuName                  = ctld.i18n_translate("RECON") --name of the CTLD JTAC radio menu
+ctld.reconRadioAdded                = {}                           --stores the groups that have had the radio menu added
+ctld.reconLosSearchRadius           = 2000                         -- search radius in meters
+ctld.reconLosMarkRadius             = 100                          -- mark radius dimension in meters
+ctld.reconAutoRefreshLosTargetMarks = false                        -- if true recon LOS marks are automaticaly refreshed on F10 map
+ctld.reconLastScheduleIdAutoRefresh = 0
+
+---- F10 RECON Menus ------------------------------------------------------------------
+function ctld.addReconRadioCommand(_side) -- _side = 1 or 2 (red    or blue)
+    if ctld.reconF10Menu then
+        if _side == 1 or _side == 2 then
+            local _players = coalition.getPlayers(_side)
+            if _players ~= nil then
+                for _, _playerUnit in pairs(_players) do
+                    local _groupId = ctld.utils.getGroupId("ctld.addReconRadioCommand()", _playerUnit)
+                    if _groupId then
+                        if ctld.reconRadioAdded[tostring(_groupId)] == nil then
+                            --ctld.logDebug("ctld.addReconRadioCommand - adding RECON radio menu for unit [%s]", ctld.p(_playerUnit:getName()))
+                            local RECONpath = missionCommands.addSubMenuForGroup(_groupId, ctld.reconMenuName)
+                            missionCommands.addCommandForGroup(_groupId,
+                                ctld.i18n_translate("Show targets in LOS (refresh)"), RECONpath,
+                                ctld.reconRefreshTargetsInLosOnF10Map, {
+                                    _groupId      = _groupId,
+                                    _playerUnit   = _playerUnit,
+                                    _searchRadius = ctld.reconLosSearchRadius,
+                                    _markRadius   = ctld.reconLosMarkRadius,
+                                    _boolRemove   = true
+                                })
+                            missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("Hide targets in LOS"),
+                                RECONpath, ctld.reconRemoveTargetsInLosOnF10Map, _playerUnit)
+                            if ctld.reconAutoRefreshLosTargetMarks then
+                                missionCommands.addCommandForGroup(_groupId,
+                                    ctld.i18n_translate("STOP autoRefresh targets in LOS"), RECONpath,
+                                    ctld.reconStopAutorefreshTargetsInLosOnF10Map,
+                                    _groupId,
+                                    _playerUnit,
+                                    ctld.reconLosSearchRadius,
+                                    ctld.reconLosMarkRadius,
+                                    true)
+                            else
+                                missionCommands.addCommandForGroup(_groupId,
+                                    ctld.i18n_translate("START autoRefresh targets in LOS"), RECONpath,
+                                    ctld.reconStartAutorefreshTargetsInLosOnF10Map,
+                                    _groupId,
+                                    _playerUnit,
+                                    ctld.reconLosSearchRadius,
+                                    ctld.reconLosMarkRadius,
+                                    true
+                                )
+                            end
+                            ctld.reconRadioAdded[tostring(_groupId)] = timer.getTime() --fetch the time to check for a regular refresh
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+--------------------------------------------------------------------
+function ctld.reconStopAutorefreshTargetsInLosOnF10Map(_groupId, _playerUnit, _searchRadius, _markRadius, _boolRemove)
+    ctld.reconAutoRefreshLosTargetMarks = false
+
+    if ctld.reconLastScheduleIdAutoRefresh ~= 0 then
+        timer.removeFunction(ctld.reconLastScheduleIdAutoRefresh) -- reset last schedule
+    end
+
+    ctld.reconRemoveTargetsInLosOnF10Map(_playerUnit)
+    missionCommands.removeItemForGroup(_groupId,
+        { ctld.reconMenuName, ctld.i18n_translate("STOP autoRefresh targets in LOS") })
+    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("START autoRefresh targets in LOS"),
+        { ctld.reconMenuName },
+        ctld.reconStartAutorefreshTargetsInLosOnF10Map,
+        _groupId,
+        _playerUnit,
+        _searchRadius,
+        _markRadius,
+        _boolRemove)
+end
+
+--------------------------------------------------------------------
+function ctld.reconStartAutorefreshTargetsInLosOnF10Map(_groupId, _playerUnit, _searchRadius, _markRadius, _boolRemove)
+    ctld.reconAutoRefreshLosTargetMarks = true
+    ctld.reconRefreshTargetsInLosOnF10Map({
+            _groupId      = _groupId,
+            _playerUnit   = _playerUnit,
+            _searchRadius = _searchRadius or ctld.reconLosSearchRadius,
+            _markRadius   = _markRadius or ctld.reconLosMarkRadius,
+            _boolRemove   = _boolRemove or true
+        },
+        timer.getTime())
+    missionCommands.removeItemForGroup(_groupId,
+        { ctld.reconMenuName, ctld.i18n_translate("START autoRefresh targets in LOS") })
+    missionCommands.addCommandForGroup(_groupId, ctld.i18n_translate("STOP autoRefresh targets in LOS"),
+        { ctld.reconMenuName },
+        ctld.reconStopAutorefreshTargetsInLosOnF10Map,
+        _groupId,
+        _playerUnit,
+        _searchRadius,
+        _markRadius,
+        _boolRemove)
+end
+
+--------------------------------------------------------------------
+function ctld.reconShowTargetsInLosOnF10Map(_playerUnit, _searchRadius, _markRadius) -- _groupId targeting
+    -- _searchRadius and _markRadius in meters
+    if _playerUnit then
+        local TargetsInLOS = {}
+
+        local enemyColor = "red"
+        local color = { 1, 0, 0, 0.2 } -- red
+
+        if _playerUnit:getCoalition() == 1 then
+            enemyColor = "blue"
+            color = { 51 / 255, 51 / 255, 1, 0.2 } -- blue
+        end
+
+        local enemyUnitsListNames = {}
+        for i, v in ipairs(coalition.getGroups(coalition.side[string.upper(enemyColor)], Group.Category.GROUND)) do
+            local groupUnits = v:getUnits()
+            for ii, vv in ipairs(groupUnits) do
+                enemyUnitsListNames[#enemyUnitsListNames + 1] = vv:getName()
+            end
+        end
+        --local t = ctld.utils.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()", { _playerUnit:getName() }, 180,
+        --    CTLD_extAPI.makeUnitTable("ctld.reconShowTargetsInLosOnF10Map()", { '[' .. enemyColor .. '][vehicle]' }),
+        --    180, _searchRadius)
+
+        local t = ctld.utils.getUnitsLOS("ctld.reconShowTargetsInLosOnF10Map()",
+            { _playerUnit:getName() },
+            180,
+            enemyUnitsListNames,
+            180, _searchRadius)
+
+        local MarkIds = {}
+        if t then
+            for i = 1, #t do                                   -- for each unit having los on enemies
+                for j = 1, #t[i].vis do                        -- for each enemy unit in los
+                    local targetPoint = t[i].vis[j]:getPoint() -- point of each target on LOS
+                    ctld.lastMarkId = ctld.lastMarkId + 1
+                    trigger.action.circleToAll(_playerUnit:getCoalition(), ctld.lastMarkId, targetPoint, _markRadius,
+                        color, color, 1, false, nil)
+                    MarkIds[#MarkIds + 1] = ctld.lastMarkId
+                    TargetsInLOS[#TargetsInLOS + 1] = {
+                        targetObject   = t[i].vis[j]:getName(),
+                        targetTypeName = t[i].vis[j]:getTypeName(),
+                        targetPoint    = targetPoint
+                    }
+                end
+            end
+        end
+        ctld.unitsWithPlayer[_playerUnit:getName()].losMarkIds =
+            MarkIds -- store list of marksIds generated and showed on F10 map
+        return TargetsInLOS
+    else
+        return nil
+    end
+end
+
+---------------------------------------------------------
+function ctld.reconRemoveTargetsInLosOnF10Map(_playerUnit)
+    local unitName = _playerUnit:getName()
+    if ctld.unitsWithPlayer[unitName].losMarkIds then
+        for i = 1, #ctld.unitsWithPlayer[unitName].losMarkIds do -- for each unit having los on enemies
+            trigger.action.removeMark(ctld.unitsWithPlayer[unitName].losMarkIds[i])
+        end
+        ctld.unitsWithPlayer[unitName].losMarkIds = nil
+    end
+end
+
+---------------------------------------------------------
+function ctld.reconRefreshTargetsInLosOnF10Map(_params, _t) -- _params._playerUnit targeting
+    -- _params._searchRadius and _params._markRadius in meters
+    -- _params._boolRemove = true to remove previous marksIds
+    if _t == nil then _t = timer.getTime() end
+
+    if ctld.reconAutoRefreshLosTargetMarks then -- to follow mobile enemy targets
+        ctld.reconLastScheduleIdAutoRefresh = timer.scheduleFunction(ctld.reconRefreshTargetsInLosOnF10Map,
+            {
+                _groupId      = _params._groupId,
+                _playerUnit   = _params._playerUnit,
+                _searchRadius = _params._searchRadius,
+                _markRadius   = _params._markRadius,
+                _boolRemove   = _params._boolRemove
+            },
+            timer.getTime() + 10)
+    end
+
+    if _params._boolRemove == true then
+        ctld.reconRemoveTargetsInLosOnF10Map(_params._playerUnit)
+    end
+
+    return ctld.reconShowTargetsInLosOnF10Map(_params._playerUnit, _params._searchRadius, _params._markRadius) -- returns TargetsInLOS table
+end
+
+--- test ------------------------------------------------------
+--local unitName = "uh2-1"                    --"uh1-1"    --"uh2-1"
+--ctld.reconShowTargetsInLosOnF10Map(Unit.getByName(unitName),2000,200)
+-- End : CTLD_recon.lua 
 -- ==================================================================================================== 
 -- Start : CTLD_core.lua 
 --[[ ! IMPORTANT : You must must use the version of MIST supplied in the CTLD pack to correctly manage dynamic spwans
@@ -5431,7 +5668,7 @@ function ctld.cratesInZone(_zone, _flagNumber)
             --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
             if _crate ~= nil and _crate:getLife() > 0
                 and (ctld.inAir(_crate) == false) then
-                local _dist = ctld.getDistance(_crate:getPoint(), _zonePos)
+                local _dist = ctld.utils.getDistance("ctld.cratesInZone()", _crate:getPoint(), _zonePos)
 
                 if _dist <= _triggerZone.radius then
                     _crateCount = _crateCount + 1
@@ -5553,7 +5790,8 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
 
             if #_groupUnits > 0 then
                 local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
-                local _dist = ctld.getDistance(_groupUnits[1]:getPoint(), _zonePos)
+                local _dist = ctld.utils.getDistance("ctld.countDroppedGroupsInZone()", _groupUnits[1]:getPoint(),
+                    _zonePos)
 
                 if _dist <= _triggerZone.radius then
                     if (_groupUnits[1]:getCoalition() == 1) then
@@ -5600,7 +5838,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
             if #_groupUnits > 0 then
                 local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
                 for _, _unit in pairs(_groupUnits) do
-                    local _dist = ctld.getDistance(_unit:getPoint(), _zonePos)
+                    local _dist = ctld.utils.getDistance("ctld.countDroppedUnitsInZone()", _unit:getPoint(), _zonePos)
 
                     if _dist <= _triggerZone.radius then
                         if (_unit:getCoalition() == 1) then
@@ -6223,7 +6461,7 @@ function ctld.isUnitInNamedLogisticZone(_unitName, _logisticUnitName) -- check i
     local unitPoint = _unit:getPoint()
     if StaticObject.getByName(_logisticUnitName) then
         local logisticUnitPoint = StaticObject.getByName(_logisticUnitName):getPoint()
-        local _dist = ctld.getDistance(unitPoint, logisticUnitPoint)
+        local _dist = ctld.utils.getDistance("ctld.isUnitInNamedLogisticZone()", unitPoint, logisticUnitPoint)
         if _dist <= ctld.maximumDistanceLogistic then
             return true
         end
@@ -6790,7 +7028,7 @@ function ctld.inExtractZone(_heli)
 
     for _, _zoneDetails in pairs(ctld.extractZones) do
         --get distance to center
-        local _dist = ctld.getDistance(_heliPoint, _zoneDetails.point)
+        local _dist = ctld.utils.getDistance("ctld.inExtractZone()", _heliPoint, _zoneDetails.point)
 
         if _dist <= _zoneDetails.radius then
             return _zoneDetails
@@ -7947,7 +8185,7 @@ function ctld.getCratesAndDistance(_heli)
         --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
         if _crate ~= nil and _crate:getLife() > 0
             and (ctld.inAir(_crate) == false) then
-            local _dist = ctld.getDistance(_crate:getPoint(), _heli:getPoint())
+            local _dist = ctld.utils.getDistance("ctld.getCratesAndDistance()", _crate:getPoint(), _heli:getPoint())
 
             local _crateDetails = { crateUnit = _crate, dist = _dist, details = _details }
 
@@ -7967,7 +8205,7 @@ function ctld.getCratesAndDistance(_heli)
         local _crate = ctld.getCrateObject(_crateName)
 
         if _crate ~= nil and _crate:getLife() > 0 then
-            local _dist = ctld.getDistance(_crate:getPoint(), _heli:getPoint())
+            local _dist = ctld.utils.getDistance("ctld.getCratesAndDistance()", _crate:getPoint(), _heli:getPoint())
 
             local _crateDetails = { crateUnit = _crate, dist = _dist, details = { unit = "FOB" }, }
 
@@ -8010,7 +8248,7 @@ function ctld.findNearestAASystem(_heli, _aaSystem)
 
             for _, _leader in pairs(_units) do
                 if _leader ~= nil and _leader:getLife() > 0 then
-                    _distance = ctld.getDistance(_leader:getPoint(), _heli:getPoint())
+                    _distance = ctld.utils.getDistance("ctld.findNearestAASystem()", _leader:getPoint(), _heli:getPoint())
 
                     if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
                         _shortestDistance = _distance
@@ -8590,7 +8828,8 @@ function ctld.removeRadioBeacon(_args)
                 local _group = Group.getByName(_details.vhfGroup)
 
                 if _group ~= nil and #_group:getUnits() == 1 then
-                    _distance = ctld.getDistance(_heli:getPoint(), _group:getUnit(1):getPoint())
+                    _distance = ctld.utils.getDistance("ctld.removeRadioBeacon()", _heli:getPoint(),
+                        _group:getUnit(1):getPoint())
                     if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
                         _shortestDistance = _distance
                         _closestBeacon = _details
@@ -9427,7 +9666,7 @@ function ctld.findNearestEnemy(_side, _point, _searchDistance)
 
                 if _leader ~= nil then
                     local _leaderPos = _leader:getPoint()
-                    local _dist = ctld.getDistance(_heliPoint, _leaderPos)
+                    local _dist = ctld.utils.getDistance("ctld.findNearestEnemy()", _heliPoint, _leaderPos)
                     if _dist < _closestEnemyDist then
                         _closestEnemyDist = _dist
                         _closestEnemy = _leaderPos
@@ -9498,7 +9737,7 @@ function ctld.findNearestGroup(_heli, _groups)
 
                 if _leader ~= nil then
                     local _leaderPos = _leader:getPoint()
-                    local _dist = ctld.getDistance(_heliPoint, _leaderPos)
+                    local _dist = ctld.utils.getDistance("ctld.findNearestGroup()", _heliPoint, _leaderPos)
                     if _dist < _closestGroupDist then
                         _closestGroupDist = _dist
                         _closestGroupDetails = _groupDetails
@@ -9626,7 +9865,7 @@ function ctld.inPickupZone(_heli)
         if _triggerZone ~= nil then
             --get distance to center
 
-            local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
+            local _dist = ctld.utils.getDistance("ctld.inPickupZone()", _heliPoint, _triggerZone.point)
             if _dist <= _triggerZone.radius then
                 local _heliCoalition = _heli:getCoalition()
                 if _zoneDetails[4] == 1 and (_zoneDetails[5] == _heliCoalition or _zoneDetails[5] == 0) then
@@ -9642,7 +9881,7 @@ function ctld.inPickupZone(_heli)
     for _, _fob in ipairs(_fobs) do
         --get distance to center
 
-        local _dist = ctld.getDistance(_heliPoint, _fob:getPoint())
+        local _dist = ctld.utils.getDistance("ctld.inPickupZone()", _heliPoint, _fob:getPoint())
 
         if _dist <= 150 then
             return { inZone = true, limit = 10000, index = -1 };
@@ -9682,7 +9921,7 @@ function ctld.inDropoffZone(_heli)
         if _triggerZone ~= nil and (_zoneDetails[3] == _heli:getCoalition() or _zoneDetails[3] == 0) then
             --get distance to center
 
-            local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
+            local _dist = ctld.utils.getDistance("ctld.inDropoffZone()", _heliPoint, _triggerZone.point)
 
             if _dist <= _triggerZone.radius then
                 return true
@@ -9702,7 +9941,7 @@ function ctld.inWaypointZone(_point, _coalition)
         if _triggerZone ~= nil and (_zoneDetails[4] == _coalition or _zoneDetails[4] == 0) and _zoneDetails[3] == 1 then
             --get distance to center
 
-            local _dist = ctld.getDistance(_point, _triggerZone.point)
+            local _dist = ctld.utils.getDistance("ctld.inWaypointZone()", _point, _triggerZone.point)
 
             if _dist <= _triggerZone.radius then
                 return { inZone = true, point = _triggerZone.point, name = _zoneDetails[1] }
@@ -9731,7 +9970,7 @@ function ctld.inLogisticsZone(_heli)
         ctld.logDebug("_logistic = %s", ctld.p(_logistic))
         if _logistic ~= nil and _logistic:getCoalition() == _heli:getCoalition() and _logistic:getLife() > 0 then
             --get distance
-            local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
+            local _dist = ctld.utils.getDistance("ctld.inLogisticsZone()", _heliPoint, _logistic:getPoint())
             if _dist <= ctld.maximumDistanceLogistic then
                 return true
             end
@@ -9756,7 +9995,7 @@ function ctld.farEnoughFromLogisticZone(_heli)
 
         if _logistic ~= nil and _logistic:getCoalition() == _heli:getCoalition() then
             --get distance
-            local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
+            local _dist = ctld.utils.getDistance("ctld.farEnoughFromLogisticZone()", _heliPoint, _logistic:getPoint())
             -- env.info("DIST ".._dist)
             if _dist <= ctld.minimumDeployDistance then
                 -- env.info("TOO CLOSE ".._dist)
@@ -10567,24 +10806,6 @@ function ctld.addJTACRadioCommand(_side)
         end
     end
 end
-
---get distance in meters assuming a Flat world
-function ctld.getDistance(_point1, _point2)
-    local xUnit = _point1.x
-    local yUnit = _point1.z
-    local xZone = _point2.x
-    local yZone = _point2.z
-
-    local xDiff = xUnit - xZone
-    local yDiff = yUnit - yZone
-
-    return math.sqrt(xDiff * xDiff + yDiff * yDiff)
-end
-
---- test ------------------------------------------------------
---local unitName = "uh2-1"                    --"uh1-1"    --"uh2-1"
---ctld.reconShowTargetsInLosOnF10Map(Unit.getByName(unitName),2000,200)
-
 
 --**********************************************************************
 

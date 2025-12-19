@@ -476,6 +476,25 @@ function ctld.utils.get2DDist(caller, point1, point2)
     return ctld.utils.vec3Mag("ctld.utils.get2DDist()", { x = point1.x - point2.x, y = 0, z = point1.z - point2.z })
 end
 
+--get distance in meters assuming a Flat world
+function ctld.utils.getDistance(caller, _point1, _point2)
+    if _point1 == nil or _point2 == nil then
+        if env and env.error then
+            env.error("ctld.utils.getDistance()." .. tostring(caller) .. ": Both input values cannot be nil.")
+        end
+        return 0
+    end
+    local xUnit = _point1.x
+    local yUnit = _point1.z
+    local xZone = _point2.x
+    local yZone = _point2.z
+
+    local xDiff = xUnit - xZone
+    local yDiff = yUnit - yZone
+
+    return math.sqrt(xDiff * xDiff + yDiff * yDiff)
+end
+
 --------------------------------------------------------------------------------------------------------
 --- Simple rounding function.
 -- @-- borrowed from mist

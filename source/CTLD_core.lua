@@ -1403,7 +1403,7 @@ function ctld.cratesInZone(_zone, _flagNumber)
             --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
             if _crate ~= nil and _crate:getLife() > 0
                 and (ctld.inAir(_crate) == false) then
-                local _dist = ctld.getDistance(_crate:getPoint(), _zonePos)
+                local _dist = ctld.utils.getDistance("ctld.cratesInZone()", _crate:getPoint(), _zonePos)
 
                 if _dist <= _triggerZone.radius then
                     _crateCount = _crateCount + 1
@@ -1525,7 +1525,8 @@ function ctld.countDroppedGroupsInZone(_zone, _blueFlag, _redFlag)
 
             if #_groupUnits > 0 then
                 local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedGroupsInZone()", _zone)
-                local _dist = ctld.getDistance(_groupUnits[1]:getPoint(), _zonePos)
+                local _dist = ctld.utils.getDistance("ctld.countDroppedGroupsInZone()", _groupUnits[1]:getPoint(),
+                    _zonePos)
 
                 if _dist <= _triggerZone.radius then
                     if (_groupUnits[1]:getCoalition() == 1) then
@@ -1572,7 +1573,7 @@ function ctld.countDroppedUnitsInZone(_zone, _blueFlag, _redFlag)
             if #_groupUnits > 0 then
                 local _zonePos = ctld.utils.zoneToVec3("ctld.countDroppedUnitsInZone()", _zone)
                 for _, _unit in pairs(_groupUnits) do
-                    local _dist = ctld.getDistance(_unit:getPoint(), _zonePos)
+                    local _dist = ctld.utils.getDistance("ctld.countDroppedUnitsInZone()", _unit:getPoint(), _zonePos)
 
                     if _dist <= _triggerZone.radius then
                         if (_unit:getCoalition() == 1) then
@@ -2195,7 +2196,7 @@ function ctld.isUnitInNamedLogisticZone(_unitName, _logisticUnitName) -- check i
     local unitPoint = _unit:getPoint()
     if StaticObject.getByName(_logisticUnitName) then
         local logisticUnitPoint = StaticObject.getByName(_logisticUnitName):getPoint()
-        local _dist = ctld.getDistance(unitPoint, logisticUnitPoint)
+        local _dist = ctld.utils.getDistance("ctld.isUnitInNamedLogisticZone()", unitPoint, logisticUnitPoint)
         if _dist <= ctld.maximumDistanceLogistic then
             return true
         end
@@ -2762,7 +2763,7 @@ function ctld.inExtractZone(_heli)
 
     for _, _zoneDetails in pairs(ctld.extractZones) do
         --get distance to center
-        local _dist = ctld.getDistance(_heliPoint, _zoneDetails.point)
+        local _dist = ctld.utils.getDistance("ctld.inExtractZone()", _heliPoint, _zoneDetails.point)
 
         if _dist <= _zoneDetails.radius then
             return _zoneDetails
@@ -3919,7 +3920,7 @@ function ctld.getCratesAndDistance(_heli)
         --in air seems buggy with crates so if in air is true, get the height above ground and the speed magnitude
         if _crate ~= nil and _crate:getLife() > 0
             and (ctld.inAir(_crate) == false) then
-            local _dist = ctld.getDistance(_crate:getPoint(), _heli:getPoint())
+            local _dist = ctld.utils.getDistance("ctld.getCratesAndDistance()", _crate:getPoint(), _heli:getPoint())
 
             local _crateDetails = { crateUnit = _crate, dist = _dist, details = _details }
 
@@ -3939,7 +3940,7 @@ function ctld.getCratesAndDistance(_heli)
         local _crate = ctld.getCrateObject(_crateName)
 
         if _crate ~= nil and _crate:getLife() > 0 then
-            local _dist = ctld.getDistance(_crate:getPoint(), _heli:getPoint())
+            local _dist = ctld.utils.getDistance("ctld.getCratesAndDistance()", _crate:getPoint(), _heli:getPoint())
 
             local _crateDetails = { crateUnit = _crate, dist = _dist, details = { unit = "FOB" }, }
 
@@ -3982,7 +3983,7 @@ function ctld.findNearestAASystem(_heli, _aaSystem)
 
             for _, _leader in pairs(_units) do
                 if _leader ~= nil and _leader:getLife() > 0 then
-                    _distance = ctld.getDistance(_leader:getPoint(), _heli:getPoint())
+                    _distance = ctld.utils.getDistance("ctld.findNearestAASystem()", _leader:getPoint(), _heli:getPoint())
 
                     if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
                         _shortestDistance = _distance
@@ -4562,7 +4563,8 @@ function ctld.removeRadioBeacon(_args)
                 local _group = Group.getByName(_details.vhfGroup)
 
                 if _group ~= nil and #_group:getUnits() == 1 then
-                    _distance = ctld.getDistance(_heli:getPoint(), _group:getUnit(1):getPoint())
+                    _distance = ctld.utils.getDistance("ctld.removeRadioBeacon()", _heli:getPoint(),
+                        _group:getUnit(1):getPoint())
                     if _distance ~= nil and (_shortestDistance == -1 or _distance < _shortestDistance) then
                         _shortestDistance = _distance
                         _closestBeacon = _details
@@ -5399,7 +5401,7 @@ function ctld.findNearestEnemy(_side, _point, _searchDistance)
 
                 if _leader ~= nil then
                     local _leaderPos = _leader:getPoint()
-                    local _dist = ctld.getDistance(_heliPoint, _leaderPos)
+                    local _dist = ctld.utils.getDistance("ctld.findNearestEnemy()", _heliPoint, _leaderPos)
                     if _dist < _closestEnemyDist then
                         _closestEnemyDist = _dist
                         _closestEnemy = _leaderPos
@@ -5470,7 +5472,7 @@ function ctld.findNearestGroup(_heli, _groups)
 
                 if _leader ~= nil then
                     local _leaderPos = _leader:getPoint()
-                    local _dist = ctld.getDistance(_heliPoint, _leaderPos)
+                    local _dist = ctld.utils.getDistance("ctld.findNearestGroup()", _heliPoint, _leaderPos)
                     if _dist < _closestGroupDist then
                         _closestGroupDist = _dist
                         _closestGroupDetails = _groupDetails
@@ -5598,7 +5600,7 @@ function ctld.inPickupZone(_heli)
         if _triggerZone ~= nil then
             --get distance to center
 
-            local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
+            local _dist = ctld.utils.getDistance("ctld.inPickupZone()", _heliPoint, _triggerZone.point)
             if _dist <= _triggerZone.radius then
                 local _heliCoalition = _heli:getCoalition()
                 if _zoneDetails[4] == 1 and (_zoneDetails[5] == _heliCoalition or _zoneDetails[5] == 0) then
@@ -5614,7 +5616,7 @@ function ctld.inPickupZone(_heli)
     for _, _fob in ipairs(_fobs) do
         --get distance to center
 
-        local _dist = ctld.getDistance(_heliPoint, _fob:getPoint())
+        local _dist = ctld.utils.getDistance("ctld.inPickupZone()", _heliPoint, _fob:getPoint())
 
         if _dist <= 150 then
             return { inZone = true, limit = 10000, index = -1 };
@@ -5654,7 +5656,7 @@ function ctld.inDropoffZone(_heli)
         if _triggerZone ~= nil and (_zoneDetails[3] == _heli:getCoalition() or _zoneDetails[3] == 0) then
             --get distance to center
 
-            local _dist = ctld.getDistance(_heliPoint, _triggerZone.point)
+            local _dist = ctld.utils.getDistance("ctld.inDropoffZone()", _heliPoint, _triggerZone.point)
 
             if _dist <= _triggerZone.radius then
                 return true
@@ -5674,7 +5676,7 @@ function ctld.inWaypointZone(_point, _coalition)
         if _triggerZone ~= nil and (_zoneDetails[4] == _coalition or _zoneDetails[4] == 0) and _zoneDetails[3] == 1 then
             --get distance to center
 
-            local _dist = ctld.getDistance(_point, _triggerZone.point)
+            local _dist = ctld.utils.getDistance("ctld.inWaypointZone()", _point, _triggerZone.point)
 
             if _dist <= _triggerZone.radius then
                 return { inZone = true, point = _triggerZone.point, name = _zoneDetails[1] }
@@ -5703,7 +5705,7 @@ function ctld.inLogisticsZone(_heli)
         ctld.logDebug("_logistic = %s", ctld.p(_logistic))
         if _logistic ~= nil and _logistic:getCoalition() == _heli:getCoalition() and _logistic:getLife() > 0 then
             --get distance
-            local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
+            local _dist = ctld.utils.getDistance("ctld.inLogisticsZone()", _heliPoint, _logistic:getPoint())
             if _dist <= ctld.maximumDistanceLogistic then
                 return true
             end
@@ -5728,7 +5730,7 @@ function ctld.farEnoughFromLogisticZone(_heli)
 
         if _logistic ~= nil and _logistic:getCoalition() == _heli:getCoalition() then
             --get distance
-            local _dist = ctld.getDistance(_heliPoint, _logistic:getPoint())
+            local _dist = ctld.utils.getDistance("ctld.farEnoughFromLogisticZone()", _heliPoint, _logistic:getPoint())
             -- env.info("DIST ".._dist)
             if _dist <= ctld.minimumDeployDistance then
                 -- env.info("TOO CLOSE ".._dist)
@@ -6538,19 +6540,6 @@ function ctld.addJTACRadioCommand(_side)
             ctld.refreshJTACmenu[_side] = false
         end
     end
-end
-
---get distance in meters assuming a Flat world
-function ctld.getDistance(_point1, _point2)
-    local xUnit = _point1.x
-    local yUnit = _point1.z
-    local xZone = _point2.x
-    local yZone = _point2.z
-
-    local xDiff = xUnit - xZone
-    local yDiff = yUnit - yZone
-
-    return math.sqrt(xDiff * xDiff + yDiff * yDiff)
 end
 
 --**********************************************************************
