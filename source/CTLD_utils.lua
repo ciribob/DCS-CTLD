@@ -495,6 +495,31 @@ function ctld.utils.getDistance(caller, _point1, _point2)
     return math.sqrt(xDiff * xDiff + yDiff * yDiff)
 end
 
+----------------------------------------------------------------------------------------------------------
+-- gets the center of a bunch of points!
+-- return proper DCS point with height
+function ctld.utils.getCentroid(caller, _points)
+    if _points == nil or #_points == 0 then
+        if env and env.error then
+            env.error("ctld.utils.getCentroid()." .. tostring(caller) .. ": Invalid points provided.")
+        end
+        return nil
+    end
+    local _tx, _ty = 0, 0
+    for _index, _point in ipairs(_points) do
+        _tx = _tx + _point.x
+        _ty = _ty + _point.z
+    end
+
+    local _npoints = #_points
+
+    local _point = { x = _tx / _npoints, z = _ty / _npoints }
+
+    _point.y = land.getHeight({ _point.x, _point.z })
+
+    return _point
+end
+
 --------------------------------------------------------------------------------------------------------
 --- Simple rounding function.
 -- @-- borrowed from mist
