@@ -8703,7 +8703,7 @@ function ctld.eventHandler:onEvent(event)
                         for _, aircraftType in pairs(ctld.aircraftTypeTable) do
                             if aircraftType == playerTypeName then
                                 ctld.logTrace("adding by aircraft type, unitName = %s", ctld.p(unitName))
-                                if ctld.tools.isValueInIpairTable(ctld.transportPilotNames, unitName) == false then
+                                if ctld.utils.isValueInIpairTable("ctld.eventHandler:onEvent()", ctld.transportPilotNames, unitName) == false then
                                     table.insert(ctld.transportPilotNames, unitName) -- add transport unit to the list
                                 end
                                 if ctld.addedTo[tostring(_groupId)] == nil then      -- only if menu not already set up
@@ -8771,17 +8771,6 @@ function ctld.RandomReal(mini, maxi)
     local rand = math.random()                 --random value between 0 and 1
     local result = mini + rand * (maxi - mini) --	scale the random value between [mini, maxi]
     return result
-end
-
--- Tools
-ctld.tools = {}
-function ctld.tools.isValueInIpairTable(tab, value)
-    for i, v in ipairs(tab) do
-        if v == value then
-            return true -- La valeur existe
-        end
-    end
-    return false -- La valeur n'existe pas
 end
 
 --- Enable/Disable error boxes displayed on screen.

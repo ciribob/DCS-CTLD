@@ -1301,6 +1301,23 @@ function ctld.utils.getAvgPos(caller, unitNames)
 end
 
 --------------------------------------------------------------------------------------------------------
+--- Checks if a value exists in an ipairs table.
+function ctld.utils.isValueInIpairTable(caller, tab, value)
+    if tab == nil or type(tab) ~= "table" then
+        if env and env.error then
+            env.error("ctld.utils.isValueInIpairTable()." .. tostring(caller) .. ": Invalid table provided.")
+        end
+        return false
+    end
+    for i, v in ipairs(tab) do
+        if v == value then
+            return true -- La valeur existe
+        end
+    end
+    return false -- La valeur n'existe pas
+end
+
+--------------------------------------------------------------------------------------------------------
 --- Creates a deep copy of a object.
 -- @-- borrowed from mist
 -- Usually this object is a table.
