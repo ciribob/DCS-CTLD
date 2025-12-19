@@ -2798,7 +2798,7 @@ function ctld.inAir(_heli)
 
     -- less than 5 cm/s a second so landed
     -- BUT AI can hold a perfect hover so ignore AI
-    if ctld.utils.vec3Mag("ctld.inAir)", _heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
+    if ctld.utils.vec3Mag("ctld.inAir()", _heli:getVelocity()) < 0.05 and _heli:getPlayerName() ~= nil then
         return false
     end
     return true
