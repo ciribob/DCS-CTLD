@@ -1309,7 +1309,7 @@ function ctld.generateFMFrequencies()
 end
 
 function ctld.getPositionString(_unit)
-    if ctld.JTAC_location == false then
+    if ctld.JTAC_location == false or _unit == nil then
         return ""
     end
 

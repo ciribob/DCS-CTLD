@@ -228,7 +228,7 @@ function ctld.dropRadioBeacon(_args)
 
         trigger.action.outTextForCoalition(_heli:getCoalition(),
             ctld.i18n_translate("%1 deployed a Radio Beacon.\n\n%2", ctld.getPlayerNameOrType(_heli),
-                _radioBeaconDetails.text, 20))
+                _radioBeaconDetails.text), 20)
     else
         ctld.displayMessageToGroup(_heli, ctld.i18n_translate("You need to land before you can deploy a Radio Beacon!"),
             20)
@@ -284,7 +284,7 @@ function ctld.removeRadioBeacon(_args)
 
             trigger.action.outTextForCoalition(_heli:getCoalition(),
                 ctld.i18n_translate("%1 removed a Radio Beacon.\n\n%2", ctld.getPlayerNameOrType(_heli),
-                    _closestBeacon.text, 20))
+                    _closestBeacon.text), 20)
         else
             ctld.displayMessageToGroup(_heli, ctld.i18n_translate("No Radio Beacons within 500m."), 20)
         end

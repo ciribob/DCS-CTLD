@@ -156,7 +156,7 @@ end
 --- @param caller string Calling context (for logging)
 --- @param refLat number Reference latitude in decimal degrees
 --- @param refLon number Reference longitude in decimal degrees
---- @param refHeading number Heading in degrees (0-360)
+--- @param refHeadingInDegrees number Heading in degrees (0-360)
 --- @param destLat number Destination latitude in decimal degrees
 --- @param destLon number Destination longitude in decimal degrees
 --- @param resultFormat string Output format ("radian", "degree", "clock")
@@ -247,13 +247,17 @@ function ctld.utils.getNorthCorrectionInRadians(caller, vec2OrVec3Point) --gets 
     end
 
     local point = ctld.utils.deepCopy("ctld.utils.getNorthCorrectionInRadians()", vec2OrVec3Point)
-    if not point.z then --Vec2; convert to Vec3
-        point.z = point.y
-        point.y = 0
+    if point == nil then
+        return 0
+    else
+        if not point.z then --Vec2; convert to Vec3
+            point.z = point.y
+            point.y = 0
+        end
+        local lat, lon = coord.LOtoLL(point)
+        local north_posit = coord.LLtoLO(lat + 1, lon)
+        return math.atan(north_posit.z - point.z, north_posit.x - point.x)
     end
-    local lat, lon = coord.LOtoLL(point)
-    local north_posit = coord.LLtoLO(lat + 1, lon)
-    return math.atan(north_posit.z - point.z, north_posit.x - point.x)
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -413,14 +417,18 @@ function ctld.utils.zoneToVec3(caller, zone, gl)
         return nil
     end
 
-    local new = {}
+    ---@diagnostic disable: assign-type-mismatch
+    local new = { x = 0, y = 0, z = 0 }
     if type(zone) == 'table' then
         if zone.point then
             new.x = zone.point.x
             new.y = zone.point.y
             new.z = zone.point.z
         elseif zone.x and zone.y and zone.z then
-            new = ctld.utils.deepCopy("ctld.utils.zoneToVec3()", zone)
+            local copied = ctld.utils.deepCopy("ctld.utils.zoneToVec3()", zone)
+            if copied then
+                new = copied
+            end
         end
         return new
     elseif type(zone) == 'string' then
@@ -431,6 +439,7 @@ function ctld.utils.zoneToVec3(caller, zone, gl)
             new.z = zone.point.z
         end
     end
+    ---@diagnostic enable: assign-type-mismatch
     if new.x and gl then
         new.y = land.getHeight({ x = new.x, y = new.z })
     end
@@ -466,12 +475,14 @@ function ctld.utils.get2DDist(caller, point1, point2)
         return 0
     end
     if not point1 then
-        log:warn("ctld.utils.get2DDist()  1st input value is nil")
+        ctld.logWarning("ctld.utils.get2DDist()  1st input value is nil")
     end
     if not point2 then
-        log:warn("ctld.utils.get2DDist()  2nd input value is nil")
+        ctld.logWarning("ctld.utils.get2DDist()  2nd input value is nil")
     end
+    ---@type table
     point1 = ctld.utils.makeVec3FromVec2OrVec3("ctld.utils.get2DDist()", point1)
+    ---@type table
     point2 = ctld.utils.makeVec3FromVec2OrVec3("ctld.utils.get2DDist()", point2)
     return ctld.utils.vec3Mag("ctld.utils.get2DDist()", { x = point1.x - point2.x, y = 0, z = point1.z - point2.z })
 end
@@ -515,7 +526,7 @@ function ctld.utils.getCentroid(caller, _points)
 
     local _point = { x = _tx / _npoints, z = _ty / _npoints }
 
-    _point.y = land.getHeight({ _point.x, _point.z })
+    _point.y = land.getHeight({ x = _point.x, y = _point.z })
 
     return _point
 end
@@ -689,10 +700,10 @@ function ctld.utils.getNextUniqId()
 end
 
 --- Converts angle in radians to degrees.
--- @param angle angle in radians
+-- @param angleInRadians angle in radians
 -- @return angle in degrees
 function ctld.utils.radianToDegree(caller, angleInRadians)
-    if angle == nil or type(angle) ~= "number" then
+    if angleInRadians == nil or type(angleInRadians) ~= "number" then
         if env and env.error then
             env.error("ctld.utils.toDegree()." .. tostring(caller) .. ": Invalid angle provided.")
         end
@@ -824,7 +835,7 @@ end
 
 --------------------------------------------------------------------------------------------------------
 function ctld.utils.getUnitsLOS(caller, unitset1, altoffset1, unitset2, altoffset2, radius)
-    --log:info("$1, $2, $3, $4, $5", unitset1, altoffset1, unitset2, altoffset2, radius)
+    --ctld.logInfo("%s, %s, %s, %s, %s", unitset1, altoffset1, unitset2, altoffset2, radius)
     if unitset1 == nil or unitset2 == nil or altoffset1 == nil or altoffset2 == nil or radius == nil then
         if env and env.error then
             env.error("ctld.utils.getUnitsLOS()." .. tostring(caller) .. ": parameters sets cannot be nil.")
@@ -953,7 +964,7 @@ function ctld.utils.getGroupRoute(caller, groupName, task)
     if Group.getByName[groupName] then
         gpId = Group.getByName[groupName]:getID()
     else
-        log:error("ctld.utils.getGroupRoute()." .. tostring(caller) .. '$1 not found in mist.DBs.MEgroupsByName',
+        ctld.logError("ctld.utils.getGroupRoute()." .. tostring(caller) .. "'%s' not found in mist.DBs.MEgroupsByName",
             groupName)
     end
 
@@ -999,7 +1010,7 @@ function ctld.utils.getGroupRoute(caller, groupName, task)
 
                                             return points
                                         end
-                                        log:error('Group route not defined in mission editor for groupId: $1', gpId)
+                                        ctld.logError('Group route not defined in mission editor for groupId: %s', gpId)
                                         return
                                     end --if group_data and group_data.name and group_data.name == 'groupname'
                                 end     --for group_num, group_data in pairs(obj_cat_data.group) do
@@ -1039,7 +1050,10 @@ function ctld.utils.dynAddStatic(caller, n)
     end
     --local newObj = mist.utils.deepCopy(n)
     local newObj = ctld.utils.deepCopy("ctld.utils.dynAddStatic()", n)
-    --log:warn(newObj)
+    if not newObj then return false end
+    ---@type table
+    newObj = newObj
+    --ctld.logWarning(newObj)
     if newObj.units and newObj.units[1] then -- if its mist format
         for entry, val in pairs(newObj.units[1]) do
             if newObj[entry] and newObj[entry] ~= val or not newObj[entry] then
@@ -1047,7 +1061,7 @@ function ctld.utils.dynAddStatic(caller, n)
             end
         end
     end
-    --log:info(newObj)
+    --ctld.logInfo(newObj)
 
     local cntry = newObj.country
     if newObj.countryId then
@@ -1070,7 +1084,7 @@ function ctld.utils.dynAddStatic(caller, n)
     end
 
     if newCountry == '' then
-        log:error("Country not found: $1", cntry)
+        ctld.logError("Country not found: %s", cntry)
         return false
     end
 
@@ -1108,15 +1122,15 @@ function ctld.utils.dynAddStatic(caller, n)
     end
 
     if not newObj.shape_name then
-        log:info('shape_name not present')
+        ctld.logInfo('shape_name not present')
     end
     if newObj.x and newObj.y and newObj.type and type(newObj.x) == 'number' and type(newObj.y) == 'number' and type(newObj.type) == 'string' then
-        --log:warn(newObj)
+        --ctld.logWarning(newObj)
         coalition.addStaticObject(country.id[newCountry], newObj)
 
         return newObj
     end
-    log:error("Failed to add static object due to missing or incorrect value. X: $1, Y: $2, Type: $3", newObj.x,
+    ctld.logError("Failed to add static object due to missing or incorrect value. X: %s, Y: %s, Type: %s", newObj.x,
         newObj.y, newObj.type)
     return false
 end
@@ -1134,7 +1148,10 @@ function ctld.utils.dynAdd(caller, ng)
         return false
     end
     local newGroup = ctld.utils.deepCopy(" ctld.utils.dynAdd()", ng)
-    --log:warn(newGroup)
+    if not newGroup then return false end
+    ---@type table
+    newGroup = newGroup
+    --ctld.logWarning(newGroup)
     --mist.debug.writeData(mist.utils.serialize,{'msg', newGroup}, 'newGroupOrig.lua')
     local cntry = newGroup.country
     if newGroup.countryId then
@@ -1158,7 +1175,7 @@ function ctld.utils.dynAdd(caller, ng)
     end
 
     if newCountry == '' then
-        log:error("Country not found: $1", cntry)
+        ctld.logError("Country not found: %s", cntry)
         return false
     end
 
@@ -1292,7 +1309,7 @@ function ctld.utils.dynAdd(caller, ng)
 
     -- update and verify any self tasks
     if newGroup.route and newGroup.route.points then
-        --log:warn(newGroup.route.points)
+        --ctld.logWarning(newGroup.route.points)
         for i, pData in pairs(newGroup.route.points) do
             if pData.task and pData.task.params and pData.task.params.tasks and #pData.task.params.tasks > 0 then
                 for tIndex, tData in pairs(pData.task.params.tasks) do
@@ -1308,7 +1325,7 @@ function ctld.utils.dynAdd(caller, ng)
         end
     end
     --mist.debug.writeData(mist.utils.serialize,{'msg', newGroup}, newGroup.name ..'.lua')
-    --log:warn(newGroup)
+    --ctld.logWarning(newGroup)
     -- sanitize table
     newGroup.groupName = nil
     newGroup.clone = nil

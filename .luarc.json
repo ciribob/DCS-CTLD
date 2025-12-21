@@ -1,0 +1,10 @@
+{
+  "workspace": {
+    "ignoreDir": [".git", ".vscode", ".luaignore"],
+    "maxPreload": 2000,
+    "checkThirdParty": false
+  },
+  "diagnostics": {
+    "disable": ["duplicate-set-field"]
+  }
+}

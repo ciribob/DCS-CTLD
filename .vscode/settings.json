@@ -1,7 +1,9 @@
 {
+    "Lua.runtime.version": "Lua 5.1",
     "Lua.diagnostics.globals": [
         "ctld",
         "timer"
     ],
-    "Lua.workspace.preloadFileSize": 2000
+    "Lua.workspace.preloadFileSize": 2000,
+    "Lua.workspace.checkThirdParty": false
 }
