@@ -2781,14 +2781,18 @@ function ctld.utils.zoneToVec3(caller, zone, gl)
         return nil
     end
 
-    local new = {}
+    ---@diagnostic disable: assign-type-mismatch
+    local new = { x = 0, y = 0, z = 0 }
     if type(zone) == 'table' then
         if zone.point then
             new.x = zone.point.x
             new.y = zone.point.y
             new.z = zone.point.z
         elseif zone.x and zone.y and zone.z then
-            new = ctld.utils.deepCopy("ctld.utils.zoneToVec3()", zone)
+            local copied = ctld.utils.deepCopy("ctld.utils.zoneToVec3()", zone)
+            if copied then
+                new = copied
+            end
         end
         return new
     elseif type(zone) == 'string' then
@@ -2799,6 +2803,7 @@ function ctld.utils.zoneToVec3(caller, zone, gl)
             new.z = zone.point.z
         end
     end
+    ---@diagnostic enable: assign-type-mismatch
     if new.x and gl then
         new.y = land.getHeight({ x = new.x, y = new.z })
     end
@@ -2839,7 +2844,9 @@ function ctld.utils.get2DDist(caller, point1, point2)
     if not point2 then
         ctld.logWarning("ctld.utils.get2DDist()  2nd input value is nil")
     end
+    ---@type table
     point1 = ctld.utils.makeVec3FromVec2OrVec3("ctld.utils.get2DDist()", point1)
+    ---@type table
     point2 = ctld.utils.makeVec3FromVec2OrVec3("ctld.utils.get2DDist()", point2)
     return ctld.utils.vec3Mag("ctld.utils.get2DDist()", { x = point1.x - point2.x, y = 0, z = point1.z - point2.z })
 end
@@ -2883,7 +2890,7 @@ function ctld.utils.getCentroid(caller, _points)
 
     local _point = { x = _tx / _npoints, z = _ty / _npoints }
 
-    _point.y = land.getHeight({ _point.x, _point.z })
+    _point.y = land.getHeight({ x = _point.x, y = _point.z })
 
     return _point
 end
@@ -3057,10 +3064,10 @@ function ctld.utils.getNextUniqId()
 end
 
 --- Converts angle in radians to degrees.
--- @param angle angle in radians
+-- @param angleInRadians angle in radians
 -- @return angle in degrees
 function ctld.utils.radianToDegree(caller, angleInRadians)
-    if angle == nil or type(angle) ~= "number" then
+    if angleInRadians == nil or type(angleInRadians) ~= "number" then
         if env and env.error then
             env.error("ctld.utils.toDegree()." .. tostring(caller) .. ": Invalid angle provided.")
         end
@@ -3407,6 +3414,9 @@ function ctld.utils.dynAddStatic(caller, n)
     end
     --local newObj = mist.utils.deepCopy(n)
     local newObj = ctld.utils.deepCopy("ctld.utils.dynAddStatic()", n)
+    if not newObj then return false end
+    ---@type table
+    newObj = newObj
     --ctld.logWarning(newObj)
     if newObj.units and newObj.units[1] then -- if its mist format
         for entry, val in pairs(newObj.units[1]) do
@@ -3502,6 +3512,9 @@ function ctld.utils.dynAdd(caller, ng)
         return false
     end
     local newGroup = ctld.utils.deepCopy(" ctld.utils.dynAdd()", ng)
+    if not newGroup then return false end
+    ---@type table
+    newGroup = newGroup
     --ctld.logWarning(newGroup)
     --mist.debug.writeData(mist.utils.serialize,{'msg', newGroup}, 'newGroupOrig.lua')
     local cntry = newGroup.country
@@ -6132,7 +6145,7 @@ function ctld.generateFMFrequencies()
 end
 
 function ctld.getPositionString(_unit)
-    if ctld.JTAC_location == false then
+    if ctld.JTAC_location == false or _unit == nil then
         return ""
     end
 
