@@ -23,46 +23,52 @@ dofile(ctld.path .. "source\\CTLD_loader.lua")
 -- CTLD Loader  ------------------------------------
 if ctld.path then
 	ctld.path = ctld.path .. "source/"
-	local loadMsg = false -- true to enable load messages
+	local loadMsg = true -- true to enable load messages
 	if loadMsg then trigger.action.outText("CTLD loader START !", 10) end
 	local m = 0
 	-----------------------------------------------------------------------
-	dofile(ctld.path .. "CTLD-i18n.lua")
+	dofile(ctld.path .. "CTLD_i18n.lua")
 	if loadMsg then
 		m = m + 1
-		trigger.action.outText(tostring(m) .. ": CTLD-i18n.lua Loaded", 10)
+		trigger.action.outText(tostring(m) .. ": CTLD_i18n.lua Loaded", 10)
 	end
-	dofile(ctld.path .. "CTLD_beacon.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": CTLD_beacon.lua Loaded", 10)
-	end
-	dofile(ctld.path .. "CTLD_menus.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": CTLD_menus.lua Loaded", 10)
-	end
-	dofile(ctld.path .. "CTLD_jtac.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": CTLD_jtac.lua Loaded", 10)
-	end
-	dofile(ctld.path .. "CTLD_recon.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": CTLD_recon.lua Loaded", 10)
-	end
-	dofile(ctld.path .. "CTLD_core.lua")
-	if loadMsg then
-		m = m + 1
-		trigger.action.outText(tostring(m) .. ": CTLD_core.lua Loaded", 10)
-	end
+	-----------------------------------------------------------------------
 	dofile(ctld.path .. "CTLD_utils.lua")
 	if loadMsg then
 		m = m + 1
 		trigger.action.outText(tostring(m) .. ": CTLD_utils.lua Loaded", 10)
 	end
-
+	-----------------------------------------------------------------------
+	dofile(ctld.path .. "CTLD_menus.lua")
+	if loadMsg then
+		m = m + 1
+		trigger.action.outText(tostring(m) .. ": CTLD_menus.lua Loaded", 10)
+	end
+	-----------------------------------------------------------------------
+	dofile(ctld.path .. "CTLD_beacon.lua")
+	if loadMsg then
+		m = m + 1
+		trigger.action.outText(tostring(m) .. ": CTLD_beacon.lua Loaded", 10)
+	end
+	-----------------------------------------------------------------------
+	dofile(ctld.path .. "CTLD_jtac.lua")
+	if loadMsg then
+		m = m + 1
+		trigger.action.outText(tostring(m) .. ": CTLD_jtac.lua Loaded", 10)
+	end
+	-----------------------------------------------------------------------
+	dofile(ctld.path .. "CTLD_recon.lua")
+	if loadMsg then
+		m = m + 1
+		trigger.action.outText(tostring(m) .. ": CTLD_recon.lua Loaded", 10)
+	end
+	-----------------------------------------------------------------------
+	dofile(ctld.path .. "CTLD_core.lua")
+	if loadMsg then
+		m = m + 1
+		trigger.action.outText(tostring(m) .. ": CTLD_core.lua Loaded", 10)
+	end
+	-----------------------------------------------------------------------
 	if loadMsg then trigger.action.outText("CTLD loader END -> CTLD loaded", 10) end
 else
 	trigger.action.outText("No ctld.path found -> CTLD Not loaded !", 10)

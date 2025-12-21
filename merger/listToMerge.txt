@@ -1,7 +1,7 @@
-CTLD-i18n.lua
+CTLD_i18n.lua
 CTLD_utils.lua
-CTLD_beacon.lua
 CTLD_menus.lua
+CTLD_beacon.lua
 CTLD_jtac.lua
 CTLD_recon.lua
 CTLD_core.lua

@@ -53,390 +53,42 @@ end
 
 ctld.dontInitialize = false -- if true, ctld.initialize() will not run; instead, you'll have to run it from your own code - it's useful when you want to override some functions/parameters before the initialization takes place
 
--- ***************************************************************
--- *************** Internationalization (I18N) *******************
--- ***************************************************************
-
--- If you want to change the language replace "en" with the language you want to use
-
---========    ENGLISH - the reference ===========================================================================
-ctld.i18n_lang = "en"
---========    FRENCH - FRANCAIS =================================================================================
---ctld.i18n_lang = "fr"
---======    SPANISH : ESPAÑOL ====================================================================================
---ctld.i18n_lang = "es"
---======    Korean : 한국어 ====================================================================================
---ctld.i18n_lang = "ko"
-
-if not ctld.i18n then -- should be defined first by CTLD-i18n.lua, but just in case it's an old mission, let's keep it here
-    ctld.i18n = {}    -- DONT REMOVE!
-end
-
--- This is the default language
--- If a string is not found in the current language then it will default to this language
--- Note that no translation is provided for this language (obviously) but that we'll maintain this table to help the translators.
-ctld.i18n["en"] = {}
-ctld.i18n["en"].translation_version =
-"1.6" -- make sure that all the translations are compatible with this version of the english language texts
-local lang = "en"; env.info(string.format("I - CTLD.i18n_translate: Loading %s language version %s", lang,
-    tostring(ctld.i18n[lang].translation_version)))
-
---- groups names
-ctld.i18n["en"]["Standard Group"] = ""
-ctld.i18n["en"]["Anti Air"] = ""
-ctld.i18n["en"]["Anti Tank"] = ""
-ctld.i18n["en"]["Mortar Squad"] = ""
-ctld.i18n["en"]["JTAC Group"] = ""
-ctld.i18n["en"]["Single JTAC"] = ""
-ctld.i18n["en"]["2x - Standard Groups"] = ""
-ctld.i18n["en"]["2x - Anti Air"] = ""
-ctld.i18n["en"]["2x - Anti Tank"] = ""
-ctld.i18n["en"]["2x - Standard Groups + 2x Mortar"] = ""
-ctld.i18n["en"]["3x - Standard Groups"] = ""
-ctld.i18n["en"]["3x - Anti Air"] = ""
-ctld.i18n["en"]["3x - Anti Tank"] = ""
-ctld.i18n["en"]["3x - Mortar Squad"] = ""
-ctld.i18n["en"]["5x - Mortar Squad"] = ""
-ctld.i18n["en"]["Mortar Squad Red"] = ""
-
---- crates names
-ctld.i18n["en"]["Humvee - MG"] = ""
-ctld.i18n["en"]["Humvee - TOW"] = ""
-ctld.i18n["en"]["Light Tank - MRAP"] = ""
-ctld.i18n["en"]["Med Tank - LAV-25"] = ""
-ctld.i18n["en"]["Heavy Tank - Abrams"] = ""
-ctld.i18n["en"]["BTR-D"] = ""
-ctld.i18n["en"]["BRDM-2"] = ""
-ctld.i18n["en"]["Hummer - JTAC"] = ""
-ctld.i18n["en"]["M-818 Ammo Truck"] = ""
-ctld.i18n["en"]["M-978 Tanker"] = ""
-ctld.i18n["en"]["SKP-11 - JTAC"] = ""
-ctld.i18n["en"]["Ural-375 Ammo Truck"] = ""
-ctld.i18n["en"]["KAMAZ Ammo Truck"] = ""
-ctld.i18n["en"]["EWR Radar"] = ""
-ctld.i18n["en"]["FOB Crate - Small"] = ""
-ctld.i18n["en"]["MQ-9 Repear - JTAC"] = ""
-ctld.i18n["en"]["RQ-1A Predator - JTAC"] = ""
-ctld.i18n["en"]["MLRS"] = ""
-ctld.i18n["en"]["SpGH DANA"] = ""
-ctld.i18n["en"]["T155 Firtina"] = ""
-ctld.i18n["en"]["Howitzer"] = ""
-ctld.i18n["en"]["SPH 2S19 Msta"] = ""
-ctld.i18n["en"]["M1097 Avenger"] = ""
-ctld.i18n["en"]["M48 Chaparral"] = ""
-ctld.i18n["en"]["Roland ADS"] = ""
-ctld.i18n["en"]["Gepard AAA"] = ""
-ctld.i18n["en"]["LPWS C-RAM"] = ""
-ctld.i18n["en"]["9K33 Osa"] = ""
-ctld.i18n["en"]["9P31 Strela-1"] = ""
-ctld.i18n["en"]["9K35M Strela-10"] = ""
-ctld.i18n["en"]["9K331 Tor"] = ""
-ctld.i18n["en"]["2K22 Tunguska"] = ""
-ctld.i18n["en"]["HAWK Launcher"] = ""
-ctld.i18n["en"]["HAWK Search Radar"] = ""
-ctld.i18n["en"]["HAWK Track Radar"] = ""
-ctld.i18n["en"]["HAWK PCP"] = ""
-ctld.i18n["en"]["HAWK CWAR"] = ""
-ctld.i18n["en"]["HAWK Repair"] = ""
-ctld.i18n["en"]["NASAMS Launcher 120C"] = ""
-ctld.i18n["en"]["NASAMS Search/Track Radar"] = ""
-ctld.i18n["en"]["NASAMS Command Post"] = ""
-ctld.i18n["en"]["NASAMS Repair"] = ""
-ctld.i18n["en"]["KUB Launcher"] = ""
-ctld.i18n["en"]["KUB Radar"] = ""
-ctld.i18n["en"]["KUB Repair"] = ""
-ctld.i18n["en"]["BUK Launcher"] = ""
-ctld.i18n["en"]["BUK Search Radar"] = ""
-ctld.i18n["en"]["BUK CC Radar"] = ""
-ctld.i18n["en"]["BUK Repair"] = ""
-ctld.i18n["en"]["Patriot Launcher"] = ""
-ctld.i18n["en"]["Patriot Radar"] = ""
-ctld.i18n["en"]["Patriot ECS"] = ""
-ctld.i18n["en"]["Patriot ICC"] = ""
-ctld.i18n["en"]["Patriot EPP"] = ""
-ctld.i18n["en"]["Patriot AMG (optional)"] = ""
-ctld.i18n["en"]["Patriot Repair"] = ""
-ctld.i18n["en"]["S-300 Grumble TEL C"] = ""
-ctld.i18n["en"]["S-300 Grumble Flap Lid-A TR"] = ""
-ctld.i18n["en"]["S-300 Grumble Clam Shell SR"] = ""
-ctld.i18n["en"]["S-300 Grumble Big Bird SR"] = ""
-ctld.i18n["en"]["S-300 Grumble C2"] = ""
-ctld.i18n["en"]["S-300 Repair"] = ""
-ctld.i18n["en"]["Humvee - TOW - All crates"] = ""
-ctld.i18n["en"]["Light Tank - MRAP - All crates"] = ""
-ctld.i18n["en"]["Med Tank - LAV-25 - All crates"] = ""
-ctld.i18n["en"]["Heavy Tank - Abrams - All crates"] = ""
-ctld.i18n["en"]["Hummer - JTAC - All crates"] = ""
-ctld.i18n["en"]["M-818 Ammo Truck - All crates"] = ""
-ctld.i18n["en"]["M-978 Tanker - All crates"] = ""
-ctld.i18n["en"]["Ural-375 Ammo Truck - All crates"] = ""
-ctld.i18n["en"]["EWR Radar - All crates"] = ""
-ctld.i18n["en"]["MLRS - All crates"] = ""
-ctld.i18n["en"]["SpGH DANA - All crates"] = ""
-ctld.i18n["en"]["T155 Firtina - All crates"] = ""
-ctld.i18n["en"]["Howitzer - All crates"] = ""
-ctld.i18n["en"]["SPH 2S19 Msta - All crates"] = ""
-ctld.i18n["en"]["M1097 Avenger - All crates"] = ""
-ctld.i18n["en"]["M48 Chaparral - All crates"] = ""
-ctld.i18n["en"]["Roland ADS - All crates"] = ""
-ctld.i18n["en"]["Gepard AAA - All crates"] = ""
-ctld.i18n["en"]["LPWS C-RAM - All crates"] = ""
-ctld.i18n["en"]["9K33 Osa - All crates"] = ""
-ctld.i18n["en"]["9P31 Strela-1 - All crates"] = ""
-ctld.i18n["en"]["9K35M Strela-10 - All crates"] = ""
-ctld.i18n["en"]["9K331 Tor - All crates"] = ""
-ctld.i18n["en"]["2K22 Tunguska - All crates"] = ""
-ctld.i18n["en"]["HAWK - All crates"] = ""
-ctld.i18n["en"]["NASAMS - All crates"] = ""
-ctld.i18n["en"]["KUB - All crates"] = ""
-ctld.i18n["en"]["BUK - All crates"] = ""
-ctld.i18n["en"]["Patriot - All crates"] = ""
-ctld.i18n["en"]["Patriot - All crates"] = ""
-
---- mission design error messages
-ctld.i18n["en"]["CTLD.lua ERROR: Can't find trigger called %1"] = ""
-ctld.i18n["en"]["CTLD.lua ERROR: Can't find zone called %1"] = ""
-ctld.i18n["en"]["CTLD.lua ERROR: Can't find zone or ship called %1"] = ""
-ctld.i18n["en"]["CTLD.lua ERROR: Can't find crate with weight %1"] = ""
-
---- runtime messages
-ctld.i18n["en"]["You are not close enough to friendly logistics to get a crate!"] = ""
-ctld.i18n["en"]["No more JTAC Crates Left!"] = ""
-ctld.i18n["en"]["Sorry you must wait %1 seconds before you can get another crate"] = ""
-ctld.i18n["en"]["A %1 crate weighing %2 kg has been brought out and is at your %3 o'clock "] = ""
-ctld.i18n["en"]["%1 fast-ropped troops from %2 into combat"] = ""
-ctld.i18n["en"]["%1 dropped troops from %2 into combat"] = ""
-ctld.i18n["en"]["%1 fast-ropped troops from %2 into %3"] = ""
-ctld.i18n["en"]["%1 dropped troops from %2 into %3"] = ""
-ctld.i18n["en"]["Too high or too fast to drop troops into combat! Hover below %1 feet or land."] = ""
-ctld.i18n["en"]["%1 dropped vehicles from %2 into combat"] = ""
-ctld.i18n["en"]["%1 loaded troops into %2"] = ""
-ctld.i18n["en"]["%1 loaded %2 vehicles into %3"] = ""
-ctld.i18n["en"]["%1 delivered a FOB Crate"] = ""
-ctld.i18n["en"]["Delivered FOB Crate 60m at 6'oclock to you"] = ""
-ctld.i18n["en"]["FOB Crate dropped back to base"] = ""
-ctld.i18n["en"]["FOB Crate Loaded"] = ""
-ctld.i18n["en"]["%1 loaded a FOB Crate ready for delivery!"] = ""
-ctld.i18n["en"]["There are no friendly logistic units nearby to load a FOB crate from!"] = ""
-ctld.i18n["en"]["This area has no more reinforcements available!"] = ""
-ctld.i18n["en"]["You are not in a pickup zone and no one is nearby to extract"] = ""
-ctld.i18n["en"]["You are not in a pickup zone"] = ""
-ctld.i18n["en"]["No one to unload"] = ""
-ctld.i18n["en"]["Dropped troops back to base"] = ""
-ctld.i18n["en"]["Dropped vehicles back to base"] = ""
-ctld.i18n["en"]["You already have troops onboard."] = ""
-ctld.i18n["en"]["Count Infantries limit in the mission reached, you can't load more troops"] = ""
-ctld.i18n["en"]["You already have vehicles onboard."] = ""
-ctld.i18n["en"]["Sorry - The group of %1 is too large to fit. \n\nLimit is %2 for %3"] = ""
-ctld.i18n["en"]["%1 extracted troops in %2 from combat"] = ""
-ctld.i18n["en"]["No extractable troops nearby!"] = ""
-ctld.i18n["en"]["%1 extracted vehicles in %2 from combat"] = ""
-ctld.i18n["en"]["No extractable vehicles nearby!"] = ""
-ctld.i18n["en"]["%1 troops onboard (%2 kg)\n"] = ""
-ctld.i18n["en"]["%1 vehicles onboard (%2)\n"] = ""
-ctld.i18n["en"]["1 FOB Crate oboard (%1 kg)\n"] = ""
-ctld.i18n["en"]["%1 crate onboard (%2 kg)\n"] = ""
-ctld.i18n["en"]["Total weight of cargo : %1 kg\n"] = ""
-ctld.i18n["en"]["No cargo."] = ""
-ctld.i18n["en"]["Hovering above %1 crate. \n\nHold hover for %2 seconds! \n\nIf the countdown stops you're too far away!"] =
-""
-ctld.i18n["en"]["Loaded %1 crate!"] = ""
-ctld.i18n["en"]["Too low to hook %1 crate.\n\nHold hover for %2 seconds"] = ""
-ctld.i18n["en"]["Too high to hook %1 crate.\n\nHold hover for %2 seconds"] = ""
-ctld.i18n["en"]["You must land before you can load a crate!"] = ""
-ctld.i18n["en"]["No Crates within 50m to load!"] = ""
-ctld.i18n["en"]["Maximum number of crates are on board!"] = ""
-ctld.i18n["en"]["%1\n%2 crate - kg %3 - %4 m - %5 o'clock"] = ""
-ctld.i18n["en"]["FOB Crate - %1 m - %2 o'clock\n"] = ""
-ctld.i18n["en"]["No Nearby Crates"] = ""
-ctld.i18n["en"]["Nearby Crates:\n%1"] = ""
-ctld.i18n["en"]["Nearby FOB Crates (Not Slingloadable):\n%1"] = ""
-ctld.i18n["en"]["FOB Positions:"] = ""
-ctld.i18n["en"]["%1\nFOB @ %2"] = ""
-ctld.i18n["en"]["Sorry, there are no active FOBs!"] = ""
-ctld.i18n["en"]["You can't unpack that here! Take it to where it's needed!"] = ""
-ctld.i18n["en"]["Sorry you must move this crate before you unpack it!"] = ""
-ctld.i18n["en"]["%1 successfully deployed %2 to the field"] = ""
-ctld.i18n["en"]["No friendly crates close enough to unpack, or crate too close to aircraft."] = ""
-ctld.i18n["en"]["Finished building FOB! Crates and Troops can now be picked up."] = ""
-ctld.i18n["en"]["Finished building FOB! Crates can now be picked up."] = ""
-ctld.i18n["en"]["%1 started building FOB using %2 FOB crates, it will be finished in %3 seconds.\nPosition marked with smoke."] =
-""
-ctld.i18n["en"]["Cannot build FOB!\n\nIt requires %1 Large FOB crates ( 3 small FOB crates equal 1 large FOB Crate) and there are the equivalent of %2 large FOB crates nearby\n\nOr the crates are not within 750m of each other"] =
-""
-ctld.i18n["en"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate or land and use F10 Crate Commands."] =
-""
-ctld.i18n["en"]["You are not currently transporting any crates. \n\nTo Pickup a crate, hover for %1 seconds above the crate."] =
-""
-ctld.i18n["en"]["You are not currently transporting any crates. \n\nTo Pickup a crate, land and use F10 Crate Commands to load one."] =
-""
-ctld.i18n["en"]["%1 crate has been safely unhooked and is at your %2 o'clock"] = ""
-ctld.i18n["en"]["%1 crate has been safely dropped below you"] = ""
-ctld.i18n["en"]["You were too high! The crate has been destroyed"] = ""
-ctld.i18n["en"]["Radio Beacons:\n%1"] = ""
-ctld.i18n["en"]["No Active Radio Beacons"] = ""
-ctld.i18n["en"]["%1 deployed a Radio Beacon.\n\n%2"] = ""
-ctld.i18n["en"]["You need to land before you can deploy a Radio Beacon!"] = ""
-ctld.i18n["en"]["%1 removed a Radio Beacon.\n\n%2"] = ""
-ctld.i18n["en"]["No Radio Beacons within 500m."] = ""
-ctld.i18n["en"]["You need to land before remove a Radio Beacon"] = ""
-ctld.i18n["en"]["%1 successfully rearmed a full %2 in the field"] = ""
-ctld.i18n["en"]["Missing %1\n"] = ""
-ctld.i18n["en"]["Out of parts for AA Systems. Current limit is %1\n"] = ""
-ctld.i18n["en"]["Cannot build %1\n%2\n\nOr the crates are not close enough together"] = ""
-ctld.i18n["en"]["%1 successfully deployed a full %2 in the field. \n\nAA Active System limit is: %3\nActive: %4"] = ""
-ctld.i18n["en"]["%1 successfully repaired a full %2 in the field."] = ""
-ctld.i18n["en"]["Cannot repair %1. No damaged %2 within 300m"] = ""
-ctld.i18n["en"]["%1 successfully deployed %2 to the field using %3 crates."] = ""
-ctld.i18n["en"]["Cannot build %1!\n\nIt requires %2 crates and there are %3 \n\nOr the crates are not within 300m of each other"] =
-""
-ctld.i18n["en"]["%1 dropped %2 smoke."] = ""
-
---- JTAC messages
-ctld.i18n["en"]["JTAC Group %1 KIA!"] = ""
-ctld.i18n["en"]["%1, selected target reacquired, %2"] = ""
-ctld.i18n["en"][". CODE: %1. POSITION: %2"] = ""
-ctld.i18n["en"]["new target, "] = ""
-ctld.i18n["en"]["standing by on %1"] = ""
-ctld.i18n["en"]["lasing %1"] = ""
-ctld.i18n["en"][", temporarily %1"] = ""
-ctld.i18n["en"]["target lost"] = ""
-ctld.i18n["en"]["target destroyed"] = ""
-ctld.i18n["en"][", selected %1"] = ""
-ctld.i18n["en"]["%1 %2 target lost."] = ""
-ctld.i18n["en"]["%1 %2 target destroyed."] = ""
-ctld.i18n["en"]["JTAC STATUS: \n\n"] = ""
-ctld.i18n["en"][", available on %1 %2,"] = ""
-ctld.i18n["en"]["UNKNOWN"] = ""
-ctld.i18n["en"][" targeting "] = ""
-ctld.i18n["en"][" targeting selected unit "] = ""
-ctld.i18n["en"][" attempting to find selected unit, temporarily targeting "] = ""
-ctld.i18n["en"]["(Laser OFF) "] = ""
-ctld.i18n["en"]["Visual On: "] = ""
-ctld.i18n["en"][" searching for targets %1\n"] = ""
-ctld.i18n["en"]["No Active JTACs"] = ""
-ctld.i18n["en"][", targeting selected unit, %1"] = ""
-ctld.i18n["en"][". CODE: %1. POSITION: %2"] = ""
-ctld.i18n["en"][", target selection reset."] = ""
-ctld.i18n["en"]["%1, laser and smokes enabled"] = ""
-ctld.i18n["en"]["%1, laser and smokes disabled"] = ""
-ctld.i18n["en"]["%1, wind and target speed laser spot compensations enabled"] = ""
-ctld.i18n["en"]["%1, wind and target speed laser spot compensations disabled"] = ""
-ctld.i18n["en"]["%1, WHITE smoke deployed near target"] = ""
-
---- F10 menu messages
-ctld.i18n["en"]["Actions"] = ""
-ctld.i18n["en"]["Troop Transport"] = ""
-ctld.i18n["en"]["Unload / Extract Troops"] = ""
-ctld.i18n["en"]["Next page"] = ""
-ctld.i18n["en"]["Load "] = ""
-ctld.i18n["en"]["Vehicle / FOB Transport"] = ""
-ctld.i18n["en"]["Crates: Vehicle / FOB / Drone"] = ""
-ctld.i18n["en"]["Unload Vehicles"] = ""
-ctld.i18n["en"]["Load / Extract Vehicles"] = ""
-ctld.i18n["en"]["Load / Unload FOB Crate"] = ""
-ctld.i18n["en"]["Repack Vehicles"] = ""
-ctld.i18n["en"]["CTLD Commands"] = ""
-ctld.i18n["en"]["CTLD"] = ""
-ctld.i18n["en"]["Check Cargo"] = ""
-ctld.i18n["en"]["Load Nearby Crate(s)"] = ""
-ctld.i18n["en"]["Unpack Any Crate"] = ""
-ctld.i18n["en"]["Drop Crate(s)"] = ""
-ctld.i18n["en"]["List Nearby Crates"] = ""
-ctld.i18n["en"]["List FOBs"] = ""
-ctld.i18n["en"]["List Beacons"] = ""
-ctld.i18n["en"]["List Radio Beacons"] = ""
-ctld.i18n["en"]["Smoke Markers"] = ""
-ctld.i18n["en"]["Drop Red Smoke"] = ""
-ctld.i18n["en"]["Drop Blue Smoke"] = ""
-ctld.i18n["en"]["Drop Orange Smoke"] = ""
-ctld.i18n["en"]["Drop Green Smoke"] = ""
-ctld.i18n["en"]["Drop Beacon"] = ""
-ctld.i18n["en"]["Radio Beacons"] = ""
-ctld.i18n["en"]["Remove Closest Beacon"] = ""
-ctld.i18n["en"]["JTAC Status"] = ""
-ctld.i18n["en"]["DISABLE "] = ""
-ctld.i18n["en"]["ENABLE "] = ""
-ctld.i18n["en"]["REQUEST "] = ""
-ctld.i18n["en"]["Reset TGT Selection"] = ""
--- F10 RECON menus
-ctld.i18n["en"]["RECON"] = ""
-ctld.i18n["en"]["Show targets in LOS (refresh)"] = ""
-ctld.i18n["en"]["Hide targets in LOS"] = ""
-ctld.i18n["en"]["START autoRefresh targets in LOS"] = ""
-ctld.i18n["en"]["STOP autoRefresh targets in LOS"] = ""
-
---- Translates a string (text) with parameters (parameters) to the language defined in ctld.i18n_lang
----@param text string The text to translate, with the parameters as %1, %2, etc. (all strings!!!!)
----@param ... any (list) The parameters to replace in the text, in order (all paremeters will be converted to string)
----@return string the translated and formatted text
-function ctld.i18n_translate(text, ...)
-    local _text
-
-    if not ctld.i18n[ctld.i18n_lang] then
-        env.info(string.format(" E - CTLD.i18n_translate: Language %s not found, defaulting to 'en'",
-            tostring(ctld.i18n_lang)))
-        _text = ctld.i18n["en"][text]
-    else
-        _text = ctld.i18n[ctld.i18n_lang][text]
-    end
-
-    -- default to english
-    if _text == nil then
-        _text = ctld.i18n["en"][text]
-    end
-
-    -- default to the provided text
-    if _text == nil or _text == "" then
-        _text = text
-    end
-
-    if arg and arg.n and arg.n > 0 then
-        local _args = {}
-        for i = 1, arg.n do
-            _args[i] = tostring(arg[i]) or ""
-        end
-        for i = 1, #_args do
-            _text = string.gsub(_text, "%%" .. i, _args[i])
-        end
-    end
-
-    return _text
-end
 
 -- ************************************************************************
 -- *********************    USER CONFIGURATION ******************************
 -- ************************************************************************
-ctld.staticBugWorkaround                  = false --    DCS had a bug where destroying statics would cause a crash. If this happens again, set this to TRUE
+ctld.staticBugWorkaround                  = false                                                                                                                                                                                           --    DCS had a bug where destroying statics would cause a crash. If this happens again, set this to TRUE
 
-ctld.disableAllSmoke                      = false -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
+ctld.disableAllSmoke                      = false                                                                                                                                                                                           -- if true, all smoke is diabled at pickup and drop off zones regardless of settings below. Leave false to respect settings below
 
 -- Allow units to CTLD by aircraft type and not by pilot name - this is done everytime a player enters a new unit
 ctld.addPlayerAircraftByType              = true
 
-ctld.hoverPickup                          = true  --    if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
-ctld.loadCrateFromMenu                    = true  -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
+ctld.hoverPickup                          = true                                                                                                                                                                                            --    if set to false you can load crates with the F10 menu instead of hovering... Only if not using real crates!
+ctld.loadCrateFromMenu                    = true                                                                                                                                                                                            -- if set to true, you can load crates with the F10 menu OR hovering, in case of using choppers and planes for example.
 
-ctld.enableCrates                         = true  -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
-ctld.enableAllCrates                      = true  -- if false, the "all crates" menu items will not be displayed
-ctld.slingLoad                            = false -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
+ctld.enableCrates                         = true                                                                                                                                                                                            -- if false, Helis will not be able to spawn or unpack crates so will be normal CTTS
+ctld.enableAllCrates                      = true                                                                                                                                                                                            -- if false, the "all crates" menu items will not be displayed
+ctld.slingLoad                            = false                                                                                                                                                                                           -- if false, crates can be used WITHOUT slingloading, by hovering above the crate, simulating slingloading but not the weight...
 -- There are some bug with Sling-loading that can cause crashes, if these occur set slingLoad to false
 -- to use the other method.
 -- Set staticBugFix    to FALSE if use set ctld.slingLoad to TRUE
-ctld.enableSmokeDrop                      = true                                          -- if false, helis and c-130 will not be able to drop smoke
-ctld.maxExtractDistance                   = 125                                           -- max distance from vehicle to troops to allow a group extraction
-ctld.maximumDistanceLogistic              = 200                                           -- max distance from vehicle to logistics to allow a loading or spawning operation
-ctld.enableRepackingVehicles              = true                                          -- if true, vehicles can be repacked into crates
-ctld.maximumDistanceRepackableUnitsSearch = 200                                           -- max distance from transportUnit to search force repackable units in meters
-ctld.maximumSearchDistance                = 4000                                          -- max distance for troops to search for enemy
-ctld.maximumMoveDistance                  = 2000                                          -- max distance for troops to move from drop point if no enemy is nearby
-ctld.minimumDeployDistance                = 1000                                          -- minimum distance from a friendly pickup zone where you can deploy a crate
-ctld.numberOfTroops                       = 10                                            -- default number of troops to load on a transport heli or C-130
+ctld.enableSmokeDrop                      = true                                                                                                                                                                                            -- if false, helis and c-130 will not be able to drop smoke
+ctld.maxExtractDistance                   = 125                                                                                                                                                                                             -- max distance from vehicle to troops to allow a group extraction
+ctld.maximumDistanceLogistic              = 200                                                                                                                                                                                             -- max distance from vehicle to logistics to allow a loading or spawning operation
+ctld.enableRepackingVehicles              = true                                                                                                                                                                                            -- if true, vehicles can be repacked into crates
+ctld.maximumDistanceRepackableUnitsSearch = 200                                                                                                                                                                                             -- max distance from transportUnit to search force repackable units in meters
+ctld.maximumSearchDistance                = 4000                                                                                                                                                                                            -- max distance for troops to search for enemy
+ctld.maximumMoveDistance                  = 2000                                                                                                                                                                                            -- max distance for troops to move from drop point if no enemy is nearby
+ctld.minimumDeployDistance                = 1000                                                                                                                                                                                            -- minimum distance from a friendly pickup zone where you can deploy a crate
+ctld.numberOfTroops                       = 10                                                                                                                                                                                              -- default number of troops to load on a transport heli or C-130
 -- also works as maximum size of group that'll fit into a helicopter unless overridden
-ctld.enableFastRopeInsertion              = true                                          -- allows you to drop troops by fast rope
-ctld.fastRopeMaximumHeight                = 18.28                                         -- in meters which is 60 ft max fast rope (not rappell) safe height
-ctld.vehiclesForTransportRED              = { "BRDM-2", "BTR_D" }                         -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
-ctld.vehiclesForTransportBLUE             = { "M1045 HMMWV TOW", "M1043 HMMWV Armament" } -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
+ctld.enableFastRopeInsertion              = true                                                                                                                                                                                            -- allows you to drop troops by fast rope
+ctld.fastRopeMaximumHeight                = 18.28                                                                                                                                                                                           -- in meters which is 60 ft max fast rope (not rappell) safe height
+ctld.vehiclesForTransportRED              = {
+    "BRDM-2", "BTR_D" }                                                                                                                                                                                                                     -- vehicles to load onto Il-76 - Alternatives {"Strela-1 9P31","BMP-1"}
+ctld.vehiclesForTransportBLUE             = {
+    "M1045 HMMWV TOW", "M1043 HMMWV Armament" }                                                                                                                                                                                             -- vehicles to load onto c130 - Alternatives {"M1128 Stryker MGS","M1097 Avenger"}
 ctld.vehiclesWeight                       = {
     ["BRDM-2"] = 7000,
     ["BTR_D"] = 8000,
@@ -444,49 +96,49 @@ ctld.vehiclesWeight                       = {
     ["M1043 HMMWV Armament"] = 2500
 }
 
-ctld.spawnRPGWithCoalition                = true  --spawns a friendly RPG unit with Coalition forces
-ctld.spawnStinger                         = false -- spawns a stinger / igla soldier with a group of 6 or more soldiers!
-ctld.enabledFOBBuilding                   = true  -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
+ctld.spawnRPGWithCoalition                = true                                                                                                                                                                                            --spawns a friendly RPG unit with Coalition forces
+ctld.spawnStinger                         = false                                                                                                                                                                                           -- spawns a stinger / igla soldier with a group of 6 or more soldiers!
+ctld.enabledFOBBuilding                   = true                                                                                                                                                                                            -- if true, you can load a crate INTO a C-130 than when unpacked creates a Forward Operating Base (FOB) which is a new place to spawn (crates) and carry crates from
 -- In future i'd like it to be a FARP but so far that seems impossible...
 -- You can also enable troop Pickup at FOBS
-ctld.cratesRequiredForFOB                 = 3 -- The amount of crates required to build a FOB. Once built, helis can spawn crates at this outpost to be carried and deployed in another area.
+ctld.cratesRequiredForFOB                 = 3                                                                                                                                                                                           -- The amount of crates required to build a FOB. Once built, helis can spawn crates at this outpost to be carried and deployed in another area.
 -- The large crates can only be loaded and dropped by large aircraft, like the C-130 and listed in ctld.vehicleTransportEnabled
 -- Small FOB crates can be moved by helicopter. The FOB will require ctld.cratesRequiredForFOB larges crates and small crates are 1/3 of a large fob crate
 -- To build the FOB entirely out of small crates you will need ctld.cratesRequiredForFOB * 3
 
-ctld.troopPickupAtFOB                     = true     -- if true, troops can also be picked up at a created FOB
-ctld.buildTimeFOB                         = 120      --time in seconds for the FOB to be built
-ctld.crateWaitTime                        = 40       -- time in seconds to wait before you can spawn another crate
-ctld.forceCrateToBeMoved                  = true     -- a crate must be picked up at least once and moved before it can be unpacked. Helps to reduce crate spam
+ctld.troopPickupAtFOB                     = true                                                                                                                                                                                               -- if true, troops can also be picked up at a created FOB
+ctld.buildTimeFOB                         = 120                                                                                                                                                                                                --time in seconds for the FOB to be built
+ctld.crateWaitTime                        = 40                                                                                                                                                                                                 -- time in seconds to wait before you can spawn another crate
+ctld.forceCrateToBeMoved                  = true                                                                                                                                                                                               -- a crate must be picked up at least once and moved before it can be unpacked. Helps to reduce crate spam
 ctld.radioSound                           =
-"beacon.ogg"                                         -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
+"beacon.ogg"                                                                                                                                                                                                                                   -- the name of the sound file to use for the FOB radio beacons. If this isnt added to the mission BEACONS WONT WORK!
 ctld.radioSoundFC3                        =
-"beaconsilent.ogg"                                   -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
-ctld.deployedBeaconBattery                = 30       -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
-ctld.enabledRadioBeaconDrop               = true     -- if its set to false then beacons cannot be dropped by units
-ctld.allowRandomAiTeamPickups             = false    -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
+"beaconsilent.ogg"                                                                                                                                                                                                                             -- name of the second silent radio file, used so FC3 aircraft dont hear ALL the beacon noises... :)
+ctld.deployedBeaconBattery                = 30                                                                                                                                                                                                 -- the battery on deployed beacons will last for this number minutes before needing to be re-deployed
+ctld.enabledRadioBeaconDrop               = true                                                                                                                                                                                               -- if its set to false then beacons cannot be dropped by units
+ctld.allowRandomAiTeamPickups             = false                                                                                                                                                                                              -- Allows the AI to randomize the loading of infantry teams (specified below) at pickup zones
 -- Limit the dropping of infantry teams -- this limit control is inactive if ctld.nbLimitSpawnedTroops = {0, 0} ----
-ctld.nbLimitSpawnedTroops                 = { 0, 0 } -- {redLimitInfantryCount, blueLimitInfantryCount} when this cumulative number of troops is reached, no more troops can be loaded onboard
-ctld.InfantryInGameCount                  = { 0, 0 } -- {redCoaInfantryCount, blueCoaInfantryCount}
+ctld.nbLimitSpawnedTroops                 = { 0, 0 }                                                                                                                                                                                           -- {redLimitInfantryCount, blueLimitInfantryCount} when this cumulative number of troops is reached, no more troops can be loaded onboard
+ctld.InfantryInGameCount                  = { 0, 0 }                                                                                                                                                                                           -- {redCoaInfantryCount, blueCoaInfantryCount}
 
 -- Simulated Sling load configuration
-ctld.minimumHoverHeight                   = 7.5  -- Lowest allowable height for crate hover
-ctld.maximumHoverHeight                   = 12.0 -- Highest allowable height for crate hover
-ctld.maxDistanceFromCrate                 = 5.5  -- Maximum distance from from crate for hover
-ctld.hoverTime                            = 10   -- Time to hold hover above a crate for loading in seconds
+ctld.minimumHoverHeight                   = 7.5                                                                                                                                                                                            -- Lowest allowable height for crate hover
+ctld.maximumHoverHeight                   = 12.0                                                                                                                                                                                           -- Highest allowable height for crate hover
+ctld.maxDistanceFromCrate                 = 5.5                                                                                                                                                                                            -- Maximum distance from from crate for hover
+ctld.hoverTime                            = 10                                                                                                                                                                                             -- Time to hold hover above a crate for loading in seconds
 
 -- end of Simulated Sling load configuration
 
 -- ***************** AA SYSTEM CONFIG *****************
-ctld.aaLaunchers                          = 3 -- controls how many launchers to add to the AA systems when its spawned if no amount is specified in the template.
+ctld.aaLaunchers                          = 3                                                                                                                                                                                           -- controls how many launchers to add to the AA systems when its spawned if no amount is specified in the template.
 -- Sets a limit on the number of active AA systems that can be built for RED.
 -- A system is counted as Active if its fully functional and has all parts
 -- If a system is partially destroyed, it no longer counts towards the total
 -- When this limit is hit, a player will still be able to get crates for an AA system, just unable
 -- to unpack them
 
-ctld.AASystemLimitRED                     = 20 -- Red side limit
-ctld.AASystemLimitBLUE                    = 20 -- Blue side limit
+ctld.AASystemLimitRED                     = 20                                                                                                                                                                                           -- Red side limit
+ctld.AASystemLimitBLUE                    = 20                                                                                                                                                                                           -- Blue side limit
 
 -- Allows players to create systems using as many crates as they like
 -- Example : an amount X of patriot launcher crates allows for Y launchers to be deployed, if a player brings 2*X+Z crates (Z being lower then X), then deploys the patriot site, 2*Y launchers will be in the group and Z launcher crate will be left over
@@ -495,27 +147,27 @@ ctld.AASystemCrateStacking                = false
 --END AA SYSTEM CONFIG ------------------------------------
 
 -- ***************** JTAC CONFIGURATION *****************
-ctld.JTAC_LIMIT_RED                       = 10    -- max number of JTAC Crates for the RED Side
-ctld.JTAC_LIMIT_BLUE                      = 10    -- max number of JTAC Crates for the BLUE Side
-ctld.JTAC_dropEnabled                     = true  -- allow JTAC Crate spawn from F10 menu
-ctld.JTAC_maxDistance                     = 10000 -- How far a JTAC can "see" in meters (with Line of Sight)
-ctld.JTAC_smokeOn_RED                     = false -- enables marking of target with smoke for RED forces
-ctld.JTAC_smokeOn_BLUE                    = false -- enables marking of target with smoke for BLUE forces
-ctld.JTAC_smokeColour_RED                 = 4     -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
-ctld.JTAC_smokeColour_BLUE                = 1     -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
-ctld.JTAC_smokeMarginOfError              = 50    -- error that the JTAC is allowed to make when popping a smoke (in meters)
-ctld.JTAC_smokeOffset_x                   = 0.0   -- distance in the X direction from target to smoke (meters)
-ctld.JTAC_smokeOffset_y                   = 2.0   -- distance in the Y direction from target to smoke (meters)
-ctld.JTAC_smokeOffset_z                   = 0.0   -- distance in the z direction from target to smoke (meters)
-ctld.JTAC_jtacStatusF10                   = true  -- enables F10 JTAC Status menu
-ctld.JTAC_location                        = true  -- shows location of target in JTAC message
-ctld.location_DMS                         = false -- shows coordinates as Degrees Minutes Seconds instead of Degrees Decimal minutes
+ctld.JTAC_LIMIT_RED                       = 10                                                                                                                                                                                              -- max number of JTAC Crates for the RED Side
+ctld.JTAC_LIMIT_BLUE                      = 10                                                                                                                                                                                              -- max number of JTAC Crates for the BLUE Side
+ctld.JTAC_dropEnabled                     = true                                                                                                                                                                                            -- allow JTAC Crate spawn from F10 menu
+ctld.JTAC_maxDistance                     = 10000                                                                                                                                                                                           -- How far a JTAC can "see" in meters (with Line of Sight)
+ctld.JTAC_smokeOn_RED                     = false                                                                                                                                                                                           -- enables marking of target with smoke for RED forces
+ctld.JTAC_smokeOn_BLUE                    = false                                                                                                                                                                                           -- enables marking of target with smoke for BLUE forces
+ctld.JTAC_smokeColour_RED                 = 4                                                                                                                                                                                               -- RED side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+ctld.JTAC_smokeColour_BLUE                = 1                                                                                                                                                                                               -- BLUE side smoke colour -- Green = 0 , Red = 1, White = 2, Orange = 3, Blue = 4
+ctld.JTAC_smokeMarginOfError              = 50                                                                                                                                                                                              -- error that the JTAC is allowed to make when popping a smoke (in meters)
+ctld.JTAC_smokeOffset_x                   = 0.0                                                                                                                                                                                             -- distance in the X direction from target to smoke (meters)
+ctld.JTAC_smokeOffset_y                   = 2.0                                                                                                                                                                                             -- distance in the Y direction from target to smoke (meters)
+ctld.JTAC_smokeOffset_z                   = 0.0                                                                                                                                                                                             -- distance in the z direction from target to smoke (meters)
+ctld.JTAC_jtacStatusF10                   = true                                                                                                                                                                                            -- enables F10 JTAC Status menu
+ctld.JTAC_location                        = true                                                                                                                                                                                            -- shows location of target in JTAC message
+ctld.location_DMS                         = false                                                                                                                                                                                           -- shows coordinates as Degrees Minutes Seconds instead of Degrees Decimal minutes
 ctld.JTAC_lock                            =
-"all"                                             -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
-ctld.JTAC_allowStandbyMode                = true  -- if true, allow players to toggle lasing on/off
-ctld.JTAC_laseSpotCorrections             = true  -- if true, each JTAC will have a special option (toggle on/off) available in it's menu to attempt to lead the target, taking into account current wind conditions and the speed of the target (particularily useful against moving heavy armor)
-ctld.JTAC_allowSmokeRequest               = true  -- if true, allow players to request a smoke on target (temporary)
-ctld.JTAC_allow9Line                      = true  -- if true, allow players to ask for a 9Line (individual) for a specific JTAC's target
+"all"                                                                                                                                                                                                                                       -- "vehicle" OR "troop" OR "all" forces JTAC to only lock vehicles or troops or all ground units
+ctld.JTAC_allowStandbyMode                = true                                                                                                                                                                                            -- if true, allow players to toggle lasing on/off
+ctld.JTAC_laseSpotCorrections             = true                                                                                                                                                                                            -- if true, each JTAC will have a special option (toggle on/off) available in it's menu to attempt to lead the target, taking into account current wind conditions and the speed of the target (particularily useful against moving heavy armor)
+ctld.JTAC_allowSmokeRequest               = true                                                                                                                                                                                            -- if true, allow players to request a smoke on target (temporary)
+ctld.JTAC_allow9Line                      = true                                                                                                                                                                                            -- if true, allow players to ask for a 9Line (individual) for a specific JTAC's target
 
 -- ***************** Pickup, dropoff and waypoint zones *****************
 
@@ -796,7 +448,7 @@ ctld.extractableGroups                    = {
 
 -- Use any of the predefined names or set your own ones
 -- When a logistic unit is destroyed, you will no longer be able to spawn crates
-ctld.dynamicLogisticUnitsIndex            = 0 -- This is the unit that will be spawned first and then subsequent units will be from the next in the list
+ctld.dynamicLogisticUnitsIndex            = 0                                                                                                                                                                                           -- This is the unit that will be spawned first and then subsequent units will be from the next in the list
 ctld.logisticUnits                        = {
     "logistic1",
     "logistic2",
