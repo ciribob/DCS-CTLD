@@ -1420,22 +1420,26 @@ function ctld.getNearestWP(_referenceUnitName)
     local memoDist = nil                                                                  -- Lower distance checked
     local refGroupName = Unit.getByName(_referenceUnitName):getGroup():getName()
     local JTACRoute = ctld.utils.getGroupRoute("ctld.getNearestWP()", refGroupName, true) -- get the initial editor route of the current group
-    if Unit.getByName(_referenceUnitName) ~= nil then                                     --JTAC et unit must exist
-        for i = 1, #JTACRoute do
-            local ptWP  = { x = JTACRoute[i].x, y = JTACRoute[i].y }
-            local ptRef = ctld.utils.makeVec2FromVec3OrVec2("ctld.getNearestWP()",
-                Unit.getByName(_referenceUnitName):getPoint())
-            local dist  = ctld.utils.get2DDist("ctld.getNearestWP()", ptRef, ptWP) -- distance between 2 points
-            if memoDist == nil then
-                memoDist = dist
-                WP = i
-            elseif dist < memoDist then
-                memoDist = dist
-                WP = i
+    if JTACRoute then
+        if Unit.getByName(_referenceUnitName) ~= nil then                                 --JTAC et unit must exist
+            for i = 1, #JTACRoute do
+                local ptWP  = { x = JTACRoute[i].x, y = JTACRoute[i].y }
+                local ptRef = ctld.utils.makeVec2FromVec3OrVec2("ctld.getNearestWP()",
+                    Unit.getByName(_referenceUnitName):getPoint())
+                local dist  = ctld.utils.get2DDist("ctld.getNearestWP()", ptRef, ptWP) -- distance between 2 points
+                if memoDist == nil then
+                    memoDist = dist
+                    WP = i
+                elseif dist < memoDist then
+                    memoDist = dist
+                    WP = i
+                end
             end
         end
+        return WP
+    else
+        return 0
     end
-    return WP
 end
 
 ----------------------------------------------------------------------------

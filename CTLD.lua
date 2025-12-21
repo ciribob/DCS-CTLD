@@ -2803,7 +2803,7 @@ function ctld.utils.zoneToVec3(caller, zone, gl)
             new.z = zone.point.z
         end
     end
-    ---@diagnostic enable: assign-type-mismatch
+
     if new.x and gl then
         new.y = land.getHeight({ x = new.x, y = new.z })
     end
