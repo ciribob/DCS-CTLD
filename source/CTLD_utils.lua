@@ -1505,7 +1505,7 @@ function ctld.utils.tableShow(caller, tbl, loc, indent, tableshow_tbls) --based 
                     loc .. '[' .. ctld.utils.basicSerialize("ctld.utils.tableShow()", ind) .. ']',
                     indent .. '    ',
                     tableshow_tbls) ]] --
-                    tbl_str[#tbl_str + 1] = ctld.utils.tableShow(val, loc, indent .. '    ')
+                    tbl_str[#tbl_str + 1] = ctld.utils.tableShow("ctld.utils.tableShow()", val, loc, indent .. '    ')
                     tbl_str[#tbl_str + 1] = ',\n'
                 end
             elseif type(val) == 'function' then
