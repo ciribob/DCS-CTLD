@@ -1,4 +1,5 @@
 CTLD_i18n.lua
+CTLD_config.lua
 CTLD_utils.lua
 CTLD_menus.lua
 CTLD_beacon.lua
