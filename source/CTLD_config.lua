@@ -896,7 +896,7 @@ function CTLDConfig:load()
     else
         env.info("CTLDConfig: No YAML config data found in ctld.yamlConfigDatas")
     end
-    trigger.action.outText("pass...1", 10)
+
     -- Temporary: Loading old ctld settings variables for backward compatibility
     if ctld ~= nil then
         for k, v in pairs(CTLDConfig.getAllSettings()) do

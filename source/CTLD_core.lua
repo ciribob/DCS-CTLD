@@ -2561,7 +2561,7 @@ function ctld.getClockDirection(_heli, _crate)
     local _playerPosition = _heli:getPosition().p -- get position of helicopter
     local _relativePosition = ctld.utils.subVec3("ctld.getClockDirection()", _position, _playerPosition)
 
-    local _playerHeading = ctld.utils.getHeadingInRadians("ctld.getClockDirection()", _heli) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
+    local _playerHeading = ctld.utils.getHeadingInRadians("ctld.getClockDirection()", _heli, false) -- the rest of the code determines the 'o'clock' bearing of the missile relative to the helicopter
 
     local _headingVector = { x = math.cos(_playerHeading), y = 0, z = math.sin(_playerHeading) }
 
