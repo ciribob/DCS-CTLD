@@ -4844,38 +4844,6 @@ function ctld.eventHandler:onEvent(event)
     end
 end
 
-function ctld.i18n_check(language, verbose)
-    local english = ctld.i18n["en"]
-    local tocheck = ctld.i18n[language]
-    if not tocheck then
-        ctld.logError(string.format("CTLD.i18n_check: Language %s not found", language))
-        return false
-    end
-    local englishVersion = english.translation_version
-    local tocheckVersion = tocheck.translation_version
-    if englishVersion ~= tocheckVersion then
-        ctld.logError(string.format("CTLD.i18n_check: Language version mismatch: EN has version %s, %s has version %s",
-            englishVersion, language, tocheckVersion))
-    end
-    --ctld.logTrace(string.format("english = %s", ctld.p(english)))
-    for textRef, textEnglish in pairs(english) do
-        if textRef ~= "translation_version" then
-            local textTocheck = tocheck[textRef]
-            if not textTocheck then
-                ctld.logError(string.format("CTLD.i18n_check: NOT FOUND: checking %s text [%s]", language, textRef))
-            elseif textTocheck == textEnglish then
-                ctld.logWarning(string.format("CTLD.i18n_check:         SAME: checking %s text [%s] as in EN", language,
-                    textRef))
-            elseif verbose then
-                ctld.logInfo(string.format("CTLD.i18n_check:             OK: checking %s text [%s]", language, textRef))
-            end
-        end
-    end
-end
-
--- example of usage:
---ctld.i18n_check("fr")
-
 --- Enable/Disable error boxes displayed on screen.
 env.setErrorMessageBoxEnabled(false)
 
