@@ -8712,3 +8712,5 @@ if ctld.dontInitialize then
 else
     ctld.initialize()
 end
+
+trigger.action.setUserFlag("CTLD_Loaded", true)

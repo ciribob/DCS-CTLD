@@ -842,3 +842,6 @@ ctld.i18n["ko"]["ENABLE "] = "활성화 "
 ctld.i18n["ko"]["REQUEST "] = "요청 "
 ctld.i18n["ko"]["Reset TGT Selection"] = "TGT 선택 초기화"
 --========================================================================================================================
+
+trigger.action.setUserFlag("CTLD-i18n_Loaded", true)
+

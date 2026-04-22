@@ -136,9 +136,9 @@ Optionaly, you can disable the STTS (text to speech over SRS) feature (4).
 
 First make sure MIST is loaded, either as an Initialization Script  for the mission or the first DO SCRIPT with a "TIME MORE" of 1. "TIME MORE" means run the actions after X seconds into the mission.
 
-If you want to make use of translations (internationalization features, a.k.a. "i18n"), you need to load the `CTLD-i18n.lua` script _before_ CTLD. Do this by adding a second trigger with a "TIME MORE" and a DO SCRIPT of `CTLD-i18n.lua`. 
+If you want to make use of translations (internationalization features, a.k.a. "i18n"), you need to load the `CTLD-i18n.lua` script _before_ CTLD. Do this by adding a second trigger with a "FLAG IS TRUE" for "MiST_Loaded" and a DO SCRIPT of `CTLD-i18n.lua`. 
 
-Load CTLD using a second (or third) trigger with a "TIME MORE" and a DO SCRIPT of `CTLD.lua`. 
+Load CTLD using a second (or third) trigger with a "FLAG IS TRUE" for "MiST_Loaded" (or "CTLD-i18n_Loaded") and a DO SCRIPT of `CTLD.lua`. 
 
 You will also need to load in **both** the **beacon.ogg** sound file and the **beaconsilent.ogg** for Radio beacon homing. This can be done by adding a two Sound To Country actions. Pick an unused country, like Australia so no one actually hears the audio when joining at the start of the mission. If you don't add the **two** Audio files, radio beacons will not work. Make sure not to rename the file as well.
 
